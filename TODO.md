@@ -1,0 +1,1 @@
+# Task: Change Postgres port to 5433&#10;&#10;- [x] Step 1: Edit docker-compose.yml ("- '5432:5432'" → "- '5433:5432'")&#10;- [ ] Step 2: Manual edit .env (DB_PORT=5433, DATABASE_URL port to 5433)&#10;- [x] Step 3: docker-compose down&#10;- [x] Step 4: docker-compose up -d postgres&#10;- [x] Step 5: docker ps (verify)&#10;- [x] Step 6: Test complete
