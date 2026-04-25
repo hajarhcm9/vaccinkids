@@ -21,7 +21,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_login_infirmier)  // ton fichier XML existant
+        setContentView(R.layout.activity_login_infirmier)
 
         etEmail         = findViewById(R.id.etEmailInfirmier)
         etPassword      = findViewById(R.id.etPasswordInfirmier)
@@ -30,14 +30,9 @@ class MainActivity : AppCompatActivity() {
         tvPasswordError = findViewById(R.id.tvPasswordErrorInfirmier)
 
         btnLogin.setOnClickListener { handleLogin() }
-
         etEmail.setOnFocusChangeListener    { _, _ -> tvEmailError.visibility    = View.GONE }
         etPassword.setOnFocusChangeListener { _, _ -> tvPasswordError.visibility = View.GONE }
-
-        etPassword.setOnEditorActionListener { _, _, _ ->
-            handleLogin()
-            true
-        }
+        etPassword.setOnEditorActionListener { _, _, _ -> handleLogin(); true }
     }
 
     private fun handleLogin() {
@@ -52,33 +47,29 @@ class MainActivity : AppCompatActivity() {
             tvEmailError.visibility = View.VISIBLE
             return
         }
-
         if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
             tvEmailError.text = "Format d'email invalide."
             tvEmailError.visibility = View.VISIBLE
             return
         }
-
         if (password.isEmpty()) {
             tvPasswordError.text = "Veuillez entrer votre mot de passe."
             tvPasswordError.visibility = View.VISIBLE
             return
         }
-
         if (email != ADMIN_EMAIL) {
             tvEmailError.text = "Email du centre non reconnu."
             tvEmailError.visibility = View.VISIBLE
             return
         }
-
         if (password != ADMIN_PASSWORD) {
             tvPasswordError.text = "Mot de passe incorrect."
             tvPasswordError.visibility = View.VISIBLE
             return
         }
 
-        // Connexion reussie -> MainInfirmierActivity (Dashboard + BottomNav)
-        val intent = Intent(this, MainInfirmierActivity::class.java)
+        // ✅ Login Admin → AdminActivity
+        val intent = Intent(this, AdminActivity::class.java)
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intent)
         finish()

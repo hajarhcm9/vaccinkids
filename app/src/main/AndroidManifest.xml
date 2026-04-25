@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- ✅ Permissions ICI, avant <application> -->
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-feature android:name="android.hardware.camera" android:required="false" />
 
@@ -15,18 +14,23 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Vaccinkid">
 
-        <!-- Login Infirmier — écran de démarrage -->
+        <!-- ✅ LAUNCHER — Ecran de choix -->
         <activity
-            android:name=".LoginInfirmierActivity"
-            android:exported="true"
-            android:windowSoftInputMode="adjustResize">
+            android:name=".WelcomeActivity"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
-        <!-- Main Infirmier avec BottomNav -->
+        <!-- Login Infirmier -->
+        <activity
+            android:name=".LoginInfirmierActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
+        <!-- Main Infirmier -->
         <activity
             android:name=".MainInfirmierActivity"
             android:exported="false" />
@@ -37,16 +41,10 @@
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
 
-        <!-- Dashboard Admin -->
+        <!-- ✅ Dashboard Admin -->
         <activity
-            android:name=".DashboardActivity"
-            android:exported="false" />
-
-        <!-- Dashboard Infirmier ancien -->
-        <activity
-            android:name=".DashboardInfirmierActivity"
+            android:name=".AdminActivity"
             android:exported="false" />
 
     </application>
-
 </manifest>

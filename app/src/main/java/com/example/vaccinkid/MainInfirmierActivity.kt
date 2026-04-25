@@ -33,14 +33,29 @@ class MainInfirmierActivity : AppCompatActivity() {
                     loadFragment(ScanQrFragment())
                     true
                 }
+                // ✅ NOUVEAU — Semaine 2
+                R.id.nav_flacons -> {
+                    loadFragment(GestionFlaconsFragment())
+                    true
+                }
+                R.id.nav_presences -> {
+                    loadFragment(GestionPresencesFragment())
+                    true
+                }
                 else -> false
             }
         }
     }
 
+    // ✅ Méthode publique pour naviguer depuis n'importe quel fragment
+    fun naviguerVers(fragment: androidx.fragment.app.Fragment) {
+        loadFragment(fragment)
+    }
+
     private fun loadFragment(fragment: androidx.fragment.app.Fragment) {
         supportFragmentManager.beginTransaction()
             .replace(R.id.fragmentContainer, fragment)
+            .addToBackStack(null)
             .commit()
     }
 }

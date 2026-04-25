@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#FFF8F0"
+    android:padding="16dp">
+
+    <!-- Chronomètre délai de grâce -->
+    <androidx.cardview.widget.CardView
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="12dp"
+        app:cardCornerRadius="10dp"
+        app:cardElevation="3dp"
+        app:cardBackgroundColor="#FFF3E0">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="12dp"
+            android:gravity="center_vertical">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tvDelaiGrace"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="⏱ Délai de grâce : 15:00"
+                    android:textStyle="bold"
+                    android:textSize="16sp"
+                    android:textColor="#F5A623" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Après expiration : marquage absent automatique"
+                    android:textSize="11sp"
+                    android:textColor="#888888" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/tvCompteurPresents"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Présents : 0/0"
+                android:textStyle="bold"
+                android:textSize="14sp"
+                android:textColor="#4CAF50" />
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
+
+    <!-- Liste RDV -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Liste des rendez-vous du jour"
+        android:textStyle="bold"
+        android:textSize="15sp"
+        android:textColor="#333333"
+        android:layout_marginBottom="8dp" />
+
+    <ListView
+        android:id="@+id/listViewRdv"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:divider="@null"
+        android:dividerHeight="8dp" />
+
+</LinearLayout>
