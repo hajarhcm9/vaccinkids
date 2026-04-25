@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="10dp"
+    app:cardCornerRadius="14dp"
+    app:cardBackgroundColor="#FFFFFF"
+    app:cardElevation="4dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="14dp"
+        android:gravity="center_vertical">
+
+        <!-- Heure -->
+        <LinearLayout
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:background="@drawable/badge_orange_bg"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:layout_marginEnd="14dp">
+
+            <TextView
+                android:id="@+id/tvRdvHeure"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="09h00"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:textColor="#C8550A" />
+
+        </LinearLayout>
+
+        <!-- Infos -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tvRdvEnfant"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Youssef Amrani"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:textColor="#7A2040" />
+
+            <TextView
+                android:id="@+id/tvRdvVaccin"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="BCG — 2 mois"
+                android:textSize="12sp"
+                android:textColor="#C07090"
+                android:layout_marginTop="2dp" />
+
+            <TextView
+                android:id="@+id/tvRdvParent"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Parent : Karim Amrani"
+                android:textSize="11sp"
+                android:textColor="#B0A090"
+                android:layout_marginTop="2dp" />
+
+        </LinearLayout>
+
+        <!-- Statut -->
+        <TextView
+            android:id="@+id/tvRdvStatut"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="EN ATTENTE"
+            android:textSize="10sp"
+            android:textColor="#C8550A"
+            android:textStyle="bold"
+            android:background="@drawable/badge_orange_bg"
+            android:paddingHorizontal="8dp"
+            android:paddingVertical="4dp" />
+
+    </LinearLayout>
+</androidx.cardview.widget.CardView>

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#FFF3E0"
+    android:padding="24dp">
+
+    <!-- Zone de scan (visuel) -->
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginTop="32dp"
+        android:layout_marginBottom="32dp"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="4dp"
+        xmlns:app="http://schemas.android.com/apk/res-auto">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <!-- Icône QR -->
+            <ImageView
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:src="@android:drawable/ic_menu_camera"
+                android:tint="#F5A623" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="Pointez la caméra vers le QR code"
+                android:textAlignment="center"
+                android:textColor="#999999"
+                android:textSize="16sp" />
+
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
+
+    <!-- Bouton SCANNER -->
+    <Button
+        android:id="@+id/btnScanner"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:backgroundTint="#F5A623"
+        android:text="SCANNER"
+        android:textColor="#FFFFFF"
+        android:textStyle="bold" />
+
+    <!-- Bouton Saisie manuelle -->
+    <Button
+        android:id="@+id/btnSaisieManuelle"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:layout_marginTop="12dp"
+        android:backgroundTint="@android:color/transparent"
+        android:text="Saisie manuelle"
+        android:textColor="#F5A623"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
+
+</LinearLayout>
