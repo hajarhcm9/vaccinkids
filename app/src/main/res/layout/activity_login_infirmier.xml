@@ -4,84 +4,85 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fillViewport="true"
-    android:background="#FDE8F0">
+    android:background="#FFF5E6">
 
     <LinearLayout
-        android:id="@+id/main"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <!-- Header Rose -->
-        <LinearLayout
+        <!-- Header jaune-rose -->
+        <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="300dp"
-            android:background="#D4537E"
-            android:gravity="center"
-            android:orientation="vertical"
-            android:paddingBottom="30dp">
+            android:layout_height="280dp">
 
-            <!-- Cercle logo -->
-            <FrameLayout
-                android:layout_width="80dp"
-                android:layout_height="80dp">
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="#FFB347" />
+
+            <View
+                android:layout_width="260dp"
+                android:layout_height="260dp"
+                android:layout_gravity="top|end"
+                android:layout_marginTop="-60dp"
+                android:layout_marginEnd="-60dp"
+                android:background="@drawable/circle_pink_alpha" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:paddingBottom="30dp">
 
                 <androidx.cardview.widget.CardView
-                    android:layout_width="80dp"
-                    android:layout_height="80dp"
-                    app:cardCornerRadius="40dp"
-                    app:cardBackgroundColor="#33FFFFFF"
+                    android:layout_width="72dp"
+                    android:layout_height="72dp"
+                    app:cardCornerRadius="36dp"
+                    app:cardBackgroundColor="#FFFFFF"
                     app:cardElevation="0dp">
 
-                    <androidx.cardview.widget.CardView
-                        android:layout_width="52dp"
-                        android:layout_height="52dp"
-                        android:layout_gravity="center"
-                        app:cardCornerRadius="26dp"
-                        app:cardBackgroundColor="#F2FFFFFF"
-                        app:cardElevation="0dp">
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:text="💉"
+                        android:textSize="32sp"
+                        android:gravity="center" />
 
-                        <ImageView
-                            android:layout_width="30dp"
-                            android:layout_height="30dp"
-                            android:layout_gravity="center"
-                            android:src="@android:drawable/ic_menu_edit"
-                            app:tint="#D4537E" />
-
-                    </androidx.cardview.widget.CardView>
                 </androidx.cardview.widget.CardView>
-            </FrameLayout>
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="VacciniKids"
-                android:textColor="#FFFFFF"
-                android:textSize="30sp"
-                android:textStyle="bold"
-                android:fontFamily="serif"
-                android:layout_marginTop="14dp" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="VacciniKids"
+                    android:textColor="#FFFFFF"
+                    android:textSize="28sp"
+                    android:textStyle="bold"
+                    android:fontFamily="serif"
+                    android:layout_marginTop="12dp" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="ESPACE ADMINISTRATION"
-                android:textColor="#CCFFFFFF"
-                android:textSize="11sp"
-                android:letterSpacing="0.15"
-                android:layout_marginTop="6dp" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="ESPACE INFIRMIER"
+                    android:textColor="#FFF0D0"
+                    android:textSize="11sp"
+                    android:letterSpacing="0.15"
+                    android:layout_marginTop="4dp" />
 
-        </LinearLayout>
+            </LinearLayout>
+        </FrameLayout>
 
-        <!-- Card de connexion -->
+        <!-- Card Login -->
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="20dp"
-            android:layout_marginTop="-40dp"
+            android:layout_marginTop="-36dp"
             android:layout_marginBottom="24dp"
             app:cardCornerRadius="24dp"
-            app:cardBackgroundColor="#FDFAFA"
+            app:cardBackgroundColor="#FFFFFF"
             app:cardElevation="12dp">
 
             <LinearLayout
@@ -90,105 +91,97 @@
                 android:orientation="vertical"
                 android:padding="28dp">
 
-                <!-- Titre -->
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Connexion Admin"
+                    android:text="Connexion Infirmier"
                     android:textSize="20sp"
                     android:textStyle="bold"
                     android:fontFamily="serif"
-                    android:textColor="#B03060"
+                    android:textColor="#C8550A"
                     android:layout_gravity="center"
                     android:layout_marginBottom="6dp" />
 
-                <!-- Sous-titre -->
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Veuillez entrer l'email de votre centre ainsi que votre mot de passe pour accéder au tableau de bord."
+                    android:text="Veuillez entrer l'email et le mot de passe de votre centre."
                     android:textSize="13sp"
-                    android:textColor="#C07090"
+                    android:textColor="#B07050"
                     android:gravity="center"
                     android:layout_gravity="center"
                     android:lineSpacingMultiplier="1.4"
                     android:layout_marginBottom="24dp" />
 
-                <!-- Label Email -->
+                <!-- Email -->
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="EMAIL DU CENTRE"
                     android:textSize="11sp"
-                    android:textColor="#A04060"
-                    android:letterSpacing="0.08"
+                    android:textColor="#C8550A"
                     android:textStyle="bold"
+                    android:letterSpacing="0.08"
                     android:layout_marginBottom="7dp" />
 
-                <!-- Champ Email -->
                 <EditText
-                    android:id="@+id/etEmail"
+                    android:id="@+id/etEmailInfirmier"
                     android:layout_width="match_parent"
                     android:layout_height="50dp"
-                    android:hint="exemple@centre-essalaam.ma"
+                    android:hint="exemple@centre.ma"
                     android:inputType="textEmailAddress"
-                    android:background="@drawable/input_bg"
+                    android:background="@drawable/input_orange_bg"
                     android:paddingHorizontal="16dp"
                     android:textSize="14sp"
-                    android:textColor="#7A2040"
-                    android:textColorHint="#D090A8"
+                    android:textColor="#7A3010"
+                    android:textColorHint="#D0A080"
                     android:layout_marginBottom="6dp" />
 
-                <!-- Erreur Email -->
                 <TextView
-                    android:id="@+id/tvEmailError"
+                    android:id="@+id/tvEmailErrorInfirmier"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="L'email du centre est invalide ou non autorisé."
                     android:textColor="#E02060"
                     android:textSize="12sp"
                     android:visibility="gone"
                     android:layout_marginBottom="10dp" />
 
-                <!-- Label Mot de passe -->
+                <!-- Mot de passe -->
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="MOT DE PASSE"
                     android:textSize="11sp"
-                    android:textColor="#A04060"
-                    android:letterSpacing="0.08"
+                    android:textColor="#C8550A"
                     android:textStyle="bold"
+                    android:letterSpacing="0.08"
                     android:layout_marginBottom="7dp" />
 
-                <!-- Champ Mot de passe -->
                 <EditText
-                    android:id="@+id/etPassword"
+                    android:id="@+id/etPasswordInfirmier"
                     android:layout_width="match_parent"
                     android:layout_height="50dp"
                     android:hint="••••••••••"
                     android:inputType="textPassword"
-                    android:background="@drawable/input_bg"
+                    android:background="@drawable/input_orange_bg"
                     android:paddingHorizontal="16dp"
                     android:textSize="14sp"
-                    android:textColor="#7A2040"
-                    android:textColorHint="#D090A8"
+                    android:textColor="#7A3010"
+                    android:textColorHint="#D0A080"
                     android:layout_marginBottom="6dp" />
 
-                <!-- Erreur Mot de passe -->
                 <TextView
-                    android:id="@+id/tvPasswordError"
+                    android:id="@+id/tvPasswordErrorInfirmier"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Mot de passe incorrect."
                     android:textColor="#E02060"
                     android:textSize="12sp"
                     android:visibility="gone"
                     android:layout_marginBottom="16dp" />
 
-                <!-- Bouton connexion -->
+                <!-- Bouton -->
                 <Button
-                    android:id="@+id/btnLogin"
+                    android:id="@+id/btnLoginInfirmier"
                     android:layout_width="match_parent"
                     android:layout_height="52dp"
                     android:text="SE CONNECTER"
@@ -196,7 +189,7 @@
                     android:textStyle="bold"
                     android:textSize="14sp"
                     android:letterSpacing="0.08"
-                    android:backgroundTint="#D4537E"
+                    android:backgroundTint="#FFB347"
                     android:layout_marginTop="6dp"
                     app:cornerRadius="14dp" />
 
@@ -213,45 +206,44 @@
                         android:layout_width="0dp"
                         android:layout_height="1dp"
                         android:layout_weight="1"
-                        android:background="#F0D0DF" />
+                        android:background="#FFE0B0" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Centre Es-Salaam · Oujda"
                         android:textSize="11sp"
-                        android:textColor="#D0A0B5"
+                        android:textColor="#D0A070"
                         android:paddingHorizontal="12dp" />
 
                     <View
                         android:layout_width="0dp"
                         android:layout_height="1dp"
                         android:layout_weight="1"
-                        android:background="#F0D0DF" />
+                        android:background="#FFE0B0" />
 
                 </LinearLayout>
 
-                <!-- Badge sécurisé -->
+                <!-- Badge -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="38dp"
-                    android:background="@drawable/badge_bg"
+                    android:background="@drawable/badge_orange_bg"
                     android:gravity="center"
                     android:orientation="horizontal">
 
                     <View
-                        android:id="@+id/dotIndicator"
                         android:layout_width="8dp"
                         android:layout_height="8dp"
-                        android:background="@drawable/dot_bg"
+                        android:background="@drawable/dot_orange_bg"
                         android:layout_marginEnd="8dp" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Système sécurisé — Accès réservé au staff"
+                        android:text="Accès réservé au personnel soignant"
                         android:textSize="12sp"
-                        android:textColor="#B05075"
+                        android:textColor="#C8550A"
                         android:textStyle="bold" />
 
                 </LinearLayout>
