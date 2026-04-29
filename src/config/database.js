@@ -1,11 +1,21 @@
 const { Pool } = require('pg');
 require('dotenv').config();
 
+const describeDbError = (error) => {
+  const details = [
+    error.message,
+    error.code && `code=${error.code}`,
+    error.address && `address=${error.address}`,
+    error.port && `port=${error.port}`,
+  ].filter(Boolean);
+
+  return details.length > 0 ? details.join(' ') : 'Unknown PostgreSQL error';
+};
+
 /**
  * PostgreSQL connection pool configuration
  */
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
   host: process.env.DB_HOST || 'localhost',
   port: parseInt(process.env.DB_PORT, 10) || 5432,
   database: process.env.DB_NAME || 'vaccinikids',
@@ -22,8 +32,13 @@ pool.on('connect', () => {
 });
 
 pool.on('error', (err) => {
-  console.error('❌ Unexpected PostgreSQL pool error:', err.message);
-  process.exit(-1);
+  console.error('Unexpected PostgreSQL pool error:', err.message);
+  if (process.env.NODE_ENV === 'production') {
+    if (err.code === 'ECONNREFUSED' || err.code === '57P01') {
+      console.error('Fatal DB connection error, shutting down...');
+      process.exit(1);
+    }
+  }
 });
 
 /**
@@ -42,7 +57,7 @@ const query = async (text, params) => {
     }
     return res;
   } catch (error) {
-    console.error(`❌ Query error: ${error.message}`);
+    console.error(`❌ Query error: ${describeDbError(error)}`);
     throw error;
   }
 };
@@ -56,4 +71,4 @@ const getClient = async () => {
   return client;
 };
 
-module.exports = { pool, query, getClient };
+module.exports = { pool, query, getClient, describeDbError };

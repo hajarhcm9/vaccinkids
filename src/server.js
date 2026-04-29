@@ -1,6 +1,32 @@
 const app = require('./app');
 const config = require('./config');
-const { pool } = require('./config/database');
+const { pool, describeDbError } = require('./config/database');
+
+const DB_RETRY_ATTEMPTS = parseInt(process.env.DB_RETRY_ATTEMPTS, 10) || 5;
+const DB_RETRY_DELAY_MS = parseInt(process.env.DB_RETRY_DELAY_MS, 10) || 2000;
+
+const wait = (ms) =>
+  new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+
+async function verifyDatabaseConnection() {
+  for (let attempt = 1; attempt <= DB_RETRY_ATTEMPTS; attempt++) {
+    try {
+      await pool.query('SELECT NOW()');
+      console.warn('✅ Database connection verified');
+      return;
+    } catch (error) {
+      const isLastAttempt = attempt === DB_RETRY_ATTEMPTS;
+      console.error(
+        `❌ Database connection attempt ${attempt}/${DB_RETRY_ATTEMPTS} failed: ${describeDbError(error)}`,
+      );
+
+      if (isLastAttempt) throw error;
+      await wait(DB_RETRY_DELAY_MS);
+    }
+  }
+}
 
 /**
  * VacciniKids Backend Server
@@ -8,8 +34,11 @@ const { pool } = require('./config/database');
 async function startServer() {
   try {
     // 1. Test database connection
-    await pool.query('SELECT NOW()');
-    console.warn('✅ Database connection verified');
+    await verifyDatabaseConnection();
+
+    // Run migrations
+    const { runMigrations } = require('./models/migrationRunner');
+    await runMigrations();
 
     // 2. Start Express server
     const PORT = config.port;
@@ -37,7 +66,7 @@ async function startServer() {
     process.on('SIGTERM', () => shutdown('SIGTERM'));
     process.on('SIGINT', () => shutdown('SIGINT'));
   } catch (error) {
-    console.error('❌ Failed to start server:', error.message);
+    console.error('❌ Failed to start server:', describeDbError(error));
     process.exit(1);
   }
 }

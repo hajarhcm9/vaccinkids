@@ -7,11 +7,7 @@
  * Accepts: +212XXXXXXXXX, 06XXXXXXXX, 6XXXXXXXX
  */
 const isValidMoroccanPhone = (phone) => {
-  const patterns = [
-    /^\+212[5-7]\d{8}$/,
-    /^0[5-7]\d{8}$/,
-    /^[5-7]\d{8}$/,
-  ];
+  const patterns = [/^\+212[5-7]\d{8}$/, /^0[5-7]\d{8}$/, /^[5-7]\d{8}$/];
   return patterns.some((pattern) => pattern.test(phone));
 };
 
@@ -33,8 +29,15 @@ const normalizePhone = (phone) => {
  * Validate CIN (Carte d'Identité Nationale)
  * Moroccan CIN: letter + 6-8 digits OR just 6-8 digits
  */
+/**
+ * Validate CIN (Carte d'Identité Nationale)
+ * Moroccan CIN + admin accounts: alphanumeric 4-12 chars
+ * Examples: "12345678", "A123456", "ADMIN01", "INFIRM01"
+ */
 const isValidCIN = (cin) => {
-  return /^[A-Za-z]?\d{6,8}$/.test(cin);
+  if (!cin || typeof cin !== 'string') return false;
+  // Alphanumeric, 4-12 characters (covers all formats + admin accounts)
+  return /^[A-Za-z0-9]{4,12}$/.test(cin);
 };
 
 /**

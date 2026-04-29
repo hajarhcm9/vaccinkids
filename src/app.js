@@ -72,10 +72,12 @@ app.get('/health', (req, res) => {
 // ============================================
 // 7. API ROUTES (will be added Day 4+)
 // ============================================
-// app.use('/api/auth', require('./routes/authRoutes'));
-// app.use('/api/sessions', require('./routes/sessionRoutes'));
-// app.use('/api/vaccins', require('./routes/vaccinRoutes'));
-// app.use('/api/carnet', require('./routes/carnetRoutes'));
+app.use('/api/auth', require('./routes/authRoutes'));
+app.use('/api/sessions', require('./routes/sessionRoutes'));
+app.use('/api/vaccins', require('./routes/vaccinRoutes'));
+
+app.use('/api/carnet', require('./routes/carnetRoutes'));
+
 // app.use('/api/stats', require('./routes/statsRoutes'));
 // app.use('/api/admin', require('./routes/adminRoutes'));
 
@@ -92,7 +94,7 @@ app.use((req, res) => {
 // ============================================
 // 9. GLOBAL ERROR HANDLER
 // ============================================
-app.use((err, req, res, _next) => {
+app.use((err, req, res, next) => {
   const statusCode = err.statusCode || 500;
   const message = err.message || 'Internal Server Error';
 

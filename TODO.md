@@ -1,1 +1,31 @@
-# Task: Change Postgres port to 5433&#10;&#10;- [x] Step 1: Edit docker-compose.yml ("- '5432:5432'" → "- '5433:5432'")&#10;- [ ] Step 2: Manual edit .env (DB_PORT=5433, DATABASE_URL port to 5433)&#10;- [x] Step 3: docker-compose down&#10;- [x] Step 4: docker-compose up -d postgres&#10;- [x] Step 5: docker ps (verify)&#10;- [x] Step 6: Test complete
+# VacciniKids Bug Fixes TODO
+
+Current working directory: /Users/macos/Desktop/vaccinkids/vaccinkids
+
+## Status: Pending Implementation
+
+### 1. [x] Fix Bug #1: database.js pool error handler
+ - Edit src/config/database.js: Exact report APRES code (err.message, conditional exit).
+ - Test: `npm run dev` - server stable, no clean exit ✅
+
+### 2. [x] Bug #2: Documentation & Test Data
+ - Run migrations: node src/models/migrationRunner.js or npm run migrate to seed ADMIN01/INFIRM01 accounts. (Pending - recommend user run)
+ - Create README.md: Added test accounts, cURL examples, auth flow.
+
+### 3. [x] Fix Bug #3: Flacon.js openFlacon SQL params
+ - Rewrote to exact report APRES dynamic paramIndex logic.
+ - Bugs #4,5,6 already correct.
+
+### 4. [ ] Test Full Flow
+- Login cURL with ADMIN01, get token.
+- GET /api/sessions/:id with token.
+- Check server stability.
+
+### 5. [ ] Optional Improvements from Report
+- Add DB transactions to controllers.
+- OTP rate limiting.
+- Audit logging integration.
+- Stats routes.
+
+**Next Step:** Implement Bug #1 edit.
+
