@@ -1,4 +1,5 @@
 const express = require('express');
+const setupSecurity = require('./middleware/security');const { authLimiter, apiLimiter } = require('./middleware/rateLimiter');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
@@ -73,6 +74,7 @@ app.get('/health', (req, res) => {
 // ============================================
 // 7. API ROUTES (will be added Day 4+)
 // ============================================
+if (process.env.NODE_ENV !== 'test') app.use('/api/auth', authLimiter);
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/sessions', require('./routes/sessionRoutes'));
 app.use('/api/vaccins', require('./routes/vaccinRoutesFull'));
