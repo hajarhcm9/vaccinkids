@@ -40,6 +40,10 @@ async function startServer() {
     const { runMigrations } = require('./models/migrationRunner');
     await runMigrations();
 
+    // Initialize notification table
+    const Notification = require('./models/Notification');
+    await Notification.initTable();
+
     // 2. Start Express server
     const PORT = config.port;
     const server = app.listen(PORT, () => {
@@ -50,11 +54,19 @@ async function startServer() {
   ║     Environment: ${config.nodeEnv}          ║
   ╚══════════════════════════════════════════╝
       `);
+
+      // Start reminder service (not in test environment)
+      if (process.env.NODE_ENV !== 'test') {
+        const reminderService = require('./services/reminderService');
+        reminderService.start();
+      }
     });
 
     // 3. Graceful shutdown
     const shutdown = async (signal) => {
       console.warn(`\n⛔ ${signal} received. Shutting down gracefully...`);
+      const reminderService = require('./services/reminderService');
+      reminderService.stop();
       server.close(() => {
         console.warn('✅ HTTP server closed');
       });
