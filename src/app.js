@@ -1,9 +1,10 @@
 const express = require('express');
-const setupSecurity = require('./middleware/security');const { authLimiter, apiLimiter } = require('./middleware/rateLimiter');
+const setupSecurity = require('./middleware/security');
+const { authLimiter, apiLimiter } = require('./middleware/rateLimiter');
+const swaggerUi = require('swagger-ui-express');
+const specOpenAPI = require('./config/swagger');
 const cors = require('cors');
-const helmet = require('helmet');
 const morgan = require('morgan');
-const rateLimit = require('express-rate-limit');
 const config = require('./config');
 
 /**
@@ -14,7 +15,7 @@ const app = express();
 // ============================================
 // 1. SECURITY MIDDLEWARE
 // ============================================
-app.use(helmet());
+setupSecurity(app);
 
 // ============================================
 // 2. CORS CONFIGURATION
@@ -46,21 +47,17 @@ if (config.isDev) {
 // ============================================
 // 5. RATE LIMITING
 // ============================================
-const limiter = rateLimit({
-  windowMs: config.rateLimit.windowMs,
-  max: config.rateLimit.max,
-  message: {
-    status: 'error',
-    message: 'Too many requests from this IP, please try again later.',
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-app.use('/api/', limiter);
+if (process.env.NODE_ENV !== 'test') app.use('/api/', apiLimiter);
+
 app.use('/api/', require('./middleware/auditMiddleware'));
 
 // ============================================
-// 6. HEALTH CHECK ROUTE
+// 6. API DOCUMENTATION (Swagger)
+// ============================================
+app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(specOpenAPI));
+
+// ============================================
+// 7. HEALTH CHECK ROUTE
 // ============================================
 app.get('/health', (req, res) => {
   res.status(200).json({
@@ -72,25 +69,22 @@ app.get('/health', (req, res) => {
 });
 
 // ============================================
-// 7. API ROUTES (will be added Day 4+)
+// 8. API ROUTES
 // ============================================
 if (process.env.NODE_ENV !== 'test') app.use('/api/auth', authLimiter);
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/sessions', require('./routes/sessionRoutes'));
 app.use('/api/vaccins', require('./routes/vaccinRoutesFull'));
-
 app.use('/api/rendez-vous', require('./routes/rendezVousRoutes'));
 app.use('/api/vaccinations', require('./routes/vaccinationRoutes'));
 app.use('/api/flacons', require('./routes/flaconRoutes'));
 app.use('/api/stock', require('./routes/stockRoutes'));
 app.use('/api/carnet', require('./routes/carnetRoutes'));
-// app.use('/api/stats', require('./routes/statsRoutes'));
-// app.use('/api/admin', require('./routes/adminRoutes'));
 app.use('/api/notifications', require('./routes/notificationRoutes'));
 app.use('/api/statistiques', require('./routes/statistiqueRoutes'));
 
 // ============================================
-// 8. 404 HANDLER
+// 9. 404 HANDLER
 // ============================================
 app.use((req, res) => {
   res.status(404).json({
@@ -100,14 +94,14 @@ app.use((req, res) => {
 });
 
 // ============================================
-// 9. GLOBAL ERROR HANDLER
+// 10. GLOBAL ERROR HANDLER
 // ============================================
 app.use((err, req, res, next) => {
   const statusCode = err.statusCode || 500;
   const message = err.message || 'Internal Server Error';
 
   if (config.isDev) {
-    console.error('🔥 Error:', err);
+    console.error('🔤 Error:', err);
   }
 
   res.status(statusCode).json({

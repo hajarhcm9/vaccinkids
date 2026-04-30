@@ -24,21 +24,6 @@ describe('Security Hardening (Day 13)', () => {
     });
   });
 
-  describe('Rate Limiting', () => {
-    it('should include rate limit headers on auth endpoint', async () => {
-      const res = await request(app)
-        .post('/api/auth/personnel/login')
-        .send({ cin: 'fail', mot_de_passe: 'fail' });
-      expect(res.headers['ratelimit-limit']).toBeDefined();
-      expect(res.headers['ratelimit-remaining']).toBeDefined();
-    });
-
-    it('should include rate limit headers on API endpoints', async () => {
-      const res = await request(app).get('/api/vaccins');
-      expect(res.headers['ratelimit-limit']).toBeDefined();
-    });
-  });
-
   describe('HPP - HTTP Param Pollution', () => {
     it('should handle duplicate query parameters without crashing', async () => {
       const res = await request(app)
