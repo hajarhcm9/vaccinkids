@@ -104,6 +104,19 @@ const RendezVous = {
     return result.rows[0];
   },
 
+  async countActiveBySession(sessionId) {
+    const counts = await this.countBySession(sessionId);
+    return parseInt(counts.actifs);
+  },
+
+  async markAbsentBySession(sessionId) {
+    const result = await query(
+      "UPDATE rendez_vous SET statut = 'ABSENT' WHERE session_id = $1 AND statut IN ('EN_ATTENTE', 'CONFIRME', 'EN_LISTE_ATTENTE') RETURNING *",
+      [sessionId],
+    );
+    return result.rows;
+  },
+
   async existsBySessionAndBebe(sessionId, bebeId) {
     const result = await query(
       "SELECT id FROM rendez_vous WHERE session_id = $1 AND bebe_id = $2 AND statut != 'ANNULE'",

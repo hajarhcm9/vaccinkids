@@ -77,6 +77,8 @@ app.use('/api/sessions', require('./routes/sessionRoutes'));
 app.use('/api/vaccins', require('./routes/vaccinRoutes'));
 
 app.use('/api/rendez-vous', require('./routes/rendezVousRoutes'));
+app.use('/api/vaccinations', require('./routes/vaccinationRoutes'));
+app.use('/api/flacons', require('./routes/flaconRoutes'));
 app.use('/api/carnet', require('./routes/carnetRoutes'));
 // app.use('/api/stats', require('./routes/statsRoutes'));
 // app.use('/api/admin', require('./routes/adminRoutes'));

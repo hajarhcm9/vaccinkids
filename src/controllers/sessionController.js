@@ -49,7 +49,14 @@ const SessionController = {
     return success(res, 200, 'Session started', session);
   }),
 
+  confirmSession: catchAsync(async (req, res, next) => {
+    const session = await Session.update(req.params.id, { statut: 'CONFIRMEE' });
+    if (!session) return next(ApiError.notFound('Session not found'));
+    return success(res, 200, 'Session confirmed', session);
+  }),
+
   endSession: catchAsync(async (req, res, next) => {
+    await RendezVous.markAbsentBySession(req.params.id);
     const session = await Session.update(req.params.id, { statut: 'TERMINEE' });
     if (!session) return next(ApiError.notFound('Session not found'));
     return success(res, 200, 'Session ended', session);

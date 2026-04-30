@@ -26,6 +26,10 @@ const validate = (schema) => {
         errors.push({ field, message: `${field} must be an integer` });
         continue;
       }
+      if (rules.type === 'number' && typeof value !== 'number') {
+        errors.push({ field, message: `${field} must be a number` });
+        continue;
+      }
 
       if (rules.type === 'string') {
         if (rules.minLength && value.length < rules.minLength)
@@ -42,6 +46,13 @@ const validate = (schema) => {
       }
 
       if (rules.type === 'integer') {
+        if (rules.min !== undefined && value < rules.min)
+          errors.push({ field, message: `${field} must be at least ${rules.min}` });
+        if (rules.max !== undefined && value > rules.max)
+          errors.push({ field, message: `${field} must be at most ${rules.max}` });
+      }
+
+      if (rules.type === 'number') {
         if (rules.min !== undefined && value < rules.min)
           errors.push({ field, message: `${field} must be at least ${rules.min}` });
         if (rules.max !== undefined && value > rules.max)
@@ -140,6 +151,21 @@ const schemas = {
       required: true,
       enum: ['EN_ATTENTE', 'CONFIRME', 'PRESENT', 'ABSENT', 'ANNULE', 'EN_LISTE_ATTENTE'],
     },
+  },
+  recordVaccination: {
+    flacon_id: { type: 'integer' },
+    poids: { type: 'number', min: 0 },
+    taille: { type: 'number', min: 0 },
+    reactions: { type: 'string', maxLength: 1000 },
+  },
+  openFlacon: {
+    vaccin_id: { type: 'integer', required: true },
+    session_id: { type: 'integer' },
+    numero_lot: { type: 'string', required: true, minLength: 1, maxLength: 50 },
+    fabricant: { type: 'string', required: true, minLength: 2, maxLength: 100 },
+  },
+  forceCloseFlacon: {
+    justification: { type: 'string', required: true, minLength: 5, maxLength: 1000 },
   },
 };
 

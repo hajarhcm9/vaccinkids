@@ -32,7 +32,7 @@ const AuthController = {
       otpSent: smsResult.success,
       mode: smsResult.mode,
     };
-if (process.env.NODE_ENV !== 'production') responseData.devOtp = otpResult.otp;
+    if (process.env.NODE_ENV !== 'production') responseData.devOtp = otpResult.otp;
 
     return success(res, 200, 'OTP code sent successfully', responseData);
   }),
