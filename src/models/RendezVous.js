@@ -1,22 +1,13 @@
 const { query } = require('../config/database');
-const ApiError = require('../utils/ApiError');
 
 const RendezVous = {
   async create(data) {
     const { session_id, parent_id, bebe_id } = data;
-    try {
-      const result = await query(
-        `INSERT INTO rendez_vous (session_id, parent_id, bebe_id)
-         VALUES ($1, $2, $3) RETURNING *`,
-        [session_id, parent_id, bebe_id],
-      );
-      return result.rows[0];
-    } catch (error) {
-      if (error.code === '23505') {
-        throw ApiError.conflict('Ce bébé est déjà inscrit à cette session');
-      }
-      throw error;
-    }
+    const result = await query(
+      'INSERT INTO rendez_vous (session_id, parent_id, bebe_id, statut) VALUES ($1, $2, $3, $4) RETURNING *',
+      [session_id, parent_id, bebe_id, 'EN_ATTENTE'],
+    );
+    return result.rows[0];
   },
 
   async findById(id) {
@@ -24,51 +15,117 @@ const RendezVous = {
     return result.rows[0];
   },
 
+  async findByParent(parentId) {
+    const result = await query(
+      'SELECT rdv.*, s.date_session, s.heure_debut, s.heure_fin, s.statut AS session_statut, ' +
+        'v.nom AS vaccin_nom, b.prenom AS bebe_prenom, b.nom AS bebe_nom ' +
+        'FROM rendez_vous rdv ' +
+        'JOIN session s ON s.id = rdv.session_id ' +
+        'JOIN vaccin v ON v.id = s.vaccin_id ' +
+        'JOIN bebe b ON b.id = rdv.bebe_id ' +
+        'WHERE rdv.parent_id = $1 ORDER BY s.date_session DESC',
+      [parentId],
+    );
+    return result.rows;
+  },
+
   async findBySession(sessionId) {
     const result = await query(
-      'SELECT * FROM rendez_vous WHERE session_id = $1 ORDER BY date_creation',
+      'SELECT rdv.*, b.prenom AS bebe_prenom, b.nom AS bebe_nom, ' +
+        'p.nom AS parent_nom, p.prenom AS parent_prenom, p.telephone AS parent_telephone ' +
+        'FROM rendez_vous rdv ' +
+        'JOIN bebe b ON b.id = rdv.bebe_id ' +
+        'JOIN parent p ON p.id = rdv.parent_id ' +
+        'WHERE rdv.session_id = $1 ORDER BY rdv.date_creation',
       [sessionId],
     );
     return result.rows;
   },
 
-  async findByBebe(bebeId) {
+  async findAll(filters = {}) {
+    const conditions = [];
+    const values = [];
+    let idx = 1;
+
+    if (filters.statut) {
+      values.push(filters.statut);
+      conditions.push('rdv.statut = $' + idx++);
+    }
+    if (filters.sessionId) {
+      values.push(filters.sessionId);
+      conditions.push('rdv.session_id = $' + idx++);
+    }
+    if (filters.parentId) {
+      values.push(filters.parentId);
+      conditions.push('rdv.parent_id = $' + idx++);
+    }
+    if (filters.bebeId) {
+      values.push(filters.bebeId);
+      conditions.push('rdv.bebe_id = $' + idx++);
+    }
+
+    const whereClause = conditions.length > 0 ? ' WHERE ' + conditions.join(' AND ') : '';
     const result = await query(
-      'SELECT * FROM rendez_vous WHERE bebe_id = $1 ORDER BY date_creation DESC',
-      [bebeId],
+      'SELECT rdv.*, s.date_session, s.heure_debut, s.heure_fin, s.statut AS session_statut, ' +
+        'v.nom AS vaccin_nom, b.prenom AS bebe_prenom, b.nom AS bebe_nom, ' +
+        'p.nom AS parent_nom, p.prenom AS parent_prenom ' +
+        'FROM rendez_vous rdv ' +
+        'JOIN session s ON s.id = rdv.session_id ' +
+        'JOIN vaccin v ON v.id = s.vaccin_id ' +
+        'JOIN bebe b ON b.id = rdv.bebe_id ' +
+        'JOIN parent p ON p.id = rdv.parent_id' +
+        whereClause +
+        ' ORDER BY s.date_session DESC, rdv.date_creation DESC',
+      values,
     );
     return result.rows;
   },
 
-  async updateStatus(id, statut, numero_attente = null) {
-    const params = [id, statut];
-    let sql = 'UPDATE rendez_vous SET statut = $2';
-    if (numero_attente !== null) {
-      sql += ', numero_attente = $3';
-      params.push(numero_attente);
-    }
-    sql += ' WHERE id = $1 RETURNING *';
-    const result = await query(sql, params);
+  async updateStatus(id, statut) {
+    const result = await query('UPDATE rendez_vous SET statut = $1 WHERE id = $2 RETURNING *', [
+      statut,
+      id,
+    ]);
     return result.rows[0];
   },
 
-  async getStatsBySession(sessionId) {
+  async countBySession(sessionId) {
     const result = await query(
-      `SELECT statut, COUNT(*) as count FROM rendez_vous 
-       WHERE session_id = $1 GROUP BY statut`,
+      'SELECT COUNT(*) AS total, ' +
+        "COUNT(*) FILTER (WHERE statut NOT IN ('ANNULE')) AS actifs, " +
+        "COUNT(*) FILTER (WHERE statut = 'EN_ATTENTE') AS en_attente, " +
+        "COUNT(*) FILTER (WHERE statut = 'CONFIRME') AS confirmes, " +
+        "COUNT(*) FILTER (WHERE statut = 'PRESENT') AS presents, " +
+        "COUNT(*) FILTER (WHERE statut = 'ABSENT') AS absents, " +
+        "COUNT(*) FILTER (WHERE statut = 'EN_LISTE_ATTENTE') AS en_liste_attente " +
+        'FROM rendez_vous WHERE session_id = $1',
       [sessionId],
     );
-    return result.rows;
+    return result.rows[0];
   },
 
-  async countActiveBySession(sessionId) {
+  async existsBySessionAndBebe(sessionId, bebeId) {
     const result = await query(
-      `SELECT COUNT(*)::int AS count
-       FROM rendez_vous
-       WHERE session_id = $1 AND statut <> 'ANNULE'`,
+      "SELECT id FROM rendez_vous WHERE session_id = $1 AND bebe_id = $2 AND statut != 'ANNULE'",
+      [sessionId, bebeId],
+    );
+    return result.rows.length > 0;
+  },
+
+  async getNextQueueNumber(sessionId) {
+    const result = await query(
+      'SELECT COALESCE(MAX(numero_attente), 0) + 1 AS next_number FROM rendez_vous WHERE session_id = $1',
       [sessionId],
     );
-    return result.rows[0].count;
+    return result.rows[0].next_number;
+  },
+
+  async assignQueueNumber(id, numero) {
+    const result = await query(
+      'UPDATE rendez_vous SET numero_attente = $1 WHERE id = $2 RETURNING *',
+      [numero, id],
+    );
+    return result.rows[0];
   },
 };
 

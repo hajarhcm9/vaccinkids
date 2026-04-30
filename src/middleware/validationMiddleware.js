@@ -130,6 +130,17 @@ const schemas = {
     currentPassword: { type: 'string', required: true },
     newPassword: { type: 'string', required: true, minLength: 6, maxLength: 50 },
   },
+  createRendezVous: {
+    session_id: { type: 'integer', required: true },
+    bebe_id: { type: 'integer', required: true },
+  },
+  updateRendezVous: {
+    statut: {
+      type: 'string',
+      required: true,
+      enum: ['EN_ATTENTE', 'CONFIRME', 'PRESENT', 'ABSENT', 'ANNULE', 'EN_LISTE_ATTENTE'],
+    },
+  },
 };
 
 module.exports = { validate, schemas };
