@@ -56,6 +56,7 @@ const limiter = rateLimit({
   legacyHeaders: false,
 });
 app.use('/api/', limiter);
+app.use('/api/', require('./middleware/auditMiddleware'));
 
 // ============================================
 // 6. HEALTH CHECK ROUTE
@@ -74,11 +75,12 @@ app.get('/health', (req, res) => {
 // ============================================
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/sessions', require('./routes/sessionRoutes'));
-app.use('/api/vaccins', require('./routes/vaccinRoutes'));
+app.use('/api/vaccins', require('./routes/vaccinRoutesFull'));
 
 app.use('/api/rendez-vous', require('./routes/rendezVousRoutes'));
 app.use('/api/vaccinations', require('./routes/vaccinationRoutes'));
 app.use('/api/flacons', require('./routes/flaconRoutes'));
+app.use('/api/stock', require('./routes/stockRoutes'));
 app.use('/api/carnet', require('./routes/carnetRoutes'));
 // app.use('/api/stats', require('./routes/statsRoutes'));
 // app.use('/api/admin', require('./routes/adminRoutes'));

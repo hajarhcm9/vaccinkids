@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const CarnetController = require('../controllers/carnetController');
+const CarnetEnhancedController = require('../controllers/carnetControllerEnhanced');
 const { authenticate } = require('../middleware/authMiddleware');
 const { authorize } = require('../middleware/rbacMiddleware');
 const { validate, schemas } = require('../middleware/validationMiddleware');
@@ -13,6 +14,7 @@ router.post(
   CarnetController.addBebe,
 );
 router.get('/bebes', authenticate, authorize('parent'), CarnetController.getBebes);
+router.get('/bebe/:id/complete', authenticate, CarnetEnhancedController.getComplete);
 router.get('/bebe/:id', authenticate, CarnetController.getBebe);
 router.get('/bebe/:id/vaccinations', authenticate, CarnetController.getVaccineHistory);
 router.get('/bebe/:id/croissance', authenticate, CarnetController.getCroissance);

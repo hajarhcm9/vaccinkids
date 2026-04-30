@@ -30,6 +30,10 @@ const validate = (schema) => {
         errors.push({ field, message: `${field} must be a number` });
         continue;
       }
+      if (rules.type === 'boolean' && typeof value !== 'boolean') {
+        errors.push({ field, message: `${field} must be a boolean` });
+        continue;
+      }
 
       if (rules.type === 'string') {
         if (rules.minLength && value.length < rules.minLength)
@@ -137,6 +141,13 @@ const schemas = {
     age_cible_semaines: { type: 'integer', required: true, min: 0 },
     maladies_ciblees: { type: 'string', required: true },
   },
+  updateVaccin: {
+    nom: { type: 'string', minLength: 2, maxLength: 100 },
+    doses_par_flacon: { type: 'integer', min: 1 },
+    age_cible_semaines: { type: 'integer', min: 0 },
+    maladies_ciblees: { type: 'string' },
+    est_actif: { type: 'boolean' },
+  },
   changePassword: {
     currentPassword: { type: 'string', required: true },
     newPassword: { type: 'string', required: true, minLength: 6, maxLength: 50 },
@@ -166,6 +177,16 @@ const schemas = {
   },
   forceCloseFlacon: {
     justification: { type: 'string', required: true, minLength: 5, maxLength: 1000 },
+  },
+  upsertStock: {
+    centre_id: { type: 'integer', required: true },
+    vaccin_id: { type: 'integer', required: true },
+    quantite_disponible: { type: 'integer', required: true, min: 0 },
+    seuil_alerte: { type: 'integer', min: 0 },
+  },
+  updateStock: {
+    quantite_disponible: { type: 'integer', min: 0 },
+    seuil_alerte: { type: 'integer', min: 0 },
   },
 };
 
