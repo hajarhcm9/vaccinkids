@@ -1,0 +1,13 @@
+process.env.NODE_ENV = 'test';
+process.env.DB_HOST = 'localhost';
+process.env.DB_PORT = '5433';
+process.env.DB_NAME = 'vaccinikids';
+process.env.DB_USER = 'vaccinikids_user';
+process.env.DB_PASSWORD = 'vaccinikids_password';
+process.env.JWT_SECRET = 'test-secret-key';
+process.env.JWT_REFRESH_SECRET = 'test-refresh-secret';
+process.env.JWT_EXPIRES_IN = '15m';
+process.env.JWT_REFRESH_EXPIRES_IN = '7d';
+process.env.OTP_EXPIRY_MINUTES = '5';
+process.env.SMS_API_KEY = '';
+process.env.PORT = '0';
