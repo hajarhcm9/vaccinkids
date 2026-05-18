@@ -83,6 +83,8 @@ app.use('/api/carnet', require('./routes/carnetRoutes'));
 app.use('/api/notifications', require('./routes/notificationRoutes'));
 app.use('/api/statistiques', require('./routes/statistiqueRoutes'));
 app.use('/api/recherche', require('./routes/rechercheRoutes'));
+app.use('/api/emails', require('./routes/emailRoutes'));
+app.use('/api/pdf', require('./routes/pdfRoutes'));
 
 // ============================================
 // 9. 404 HANDLER
