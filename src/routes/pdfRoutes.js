@@ -1,15 +1,28 @@
-const { Router } = require('express');
-const { authenticate } = require('../middleware/authMiddleware');
-const { authorize } = require('../middleware/rbacMiddleware');
-const pdfController = require('../controllers/pdfController');
+const express = require('express');
+var router = express.Router();
+var authMiddleware = require('../middleware/authMiddleware');
+var rbacMiddleware = require('../middleware/rbacMiddleware');
+var pdfController = require('../controllers/pdfController');
 
-const router = Router();
+router.get(
+  '/vaccination-certificate/:vaccinationId',
+  authMiddleware.authenticate,
+  rbacMiddleware.authorize('admin', 'infirmier'),
+  pdfController.downloadVaccinationCertificate
+);
 
-router.use(authenticate);
-router.use(authorize('admin', 'infirmier'));
+router.get(
+  '/carnet/:bebeId',
+  authMiddleware.authenticate,
+  rbacMiddleware.authorize('admin', 'infirmier'),
+  pdfController.downloadCarnet
+);
 
-router.get('/vaccination-certificate/:vaccinationId', pdfController.downloadVaccinationCertificate);
-router.get('/carnet/:bebeId', pdfController.downloadCarnet);
-router.get('/rdv-confirmation/:rdvId', pdfController.downloadRdvConfirmation);
+router.get(
+  '/rdv-confirmation/:rdvId',
+  authMiddleware.authenticate,
+  rbacMiddleware.authorize('admin', 'infirmier'),
+  pdfController.downloadRdvConfirmation
+);
 
 module.exports = router;

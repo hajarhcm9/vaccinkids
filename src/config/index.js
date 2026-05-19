@@ -10,6 +10,7 @@ const config = {
   nodeEnv: process.env.NODE_ENV || 'development',
   isDev: process.env.NODE_ENV === 'development',
   isProd: process.env.NODE_ENV === 'production',
+  isTest: process.env.NODE_ENV === 'test',
 
   // Database
   db: {
@@ -42,6 +43,16 @@ const config = {
     apiUrl: process.env.SMS_API_URL || 'https://api.smspartner.fr/v1/send',
   },
 
+  
+  // Email
+  email: {
+    host: process.env.EMAIL_HOST || 'smtp.ethereal.email',
+    port: parseInt(process.env.EMAIL_PORT, 10) || 587,
+    secure: process.env.EMAIL_SECURE === 'true',
+    user: process.env.EMAIL_USER || '',
+    password: process.env.EMAIL_PASSWORD || '',
+    from: process.env.EMAIL_FROM || '"VacciniKids" <noreply@vaccinikids.ma>',
+  },
   // Firebase
   firebase: {
     projectId: process.env.FIREBASE_PROJECT_ID || '',

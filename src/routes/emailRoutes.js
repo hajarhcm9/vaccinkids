@@ -1,15 +1,28 @@
-const { Router } = require('express');
-const { authenticate } = require('../middleware/authMiddleware');
-const { authorize } = require('../middleware/rbacMiddleware');
-const emailController = require('../controllers/emailController');
+const express = require('express');
+var router = express.Router();
+var authMiddleware = require('../middleware/authMiddleware');
+var rbacMiddleware = require('../middleware/rbacMiddleware');
+var emailController = require('../controllers/emailController');
 
-const router = Router();
+router.post(
+  '/rdv-confirmation/:rdvId',
+  authMiddleware.authenticate,
+  rbacMiddleware.authorize('admin', 'infirmier'),
+  emailController.sendRdvConfirmation
+);
 
-router.use(authenticate);
-router.use(authorize('admin', 'infirmier'));
+router.post(
+  '/rdv-rappel/:rdvId',
+  authMiddleware.authenticate,
+  rbacMiddleware.authorize('admin', 'infirmier'),
+  emailController.sendRdvReminder
+);
 
-router.post('/rdv-confirmation/:rdvId', emailController.sendRdvConfirmation);
-router.post('/rdv-rappel/:rdvId', emailController.sendRdvReminder);
-router.post('/vaccination-certificate/:vaccinationId', emailController.sendVaccinationCertificate);
+router.post(
+  '/vaccination-certificate/:vaccinationId',
+  authMiddleware.authenticate,
+  rbacMiddleware.authorize('admin', 'infirmier'),
+  emailController.sendVaccinationCertificate
+);
 
 module.exports = router;
