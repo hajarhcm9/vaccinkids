@@ -82,6 +82,8 @@ app.use('/api/stock', require('./routes/stockRoutes'));
 app.use('/api/carnet', require('./routes/carnetRoutes'));
 app.use('/api/notifications', require('./routes/notificationRoutes'));
 app.use('/api/statistiques', require('./routes/statistiqueRoutes'));
+app.use('/api/absenteisme', require('./routes/absenteeismRoutes'));
+app.use('/api/alertes-retard', require('./routes/delayAlertRoutes'));
 app.use('/api/recherche', require('./routes/rechercheRoutes'));
 app.use('/api/emails', require('./routes/emailRoutes'));
 app.use('/api/pdf', require('./routes/pdfRoutes'));
