@@ -84,7 +84,9 @@ app.use('/api/notifications', require('./routes/notificationRoutes'));
 app.use('/api/statistiques', require('./routes/statistiqueRoutes'));
 app.use('/api/absenteisme', require('./routes/absenteeismRoutes'));
 app.use('/api/alertes-retard', require('./routes/delayAlertRoutes'));
+app.use('/api/stats', require('./routes/statsRoutes'));
 app.use('/api/recherche', require('./routes/rechercheRoutes'));
+app.use('/api/stats', require('./routes/statsRoutes'));
 app.use('/api/emails', require('./routes/emailRoutes'));
 app.use('/api/pdf', require('./routes/pdfRoutes'));
 
