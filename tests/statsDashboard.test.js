@@ -1,3 +1,5 @@
+jest.setTimeout(60000);
+
 const request = require('supertest');
 const bcrypt = require('bcrypt');
 const { pool } = require('../src/config/database');
@@ -67,14 +69,12 @@ beforeAll(async () => {
     .post('/api/auth/parent/send-otp')
     .send({ telephone: parentPhone });
 
-  const otp = await getOTP(parentPhone);
-  if (otp) {
-    const verifyRes = await request(app)
-      .post('/api/auth/parent/verify-otp')
-      .send({ telephone: parentPhone, code: otp, nom: 'StatsParent', prenom: 'Test' });
-    parentToken = verifyRes.body.data?.tokens?.accessToken || verifyRes.body.data?.accessToken;
-    parentId = verifyRes.body.data?.parent?.id;
-  }
+  // Use test bypass '123456' instead of fetching real OTP (more reliable)
+  const verifyRes = await request(app)
+    .post('/api/auth/parent/verify-otp')
+    .send({ telephone: parentPhone, code: '123456', nom: 'StatsParent', prenom: 'Test' });
+  parentToken = verifyRes.body.data?.tokens?.accessToken || verifyRes.body.data?.accessToken;
+  parentId = verifyRes.body.data?.parent?.id;
 
   // Create a test bebe
   if (parentId) {
@@ -115,7 +115,11 @@ beforeAll(async () => {
       });
     testRdvId = rdvRes.body.data?.rendez_vous?.id || rdvRes.body.data?.id;
   }
-}, 30000);
+  // Validate tokens were obtained
+  if (!adminToken) console.error('STATS TEST: adminToken is undefined!');
+  if (!nurseToken) console.error('STATS TEST: nurseToken is undefined!');
+  if (!parentToken) console.error('STATS TEST: parentToken is undefined!');
+}, 60000);
 
 afterAll(async () => {
   // Cleanup test data

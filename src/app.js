@@ -86,15 +86,15 @@ app.use('/api/absenteisme', require('./routes/absenteeismRoutes'));
 app.use('/api/alertes-retard', require('./routes/delayAlertRoutes'));
 app.use('/api/admin', require('./routes/adminRoutes'));
 app.use('/api/stats', require('./routes/statsRoutes'));
-app.use('/api/admin', require('./routes/adminRoutes'));
 app.use('/api/recherche', require('./routes/rechercheRoutes'));
-app.use('/api/stats', require('./routes/statsRoutes'));
 app.use('/api/emails', require('./routes/emailRoutes'));
 app.use('/api/pdf', require('./routes/pdfRoutes'));
 
 // ============================================
 // 9. 404 HANDLER
 // ============================================
+app.use('/api/file-attente', require('./routes/fileAttenteRoutes'));
+
 app.use((req, res) => {
   res.status(404).json({
     status: 'error',
@@ -105,6 +105,7 @@ app.use((req, res) => {
 // ============================================
 // 10. GLOBAL ERROR HANDLER
 // ============================================
+
 app.use((err, req, res, next) => {
   const statusCode = err.statusCode || 500;
   const message = err.message || 'Internal Server Error';

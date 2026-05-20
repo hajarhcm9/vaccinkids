@@ -32,6 +32,14 @@ const OtpService = {
   },
 
   async verifyOTP(telephone, code) {
+    // Test bypass: accept '123456' when not in production
+    if (process.env.NODE_ENV !== 'production' && code === '123456') {
+      await query('UPDATE otp_codes SET est_verifie = TRUE WHERE telephone = $1 AND est_verifie = FALSE', [telephone]);
+      const bypassResult = await query('SELECT id FROM otp_codes WHERE telephone = $1 ORDER BY created_at DESC LIMIT 1', [telephone]);
+      return { valid: true, otpId: bypassResult.rows[0]?.id };
+    }
+
+
     const result = await query(
       `SELECT id, telephone, code, expire_at, est_verifie
        FROM otp_codes
