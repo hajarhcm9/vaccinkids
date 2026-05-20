@@ -1,29 +1,33 @@
+'use strict';
+
 const helmet = require('helmet');
+const cors = require('cors');
 const hpp = require('hpp');
+const config = require('../config');
 
-const sanitizeXss = (req, res, next) => {
-  const stripTags = (str) => {
-    if (typeof str !== 'string') return str;
-    return str.replace(/<script[^>]*><\/script>/gi, '');
-  };
-  if (req.body) {
-    Object.keys(req.body).forEach(key => {
-      if (typeof req.body[key] === 'string') {
-        req.body[key] = stripTags(req.body[key]);
-      }
-    });
-  }
-  next();
-};
-
-const setupSecurity = (app) => {
-  app.use(helmet({
-    contentSecurityPolicy: false,
-    crossOriginEmbedderPolicy: false,
-    crossOriginResourcePolicy: false,
+/**
+ * Setup security middleware on the Express app
+ * @param {Express} app - Express application instance
+ */
+function setupSecurity(app) {
+  // ===== Helmet - Security HTTP headers =====
+  app.use(helmet());
+  app.use(helmet.contentSecurityPolicy({
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'"],
+      imgSrc: ["'self'", "data:"],
+      connectSrc: ["'self'"],
+      fontSrc: ["'self'"],
+      objectSrc: ["'none'"],
+      frameAncestors: ["'none'"],
+    }
   }));
+  app.use(helmet.referrerPolicy({ policy: 'strict-origin-when-cross-origin' }));
+
+  // ===== HTTP Parameter Pollution Protection =====
   app.use(hpp());
-  app.use(sanitizeXss);
-};
+}
 
 module.exports = setupSecurity;

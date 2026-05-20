@@ -1,4 +1,5 @@
 const bcrypt = require('bcrypt');
+const { handleFailedLogin, handleSuccessfulLogin } = require('../middleware/bruteForceProtection');
 const OtpService = require('../services/otpService');
 const SmsService = require('../services/smsService');
 const TokenService = require('../services/tokenService');
@@ -112,18 +113,19 @@ const AuthController = {
     if (!isValidCIN(cin)) return next(ApiError.badRequest('Invalid CIN format'));
 
     const personnel = await Personnel.findByCIN(cin);
-    if (!personnel) return next(ApiError.unauthorized('Invalid CIN or password'));
+    if (!personnel) { await handleFailedLogin(cin); return next(ApiError.unauthorized('Invalid CIN or password')); }
     if (!personnel.est_actif) return next(ApiError.forbidden('Your account has been deactivated.'));
 
     const isPasswordValid = await bcrypt.compare(mot_de_passe, personnel.mot_de_passe);
-    if (!isPasswordValid) return next(ApiError.unauthorized('Invalid CIN or password'));
+    if (!isPasswordValid) { await handleFailedLogin(cin); return next(ApiError.unauthorized('Invalid CIN or password')); };
 
     const tokens = await TokenService.generateAuthTokens({
       id: personnel.id,
       role: personnel.role,
     });
 
-    return success(res, 200, 'Login successful', {
+    await handleSuccessfulLogin(cin);
+      return success(res, 200, 'Login successful', {
       user: {
         id: personnel.id,
         cin: personnel.cin,
