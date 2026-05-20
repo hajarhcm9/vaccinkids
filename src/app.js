@@ -93,6 +93,7 @@ app.use('/api/pdf', require('./routes/pdfRoutes'));
 // ============================================
 // 9. 404 HANDLER
 // ============================================
+app.use('/api/exports', require('./routes/exportRoutes'));
 app.use('/api/file-attente', require('./routes/fileAttenteRoutes'));
 
 app.use((req, res) => {
