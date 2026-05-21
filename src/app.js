@@ -96,6 +96,7 @@ app.use('/api/pdf', require('./routes/pdfRoutes'));
 app.use('/api/exports', require('./routes/exportRoutes'));
 app.use('/api/file-attente', require('./routes/fileAttenteRoutes'));
 app.use('/api/sync', require('./routes/syncRoutes'));
+app.use('/api/exports', require('./routes/exportRoutes'));
 
 app.use((req, res) => {
   res.status(404).json({
