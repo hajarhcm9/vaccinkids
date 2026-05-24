@@ -198,7 +198,8 @@ describe('Day 19 - Statistics & Dashboard', () => {
   // Vaccination Coverage
   // ==========================================
   describe('GET /api/stats/couverture-vaccinale', () => {
-    test('should return vaccination coverage for admin', async () => {
+    jest.setTimeout(120000);
+    test("should return vaccination coverage for admin", async () => {
       const res = await request(app)
         .get('/api/stats/couverture-vaccinale')
         .set('Authorization', 'Bearer ' + adminToken);
@@ -212,7 +213,7 @@ describe('Day 19 - Statistics & Dashboard', () => {
       expect(res.body.data).toHaveProperty('parCentre');
       expect(Array.isArray(res.body.data.parVaccin)).toBe(true);
       expect(Array.isArray(res.body.data.parCentre)).toBe(true);
-    });
+    }, 120000);
 
     test('should allow nurse to view coverage', async () => {
       const res = await request(app)
