@@ -1,0 +1,4045 @@
+{
+  "/api/auth/parent/send-otp": {
+    "post": {
+      "tags": [
+        "Auth"
+      ],
+      "summary": "Envoyer un code OTP au parent",
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": [
+                "telephone"
+              ],
+              "properties": {
+                "telephone": {
+                  "type": "string",
+                  "example": "0661234567"
+                }
+              }
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "OTP envoye avec succes"
+        },
+        "400": {
+          "description": "Numero invalide"
+        }
+      }
+    }
+  },
+  "/api/auth/parent/verify-otp": {
+    "post": {
+      "tags": [
+        "Auth"
+      ],
+      "summary": "Verifier le code OTP et obtenir les tokens",
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": [
+                "telephone",
+                "otp"
+              ],
+              "properties": {
+                "telephone": {
+                  "type": "string",
+                  "example": "0661234567"
+                },
+                "otp": {
+                  "type": "string",
+                  "example": "123456"
+                }
+              }
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "Tokens JWT retournes"
+        },
+        "401": {
+          "description": "OTP invalide ou expire"
+        }
+      }
+    }
+  },
+  "/api/auth/personnel/login": {
+    "post": {
+      "tags": [
+        "Auth"
+      ],
+      "summary": "Connexion personnel (infirmier/admin)",
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": [
+                "cin",
+                "mot_de_passe"
+              ],
+              "properties": {
+                "cin": {
+                  "type": "string",
+                  "example": "AB123456"
+                },
+                "mot_de_passe": {
+                  "type": "string",
+                  "format": "password",
+                  "example": "password123"
+                }
+              }
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "Connexion reussie"
+        },
+        "401": {
+          "description": "Identifiants incorrects"
+        },
+        "423": {
+          "description": "Compte verrouille"
+        }
+      }
+    }
+  },
+  "/api/auth/refresh": {
+    "post": {
+      "tags": [
+        "Auth"
+      ],
+      "summary": "Renouveler le token JWT",
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": [
+                "refreshToken"
+              ],
+              "properties": {
+                "refreshToken": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "Nouveau token JWT"
+        },
+        "401": {
+          "description": "Refresh token invalide"
+        }
+      }
+    }
+  },
+  "/api/auth/parent/register": {
+    "post": {
+      "tags": [
+        "Auth"
+      ],
+      "summary": "Inscrire un parent (apres verification OTP)",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": [
+                "nom",
+                "prenom",
+                "telephone",
+                "mot_de_passe"
+              ],
+              "properties": {
+                "nom": {
+                  "type": "string",
+                  "example": "Benali"
+                },
+                "prenom": {
+                  "type": "string",
+                  "example": "Fatima"
+                },
+                "telephone": {
+                  "type": "string",
+                  "example": "0661234567"
+                },
+                "mot_de_passe": {
+                  "type": "string",
+                  "format": "password",
+                  "example": "StrongPass123!"
+                },
+                "adresse": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "responses": {
+        "201": {
+          "description": "Parent inscrit"
+        },
+        "400": {
+          "description": "Donnees invalides"
+        },
+        "401": {
+          "description": "Token temporaire requis"
+        }
+      }
+    }
+  },
+  "/api/auth/me": {
+    "get": {
+      "tags": [
+        "Auth"
+      ],
+      "summary": "Obtenir le profil courant",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Profil utilisateur"
+        },
+        "401": {
+          "description": "Non authentifie"
+        }
+      }
+    }
+  },
+  "/api/auth/logout": {
+    "post": {
+      "tags": [
+        "Auth"
+      ],
+      "summary": "Deconnexion",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Deconnexion reussie"
+        },
+        "401": {
+          "description": "Token invalide"
+        }
+      }
+    }
+  },
+  "/api/auth/logout-all": {
+    "post": {
+      "tags": [
+        "Auth"
+      ],
+      "summary": "Deconnexion de tous les appareils",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Tous les appareils deconnectes"
+        },
+        "401": {
+          "description": "Token invalide"
+        }
+      }
+    }
+  },
+  "/api/auth/change-password": {
+    "put": {
+      "tags": [
+        "Auth"
+      ],
+      "summary": "Changer le mot de passe",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": [
+                "ancien_mot_de_passe",
+                "nouveau_mot_de_passe"
+              ],
+              "properties": {
+                "ancien_mot_de_passe": {
+                  "type": "string",
+                  "format": "password"
+                },
+                "nouveau_mot_de_passe": {
+                  "type": "string",
+                  "format": "password"
+                },
+                "confirmation_mot_de_passe": {
+                  "type": "string",
+                  "format": "password"
+                }
+              }
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "Mot de passe change"
+        },
+        "400": {
+          "description": "Donnees invalides"
+        },
+        "401": {
+          "description": "Ancien mot de passe incorrect"
+        }
+      }
+    }
+  },
+  "/api/sessions": {
+    "get": {
+      "tags": [
+        "Sessions"
+      ],
+      "summary": "Liste des sessions disponibles",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "name": "date",
+          "in": "query",
+          "schema": {
+            "type": "string",
+            "format": "date"
+          }
+        },
+        {
+          "name": "vaccin_id",
+          "in": "query",
+          "schema": {
+            "type": "integer"
+          }
+        },
+        {
+          "name": "centre_id",
+          "in": "query",
+          "schema": {
+            "type": "integer"
+          }
+        },
+        {
+          "name": "statut",
+          "in": "query",
+          "schema": {
+            "type": "string",
+            "enum": [
+              "EN_FORMATION",
+              "CONFIRMEE",
+              "EN_COURS",
+              "TERMINEE",
+              "ANNULEE"
+            ]
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Liste des sessions"
+        }
+      }
+    },
+    "post": {
+      "tags": [
+        "Sessions"
+      ],
+      "summary": "Creer une session (admin)",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": [
+                "centre_id",
+                "vaccin_id",
+                "date_session",
+                "heure_debut",
+                "heure_fin",
+                "capacite"
+              ],
+              "properties": {
+                "centre_id": {
+                  "type": "integer"
+                },
+                "vaccin_id": {
+                  "type": "integer"
+                },
+                "date_session": {
+                  "type": "string",
+                  "format": "date"
+                },
+                "heure_debut": {
+                  "type": "string",
+                  "example": "08:00"
+                },
+                "heure_fin": {
+                  "type": "string",
+                  "example": "12:00"
+                },
+                "capacite": {
+                  "type": "integer",
+                  "example": 10
+                }
+              }
+            }
+          }
+        }
+      },
+      "responses": {
+        "201": {
+          "description": "Session creee"
+        },
+        "403": {
+          "description": "Admin uniquement"
+        }
+      }
+    }
+  },
+  "/api/sessions/today": {
+    "get": {
+      "tags": [
+        "Sessions"
+      ],
+      "summary": "Sessions du jour (infirmier/admin)",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Sessions du jour"
+        }
+      }
+    }
+  },
+  "/api/sessions/{id}": {
+    "get": {
+      "tags": [
+        "Sessions"
+      ],
+      "summary": "Detail d une session",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Detail session"
+        },
+        "404": {
+          "description": "Session non trouvee"
+        }
+      }
+    },
+    "patch": {
+      "tags": [
+        "Sessions"
+      ],
+      "summary": "Modifier une session (admin)",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "date_session": {
+                  "type": "string",
+                  "format": "date"
+                },
+                "heure_debut": {
+                  "type": "string"
+                },
+                "heure_fin": {
+                  "type": "string"
+                },
+                "capacite": {
+                  "type": "integer"
+                },
+                "statut": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "Session modifiee"
+        },
+        "403": {
+          "description": "Admin uniquement"
+        }
+      }
+    }
+  },
+  "/api/sessions/{id}/inscrire": {
+    "post": {
+      "tags": [
+        "Sessions"
+      ],
+      "summary": "Inscrire un parent a une session",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": [
+                "bebe_id"
+              ],
+              "properties": {
+                "bebe_id": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        }
+      },
+      "responses": {
+        "201": {
+          "description": "Inscription reussie"
+        },
+        "409": {
+          "description": "Session pleine"
+        }
+      }
+    }
+  },
+  "/api/sessions/{id}/confirm": {
+    "patch": {
+      "tags": [
+        "Sessions"
+      ],
+      "summary": "Confirmer une session (admin)",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Session confirmee"
+        }
+      }
+    }
+  },
+  "/api/sessions/{id}/start": {
+    "patch": {
+      "tags": [
+        "Sessions"
+      ],
+      "summary": "Demarrer une session",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Session demarree"
+        }
+      }
+    }
+  },
+  "/api/sessions/{id}/end": {
+    "patch": {
+      "tags": [
+        "Sessions"
+      ],
+      "summary": "Terminer une session",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Session terminee"
+        }
+      }
+    }
+  },
+  "/api/sessions/{id}/cancel": {
+    "patch": {
+      "tags": [
+        "Sessions"
+      ],
+      "summary": "Annuler une session (admin)",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Session annulee"
+        }
+      }
+    }
+  },
+  "/api/rendez-vous": {
+    "post": {
+      "tags": [
+        "RendezVous"
+      ],
+      "summary": "Prendre un rendez-vous (parent)",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": [
+                "session_id",
+                "bebe_id"
+              ],
+              "properties": {
+                "session_id": {
+                  "type": "integer"
+                },
+                "bebe_id": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        }
+      },
+      "responses": {
+        "201": {
+          "description": "RDV cree"
+        },
+        "409": {
+          "description": "Session pleine ou deja inscrit"
+        }
+      }
+    },
+    "get": {
+      "tags": [
+        "RendezVous"
+      ],
+      "summary": "Liste de tous les rendez-vous",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "name": "statut",
+          "in": "query",
+          "schema": {
+            "type": "string",
+            "enum": [
+              "confirmee",
+              "en_attente",
+              "annulee",
+              "present",
+              "absent"
+            ]
+          }
+        },
+        {
+          "name": "date",
+          "in": "query",
+          "schema": {
+            "type": "string",
+            "format": "date"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Liste des RDV"
+        }
+      }
+    }
+  },
+  "/api/rendez-vous/me": {
+    "get": {
+      "tags": [
+        "RendezVous"
+      ],
+      "summary": "Mes rendez-vous (parent)",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Liste de mes RDV"
+        }
+      }
+    }
+  },
+  "/api/rendez-vous/session/{sessionId}/availability": {
+    "get": {
+      "tags": [
+        "RendezVous"
+      ],
+      "summary": "Disponibilite d une session",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "name": "sessionId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Places disponibles"
+        }
+      }
+    }
+  },
+  "/api/rendez-vous/session/{sessionId}": {
+    "get": {
+      "tags": [
+        "RendezVous"
+      ],
+      "summary": "RDV d une session (infirmier/admin)",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "name": "sessionId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Liste des RDV de la session"
+        }
+      }
+    }
+  },
+  "/api/rendez-vous/{id}": {
+    "get": {
+      "tags": [
+        "RendezVous"
+      ],
+      "summary": "Detail d un rendez-vous",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Detail du RDV"
+        },
+        "404": {
+          "description": "RDV non trouve"
+        }
+      }
+    },
+    "patch": {
+      "tags": [
+        "RendezVous"
+      ],
+      "summary": "Modifier le statut d un RDV",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": [
+                "statut"
+              ],
+              "properties": {
+                "statut": {
+                  "type": "string",
+                  "enum": [
+                    "confirmee",
+                    "annulee",
+                    "present",
+                    "absent"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "RDV mis a jour"
+        }
+      }
+    },
+    "delete": {
+      "tags": [
+        "RendezVous"
+      ],
+      "summary": "Supprimer un RDV (admin)",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "RDV supprime"
+        }
+      }
+    }
+  },
+  "/api/vaccins": {
+    "get": {
+      "tags": [
+        "Vaccins"
+      ],
+      "summary": "Liste des vaccins (authentifie)",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Liste des vaccins"
+        }
+      }
+    },
+    "post": {
+      "tags": [
+        "Vaccins"
+      ],
+      "summary": "Ajouter un vaccin (admin)",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": [
+                "nom",
+                "doses_par_flacon",
+                "age_cible_mois"
+              ],
+              "properties": {
+                "nom": {
+                  "type": "string",
+                  "example": "BCG"
+                },
+                "doses_par_flacon": {
+                  "type": "integer",
+                  "example": 20
+                },
+                "age_cible_mois": {
+                  "type": "integer",
+                  "example": 0
+                },
+                "maladies_ciblees": {
+                  "type": "string",
+                  "example": "Tuberculose"
+                },
+                "fabricant": {
+                  "type": "string"
+                },
+                "interval_jours": {
+                  "type": "integer",
+                  "example": 0
+                }
+              }
+            }
+          }
+        }
+      },
+      "responses": {
+        "201": {
+          "description": "Vaccin cree"
+        }
+      }
+    }
+  },
+  "/api/vaccins/{id}": {
+    "get": {
+      "tags": [
+        "Vaccins"
+      ],
+      "summary": "Detail d un vaccin",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Detail vaccin"
+        },
+        "404": {
+          "description": "Non trouve"
+        }
+      }
+    },
+    "patch": {
+      "tags": [
+        "Vaccins"
+      ],
+      "summary": "Modifier un vaccin (admin)",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "nom": {
+                  "type": "string"
+                },
+                "doses_par_flacon": {
+                  "type": "integer"
+                },
+                "age_cible_mois": {
+                  "type": "integer"
+                },
+                "maladies_ciblees": {
+                  "type": "string"
+                },
+                "fabricant": {
+                  "type": "string"
+                },
+                "interval_jours": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "Vaccin modifie"
+        }
+      }
+    },
+    "delete": {
+      "tags": [
+        "Vaccins"
+      ],
+      "summary": "Desactiver un vaccin (admin)",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Vaccin desactive"
+        }
+      }
+    }
+  },
+  "/api/vaccinations/{rdvId}": {
+    "post": {
+      "tags": [
+        "Vaccinations"
+      ],
+      "summary": "Enregistrer une vaccination (infirmier/admin)",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "name": "rdvId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": [
+                "numero_lot",
+                "fabricant"
+              ],
+              "properties": {
+                "numero_lot": {
+                  "type": "string"
+                },
+                "fabricant": {
+                  "type": "string"
+                },
+                "reactions_observees": {
+                  "type": "string"
+                },
+                "poids_bebe": {
+                  "type": "number"
+                },
+                "taille_bebe": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        }
+      },
+      "responses": {
+        "201": {
+          "description": "Vaccination enregistree"
+        },
+        "400": {
+          "description": "Donnees invalides"
+        }
+      }
+    }
+  },
+  "/api/vaccinations/session/{sessionId}": {
+    "get": {
+      "tags": [
+        "Vaccinations"
+      ],
+      "summary": "Vaccinations d une session",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "name": "sessionId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Liste des vaccinations"
+        }
+      }
+    }
+  },
+  "/api/vaccinations/bebe/{bebeId}": {
+    "get": {
+      "tags": [
+        "Vaccinations"
+      ],
+      "summary": "Historique vaccinal d un bebe",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "name": "bebeId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Historique vaccinal"
+        }
+      }
+    }
+  },
+  "/api/carnet/bebe": {
+    "post": {
+      "tags": [
+        "Carnet"
+      ],
+      "summary": "Ajouter un bebe (parent)",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": [
+                "nom",
+                "prenom",
+                "date_naissance",
+                "sexe"
+              ],
+              "properties": {
+                "nom": {
+                  "type": "string",
+                  "example": "Benali"
+                },
+                "prenom": {
+                  "type": "string",
+                  "example": "Youssef"
+                },
+                "date_naissance": {
+                  "type": "string",
+                  "format": "date"
+                },
+                "sexe": {
+                  "type": "string",
+                  "enum": [
+                    "M",
+                    "F"
+                  ]
+                },
+                "groupe_sanguin": {
+                  "type": "string",
+                  "example": "A+"
+                },
+                "allergies": {
+                  "type": "string"
+                },
+                "maladies_chroniques": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "responses": {
+        "201": {
+          "description": "Bebe ajoute"
+        }
+      }
+    }
+  },
+  "/api/carnet/bebes": {
+    "get": {
+      "tags": [
+        "Carnet"
+      ],
+      "summary": "Liste de mes bebes (parent)",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Liste des bebes"
+        }
+      }
+    }
+  },
+  "/api/carnet/bebe/{id}": {
+    "get": {
+      "tags": [
+        "Carnet"
+      ],
+      "summary": "Detail d un bebe",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Detail bebe"
+        }
+      }
+    }
+  },
+  "/api/carnet/bebe/{id}/complete": {
+    "get": {
+      "tags": [
+        "Carnet"
+      ],
+      "summary": "Fiche complete du bebe (vaccinations+croissance)",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Fiche complete"
+        }
+      }
+    }
+  },
+  "/api/carnet/bebe/{id}/vaccinations": {
+    "get": {
+      "tags": [
+        "Carnet"
+      ],
+      "summary": "Historique vaccinal du bebe",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Historique vaccinal"
+        }
+      }
+    }
+  },
+  "/api/carnet/bebe/{id}/croissance": {
+    "get": {
+      "tags": [
+        "Carnet"
+      ],
+      "summary": "Courbe de croissance du bebe",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Donnees de croissance"
+        }
+      }
+    },
+    "post": {
+      "tags": [
+        "Carnet"
+      ],
+      "summary": "Ajouter une mesure de croissance",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": [
+                "poids",
+                "taille",
+                "age_mois"
+              ],
+              "properties": {
+                "poids": {
+                  "type": "number",
+                  "example": 8.5
+                },
+                "taille": {
+                  "type": "number",
+                  "example": 70
+                },
+                "age_mois": {
+                  "type": "integer",
+                  "example": 12
+                },
+                "perimetre_cranien": {
+                  "type": "number"
+                },
+                "observations": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "responses": {
+        "201": {
+          "description": "Mesure ajoutee"
+        }
+      }
+    }
+  },
+  "/api/carnet/bebe/{id}/retards": {
+    "get": {
+      "tags": [
+        "Carnet"
+      ],
+      "summary": "Vaccins en retard pour un bebe",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Liste des vaccins en retard"
+        }
+      }
+    }
+  },
+  "/api/carnet/qr/{code}": {
+    "get": {
+      "tags": [
+        "Carnet"
+      ],
+      "summary": "Recherche par code QR (infirmier/admin)",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "name": "code",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Bebe trouve via QR"
+        }
+      }
+    }
+  },
+  "/api/flacons": {
+    "post": {
+      "tags": [
+        "Flacons"
+      ],
+      "summary": "Ouvrir un flacon (infirmier/admin)",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": [
+                "session_id",
+                "vaccin_id",
+                "numero_lot"
+              ],
+              "properties": {
+                "session_id": {
+                  "type": "integer"
+                },
+                "vaccin_id": {
+                  "type": "integer"
+                },
+                "numero_lot": {
+                  "type": "string"
+                },
+                "fabricant": {
+                  "type": "string"
+                },
+                "date_expiration": {
+                  "type": "string",
+                  "format": "date"
+                }
+              }
+            }
+          }
+        }
+      },
+      "responses": {
+        "201": {
+          "description": "Flacon ouvert"
+        }
+      }
+    }
+  },
+  "/api/flacons/session/{sessionId}": {
+    "get": {
+      "tags": [
+        "Flacons"
+      ],
+      "summary": "Flacons d une session",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "name": "sessionId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Liste des flacons"
+        }
+      }
+    }
+  },
+  "/api/flacons/session/{sessionId}/active": {
+    "get": {
+      "tags": [
+        "Flacons"
+      ],
+      "summary": "Flacons actifs d une session",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "name": "sessionId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Flacons actifs"
+        }
+      }
+    }
+  },
+  "/api/flacons/{id}/waste": {
+    "patch": {
+      "tags": [
+        "Flacons"
+      ],
+      "summary": "Enregistrer du gaspillage",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": [
+                "doses_gaspillees"
+              ],
+              "properties": {
+                "doses_gaspillees": {
+                  "type": "integer"
+                },
+                "raison": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "Gaspillage enregistre"
+        }
+      }
+    }
+  },
+  "/api/flacons/{id}/force-close": {
+    "patch": {
+      "tags": [
+        "Flacons"
+      ],
+      "summary": "Fermeture forcee d un flacon (admin)",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": [
+                "justification"
+              ],
+              "properties": {
+                "justification": {
+                  "type": "string",
+                  "example": "Fin de session - doses restantes non utilisables"
+                }
+              }
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "Flacon ferme"
+        }
+      }
+    }
+  },
+  "/api/stock/centre/{centreId}": {
+    "get": {
+      "tags": [
+        "Stock"
+      ],
+      "summary": "Stock par centre",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "name": "centreId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Liste du stock"
+        }
+      }
+    }
+  },
+  "/api/stock/centre/{centreId}/low": {
+    "get": {
+      "tags": [
+        "Stock"
+      ],
+      "summary": "Alertes stock bas par centre",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "name": "centreId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Vaccins en stock bas"
+        }
+      }
+    }
+  },
+  "/api/stock": {
+    "post": {
+      "tags": [
+        "Stock"
+      ],
+      "summary": "Ajouter du stock (admin)",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": [
+                "centre_id",
+                "vaccin_id",
+                "quantite"
+              ],
+              "properties": {
+                "centre_id": {
+                  "type": "integer"
+                },
+                "vaccin_id": {
+                  "type": "integer"
+                },
+                "quantite": {
+                  "type": "integer"
+                },
+                "date_expiration": {
+                  "type": "string",
+                  "format": "date"
+                },
+                "numero_lot": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "responses": {
+        "201": {
+          "description": "Stock ajoute"
+        }
+      }
+    }
+  },
+  "/api/stock/{id}": {
+    "patch": {
+      "tags": [
+        "Stock"
+      ],
+      "summary": "Modifier une entree de stock (admin)",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "quantite": {
+                  "type": "integer"
+                },
+                "date_expiration": {
+                  "type": "string",
+                  "format": "date"
+                }
+              }
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "Stock modifie"
+        }
+      }
+    }
+  },
+  "/api/notifications/me": {
+    "get": {
+      "tags": [
+        "Notifications"
+      ],
+      "summary": "Mes notifications (parent, pagine)",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "name": "page",
+          "in": "query",
+          "schema": {
+            "type": "integer",
+            "default": 1
+          }
+        },
+        {
+          "name": "limit",
+          "in": "query",
+          "schema": {
+            "type": "integer",
+            "default": 20
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Liste des notifications"
+        }
+      }
+    }
+  },
+  "/api/notifications/unread-count": {
+    "get": {
+      "tags": [
+        "Notifications"
+      ],
+      "summary": "Nombre de notifications non lues",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Count"
+        }
+      }
+    }
+  },
+  "/api/notifications/{id}/read": {
+    "patch": {
+      "tags": [
+        "Notifications"
+      ],
+      "summary": "Marquer une notification comme lue",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Notification lue"
+        }
+      }
+    }
+  },
+  "/api/notifications/read-all": {
+    "patch": {
+      "tags": [
+        "Notifications"
+      ],
+      "summary": "Marquer toutes les notifications comme lues",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Toutes lues"
+        }
+      }
+    }
+  },
+  "/api/notifications/send": {
+    "post": {
+      "tags": [
+        "Notifications"
+      ],
+      "summary": "Envoyer une notification manuelle (admin/infirmier)",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": [
+                "parent_id",
+                "titre",
+                "message"
+              ],
+              "properties": {
+                "parent_id": {
+                  "type": "integer"
+                },
+                "titre": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                },
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "info",
+                    "rappel",
+                    "alerte",
+                    "confirmation"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "responses": {
+        "201": {
+          "description": "Notification envoyee"
+        }
+      }
+    }
+  },
+  "/api/file-attente": {
+    "post": {
+      "tags": [
+        "FileAttente"
+      ],
+      "summary": "Rejoindre la file d attente (parent)",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": [
+                "session_id"
+              ],
+              "properties": {
+                "session_id": {
+                  "type": "integer"
+                },
+                "bebe_id": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        }
+      },
+      "responses": {
+        "201": {
+          "description": "Dans la file"
+        }
+      }
+    }
+  },
+  "/api/file-attente/centre/{centreId}": {
+    "get": {
+      "tags": [
+        "FileAttente"
+      ],
+      "summary": "File d attente par centre",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "name": "centreId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "File du centre"
+        }
+      }
+    }
+  },
+  "/api/file-attente/session/{sessionId}": {
+    "get": {
+      "tags": [
+        "FileAttente"
+      ],
+      "summary": "File d attente par session",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "name": "sessionId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "File de la session"
+        }
+      }
+    }
+  },
+  "/api/file-attente/call-next": {
+    "patch": {
+      "tags": [
+        "FileAttente"
+      ],
+      "summary": "Appeler le suivant (infirmier)",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": [
+                "session_id"
+              ],
+              "properties": {
+                "session_id": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "Prochain appele"
+        }
+      }
+    }
+  },
+  "/api/file-attente/{id}/complete": {
+    "patch": {
+      "tags": [
+        "FileAttente"
+      ],
+      "summary": "Marquer un service comme termine",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Service termine"
+        }
+      }
+    }
+  },
+  "/api/file-attente/{id}/abandon": {
+    "patch": {
+      "tags": [
+        "FileAttente"
+      ],
+      "summary": "Abandonner la file",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Sorti de la file"
+        }
+      }
+    }
+  },
+  "/api/file-attente/me/position": {
+    "get": {
+      "tags": [
+        "FileAttente"
+      ],
+      "summary": "Ma position dans la file (parent)",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Position actuelle"
+        }
+      }
+    }
+  },
+  "/api/file-attente/me/wait-time": {
+    "get": {
+      "tags": [
+        "FileAttente"
+      ],
+      "summary": "Temps d attente estime (parent)",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Temps estime"
+        }
+      }
+    }
+  },
+  "/api/file-attente/stats": {
+    "get": {
+      "tags": [
+        "FileAttente"
+      ],
+      "summary": "Statistiques file d attente (admin)",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Stats file"
+        }
+      }
+    }
+  },
+  "/api/absenteisme/process-session/{sessionId}": {
+    "post": {
+      "tags": [
+        "Absenteeisme"
+      ],
+      "summary": "Traiter les absents d une session",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "name": "sessionId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Absents traites"
+        }
+      }
+    }
+  },
+  "/api/absenteisme/habitual-absents": {
+    "get": {
+      "tags": [
+        "Absenteeisme"
+      ],
+      "summary": "Liste des absents habituels",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Absents habituels"
+        }
+      }
+    }
+  },
+  "/api/absenteisme/parent/{parentId}/history": {
+    "get": {
+      "tags": [
+        "Absenteeisme"
+      ],
+      "summary": "Historique absences d un parent",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "name": "parentId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Historique"
+        }
+      }
+    }
+  },
+  "/api/absenteisme/session/{sessionId}/absents": {
+    "get": {
+      "tags": [
+        "Absenteeisme"
+      ],
+      "summary": "Absents d une session",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "name": "sessionId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Liste des absents"
+        }
+      }
+    }
+  },
+  "/api/absenteisme/stats": {
+    "get": {
+      "tags": [
+        "Absenteeisme"
+      ],
+      "summary": "Statistiques absenteeisme (admin)",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Stats"
+        }
+      }
+    }
+  },
+  "/api/alertes-retard/centre/{centreId}": {
+    "get": {
+      "tags": [
+        "AlertesRetard"
+      ],
+      "summary": "Vaccins en retard par centre",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "name": "centreId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Retards du centre"
+        }
+      }
+    }
+  },
+  "/api/alertes-retard/bebe/{bebeId}": {
+    "get": {
+      "tags": [
+        "AlertesRetard"
+      ],
+      "summary": "Vaccins en retard pour un bebe",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "name": "bebeId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Retards du bebe"
+        }
+      }
+    }
+  },
+  "/api/alertes-retard/dashboard": {
+    "get": {
+      "tags": [
+        "AlertesRetard"
+      ],
+      "summary": "Tableau de bord des retards (admin)",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Dashboard retards"
+        }
+      }
+    }
+  },
+  "/api/alertes-retard/send-alerts": {
+    "post": {
+      "tags": [
+        "AlertesRetard"
+      ],
+      "summary": "Envoyer les alertes retard (admin)",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Alertes envoyees"
+        }
+      }
+    }
+  },
+  "/api/admin/personnel": {
+    "post": {
+      "tags": [
+        "Admin"
+      ],
+      "summary": "Creer un personnel (admin)",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": [
+                "nom",
+                "prenom",
+                "cin",
+                "mot_de_passe",
+                "role",
+                "centre_id"
+              ],
+              "properties": {
+                "nom": {
+                  "type": "string"
+                },
+                "prenom": {
+                  "type": "string"
+                },
+                "cin": {
+                  "type": "string"
+                },
+                "mot_de_passe": {
+                  "type": "string",
+                  "format": "password"
+                },
+                "role": {
+                  "type": "string",
+                  "enum": [
+                    "infirmier",
+                    "admin"
+                  ]
+                },
+                "centre_id": {
+                  "type": "integer"
+                },
+                "telephone": {
+                  "type": "string"
+                },
+                "email": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "responses": {
+        "201": {
+          "description": "Personnel cree"
+        }
+      }
+    },
+    "get": {
+      "tags": [
+        "Admin"
+      ],
+      "summary": "Liste du personnel",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "name": "role",
+          "in": "query",
+          "schema": {
+            "type": "string",
+            "enum": [
+              "infirmier",
+              "admin"
+            ]
+          }
+        },
+        {
+          "name": "centre_id",
+          "in": "query",
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Liste"
+        }
+      }
+    }
+  },
+  "/api/admin/personnel/{id}": {
+    "get": {
+      "tags": [
+        "Admin"
+      ],
+      "summary": "Detail personnel",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Detail"
+        }
+      }
+    },
+    "patch": {
+      "tags": [
+        "Admin"
+      ],
+      "summary": "Modifier personnel",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "nom": {
+                  "type": "string"
+                },
+                "prenom": {
+                  "type": "string"
+                },
+                "telephone": {
+                  "type": "string"
+                },
+                "email": {
+                  "type": "string"
+                },
+                "role": {
+                  "type": "string"
+                },
+                "centre_id": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "Modifie"
+        }
+      }
+    }
+  },
+  "/api/admin/personnel/{id}/deactivate": {
+    "patch": {
+      "tags": [
+        "Admin"
+      ],
+      "summary": "Desactiver personnel",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Desactive"
+        }
+      }
+    }
+  },
+  "/api/admin/personnel/{id}/reactivate": {
+    "patch": {
+      "tags": [
+        "Admin"
+      ],
+      "summary": "Reactiver personnel",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Reactive"
+        }
+      }
+    }
+  },
+  "/api/admin/centres": {
+    "post": {
+      "tags": [
+        "Admin"
+      ],
+      "summary": "Creer un centre",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": [
+                "nom",
+                "adresse",
+                "telephone"
+              ],
+              "properties": {
+                "nom": {
+                  "type": "string"
+                },
+                "adresse": {
+                  "type": "string"
+                },
+                "telephone": {
+                  "type": "string"
+                },
+                "email": {
+                  "type": "string"
+                },
+                "latitude": {
+                  "type": "number"
+                },
+                "longitude": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        }
+      },
+      "responses": {
+        "201": {
+          "description": "Centre cree"
+        }
+      }
+    },
+    "get": {
+      "tags": [
+        "Admin"
+      ],
+      "summary": "Liste des centres",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Liste"
+        }
+      }
+    }
+  },
+  "/api/admin/centres/{id}": {
+    "get": {
+      "tags": [
+        "Admin"
+      ],
+      "summary": "Detail centre",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Detail"
+        }
+      }
+    },
+    "patch": {
+      "tags": [
+        "Admin"
+      ],
+      "summary": "Modifier centre",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "nom": {
+                  "type": "string"
+                },
+                "adresse": {
+                  "type": "string"
+                },
+                "telephone": {
+                  "type": "string"
+                },
+                "email": {
+                  "type": "string"
+                },
+                "latitude": {
+                  "type": "number"
+                },
+                "longitude": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "Modifie"
+        }
+      }
+    }
+  },
+  "/api/admin/centres/{id}/deactivate": {
+    "patch": {
+      "tags": [
+        "Admin"
+      ],
+      "summary": "Desactiver centre",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Desactive"
+        }
+      }
+    }
+  },
+  "/api/admin/audit-log": {
+    "get": {
+      "tags": [
+        "Admin"
+      ],
+      "summary": "Journal d audit",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "name": "action",
+          "in": "query",
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "user_id",
+          "in": "query",
+          "schema": {
+            "type": "integer"
+          }
+        },
+        {
+          "name": "page",
+          "in": "query",
+          "schema": {
+            "type": "integer",
+            "default": 1
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Journal"
+        }
+      }
+    }
+  },
+  "/api/admin/audit-log/stats": {
+    "get": {
+      "tags": [
+        "Admin"
+      ],
+      "summary": "Statistiques audit",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Stats audit"
+        }
+      }
+    }
+  },
+  "/api/admin/system-info": {
+    "get": {
+      "tags": [
+        "Admin"
+      ],
+      "summary": "Informations systeme",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Info systeme"
+        }
+      }
+    }
+  },
+  "/api/stats/dashboard": {
+    "get": {
+      "tags": [
+        "Stats"
+      ],
+      "summary": "Dashboard KPIs",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "KPIs"
+        }
+      }
+    }
+  },
+  "/api/stats/couverture-vaccinale": {
+    "get": {
+      "tags": [
+        "Stats"
+      ],
+      "summary": "Couverture vaccinale",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "name": "centre_id",
+          "in": "query",
+          "schema": {
+            "type": "integer"
+          }
+        },
+        {
+          "name": "periode",
+          "in": "query",
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Couverture"
+        }
+      }
+    }
+  },
+  "/api/stats/sessions": {
+    "get": {
+      "tags": [
+        "Stats"
+      ],
+      "summary": "Statistiques sessions",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Stats sessions"
+        }
+      }
+    }
+  },
+  "/api/stats/rendez-vous": {
+    "get": {
+      "tags": [
+        "Stats"
+      ],
+      "summary": "Statistiques RDV",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Stats RDV"
+        }
+      }
+    }
+  },
+  "/api/stats/stock": {
+    "get": {
+      "tags": [
+        "Stats"
+      ],
+      "summary": "Statistiques stock",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Stats stock"
+        }
+      }
+    }
+  },
+  "/api/stats/absenteisme": {
+    "get": {
+      "tags": [
+        "Stats"
+      ],
+      "summary": "Statistiques absenteeisme (admin)",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Stats abs"
+        }
+      }
+    }
+  },
+  "/api/stats/croissance": {
+    "get": {
+      "tags": [
+        "Stats"
+      ],
+      "summary": "Statistiques croissance",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Stats croissance"
+        }
+      }
+    }
+  },
+  "/api/stats/comparaison-centres": {
+    "get": {
+      "tags": [
+        "Stats"
+      ],
+      "summary": "Comparaison centres (admin)",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Comparaison"
+        }
+      }
+    }
+  },
+  "/api/stats/export": {
+    "get": {
+      "tags": [
+        "Stats"
+      ],
+      "summary": "Exporter les donnees (admin)",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "name": "format",
+          "in": "query",
+          "schema": {
+            "type": "string",
+            "enum": [
+              "json",
+              "csv"
+            ]
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Donnees exportees"
+        }
+      }
+    }
+  },
+  "/api/statistiques/dashboard": {
+    "get": {
+      "tags": [
+        "Stats"
+      ],
+      "summary": "Dashboard statistiques (v1)",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Dashboard"
+        }
+      }
+    }
+  },
+  "/api/statistiques/vaccinations-mensuelles": {
+    "get": {
+      "tags": [
+        "Stats"
+      ],
+      "summary": "Vaccinations mensuelles",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Mensuelles"
+        }
+      }
+    }
+  },
+  "/api/statistiques/rdv-par-statut": {
+    "get": {
+      "tags": [
+        "Stats"
+      ],
+      "summary": "RDV par statut",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Par statut"
+        }
+      }
+    }
+  },
+  "/api/statistiques/stock-alertes": {
+    "get": {
+      "tags": [
+        "Stats"
+      ],
+      "summary": "Alertes stock",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Alertes"
+        }
+      }
+    }
+  },
+  "/api/statistiques/top-vaccins": {
+    "get": {
+      "tags": [
+        "Stats"
+      ],
+      "summary": "Top vaccins",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Top"
+        }
+      }
+    }
+  },
+  "/api/recherche/global": {
+    "get": {
+      "tags": [
+        "Recherche"
+      ],
+      "summary": "Recherche globale",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "name": "q",
+          "in": "query",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "type",
+          "in": "query",
+          "schema": {
+            "type": "string",
+            "enum": [
+              "parent",
+              "bebe",
+              "rdv",
+              "vaccination"
+            ]
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Resultats"
+        }
+      }
+    }
+  },
+  "/api/recherche/rendez-vous": {
+    "get": {
+      "tags": [
+        "Recherche"
+      ],
+      "summary": "Rechercher RDV",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "name": "q",
+          "in": "query",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Resultats RDV"
+        }
+      }
+    }
+  },
+  "/api/recherche/vaccinations": {
+    "get": {
+      "tags": [
+        "Recherche"
+      ],
+      "summary": "Rechercher vaccinations",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "name": "q",
+          "in": "query",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Resultats"
+        }
+      }
+    }
+  },
+  "/api/recherche/sessions": {
+    "get": {
+      "tags": [
+        "Recherche"
+      ],
+      "summary": "Rechercher sessions",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "name": "q",
+          "in": "query",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Resultats"
+        }
+      }
+    }
+  },
+  "/api/emails/rdv-confirmation/{rdvId}": {
+    "post": {
+      "tags": [
+        "Emails"
+      ],
+      "summary": "Envoyer confirmation RDV",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "name": "rdvId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Email envoye"
+        }
+      }
+    }
+  },
+  "/api/emails/rdv-rappel/{rdvId}": {
+    "post": {
+      "tags": [
+        "Emails"
+      ],
+      "summary": "Envoyer rappel RDV",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "name": "rdvId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Rappel envoye"
+        }
+      }
+    }
+  },
+  "/api/emails/vaccination-certificate/{vaccinationId}": {
+    "post": {
+      "tags": [
+        "Emails"
+      ],
+      "summary": "Envoyer certificat vaccination",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "name": "vaccinationId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Certificat envoye"
+        }
+      }
+    }
+  },
+  "/api/pdf/vaccination-certificate/{vaccinationId}": {
+    "get": {
+      "tags": [
+        "PDF"
+      ],
+      "summary": "Telecharger certificat vaccination PDF",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "name": "vaccinationId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Fichier PDF"
+        }
+      }
+    }
+  },
+  "/api/pdf/carnet/{bebeId}": {
+    "get": {
+      "tags": [
+        "PDF"
+      ],
+      "summary": "Telecharger carnet de sante PDF",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "name": "bebeId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Fichier PDF"
+        }
+      }
+    }
+  },
+  "/api/pdf/rdv-confirmation/{rdvId}": {
+    "get": {
+      "tags": [
+        "PDF"
+      ],
+      "summary": "Telecharger confirmation RDV PDF",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "name": "rdvId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Fichier PDF"
+        }
+      }
+    }
+  },
+  "/api/exports/pdf": {
+    "get": {
+      "tags": [
+        "Exports"
+      ],
+      "summary": "Export PDF general",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Fichier PDF"
+        }
+      }
+    }
+  },
+  "/api/exports/excel": {
+    "get": {
+      "tags": [
+        "Exports"
+      ],
+      "summary": "Export Excel general",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Fichier Excel"
+        }
+      }
+    }
+  },
+  "/api/exports/vaccinations/pdf": {
+    "get": {
+      "tags": [
+        "Exports"
+      ],
+      "summary": "Export vaccinations PDF",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "name": "date_debut",
+          "in": "query",
+          "schema": {
+            "type": "string",
+            "format": "date"
+          }
+        },
+        {
+          "name": "date_fin",
+          "in": "query",
+          "schema": {
+            "type": "string",
+            "format": "date"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "PDF"
+        }
+      }
+    }
+  },
+  "/api/exports/vaccinations/excel": {
+    "get": {
+      "tags": [
+        "Exports"
+      ],
+      "summary": "Export vaccinations Excel",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "name": "date_debut",
+          "in": "query",
+          "schema": {
+            "type": "string",
+            "format": "date"
+          }
+        },
+        {
+          "name": "date_fin",
+          "in": "query",
+          "schema": {
+            "type": "string",
+            "format": "date"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Excel"
+        }
+      }
+    }
+  },
+  "/api/exports/sessions/pdf": {
+    "get": {
+      "tags": [
+        "Exports"
+      ],
+      "summary": "Export sessions PDF",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "PDF"
+        }
+      }
+    }
+  },
+  "/api/exports/sessions/excel": {
+    "get": {
+      "tags": [
+        "Exports"
+      ],
+      "summary": "Export sessions Excel",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Excel"
+        }
+      }
+    }
+  },
+  "/api/exports/absenteisme/pdf": {
+    "get": {
+      "tags": [
+        "Exports"
+      ],
+      "summary": "Export absenteeisme PDF",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "PDF"
+        }
+      }
+    }
+  },
+  "/api/exports/absenteisme/excel": {
+    "get": {
+      "tags": [
+        "Exports"
+      ],
+      "summary": "Export absenteeisme Excel",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Excel"
+        }
+      }
+    }
+  },
+  "/api/exports/stock/excel": {
+    "get": {
+      "tags": [
+        "Exports"
+      ],
+      "summary": "Export stock Excel",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Excel"
+        }
+      }
+    }
+  },
+  "/api/sync/pull": {
+    "get": {
+      "tags": [
+        "Sync"
+      ],
+      "summary": "Recuperer donnees (offline sync)",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "name": "since",
+          "in": "query",
+          "schema": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        {
+          "name": "models",
+          "in": "query",
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Donnees a synchroniser"
+        }
+      }
+    }
+  },
+  "/api/sync/push": {
+    "post": {
+      "tags": [
+        "Sync"
+      ],
+      "summary": "Envoyer donnees (offline sync)",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": [
+                "changes"
+              ],
+              "properties": {
+                "changes": {
+                  "type": "array",
+                  "items": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "Changes appliques"
+        }
+      }
+    }
+  },
+  "/api/sync/status": {
+    "get": {
+      "tags": [
+        "Sync"
+      ],
+      "summary": "Statut de synchronisation",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Statut"
+        }
+      }
+    }
+  },
+  "/api/sync/queue": {
+    "get": {
+      "tags": [
+        "Sync"
+      ],
+      "summary": "File d attente de sync",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Queue"
+        }
+      }
+    },
+    "post": {
+      "tags": [
+        "Sync"
+      ],
+      "summary": "Ajouter a la file de sync",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": [
+                "model",
+                "action",
+                "data"
+              ],
+              "properties": {
+                "model": {
+                  "type": "string"
+                },
+                "action": {
+                  "type": "string",
+                  "enum": [
+                    "create",
+                    "update",
+                    "delete"
+                  ]
+                },
+                "data": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      },
+      "responses": {
+        "201": {
+          "description": "Ajoute"
+        }
+      }
+    }
+  },
+  "/api/sync/resolve/{id}": {
+    "post": {
+      "tags": [
+        "Sync"
+      ],
+      "summary": "Resoudre un conflit de sync",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": [
+                "resolution"
+              ],
+              "properties": {
+                "resolution": {
+                  "type": "string",
+                  "enum": [
+                    "keep_local",
+                    "keep_server",
+                    "merge"
+                  ]
+                },
+                "merged_data": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "Conflit resolu"
+        }
+      }
+    }
+  }
+}
