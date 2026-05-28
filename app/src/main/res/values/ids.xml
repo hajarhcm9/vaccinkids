@@ -2,5 +2,5 @@
 <resources>
     <item name="etPassword" type="id" />
     <item name="etTaille" type="id" />
-    <item name="chipGroupVaccinsJour" type="id">chiqGroupVaccinsJours</item>
+    <item name="chipGroupVaccinsJour" type="id" />
 </resources>

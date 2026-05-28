@@ -10,6 +10,7 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        maven("https://jitpack.io") // <--- LIGNE AJOUTÉE POUR MPAndroidChart
     }
 }
 rootProject.name = "vaccinkid"

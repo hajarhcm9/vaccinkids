@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/cardInfirmier"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="3dp"
+    app:cardBackgroundColor="#FFFFFF"
+    android:layout_marginBottom="8dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <TextView
+            android:id="@+id/tvNomInfirmier"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Dr. Nom"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="#222222"/>
+
+        <TextView
+            android:id="@+id/tvRoleInfirmier"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Infirmier"
+            android:textSize="14sp"
+            android:textColor="#F5A623"/>
+
+        <TextView
+            android:id="@+id/tvCentreInfirmier"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Centre Oujda"
+            android:textSize="12sp"
+            android:textColor="#666666"/>
+
+        <TextView
+            android:id="@+id/tvEmailInfirmier"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="email@test.com"
+            android:textSize="12sp"
+            android:autoLink="email"
+            android:textColor="#666666"/>
+
+        <TextView
+            android:id="@+id/tvStatutInfirmier"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Actif"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="#4CAF50"
+            android:layout_marginTop="4dp"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="8dp"
+            android:gravity="end">
+
+            <Button
+                android:id="@+id/btnModifierInfirmier"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:text="Modifier"
+                android:backgroundTint="#F5A623"
+                android:layout_marginEnd="8dp"/>
+
+            <Button
+                android:id="@+id/btnToggleInfirmier"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:text="Désactiver"
+                android:backgroundTint="#FF8A80"/>
+        </LinearLayout>
+
+    </LinearLayout>
+</androidx.cardview.widget.CardView>

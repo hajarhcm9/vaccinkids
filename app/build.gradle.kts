@@ -44,7 +44,7 @@ dependencies {
     implementation("androidx.viewpager2:viewpager2:1.1.0")
     implementation("androidx.cardview:cardview:1.0.0")
     implementation("androidx.recyclerview:recyclerview:1.3.2")
-
+    implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
     // ✅ Corrigé : guillemets doubles pour Kotlin DSL
     implementation("com.journeyapps:zxing-android-embedded:4.3.0")
     implementation("com.google.zxing:core:3.5.1")

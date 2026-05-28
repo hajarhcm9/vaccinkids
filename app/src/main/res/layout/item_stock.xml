@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="3dp"
+    app:cardBackgroundColor="#FFFFFF"
+    android:layout_marginBottom="8dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <TextView
+            android:id="@+id/tvNomVaccinStock"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Pentavalent"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="#222222"/>
+
+        <TextView
+            android:id="@+id/tvQuantiteStock"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Restant : 5 flacons"
+            android:textSize="14sp"
+            android:textColor="#FF8A80"
+            android:layout_marginTop="4dp"/>
+
+        <TextView
+            android:id="@+id/tvAlerteStock"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="⚠️ Stock Bas !"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="#F44336"
+            android:visibility="visible"
+            android:layout_marginTop="4dp"/>
+
+    </LinearLayout>
+</androidx.cardview.widget.CardView>
