@@ -175,23 +175,29 @@ class StatsService {
         v.id AS vaccin_id,
         v.nom AS vaccin_nom,
         v.age_cible_semaines,
-        COUNT(DISTINCT b.id) AS total_bebes_eligibles,
-        COUNT(DISTINCT vac.rendez_vous_id) AS total_vaccines,
-        ROUND(
-          COUNT(DISTINCT vac.rendez_vous_id)::numeric
-          / NULLIF(COUNT(DISTINCT b.id), 0) * 100, 1
-        ) AS taux_couverture
+        COALESCE(eligible.cnt, 0) AS total_bebes_eligibles,
+        COALESCE(vaccinated.cnt, 0) AS total_vaccines,
+        CASE
+          WHEN COALESCE(eligible.cnt, 0) > 0
+          THEN ROUND(COALESCE(vaccinated.cnt, 0)::numeric / eligible.cnt * 100, 1)
+          ELSE 0
+        END AS taux_couverture
       FROM vaccin v
-      CROSS JOIN bebe b
-      LEFT JOIN vaccination vac ON vac.rendez_vous_id IN (
-        SELECT rdv.id FROM rendez_vous rdv
+      LEFT JOIN LATERAL (
+        SELECT COUNT(DISTINCT b.id) AS cnt
+        FROM bebe b
+        WHERE (b.date_naissance + (v.age_cible_semaines * INTERVAL '1 week')) <= CURRENT_DATE
+        ${centreId ? 'AND EXISTS (SELECT 1 FROM rendez_vous rdv2 JOIN session s2 ON s2.id = rdv2.session_id WHERE rdv2.bebe_id = b.id AND s2.centre_id = ' + parseInt(centreId) + ')' : ''}
+      ) eligible ON TRUE
+      LEFT JOIN LATERAL (
+        SELECT COUNT(DISTINCT vac.id) AS cnt
+        FROM vaccination vac
+        JOIN rendez_vous rdv ON rdv.id = vac.rendez_vous_id
         JOIN session s ON s.id = rdv.session_id
-        WHERE rdv.bebe_id = b.id AND s.vaccin_id = v.id
-      )
+        WHERE s.vaccin_id = v.id
+        ${centreId ? 'AND s.centre_id = ' + parseInt(centreId) : ''}
+      ) vaccinated ON TRUE
       WHERE v.est_actif = TRUE
-        AND (b.date_naissance + (v.age_cible_semaines * INTERVAL '1 week')) <= CURRENT_DATE
-      ${centreId ? 'AND EXISTS (SELECT 1 FROM rendez_vous rdv2 JOIN session s2 ON s2.id = rdv2.session_id WHERE rdv2.bebe_id = b.id AND s2.centre_id = ' + parseInt(centreId) + ')' : ''}
-      GROUP BY v.id, v.nom, v.age_cible_semaines
       ORDER BY v.age_cible_semaines ASC
     `);
 
@@ -415,12 +421,12 @@ class StatsService {
         ROUND(
           SUM(f.doses_gaspillees)::numeric
           / NULLIF(SUM(f.doses_utilisees + f.doses_gaspillees), 0) * 100, 1
-        ) AS taux_gaspgillage
+        ) AS taux_gaspillage
       FROM flacon f
       JOIN vaccin v ON v.id = f.vaccin_id
       ${centreId ? 'JOIN session s ON s.id = f.session_id AND s.centre_id = ' + parseInt(centreId) : ''}
       GROUP BY v.id, v.nom
-      ORDER BY taux_gaspgillage DESC
+      ORDER BY taux_gaspillage DESC
     `);
 
     return {
