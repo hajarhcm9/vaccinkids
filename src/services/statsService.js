@@ -742,9 +742,9 @@ class StatsService {
           FROM stock st
           JOIN centre c ON c.id = st.centre_id
           JOIN vaccin v ON v.id = st.vaccin_id
-          ${centreId ? 'WHERE st.centre_id = ' + parseInt(centreId) : ''}
+          ${centreId ? 'WHERE st.centre_id = $1' : ''}
           ORDER BY st.quantite_disponible ASC
-        `);
+        `, params);
         return { type, data: stockRes.rows, count: stockRes.rows.length };
 
       default:
