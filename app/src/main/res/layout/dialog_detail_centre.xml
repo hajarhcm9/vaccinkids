@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_dialog_rose"
+    android:padding="24dp">
+
+    <!-- Icône -->
+    <FrameLayout
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="12dp"
+        android:background="@drawable/bg_circle_white_alpha">
+        <ImageView
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:layout_gravity="center"
+            android:src="@android:drawable/ic_dialog_map"
+            android:tint="#FFFFFF" />
+    </FrameLayout>
+
+    <!-- Nom centre -->
+    <TextView
+        android:id="@+id/tvDetailNom"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="#FFFFFF"
+        android:textSize="17sp"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Infos -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_info_box_white_alpha"
+        android:padding="14dp"
+        android:orientation="vertical"
+        android:layout_marginBottom="12dp">
+
+        <TextView
+            android:id="@+id/tvDetailAdresse"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#FFFFFF"
+            android:textSize="13sp"
+            android:layout_marginBottom="6dp" />
+
+        <TextView
+            android:id="@+id/tvDetailTel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#FFFFFF"
+            android:textSize="13sp"
+            android:layout_marginBottom="6dp" />
+
+        <TextView
+            android:id="@+id/tvDetailCoords"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#E0FFFFFF"
+            android:textSize="12sp" />
+    </LinearLayout>
+
+    <!-- Jours vaccination -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="📅 Jours de vaccination"
+        android:textColor="#FFFFFF"
+        android:textSize="13sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="6dp" />
+
+    <TextView
+        android:id="@+id/tvDetailJours"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="#FFFFFF"
+        android:textSize="13sp"
+        android:lineSpacingMultiplier="1.6"
+        android:background="@drawable/bg_info_box_white_alpha"
+        android:padding="12dp"
+        android:layout_marginBottom="20dp" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#4DFFFFFF"
+        android:layout_marginBottom="16dp" />
+
+    <Button
+        android:id="@+id/btnFermerDetail"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:text="Fermer"
+        android:textColor="#FF8A80"
+        android:background="@drawable/bg_btn_white_round" />
+
+</LinearLayout>

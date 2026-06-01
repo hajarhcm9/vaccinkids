@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">vaccinkid</string>
+    <string name="appui_long_sur_un_centre_pour_activer_d_sactiver">💡 Appui long sur un centre pour activer / désactiver</string>
+    <string name="centres_actifs_1_10">Centres actifs : 1 / 10</string>
+</resources>
