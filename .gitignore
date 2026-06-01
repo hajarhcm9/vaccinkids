@@ -47,3 +47,10 @@ local.properties
 /captures
 .externalNativeBuild
 .cxx
+
+# React Native
+.expo/
+.buckconfig
+.watchmanconfig
+bundle.js
+bundle.js.map
