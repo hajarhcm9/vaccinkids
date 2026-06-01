@@ -133,15 +133,18 @@ class StatsService {
     const delayedRes = await pool.query(`
       SELECT COUNT(*) AS total
       FROM bebe b
-      CROSS JOIN vaccin v
-      WHERE v.est_actif = TRUE
-        AND NOT EXISTS (
-          SELECT 1 FROM vaccination vac
-          JOIN rendez_vous rdv ON rdv.id = vac.rendez_vous_id
-          JOIN session s ON s.id = rdv.session_id
-          WHERE rdv.bebe_id = b.id AND s.vaccin_id = v.id
-        )
-        AND CURRENT_DATE > (b.date_naissance + (v.age_cible_semaines * INTERVAL '1 week') + INTERVAL '7 days')
+      JOIN LATERAL (
+        SELECT 1
+        FROM vaccin v
+        WHERE v.est_actif = TRUE
+          AND NOT EXISTS (
+            SELECT 1 FROM vaccination vac
+            JOIN rendez_vous rdv ON rdv.id = vac.rendez_vous_id
+            JOIN session s ON s.id = rdv.session_id
+            WHERE rdv.bebe_id = b.id AND s.vaccin_id = v.id
+          )
+          AND CURRENT_DATE > (b.date_naissance + (v.age_cible_semaines * INTERVAL '1 week') + INTERVAL '7 days')
+      ) v ON TRUE
     `);
     const retardsVaccinaux = parseInt(delayedRes.rows[0]?.total) || 0;
 
