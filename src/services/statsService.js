@@ -537,6 +537,7 @@ class StatsService {
    * @returns {Object} Growth statistics
    */
   async getCroissanceStats(centreId) {
+    const params = centreId ? [parseInt(centreId)] : [];
     // Total growth measurements
     const totalRes = await pool.query('SELECT COUNT(*) AS total FROM croissance');
 
@@ -564,10 +565,10 @@ class StatsService {
              b.prenom AS bebe_prenom, b.nom AS bebe_nom
       FROM croissance cr
       JOIN bebe b ON b.id = cr.bebe_id
-      ${centreId ? 'WHERE EXISTS (SELECT 1 FROM rendez_vous rdv JOIN session s ON s.id = rdv.session_id WHERE rdv.bebe_id = b.id AND s.centre_id = ' + parseInt(centreId) + ')' : ''}
+      ${centreId ? 'WHERE EXISTS (SELECT 1 FROM rendez_vous rdv JOIN session s ON s.id = rdv.session_id WHERE rdv.bebe_id = b.id AND s.centre_id = $1)' : ''}
       ORDER BY cr.date_mesure DESC
       LIMIT 20
-    `);
+    `, params);
 
     return {
       totalMesures: parseInt(totalRes.rows[0]?.total) || 0,
