@@ -169,6 +169,7 @@ class StatsService {
    * @returns {Object} Coverage data per vaccine and per centre
    */
   async getCouvertureVaccinale(centreId) {
+    const params = centreId ? [parseInt(centreId)] : [];
     // Coverage per vaccine
     const vaccineRes = await pool.query(`
       SELECT
@@ -187,7 +188,7 @@ class StatsService {
         SELECT COUNT(DISTINCT b.id) AS cnt
         FROM bebe b
         WHERE (b.date_naissance + (v.age_cible_semaines * INTERVAL '1 week')) <= CURRENT_DATE
-        ${centreId ? 'AND EXISTS (SELECT 1 FROM rendez_vous rdv2 JOIN session s2 ON s2.id = rdv2.session_id WHERE rdv2.bebe_id = b.id AND s2.centre_id = ' + parseInt(centreId) + ')' : ''}
+        ${centreId ? 'AND EXISTS (SELECT 1 FROM rendez_vous rdv2 JOIN session s2 ON s2.id = rdv2.session_id WHERE rdv2.bebe_id = b.id AND s2.centre_id = $1)' : ''}
       ) eligible ON TRUE
       LEFT JOIN LATERAL (
         SELECT COUNT(DISTINCT vac.id) AS cnt
@@ -195,11 +196,11 @@ class StatsService {
         JOIN rendez_vous rdv ON rdv.id = vac.rendez_vous_id
         JOIN session s ON s.id = rdv.session_id
         WHERE s.vaccin_id = v.id
-        ${centreId ? 'AND s.centre_id = ' + parseInt(centreId) : ''}
+        ${centreId ? 'AND s.centre_id = $1' : ''}
       ) vaccinated ON TRUE
       WHERE v.est_actif = TRUE
       ORDER BY v.age_cible_semaines ASC
-    `);
+    `, params);
 
     // Coverage per centre
     const centreRes = await pool.query(`
@@ -424,10 +425,10 @@ class StatsService {
         ) AS taux_gaspillage
       FROM flacon f
       JOIN vaccin v ON v.id = f.vaccin_id
-      ${centreId ? 'JOIN session s ON s.id = f.session_id AND s.centre_id = ' + parseInt(centreId) : ''}
+      ${centreId ? 'JOIN session s ON s.id = f.session_id AND s.centre_id = $1' : ''}
       GROUP BY v.id, v.nom
       ORDER BY taux_gaspillage DESC
-    `);
+    `, params);
 
     return {
       alerteStockBas: parseInt(lowStockRes.rows[0]?.total) || 0,
@@ -495,10 +496,10 @@ class StatsService {
       JOIN session s ON s.id = rdv.session_id
       JOIN centre c ON c.id = s.centre_id
       WHERE rdv.statut IN ('PRESENT', 'ABSENT')
-      ${centreId ? 'AND s.centre_id = ' + parseInt(centreId) : ''}
+      ${centreId ? 'AND s.centre_id = $1' : ''}
       GROUP BY c.id, c.nom
       ORDER BY taux_absenteisme DESC
-    `);
+    `, params);
 
     // Top absent parents
     const topAbsentsRes = await pool.query(`
