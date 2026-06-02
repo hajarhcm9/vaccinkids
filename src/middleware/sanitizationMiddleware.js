@@ -32,20 +32,6 @@ const sanitizeInput = (req, res, next) => {
   next();
 };
 
-const preventNoSQLInj_ection = (req, res, next) => {
-  const check = (obj) => {
-    if (!obj || typeof obj !== 'object') return false;
-    for (const key of Object.keys(obj)) {
-      if (key.startsWith('$')) return true;
-      if (typeof obj[key] === 'object' && check(obj[key])) return true;
-    }
-    return false;
-  };
-  if (check(req.body) || check(req.query)) {
-    return res.status(400).json({ error: 'NoSQL injection detected' });
-  }
-  next();
-};
 
 const preventNoSQLInjection = (req, res, next) => {
   const check = (obj) => {
