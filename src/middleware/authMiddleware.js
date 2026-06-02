@@ -30,7 +30,9 @@ const authenticate = async (req, res, next) => {
     if (!user) {
       throw ApiError.unauthorized('User not found or deactivated.');
     }
-
+    if (user.est_actif === false) {
+      throw ApiError.forbidden('Your account has been deactivated.');
+    }
     req.user = {
       id: decoded.userId,
       role: decoded.role,
@@ -58,7 +60,7 @@ const optionalAuth = async (req, res, next) => {
         user = await Personnel.findById(decoded.userId);
       }
 
-      if (user) {
+      if (user && user.est_actif !== false) {
         req.user = {
           id: decoded.userId,
           role: decoded.role,
