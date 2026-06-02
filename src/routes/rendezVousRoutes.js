@@ -29,20 +29,21 @@ router.get(
 );
 
 // All appointments (filtered)
-router.get('/', authenticate, RendezVousController.getAll);
+router.get('/', authenticate, authorize('infirmier', 'admin'), RendezVousController.getAll);
 
 // Single appointment
-router.get('/:id', authenticate, RendezVousController.getOne);
+router.get('/:id', authenticate, authorize('parent', 'infirmier', 'admin'), RendezVousController.getOne);
 
 // Update status
 router.patch(
   '/:id',
   authenticate,
+  authorize('parent', 'infirmier', 'admin'),
   validate(schemas.updateRendezVous),
   RendezVousController.updateStatus,
 );
 
-// Delete (admin only)
+// Delete (admin only)// Delete (admin only)
 router.delete('/:id', authenticate, authorize('admin'), RendezVousController.remove);
 
 module.exports = router;
