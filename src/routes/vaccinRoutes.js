@@ -5,8 +5,8 @@ const { authenticate } = require('../middleware/authMiddleware');
 const { authorize } = require('../middleware/rbacMiddleware');
 const { validate, schemas } = require('../middleware/validationMiddleware');
 
-router.get('/', VaccinController.getAll);
-router.get('/:id', VaccinController.getOne);
+router.get('/', authenticate, VaccinController.getAll);
+router.get('/:id', authenticate, VaccinController.getOne);
 router.post(
   '/',
   authenticate,
