@@ -174,14 +174,21 @@ class ScanQrFragment : Fragment() {
             .setMessage(message)
             .setPositiveButton("Enregistrer vaccination") { _, _ ->
                 val fragment = EnregistrementVaccinationFragment.newInstance(fullName, bebe.id.toString())
-                (activity as? MainInfirmierActivity)?.naviguerVers(fragment)
-                    ?: parentFragmentManager.beginTransaction()
-                        .replace(R.id.fragmentContainer, fragment)
-                        .addToBackStack(null)
-                        .commit()
+                navigateTo(fragment)
+            }
+            .setNeutralButton("Courbes") { _, _ ->
+                navigateTo(GrowthChartFragment.newInstance(bebe.id, fullName))
             }
             .setNegativeButton("Rescanner", null)
             .show()
+    }
+
+    private fun navigateTo(fragment: Fragment) {
+        (activity as? MainInfirmierActivity)?.naviguerVers(fragment)
+            ?: parentFragmentManager.beginTransaction()
+                .replace(R.id.fragmentContainer, fragment)
+                .addToBackStack(null)
+                .commit()
     }
 
     private fun setLoading(isLoading: Boolean) {

@@ -154,6 +154,15 @@ data class QrCarnetDto(
     val lastVaccinations: List<VaccinationHistoryDto> = emptyList()
 )
 
+data class CroissanceDto(
+    val id: Int? = null,
+    @SerializedName("bebe_id") val bebeId: Int? = null,
+    @SerializedName("date_mesure") val dateMesure: String? = null,
+    val poids: Double? = null,
+    val taille: Double? = null,
+    @SerializedName("age_semaines") val ageSemaines: Int? = null
+)
+
 data class QueueEntryDto(
     val id: Int,
     @SerializedName("numero_attente") val numeroAttente: Int? = null,

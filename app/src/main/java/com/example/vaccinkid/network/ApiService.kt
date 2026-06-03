@@ -61,6 +61,9 @@ interface ApiService {
     @GET("carnet/qr/{code}")
     suspend fun getBebeByQr(@Path("code") code: String): ApiResponse<QrCarnetDto>
 
+    @GET("carnet/bebe/{id}/croissance")
+    suspend fun getCroissance(@Path("id") bebeId: Int): ApiResponse<List<CroissanceDto>>
+
     @GET("file-attente/centre/{centreId}")
     suspend fun getCentreQueue(@Path("centreId") centreId: Int): ApiResponse<QueueListDto>
 
