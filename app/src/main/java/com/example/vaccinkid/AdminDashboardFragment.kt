@@ -1,5 +1,6 @@
 package com.example.vaccinkid
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -23,6 +24,9 @@ class AdminDashboardFragment : Fragment() {
         }
         view.findViewById<CardView>(R.id.cardJoursDedies).setOnClickListener {
             (activity as? AdminActivity)?.naviguerVers(ConfigJoursDediesFragment())
+        }
+        view.findViewById<CardView>(R.id.cardExports).setOnClickListener {
+            startActivity(Intent(requireContext(), ExportsAdminActivity::class.java))
         }
 
         return view
