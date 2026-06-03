@@ -1,7 +1,47 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:3000/api';
-const BABIES_KEY = 'mock_babies';
+const BABIES_KEY = 'cached_babies';
+
+async function parseApiResponse(response) {
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok || data.status === 'error') {
+    throw new Error(data.message || 'Erreur serveur');
+  }
+  return data;
+}
+
+function toApiBaby(babyData) {
+  return {
+    prenom: babyData.firstName,
+    nom: babyData.lastName,
+    date_naissance: babyData.birthDate,
+    sexe: babyData.gender === 'female' ? 'F' : 'M',
+  };
+}
+
+function fromApiBaby(baby) {
+  return {
+    id: baby.id,
+    firstName: baby.prenom,
+    lastName: baby.nom,
+    birthDate: baby.date_naissance,
+    gender: baby.sexe === 'F' ? 'female' : 'male',
+    qrCode: baby.qr_code,
+    createdAt: baby.created_at,
+    raw: baby,
+  };
+}
+
+async function getAuthToken() {
+  const token = await AsyncStorage.getItem('authToken');
+  if (!token) throw new Error('Session expirée. Reconnectez-vous.');
+  return token;
+}
+
+async function cacheBabies(babies) {
+  await AsyncStorage.setItem(BABIES_KEY, JSON.stringify(babies));
+}
 
 export const babyService = {
   /**
@@ -11,35 +51,21 @@ export const babyService = {
    */
   addBaby: async (babyData) => {
     try {
-      // TODO: Remplacer par appel API réel
-      // const token = await AsyncStorage.getItem('authToken');
-      // const response = await fetch(`${API_BASE_URL}/babies`, {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //     'Authorization': `Bearer ${token}`,
-      //   },
-      //   body: JSON.stringify(babyData),
-      // });
-      // return await response.json();
-
-      // MOCK
-      await new Promise((r) => setTimeout(r, 900));
-
+      const token = await getAuthToken();
+      const response = await fetch(`${API_BASE_URL}/carnet/bebe`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(toApiBaby(babyData)),
+      });
+      const data = await parseApiResponse(response);
+      const baby = fromApiBaby(data.data);
       const stored = await AsyncStorage.getItem(BABIES_KEY);
       const babies = stored ? JSON.parse(stored) : [];
-
-      const newBaby = {
-        id: `baby_${Date.now()}`,
-        ...babyData,
-        createdAt: new Date().toISOString(),
-      };
-
-      babies.push(newBaby);
-      await AsyncStorage.setItem(BABIES_KEY, JSON.stringify(babies));
-
-      console.log('[DEV] Bébé ajouté:', newBaby);
-      return { success: true, baby: newBaby };
+      await cacheBabies([baby, ...babies.filter((item) => item.id !== baby.id)]);
+      return { success: true, baby };
     } catch (error) {
       console.error('addBaby error:', error);
       throw new Error("Impossible d'ajouter le bébé. Réessayez.");
@@ -52,21 +78,18 @@ export const babyService = {
    */
   getBabies: async () => {
     try {
-      // TODO: Remplacer par appel API réel
-      // const token = await AsyncStorage.getItem('authToken');
-      // const response = await fetch(`${API_BASE_URL}/babies`, {
-      //   headers: { 'Authorization': `Bearer ${token}` },
-      // });
-      // const data = await response.json();
-      // return data.babies;
-
-      // MOCK
-      await new Promise((r) => setTimeout(r, 500));
-      const stored = await AsyncStorage.getItem(BABIES_KEY);
-      return stored ? JSON.parse(stored) : [];
+      const token = await getAuthToken();
+      const response = await fetch(`${API_BASE_URL}/carnet/bebes`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await parseApiResponse(response);
+      const babies = (data.data || []).map(fromApiBaby);
+      await cacheBabies(babies);
+      return babies;
     } catch (error) {
       console.error('getBabies error:', error);
-      return [];
+      const stored = await AsyncStorage.getItem(BABIES_KEY);
+      return stored ? JSON.parse(stored) : [];
     }
   },
 };
