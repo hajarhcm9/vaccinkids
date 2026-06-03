@@ -56,7 +56,7 @@ const translations = {
   },
 };
 
-const ProfileScreen = () => {
+const ProfileScreen = ({ onLanguageChange }) => {
   const [language, setLanguage] = useState('fr');
   const { signOut } = useContext(AuthContext);
   const isRTL = language === 'ar';
@@ -71,6 +71,7 @@ const ProfileScreen = () => {
 
   const handleLanguageChange = async (code) => {
     setLanguage(code);
+    onLanguageChange?.(code);
     await preferencesService.setLanguage(code).catch(() => {});
   };
 

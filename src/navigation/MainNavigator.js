@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Platform } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -10,10 +10,28 @@ import AppointmentsScreen from '../screens/main/AppointmentsScreen';
 import HealthBookScreen from '../screens/main/HealthBookScreen';
 import ProfileScreen from '../screens/main/ProfileScreen';
 
+import { preferencesService } from '../services/preferencesService';
 import { colors, typography, spacing, borderRadius } from '../theme';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
+
+const translations = {
+  fr: {
+    home: 'Accueil',
+    sessions: 'Sessions',
+    appointments: 'Rendez-vous',
+    healthBook: 'Carnet',
+    profile: 'Profil',
+  },
+  ar: {
+    home: 'الرئيسية',
+    sessions: 'الحصص',
+    appointments: 'المواعيد',
+    healthBook: 'الدفتر',
+    profile: 'الملف',
+  },
+};
 
 const TabIcon = ({ emoji, focused, badge }) => (
   <View style={tabStyles.iconWrapper}>
@@ -43,6 +61,16 @@ const HomeStack = () => (
 );
 
 const MainNavigator = () => {
+  const [language, setLanguage] = useState('fr');
+  const t = translations[language] || translations.fr;
+
+  useEffect(() => {
+    preferencesService
+      .getLanguage()
+      .then(setLanguage)
+      .catch(() => {});
+  }, []);
+
   return (
     <Tab.Navigator
       screenOptions={{
@@ -59,7 +87,7 @@ const MainNavigator = () => {
         name="Home"
         component={HomeStack}
         options={{
-          tabBarLabel: 'Accueil',
+          tabBarLabel: t.home,
           tabBarIcon: ({ focused }) => <TabIcon emoji="🏠" focused={focused} />,
         }}
       />
@@ -67,7 +95,7 @@ const MainNavigator = () => {
         name="Sessions"
         component={SessionsStack}
         options={{
-          tabBarLabel: 'Sessions',
+          tabBarLabel: t.sessions,
           tabBarIcon: ({ focused }) => <TabIcon emoji="💉" focused={focused} />,
         }}
       />
@@ -75,7 +103,7 @@ const MainNavigator = () => {
         name="Appointments"
         component={AppointmentsScreen}
         options={{
-          tabBarLabel: 'Rendez-vous',
+          tabBarLabel: t.appointments,
           tabBarIcon: ({ focused }) => <TabIcon emoji="📅" focused={focused} badge={2} />,
         }}
       />
@@ -83,18 +111,19 @@ const MainNavigator = () => {
         name="HealthBook"
         component={HealthBookScreen}
         options={{
-          tabBarLabel: 'Carnet',
+          tabBarLabel: t.healthBook,
           tabBarIcon: ({ focused }) => <TabIcon emoji="📋" focused={focused} />,
         }}
       />
       <Tab.Screen
         name="Profile"
-        component={ProfileScreen}
         options={{
-          tabBarLabel: 'Profil',
+          tabBarLabel: t.profile,
           tabBarIcon: ({ focused }) => <TabIcon emoji="👤" focused={focused} />,
         }}
-      />
+      >
+        {() => <ProfileScreen onLanguageChange={setLanguage} />}
+      </Tab.Screen>
     </Tab.Navigator>
   );
 };
@@ -124,7 +153,8 @@ const tabStyles = StyleSheet.create({
     justifyContent: 'center',
   },
   iconBox: {
-    width: 36, height: 36,
+    width: 36,
+    height: 36,
     borderRadius: borderRadius.sm,
     justifyContent: 'center',
     alignItems: 'center',
@@ -132,15 +162,20 @@ const tabStyles = StyleSheet.create({
   iconBoxActive: { backgroundColor: colors.primaryLight },
   emoji: { fontSize: 20 },
   badge: {
-    position: 'absolute', top: -2, right: -6,
+    position: 'absolute',
+    top: -2,
+    right: -6,
     backgroundColor: colors.danger,
     borderRadius: borderRadius.full,
-    minWidth: 16, height: 16,
-    justifyContent: 'center', alignItems: 'center',
+    minWidth: 16,
+    height: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
     paddingHorizontal: 3,
   },
   badgeText: {
-    color: colors.white, fontSize: 9,
+    color: colors.white,
+    fontSize: 9,
     fontWeight: typography.fontWeights.bold,
   },
 });
