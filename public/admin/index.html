@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>VacciniKids Admin</title>
+    <link rel="stylesheet" href="/admin/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <section class="login-view" id="loginView">
+        <div class="login-panel">
+          <p class="eyebrow">VacciniKids Admin</p>
+          <h1>Console d'administration</h1>
+          <form id="loginForm" class="login-form">
+            <label for="cin">CIN</label>
+            <input id="cin" name="cin" autocomplete="username" value="ADMIN01" required />
+
+            <label for="password">Mot de passe</label>
+            <input
+              id="password"
+              name="password"
+              type="password"
+              autocomplete="current-password"
+              required
+            />
+
+            <button type="submit" id="loginButton">Se connecter</button>
+            <p class="form-error" id="loginError" role="alert"></p>
+          </form>
+        </div>
+      </section>
+
+      <section class="dashboard hidden" id="dashboardView">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">VacciniKids Admin</p>
+            <h1>Vue operationnelle</h1>
+          </div>
+          <div class="topbar-actions">
+            <span class="status-pill" id="systemStatus">API</span>
+            <button type="button" id="refreshButton">Actualiser</button>
+            <button type="button" class="ghost" id="logoutButton">Deconnexion</button>
+          </div>
+        </header>
+
+        <section class="kpi-grid" id="kpiGrid" aria-label="Indicateurs principaux"></section>
+
+        <section class="content-grid">
+          <article class="panel">
+            <div class="panel-header">
+              <h2>Centres</h2>
+              <span id="centresCount">0</span>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Nom</th>
+                    <th>Ville</th>
+                    <th>Statut</th>
+                  </tr>
+                </thead>
+                <tbody id="centresTable"></tbody>
+              </table>
+            </div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-header">
+              <h2>Personnel</h2>
+              <span id="personnelCount">0</span>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Nom</th>
+                    <th>Role</th>
+                    <th>Centre</th>
+                  </tr>
+                </thead>
+                <tbody id="personnelTable"></tbody>
+              </table>
+            </div>
+          </article>
+
+          <article class="panel wide">
+            <div class="panel-header">
+              <h2>Systeme</h2>
+              <span id="lastUpdated">Jamais</span>
+            </div>
+            <dl class="system-list" id="systemList"></dl>
+          </article>
+        </section>
+
+        <p class="form-error dashboard-error" id="dashboardError" role="alert"></p>
+      </section>
+    </main>
+
+    <script src="/admin/admin.js"></script>
+  </body>
+</html>

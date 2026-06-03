@@ -6,6 +6,7 @@ const specOpenAPI = require('./config/swagger');
 const cors = require('cors');
 const morgan = require('morgan');
 const config = require('./config');
+const path = require('path');
 
 /**
  * Express Application Setup
@@ -70,7 +71,12 @@ app.get('/health', (req, res) => {
 });
 
 // ============================================
-// 8. API ROUTES
+// 8. ADMIN WEB INTERFACE
+// ============================================
+app.use('/admin', express.static(path.join(__dirname, '..', 'public', 'admin')));
+
+// ============================================
+// 9. API ROUTES
 // ============================================
 if (process.env.NODE_ENV !== 'test') app.use('/api/auth', authLimiter);
 app.use('/api/auth', require('./routes/authRoutes'));
@@ -95,7 +101,7 @@ app.use('/api/file-attente', require('./routes/fileAttenteRoutes'));
 app.use('/api/sync', require('./routes/syncRoutes'));
 
 // ============================================
-// 9. 404 HANDLER
+// 10. 404 HANDLER
 // ============================================
 
 app.use((req, res) => {
@@ -106,7 +112,7 @@ app.use((req, res) => {
 });
 
 // ============================================
-// 10. GLOBAL ERROR HANDLER
+// 11. GLOBAL ERROR HANDLER
 // ============================================
 
 app.use((err, req, res, next) => {
