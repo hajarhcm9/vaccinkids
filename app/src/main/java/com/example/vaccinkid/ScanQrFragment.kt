@@ -15,6 +15,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import com.example.vaccinkid.data.AppDatabase
+import com.example.vaccinkid.data.CachedBebeEntity
 import com.example.vaccinkid.model.BebeDto
 import com.example.vaccinkid.network.ApiClient
 import com.journeyapps.barcodescanner.ScanContract
@@ -100,6 +102,7 @@ class ScanQrFragment : Fragment() {
                 val response = ApiClient.apiService.getBebeByQr(code)
                 val bebe = response.data?.bebe
                 if (response.status == "success" && bebe != null) {
+                    cacheBebe(bebe, code)
                     showBabyFoundDialog(bebe, code)
                 } else {
                     Toast.makeText(
@@ -109,11 +112,17 @@ class ScanQrFragment : Fragment() {
                     ).show()
                 }
             } catch (e: Exception) {
-                Toast.makeText(
-                    requireContext(),
-                    "Recherche impossible : ${e.message}",
-                    Toast.LENGTH_LONG
-                ).show()
+                val cachedBebe = findCachedBebe(code)
+                if (cachedBebe != null) {
+                    Toast.makeText(requireContext(), "Mode hors ligne : carnet en cache", Toast.LENGTH_SHORT).show()
+                    showBabyFoundDialog(cachedBebe, code)
+                } else {
+                    Toast.makeText(
+                        requireContext(),
+                        "Recherche impossible : ${e.message}",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
             } finally {
                 setLoading(false)
             }
@@ -181,6 +190,19 @@ class ScanQrFragment : Fragment() {
             }
             .setNegativeButton("Rescanner", null)
             .show()
+    }
+
+    private suspend fun cacheBebe(bebe: BebeDto, code: String) {
+        AppDatabase.getInstance(requireContext())
+            .cachedBebeDao()
+            .upsert(CachedBebeEntity.fromDto(bebe, code))
+    }
+
+    private suspend fun findCachedBebe(code: String): BebeDto? {
+        return AppDatabase.getInstance(requireContext())
+            .cachedBebeDao()
+            .findByQr(code)
+            ?.toDto()
     }
 
     private fun navigateTo(fragment: Fragment) {
