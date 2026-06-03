@@ -54,7 +54,9 @@ const pool = new Pool(poolConfig);
 
 // Connection events
 pool.on('connect', () => {
-  console.warn('✅ PostgreSQL connected successfully');
+  if (process.env.NODE_ENV !== 'test') {
+    console.warn('✅ PostgreSQL connected successfully');
+  }
 });
 
 pool.on('error', (err) => {

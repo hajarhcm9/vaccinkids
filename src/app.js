@@ -38,9 +38,9 @@ app.use(express.urlencoded({ extended: true }));
 // ============================================
 // 4. LOGGING
 // ============================================
-if (config.isDev) {
+if (process.env.NODE_ENV !== 'test' && config.isDev) {
   app.use(morgan('dev'));
-} else {
+} else if (process.env.NODE_ENV !== 'test') {
   app.use(morgan('combined'));
 }
 
