@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import {
   View,
   Text,
@@ -11,14 +11,16 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { colors, typography, spacing, borderRadius, shadows } from '../../theme';
+import { AuthContext } from '../../context/AuthContext';
 
 const LANGUAGES = [
   { code: 'fr', label: 'Français', flag: '🇫🇷' },
   { code: 'ar', label: 'العربية', flag: '🇲🇦' },
 ];
 
-const ProfileScreen = ({ navigation }) => {
+const ProfileScreen = () => {
   const [language, setLanguage] = useState('fr');
+  const { signOut } = useContext(AuthContext);
 
   const handleLogout = () => {
     Alert.alert(
@@ -31,7 +33,7 @@ const ProfileScreen = ({ navigation }) => {
           style: 'destructive',
           onPress: async () => {
             await AsyncStorage.multiRemove(['authToken', 'refreshToken', 'userPhone']);
-            navigation.replace('Login');
+            signOut();
           },
         },
       ]

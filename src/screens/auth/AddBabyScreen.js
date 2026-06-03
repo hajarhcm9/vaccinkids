@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useContext, useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -15,6 +15,7 @@ import { AppInput, AppButton, SegmentedControl } from '../../components/FormComp
 import DatePickerInput from '../../components/DatePickerInput';
 import { babyService } from '../../services/babyService';
 import { colors, typography, spacing, borderRadius, shadows } from '../../theme';
+import { AuthContext } from '../../context/AuthContext';
 
 // ─── Traductions ───────────────────────────────────────────────
 const translations = {
@@ -107,6 +108,7 @@ const TOTAL_STEPS = 3;
 
 // ─── Composant principal ───────────────────────────────────────
 const AddBabyScreen = ({ navigation, route }) => {
+  const { signIn } = useContext(AuthContext);
   const language = route?.params?.language || 'fr';
   const isRTL = language === 'ar';
   const t = translations[language];
@@ -185,7 +187,7 @@ const AddBabyScreen = ({ navigation, route }) => {
       Alert.alert(t.successTitle, t.successMsg(form.firstName), [
         {
           text: 'OK',
-          onPress: () => navigation.replace('MainTabs'),
+          onPress: signIn,
         },
       ]);
     } catch (error) {

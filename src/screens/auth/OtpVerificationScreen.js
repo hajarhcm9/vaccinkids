@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useContext } from 'react';
 import {
   View,
   Text,
@@ -15,6 +15,7 @@ import OtpInput from '../../components/OtpInput';
 import { authService } from '../../services/authService';
 import { colors, typography, spacing, borderRadius, shadows } from '../../theme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { AuthContext } from '../../context/AuthContext';
 
 const RESEND_DELAY = 60; // secondes
 
@@ -49,6 +50,7 @@ const OtpVerificationScreen = ({ navigation, route }) => {
   const { phoneNumber, displayPhone, language = 'fr' } = route.params;
   const t = translations[language];
   const isRTL = language === 'ar';
+  const { signIn } = useContext(AuthContext);
 
   const [otpCode, setOtpCode] = useState('');
   const [loading, setLoading] = useState(false);
@@ -88,12 +90,18 @@ const OtpVerificationScreen = ({ navigation, route }) => {
       await AsyncStorage.setItem('authToken', result.token);
       await AsyncStorage.setItem('refreshToken', result.refreshToken);
       await AsyncStorage.setItem('userPhone', phoneNumber);
+      const fcmToken = await AsyncStorage.getItem('fcmToken');
+      if (fcmToken) {
+        await authService.registerFcmToken(result.token, fcmToken).catch((error) => {
+          console.warn('FCM token registration failed:', error.message);
+        });
+      }
 
       // Navigation vers l'écran suivant
       if (result.user?.isNewUser) {
         navigation.replace('AddBaby'); // Nouvel utilisateur → ajout bébé
       } else {
-        navigation.replace('MainTabs'); // Utilisateur existant → accueil
+        signIn(); // Utilisateur existant → accueil
       }
     } catch (error) {
       setHasError(true);
@@ -102,7 +110,7 @@ const OtpVerificationScreen = ({ navigation, route }) => {
     } finally {
       setLoading(false);
     }
-  }, [otpCode, phoneNumber, navigation, t]);
+  }, [otpCode, phoneNumber, navigation, signIn, t]);
 
   // Auto-vérification quand les 6 chiffres sont saisis
   useEffect(() => {
