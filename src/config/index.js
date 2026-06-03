@@ -76,6 +76,7 @@ const config = {
     projectId: process.env.FIREBASE_PROJECT_ID || '',
     privateKey: process.env.FIREBASE_PRIVATE_KEY || '',
     clientEmail: process.env.FIREBASE_CLIENT_EMAIL || '',
+    tokenUri: process.env.FIREBASE_TOKEN_URI || 'https://oauth2.googleapis.com/token',
   },
 
   // CORS

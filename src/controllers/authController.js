@@ -105,6 +105,18 @@ const AuthController = {
     });
   }),
 
+  updateFcmToken: catchAsync(async (req, res, next) => {
+    if (req.user.role !== 'parent') return next(ApiError.forbidden('Only parents can register FCM tokens'));
+
+    const updated = await Parent.updateFcmToken(req.user.id, req.body.fcm_token);
+    if (!updated) return next(ApiError.notFound('Parent not found'));
+
+    return success(res, 200, 'FCM token registered successfully', {
+      parent_id: updated.id,
+      push_enabled: Boolean(updated.fcm_token),
+    });
+  }),
+
   // ---- PERSONNEL LOGIN ----
 
   personnelLogin: catchAsync(async (req, res, next) => {

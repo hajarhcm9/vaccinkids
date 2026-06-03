@@ -1,5 +1,6 @@
 const request = require('supertest');
 const app = require('../src/app');
+const { pool } = require('../src/config/database');
 
 describe('Auth Endpoints', () => {
   describe('GET /health', () => {
@@ -57,6 +58,46 @@ expect(res.status).toBe(201);
         .post('/api/auth/parent/verify-otp')
         .send({ telephone: '0677889901', code: '000000' });
       expect(res.status).toBe(401);
+    });
+  });
+
+  describe('PUT /api/auth/parent/fcm-token', () => {
+    it('should allow a parent to register an FCM token', async () => {
+      const phone = '0677889902';
+      const sendRes = await request(app)
+        .post('/api/auth/parent/send-otp')
+        .send({ telephone: phone });
+      const otpCode = sendRes.body.data.devOtp || sendRes.body.data.otpCode;
+      const verifyRes = await request(app)
+        .post('/api/auth/parent/verify-otp')
+        .send({ telephone: phone, code: otpCode });
+      const token = verifyRes.body.data.tokens.accessToken;
+      const parentId = verifyRes.body.data.user.id;
+
+      const res = await request(app)
+        .put('/api/auth/parent/fcm-token')
+        .set('Authorization', 'Bearer ' + token)
+        .send({ fcm_token: 'test-fcm-token-1234567890' });
+
+      expect(res.status).toBe(200);
+      expect(res.body.data).toMatchObject({ parent_id: parentId, push_enabled: true });
+
+      const dbRes = await pool.query('SELECT fcm_token FROM parent WHERE id = $1', [parentId]);
+      expect(dbRes.rows[0].fcm_token).toBe('test-fcm-token-1234567890');
+    });
+
+    it('should reject FCM token registration for personnel', async () => {
+      const loginRes = await request(app)
+        .post('/api/auth/personnel/login')
+        .send({ cin: 'ADMIN01', mot_de_passe: 'admin123' });
+      const token = loginRes.body.data.tokens.accessToken;
+
+      const res = await request(app)
+        .put('/api/auth/parent/fcm-token')
+        .set('Authorization', 'Bearer ' + token)
+        .send({ fcm_token: 'test-fcm-token-1234567890' });
+
+      expect(res.status).toBe(403);
     });
   });
 

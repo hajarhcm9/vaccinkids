@@ -20,6 +20,12 @@ router.post(
   validate(schemas.registerParent),
   AuthController.registerParent,
 );
+router.put(
+  '/parent/fcm-token',
+  authenticate,
+  validate(schemas.updateFcmToken),
+  AuthController.updateFcmToken,
+);
 router.get('/me', authenticate, AuthController.getMe);
 router.post('/logout', authenticate, AuthController.logout);
 router.post('/logout-all', authenticate, AuthController.logoutAll);

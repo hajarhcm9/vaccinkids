@@ -100,6 +100,30 @@ describe('Notification System (Day 11)', () => {
       expect(res.body.data.canal).toBe('sms');
     });
 
+    it('should dispatch push notification when parent has an FCM token', async () => {
+      await pool.query('UPDATE parent SET fcm_token = $1 WHERE id = $2', [
+        'test-fcm-token-1234567890',
+        parentId,
+      ]);
+
+      const res = await request(app)
+        .post('/api/notifications/send')
+        .set('Authorization', 'Bearer ' + adminToken)
+        .send({
+          destinataire_id: parentId,
+          destinataire_type: 'parent',
+          type: 'INFO',
+          canal: 'push',
+          titre: 'Push test',
+          message: 'Notification push de test.',
+        });
+
+      expect(res.status).toBe(201);
+      expect(res.body.data.type).toBe('INFO');
+      expect(res.body.data.canal).toBe('push');
+      expect(res.body.data.envoye).toBe(true);
+    });
+
     it('should deny parent from sending manual notifications', async () => {
       const res = await request(app)
         .post('/api/notifications/send')

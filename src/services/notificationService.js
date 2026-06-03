@@ -1,5 +1,6 @@
 const Notification = require("../models/Notification");
 const SmsService = require("./smsService");
+const FirebaseService = require("./firebaseService");
 const { pool } = require("../config/database");
 class NotificationService {
   async sendNotification(o) {
@@ -8,6 +9,18 @@ class NotificationService {
     try {
       if (o.canal === "sms" && o.phone) {
         const r = await SmsService.sendSMS(o.phone, o.message);
+        sent = r.success === true;
+      } else if (o.canal === "push" && o.destinataire_type === "parent") {
+        const token = await this._gft(o.destinataire_id);
+        const r = await FirebaseService.sendPush(
+          token,
+          { title: o.titre, body: o.message },
+          {
+            type: o.type,
+            reference_id: o.reference_id ? String(o.reference_id) : "",
+            reference_type: o.reference_type || "",
+          },
+        );
         sent = r.success === true;
       } else if (o.canal === "in_app") { sent = true; }
     } catch (e) { console.error("[NS] Dispatch:", e.message); }
@@ -20,6 +33,10 @@ class NotificationService {
   async _gp(id) {
     const { rows } = await pool.query("SELECT telephone FROM parent WHERE id = $1", [id]);
     return rows[0]?.telephone || null;
+  }
+  async _gft(id) {
+    const { rows } = await pool.query("SELECT fcm_token FROM parent WHERE id = $1", [id]);
+    return rows[0]?.fcm_token || null;
   }
   async _gs(id) {
     const { rows } = await pool.query("SELECT date_session, heure_debut FROM session WHERE id = $1", [id]);

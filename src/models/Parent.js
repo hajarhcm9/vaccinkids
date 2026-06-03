@@ -25,7 +25,16 @@ const Parent = {
   },
 
   async updateFcmToken(id, fcmToken) {
-    await query('UPDATE parent SET fcm_token = $1 WHERE id = $2', [fcmToken, id]);
+    const result = await query(
+      'UPDATE parent SET fcm_token = $1, updated_at = NOW() WHERE id = $2 RETURNING id, fcm_token',
+      [fcmToken, id],
+    );
+    return result.rows[0];
+  },
+
+  async getFcmToken(id) {
+    const result = await query('SELECT fcm_token FROM parent WHERE id = $1', [id]);
+    return result.rows[0]?.fcm_token || null;
   },
 
   async incrementAbsences(id) {
