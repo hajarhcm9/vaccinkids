@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>VacciniKids File d'attente</title>
+    <link rel="stylesheet" href="/waiting-room/styles.css" />
+  </head>
+  <body>
+    <main class="screen">
+      <section class="setup" id="setupView">
+        <form class="setup-panel" id="setupForm">
+          <p class="eyebrow">VacciniKids</p>
+          <h1>Affichage file d'attente</h1>
+
+          <label for="cin">CIN personnel</label>
+          <input id="cin" name="cin" autocomplete="username" value="INFIRM01" required />
+
+          <label for="password">Mot de passe</label>
+          <input
+            id="password"
+            name="password"
+            type="password"
+            autocomplete="current-password"
+            required
+          />
+
+          <label for="centreId">Centre ID</label>
+          <input id="centreId" name="centreId" inputmode="numeric" value="1" required />
+
+          <button type="submit" id="connectButton">Lancer l'affichage</button>
+          <p class="error" id="setupError" role="alert"></p>
+        </form>
+      </section>
+
+      <section class="display hidden" id="displayView">
+        <header class="display-header">
+          <div>
+            <p class="eyebrow">VacciniKids</p>
+            <h1>File d'attente</h1>
+          </div>
+          <div class="clock">
+            <span id="clockTime">--:--</span>
+            <small id="syncTime">Synchronisation...</small>
+          </div>
+        </header>
+
+        <section class="hero-call">
+          <div>
+            <span class="label">En cours</span>
+            <strong id="currentNumber">--</strong>
+          </div>
+          <p id="currentName">Aucun enfant appele</p>
+        </section>
+
+        <section class="queue-grid">
+          <article class="panel">
+            <div class="panel-header">
+              <h2>Prochains numeros</h2>
+              <span id="waitingCount">0 en attente</span>
+            </div>
+            <ol class="next-list" id="nextList"></ol>
+          </article>
+
+          <article class="panel">
+            <div class="panel-header">
+              <h2>Etat de la file</h2>
+              <button type="button" id="exitButton">Quitter</button>
+            </div>
+            <dl class="stats">
+              <div>
+                <dt>Total</dt>
+                <dd id="totalCount">0</dd>
+              </div>
+              <div>
+                <dt>En attente</dt>
+                <dd id="pendingCount">0</dd>
+              </div>
+              <div>
+                <dt>Termines</dt>
+                <dd id="doneCount">0</dd>
+              </div>
+            </dl>
+            <p class="hint">Actualisation automatique toutes les 10 secondes.</p>
+          </article>
+        </section>
+
+        <p class="error display-error" id="displayError" role="alert"></p>
+      </section>
+    </main>
+
+    <script src="/waiting-room/display.js"></script>
+  </body>
+</html>

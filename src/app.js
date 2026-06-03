@@ -74,6 +74,7 @@ app.get('/health', (req, res) => {
 // 8. ADMIN WEB INTERFACE
 // ============================================
 app.use('/admin', express.static(path.join(__dirname, '..', 'public', 'admin')));
+app.use('/waiting-room', express.static(path.join(__dirname, '..', 'public', 'waiting-room')));
 
 // ============================================
 // 9. API ROUTES
