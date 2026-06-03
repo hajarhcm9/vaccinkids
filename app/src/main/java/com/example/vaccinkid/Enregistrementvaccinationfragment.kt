@@ -69,6 +69,7 @@ class EnregistrementVaccinationFragment : Fragment() {
         etNumerLot = view.findViewById(R.id.etNumerLot)
         etFabricant = view.findViewById(R.id.etFabricant)
         etPoids = view.findViewById(R.id.etPoids)
+        etTaille = view.findViewById(R.id.etTaille)
         chipGroupReactions = view.findViewById(R.id.chipGroupReactions)
         etReactionLibre = view.findViewById(R.id.etReactionLibre)
         btnValider = view.findViewById(R.id.btnValiderVaccination)

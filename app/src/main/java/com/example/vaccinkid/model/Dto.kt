@@ -125,6 +125,35 @@ data class RendezVousDto(
 
 data class UpdateRendezVousRequest(val statut: String)
 
+data class BebeDto(
+    val id: Int,
+    @SerializedName("parent_id") val parentId: Int? = null,
+    val prenom: String? = null,
+    val nom: String? = null,
+    @SerializedName("date_naissance") val dateNaissance: String? = null,
+    val sexe: String? = null,
+    @SerializedName("photo_url") val photoUrl: String? = null,
+    @SerializedName("code_qr") val codeQr: String? = null
+)
+
+data class VaccinationHistoryDto(
+    @SerializedName("vaccination_id") val vaccinationId: Int? = null,
+    @SerializedName("date_heure") val dateHeure: String? = null,
+    val poids: Double? = null,
+    val taille: Double? = null,
+    val reactions: String? = null,
+    @SerializedName("vaccin_nom") val vaccinNom: String? = null,
+    @SerializedName("numero_lot") val numeroLot: String? = null,
+    val fabricant: String? = null,
+    @SerializedName("infirmier_nom") val infirmierNom: String? = null,
+    @SerializedName("infirmier_prenom") val infirmierPrenom: String? = null
+)
+
+data class QrCarnetDto(
+    val bebe: BebeDto? = null,
+    val lastVaccinations: List<VaccinationHistoryDto> = emptyList()
+)
+
 data class QueueEntryDto(
     val id: Int,
     @SerializedName("numero_attente") val numeroAttente: Int? = null,
