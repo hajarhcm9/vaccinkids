@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -10,10 +10,10 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  I18nManager,
 } from 'react-native';
 import PhoneInput from '../../components/PhoneInput';
 import { authService } from '../../services/authService';
+import { preferencesService } from '../../services/preferencesService';
 import { colors, typography, spacing, borderRadius, shadows } from '../../theme';
 
 const LANGUAGES = [
@@ -61,6 +61,12 @@ const LoginScreen = ({ navigation }) => {
   const isRTL = LANGUAGES.find((l) => l.code === language)?.isRTL || false;
   const t = translations[language];
 
+  useEffect(() => {
+    preferencesService.getLanguage()
+      .then(setLanguage)
+      .catch(() => {});
+  }, []);
+
   const validatePhone = () => {
     if (!phoneNumber.trim()) {
       Alert.alert('Erreur', t.phoneRequired);
@@ -93,9 +99,9 @@ const LoginScreen = ({ navigation }) => {
     }
   };
 
-  const switchLanguage = (code) => {
+  const switchLanguage = async (code) => {
     setLanguage(code);
-    // En production : I18nManager.forceRTL(isRTL) + restart app
+    await preferencesService.setLanguage(code).catch(() => {});
   };
 
   return (

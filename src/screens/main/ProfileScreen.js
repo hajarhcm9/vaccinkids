@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -12,6 +12,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { colors, typography, spacing, borderRadius, shadows } from '../../theme';
 import { AuthContext } from '../../context/AuthContext';
+import { preferencesService } from '../../services/preferencesService';
 
 const LANGUAGES = [
   { code: 'fr', label: 'Français', flag: '🇫🇷' },
@@ -21,6 +22,17 @@ const LANGUAGES = [
 const ProfileScreen = () => {
   const [language, setLanguage] = useState('fr');
   const { signOut } = useContext(AuthContext);
+
+  useEffect(() => {
+    preferencesService.getLanguage()
+      .then(setLanguage)
+      .catch(() => {});
+  }, []);
+
+  const handleLanguageChange = async (code) => {
+    setLanguage(code);
+    await preferencesService.setLanguage(code).catch(() => {});
+  };
 
   const handleLogout = () => {
     Alert.alert(
@@ -70,7 +82,7 @@ const ProfileScreen = () => {
             <TouchableOpacity
               key={lang.code}
               style={[styles.langBtn, language === lang.code && styles.langBtnActive]}
-              onPress={() => setLanguage(lang.code)}
+              onPress={() => handleLanguageChange(lang.code)}
             >
               <Text style={styles.langFlag}>{lang.flag}</Text>
               <Text style={[styles.langLabel, language === lang.code && styles.langLabelActive]}>
