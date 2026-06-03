@@ -19,12 +19,52 @@ const LANGUAGES = [
   { code: 'ar', label: 'العربية', flag: '🇲🇦' },
 ];
 
+const translations = {
+  fr: {
+    title: 'Mon Profil',
+    center: 'Centre Es-Salaam · Oujda',
+    language: 'Langue',
+    account: 'Mon compte',
+    children: 'Gérer mes enfants',
+    notifications: 'Notifications',
+    personalInfo: 'Informations personnelles',
+    info: 'Informations',
+    terms: "Conditions d'utilisation",
+    privacy: 'Politique de confidentialité',
+    about: 'À propos de VacciniKids',
+    logout: 'Se déconnecter',
+    logoutTitle: 'Déconnexion',
+    logoutMessage: 'Voulez-vous vraiment vous déconnecter ?',
+    cancel: 'Annuler',
+  },
+  ar: {
+    title: 'ملفي الشخصي',
+    center: 'مركز السلام · وجدة',
+    language: 'اللغة',
+    account: 'حسابي',
+    children: 'إدارة أطفالي',
+    notifications: 'الإشعارات',
+    personalInfo: 'المعلومات الشخصية',
+    info: 'معلومات',
+    terms: 'شروط الاستخدام',
+    privacy: 'سياسة الخصوصية',
+    about: 'حول VacciniKids',
+    logout: 'تسجيل الخروج',
+    logoutTitle: 'تسجيل الخروج',
+    logoutMessage: 'هل تريد تسجيل الخروج فعلاً؟',
+    cancel: 'إلغاء',
+  },
+};
+
 const ProfileScreen = () => {
   const [language, setLanguage] = useState('fr');
   const { signOut } = useContext(AuthContext);
+  const isRTL = language === 'ar';
+  const t = translations[language] || translations.fr;
 
   useEffect(() => {
-    preferencesService.getLanguage()
+    preferencesService
+      .getLanguage()
       .then(setLanguage)
       .catch(() => {});
   }, []);
@@ -35,28 +75,26 @@ const ProfileScreen = () => {
   };
 
   const handleLogout = () => {
-    Alert.alert(
-      'Déconnexion',
-      'Voulez-vous vraiment vous déconnecter ?',
-      [
-        { text: 'Annuler', style: 'cancel' },
-        {
-          text: 'Déconnexion',
-          style: 'destructive',
-          onPress: async () => {
-            await AsyncStorage.multiRemove(['authToken', 'refreshToken', 'userPhone']);
-            signOut();
-          },
+    Alert.alert(t.logoutTitle, t.logoutMessage, [
+      { text: t.cancel, style: 'cancel' },
+      {
+        text: t.logout,
+        style: 'destructive',
+        onPress: async () => {
+          await AsyncStorage.multiRemove(['authToken', 'refreshToken', 'userPhone']);
+          signOut();
         },
-      ]
-    );
+      },
+    ]);
   };
 
   const MenuRow = ({ icon, label, onPress, danger = false }) => (
-    <TouchableOpacity style={styles.menuRow} onPress={onPress}>
+    <TouchableOpacity style={[styles.menuRow, isRTL && styles.rowRTL]} onPress={onPress}>
       <Text style={styles.menuIcon}>{icon}</Text>
-      <Text style={[styles.menuLabel, danger && styles.menuLabelDanger]}>{label}</Text>
-      <Text style={styles.menuChevron}>›</Text>
+      <Text style={[styles.menuLabel, isRTL && styles.textRTL, danger && styles.menuLabelDanger]}>
+        {label}
+      </Text>
+      <Text style={styles.menuChevron}>{isRTL ? '‹' : '›'}</Text>
     </TouchableOpacity>
   );
 
@@ -67,8 +105,8 @@ const ProfileScreen = () => {
         <View style={styles.avatarCircle}>
           <Text style={styles.avatarEmoji}>👤</Text>
         </View>
-        <Text style={styles.headerName}>Mon Profil</Text>
-        <Text style={styles.headerSub}>Centre Es-Salaam · Oujda</Text>
+        <Text style={styles.headerName}>{t.title}</Text>
+        <Text style={styles.headerSub}>{t.center}</Text>
       </View>
 
       <ScrollView
@@ -76,16 +114,26 @@ const ProfileScreen = () => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.sectionTitle}>Langue</Text>
+        <Text style={[styles.sectionTitle, isRTL && styles.textRTL]}>{t.language}</Text>
         <View style={styles.langCard}>
           {LANGUAGES.map((lang) => (
             <TouchableOpacity
               key={lang.code}
-              style={[styles.langBtn, language === lang.code && styles.langBtnActive]}
+              style={[
+                styles.langBtn,
+                isRTL && styles.rowRTL,
+                language === lang.code && styles.langBtnActive,
+              ]}
               onPress={() => handleLanguageChange(lang.code)}
             >
               <Text style={styles.langFlag}>{lang.flag}</Text>
-              <Text style={[styles.langLabel, language === lang.code && styles.langLabelActive]}>
+              <Text
+                style={[
+                  styles.langLabel,
+                  isRTL && styles.textRTL,
+                  language === lang.code && styles.langLabelActive,
+                ]}
+              >
                 {lang.label}
               </Text>
               {language === lang.code && <Text style={styles.langCheck}>✓</Text>}
@@ -93,26 +141,26 @@ const ProfileScreen = () => {
           ))}
         </View>
 
-        <Text style={styles.sectionTitle}>Mon compte</Text>
+        <Text style={[styles.sectionTitle, isRTL && styles.textRTL]}>{t.account}</Text>
         <View style={styles.menuCard}>
-          <MenuRow icon="👶" label="Gérer mes enfants" onPress={() => {}} />
+          <MenuRow icon="👶" label={t.children} onPress={() => {}} />
           <View style={styles.menuDivider} />
-          <MenuRow icon="🔔" label="Notifications" onPress={() => {}} />
+          <MenuRow icon="🔔" label={t.notifications} onPress={() => {}} />
           <View style={styles.menuDivider} />
-          <MenuRow icon="📱" label="Informations personnelles" onPress={() => {}} />
+          <MenuRow icon="📱" label={t.personalInfo} onPress={() => {}} />
         </View>
 
-        <Text style={styles.sectionTitle}>Informations</Text>
+        <Text style={[styles.sectionTitle, isRTL && styles.textRTL]}>{t.info}</Text>
         <View style={styles.menuCard}>
-          <MenuRow icon="📋" label="Conditions d'utilisation" onPress={() => {}} />
+          <MenuRow icon="📋" label={t.terms} onPress={() => {}} />
           <View style={styles.menuDivider} />
-          <MenuRow icon="🔒" label="Politique de confidentialité" onPress={() => {}} />
+          <MenuRow icon="🔒" label={t.privacy} onPress={() => {}} />
           <View style={styles.menuDivider} />
-          <MenuRow icon="ℹ️" label="À propos de VacciniKids" onPress={() => {}} />
+          <MenuRow icon="ℹ️" label={t.about} onPress={() => {}} />
         </View>
 
         <View style={styles.menuCard}>
-          <MenuRow icon="🚪" label="Se déconnecter" onPress={handleLogout} danger />
+          <MenuRow icon="🚪" label={t.logout} onPress={handleLogout} danger />
         </View>
 
         <Text style={styles.version}>VacciniKids v1.0.0 · ISPITS Oujda PFE 2025</Text>
@@ -205,6 +253,7 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     padding: spacing.lg,
   },
+  rowRTL: { flexDirection: 'row-reverse' },
   menuIcon: { fontSize: 20, width: 28, textAlign: 'center' },
   menuLabel: {
     flex: 1,
@@ -222,6 +271,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.border,
     marginLeft: spacing.xl + 28,
   },
+  textRTL: { textAlign: 'right' },
   version: {
     textAlign: 'center',
     fontSize: typography.fontSizes.xs,
