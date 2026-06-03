@@ -12,6 +12,22 @@ const describeDbError = (error) => {
   return details.length > 0 ? details.join(' ') : 'Unknown PostgreSQL error';
 };
 
+const requireEnv = (key) => {
+  const value = process.env[key];
+  if (!value) {
+    console.error(`FATAL: ${key} must be set in environment`);
+    process.exit(1);
+  }
+  if (process.env.NODE_ENV === 'production' && value.indexOf('dev-only-') === 0) {
+    console.error(`FATAL: ${key} must not use dev-only values in production`);
+    process.exit(1);
+  }
+  if (process.env.NODE_ENV !== 'production' && value.indexOf('dev-only-') === 0) {
+    console.warn(`WARNING: ${key} uses a dev-only value. Change it before production.`);
+  }
+  return value;
+};
+
 /**
  * PostgreSQL connection pool configuration
  */
@@ -27,8 +43,8 @@ const poolConfig = process.env.DATABASE_URL
       host: process.env.DB_HOST || 'localhost',
       port: parseInt(process.env.DB_PORT, 10) || 5432,
       database: process.env.DB_NAME || 'vaccinikids',
-      user: process.env.DB_USER || 'vaccinkids_user',
-      password: process.env.DB_PASSWORD || 'vaccinikids_password',
+      user: requireEnv('DB_USER'),
+      password: requireEnv('DB_PASSWORD'),
       max: 20,
       idleTimeoutMillis: 30000,
       connectionTimeoutMillis: 5000,

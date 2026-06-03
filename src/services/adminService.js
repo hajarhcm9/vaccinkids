@@ -1,6 +1,20 @@
 const { pool } = require('../config/database');
 const bcrypt = require('bcrypt');
 
+const VALID_SYSTEM_INFO_TABLES = [
+  'centre', 'personnel', 'parent', 'bebe', 'vaccin', 'session',
+  'rendez_vous', 'vaccination', 'stock', 'flacon', 'croissance',
+  'audit_log', 'notification', 'file_attente', 'sync_queue',
+  'otp_codes', 'refresh_tokens'
+];
+
+const tableIdentifier = function(table) {
+  if (!VALID_SYSTEM_INFO_TABLES.includes(table)) {
+    throw new Error('Invalid table name: ' + table);
+  }
+  return table === 'session' ? '"session"' : table;
+};
+
 /**
  * AdminService - Personnel, Centres, Audit Log management
  * All SQL uses string concatenation (no template literals).
@@ -485,11 +499,11 @@ class AdminService {
   async getSystemInfo() {
     var dbSizeRes = await pool.query("SELECT pg_size_pretty(pg_database_size(current_database())) AS db_size");
 
-    var tables = ['centre', 'personnel', 'parent', 'bebe', 'vaccin', 'session', 'rendez_vous', 'vaccination', 'stock', 'flacon', 'audit_log', 'notification'];
+    var tables = ['centre', 'personnel', 'parent', 'bebe', 'vaccin', 'session', 'rendez_vous', 'vaccination', 'stock', 'flacon', 'audit_log', 'notification', 'file_attente', 'sync_queue'];
     var counts = {};
     for (var i = 0; i < tables.length; i++) {
       try {
-        var r = await pool.query('SELECT COUNT(*) AS total FROM ' + tables[i]);
+        var r = await pool.query('SELECT COUNT(*) AS total FROM ' + tableIdentifier(tables[i]));
         counts[tables[i]] = parseInt(r.rows[0].total) || 0;
       } catch (e) {
         counts[tables[i]] = 0;

@@ -93,12 +93,31 @@ async function getEstimatedWaitTime(parentId) {
 }
 
 async function getStats(centreId) {
-  var base = 'DATE(heure_arrivee) = CURRENT_DATE';
-  var cFilter = centreId ? ' AND centre_id = ' + parseInt(centreId) : '';
-  var total = await pool.query('SELECT COUNT(*) AS c FROM file_attente WHERE ' + base + cFilter);
-  var waiting = await pool.query("SELECT COUNT(*) AS c FROM file_attente WHERE statut = 'EN_ATTENTE' AND " + base + cFilter);
-  var serving = await pool.query("SELECT COUNT(*) AS c FROM file_attente WHERE statut = 'EN_COURS' AND " + base + cFilter);
-  var done = await pool.query("SELECT COUNT(*) AS c FROM file_attente WHERE statut = 'TERMINE' AND " + base + cFilter);
+  var params = [];
+  var whereClause = ' WHERE DATE(heure_arrivee) = CURRENT_DATE';
+
+  if (centreId) {
+    if (!/^\d+$/.test(String(centreId))) {
+      throw new Error('Invalid centre_id');
+    }
+    var parsedCentreId = parseInt(centreId, 10);
+    params.push(parsedCentreId);
+    whereClause += ' AND centre_id = $' + params.length;
+  }
+
+  var total = await pool.query('SELECT COUNT(*) AS c FROM file_attente' + whereClause, params);
+  var waiting = await pool.query(
+    "SELECT COUNT(*) AS c FROM file_attente" + whereClause + " AND statut = 'EN_ATTENTE'",
+    params
+  );
+  var serving = await pool.query(
+    "SELECT COUNT(*) AS c FROM file_attente" + whereClause + " AND statut = 'EN_COURS'",
+    params
+  );
+  var done = await pool.query(
+    "SELECT COUNT(*) AS c FROM file_attente" + whereClause + " AND statut = 'TERMINE'",
+    params
+  );
   return {
     total: parseInt(total.rows[0].c) || 0,
     enAttente: parseInt(waiting.rows[0].c) || 0,

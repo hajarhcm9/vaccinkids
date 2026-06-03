@@ -1,6 +1,5 @@
 -- Migration 002: Seed admin and sample nurse
--- Admin: CIN=ADMIN01, Password=admin123
--- Nurse: CIN=INFIRM01, Password=infirmier123
+-- Seeded credentials are represented by bcrypt hashes below.
 
 DELETE FROM personnel WHERE cin IN ('ADMIN01', 'INFIRM01');
 

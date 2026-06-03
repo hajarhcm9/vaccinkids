@@ -3,14 +3,71 @@
 const { pool } = require('../config/database');
 
 const SYNC_TABLES = [
-  { table: 'rendez_vous', entity: 'rendez_vous' },
-  { table: 'bebe', entity: 'bebe' },
-  { table: 'vaccination', entity: 'vaccination' },
-  { table: 'session', entity: 'session' },
-  { table: 'file_attente', entity: 'file_attente' }
+  { table: 'rendez_vous', identifier: 'rendez_vous', entity: 'rendez_vous' },
+  { table: 'bebe', identifier: 'bebe', entity: 'bebe' },
+  { table: 'vaccination', identifier: 'vaccination', entity: 'vaccination' },
+  { table: 'session', identifier: '"session"', entity: 'session' },
+  { table: 'file_attente', identifier: 'file_attente', entity: 'file_attente' }
 ];
 
 const VALID_ENTITIES = SYNC_TABLES.map(function(t) { return t.entity; });
+const ENTITY_BY_NAME = SYNC_TABLES.reduce(function(acc, item) {
+  acc[item.entity] = item;
+  return acc;
+}, {});
+
+const ENTITY_COLUMNS = {
+  rendez_vous: [
+    'id', 'session_id', 'parent_id', 'bebe_id', 'statut', 'numero_attente',
+    'date_creation', 'updated_at'
+  ],
+  bebe: [
+    'id', 'parent_id', 'prenom', 'nom', 'date_naissance', 'sexe', 'photo_url',
+    'code_qr', 'created_at', 'updated_at'
+  ],
+  vaccination: [
+    'id', 'rendez_vous_id', 'personnel_id', 'flacon_id', 'date_heure', 'poids',
+    'taille', 'reactions', 'created_at', 'updated_at'
+  ],
+  session: [
+    'id', 'centre_id', 'vaccin_id', 'date_session', 'heure_debut', 'heure_fin',
+    'statut', 'max_inscriptions', 'created_at', 'updated_at'
+  ],
+  file_attente: [
+    'id', 'numero_attente', 'rendez_vous_id', 'centre_id', 'session_id',
+    'parent_id', 'bebe_id', 'statut', 'heure_arrivee', 'heure_debut_service',
+    'heure_fin_service', 'created_at', 'updated_at'
+  ]
+};
+
+const getEntityMeta = function(entityType) {
+  var meta = ENTITY_BY_NAME[entityType];
+  if (!meta) throw new Error('Invalid entity type: ' + entityType);
+  return meta;
+};
+
+const quoteColumn = function(column) {
+  return '"' + column + '"';
+};
+
+const filterPayload = function(entityType, payload) {
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+    throw new Error('Payload must be an object');
+  }
+  var allowed = ENTITY_COLUMNS[entityType];
+  if (!allowed) throw new Error('Invalid entity type: ' + entityType);
+
+  var filtered = {};
+  var keys = Object.keys(payload);
+  for (var i = 0; i < keys.length; i++) {
+    var key = keys[i];
+    if (!allowed.includes(key)) {
+      throw new Error('Invalid column for ' + entityType + ': ' + key);
+    }
+    filtered[key] = payload[key];
+  }
+  return filtered;
+};
 
 const pullChanges = async function(since, userId, userRole) {
   var changes = {};
@@ -19,9 +76,10 @@ const pullChanges = async function(since, userId, userRole) {
   for (var i = 0; i < SYNC_TABLES.length; i++) {
     var item = SYNC_TABLES[i];
     var table = item.table;
+    var identifier = item.identifier;
     var entity = item.entity;
     try {
-      var query = 'SELECT * FROM ' + table + ' WHERE updated_at > $1';
+      var query = 'SELECT * FROM ' + identifier + ' WHERE updated_at > $1';
       var params = [sinceDate];
 
       if (userRole === 'parent') {
@@ -56,7 +114,7 @@ const checkConflict = async function(item) {
 
   try {
     var result = await pool.query(
-      'SELECT updated_at FROM ' + item.entity_type + ' WHERE id = $1',
+      'SELECT updated_at FROM ' + getEntityMeta(item.entity_type).identifier + ' WHERE id = $1',
       [item.entity_id]
     );
     if (result.rows.length === 0) return false;
@@ -74,27 +132,33 @@ const applyChange = async function(item, userId, userRole) {
   var entity_id = item.entity_id;
   var payload = item.payload;
 
-  if (!VALID_ENTITIES.includes(entity_type)) {
-    throw new Error('Invalid entity type: ' + entity_type);
-  }
+  var meta = getEntityMeta(entity_type);
+  var tableIdentifier = meta.identifier;
 
   if (operation === 'CREATE') {
-    var columns = Object.keys(payload).join(', ');
-    var values = Object.values(payload);
+    var safePayload = filterPayload(entity_type, payload);
+    var createColumns = Object.keys(safePayload);
+    if (createColumns.length === 0) throw new Error('Payload must contain at least one valid column');
+    var columns = createColumns.map(quoteColumn).join(', ');
+    var values = Object.values(safePayload);
     var placeholders = values.map(function(_, i) { return '$' + (i + 1); }).join(', ');
     var result = await pool.query(
-      'INSERT INTO ' + entity_type + ' (' + columns + ') VALUES (' + placeholders + ') RETURNING *',
+      'INSERT INTO ' + tableIdentifier + ' (' + columns + ') VALUES (' + placeholders + ') RETURNING *',
       values
     );
     return result.rows[0];
   }
 
   if (operation === 'UPDATE') {
-    var columns = Object.keys(payload);
-    var values = Object.values(payload);
-    var setClause = columns.map(function(col, i) { return col + ' = $' + (i + 1); }).join(', ');
+    var updatePayload = filterPayload(entity_type, payload);
+    var updateColumns = Object.keys(updatePayload).filter(function(col) {
+      return col !== 'id' && col !== 'updated_at';
+    });
+    if (updateColumns.length === 0) throw new Error('Payload must contain at least one valid update column');
+    var values = updateColumns.map(function(col) { return updatePayload[col]; });
+    var setClause = updateColumns.map(function(col, i) { return quoteColumn(col) + ' = $' + (i + 1); }).join(', ');
     var result = await pool.query(
-      'UPDATE ' + entity_type + ' SET ' + setClause + ', updated_at = NOW() WHERE id = $' + (values.length + 1) + ' RETURNING *',
+      'UPDATE ' + tableIdentifier + ' SET ' + setClause + ', updated_at = NOW() WHERE id = $' + (values.length + 1) + ' RETURNING *',
       values.concat([entity_id])
     );
     return result.rows[0];
@@ -102,7 +166,7 @@ const applyChange = async function(item, userId, userRole) {
 
   if (operation === 'DELETE') {
     var result = await pool.query(
-      'DELETE FROM ' + entity_type + ' WHERE id = $1 RETURNING *',
+      'DELETE FROM ' + tableIdentifier + ' WHERE id = $1 RETURNING *',
       [entity_id]
     );
     return result.rows[0];

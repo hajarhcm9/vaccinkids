@@ -61,7 +61,7 @@ var getWaitTime = catchAsync(async function(req, res) {
 });
 
 var getStats = catchAsync(async function(req, res) {
-  var centreId = req.query.centre_id;
+  var centreId = req.query.centre_id || req.query.centreId;
   var stats = await faService.getStats(centreId);
   success(res, 200, 'Queue stats', stats);
 });

@@ -55,6 +55,7 @@ app.use('/api/', require('./middleware/auditMiddleware'));
 // 6. API DOCUMENTATION (Swagger)
 // ============================================
 app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(specOpenAPI));
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specOpenAPI));
 
 // ============================================
 // 7. HEALTH CHECK ROUTE

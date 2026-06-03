@@ -1,8 +1,24 @@
 require('dotenv').config();
 
+function requireEnv(key) {
+  var value = process.env[key];
+  if (!value) {
+    console.error('FATAL: ' + key + ' must be set in environment');
+    process.exit(1);
+  }
+  if (process.env.NODE_ENV === 'production' && value.indexOf('dev-only-') === 0) {
+    console.error('FATAL: ' + key + ' must not use dev-only values in production');
+    process.exit(1);
+  }
+  if (process.env.NODE_ENV !== 'production' && value.indexOf('dev-only-') === 0) {
+    console.warn('WARNING: ' + key + ' uses a dev-only value. Change it before production.');
+  }
+  return value;
+}
+
 /**
  * Centralized application configuration
- * All settings come from environment variables with sensible defaults
+ * Security-sensitive settings must come from environment variables.
  */
 const config = {
   // Server
@@ -17,16 +33,16 @@ const config = {
     host: process.env.DB_HOST || 'localhost',
     port: parseInt(process.env.DB_PORT, 10) || 5432,
     name: process.env.DB_NAME || 'vaccinikids',
-    user: process.env.DB_USER || 'vaccinikids_user',
-    password: process.env.DB_PASSWORD || 'vaccinikids_password',
+    user: process.env.DATABASE_URL ? process.env.DB_USER || '' : requireEnv('DB_USER'),
+    password: process.env.DATABASE_URL ? process.env.DB_PASSWORD || '' : requireEnv('DB_PASSWORD'),
     url: process.env.DATABASE_URL,
   },
 
   // JWT
   jwt: {
-    secret: process.env.JWT_SECRET || 'default-dev-secret',
+    secret: requireEnv('JWT_SECRET'),
     expiresIn: process.env.JWT_EXPIRES_IN || '15m',
-    refreshSecret: process.env.JWT_REFRESH_SECRET || 'default-dev-refresh-secret',
+    refreshSecret: requireEnv('JWT_REFRESH_SECRET'),
     refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
   },
 

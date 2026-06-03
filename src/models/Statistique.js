@@ -73,31 +73,22 @@ class Statistique {
   }
 
   static async getTopVaccins(centreId) {
-    let query, params;
+    const params = [];
+    let query = `
+      SELECT vc.nom AS vaccin_nom, COUNT(vac.id)::int AS nombre_vaccinations
+      FROM vaccin vc
+      LEFT JOIN session s ON s.vaccin_id = vc.id
+      LEFT JOIN rendez_vous rv ON rv.session_id = s.id
+      LEFT JOIN vaccination vac ON vac.rendez_vous_id = rv.id
+    `;
     if (centreId) {
-      query = `
-        SELECT vc.nom AS vaccin_nom, COUNT(vac.id)::int AS nombre_vaccinations
-        FROM vaccin vc
-        JOIN session s ON s.vaccin_id = vc.id
-        JOIN rendez_vous rv ON rv.session_id = s.id
-        JOIN vaccination vac ON vac.rendez_vous_id = rv.id
-        WHERE s.centre_id = $1
-        GROUP BY vc.nom
-        ORDER BY nombre_vaccinations DESC LIMIT 10
-      `;
-      params = [centreId];
-    } else {
-      query = `
-        SELECT vc.nom AS vaccin_nom, COUNT(vac.id)::int AS nombre_vaccinations
-        FROM vaccin vc
-        LEFT JOIN session s ON s.vaccin_id = vc.id
-        LEFT JOIN rendez_vous rv ON rv.session_id = s.id
-        LEFT JOIN vaccination vac ON vac.rendez_vous_id = rv.id
-        GROUP BY vc.nom
-        ORDER BY nombre_vaccinations DESC LIMIT 10
-      `;
-      params = [];
+      params.push(centreId);
+      query += ` WHERE s.centre_id = $1`;
     }
+    query += `
+      GROUP BY vc.nom
+      ORDER BY nombre_vaccinations DESC LIMIT 10
+    `;
     const { rows } = await pool.query(query, params);
     return rows;
   }
