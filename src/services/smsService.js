@@ -1,33 +1,82 @@
 const config = require('../config');
 
+function buildPayload(phone, message) {
+  if (config.sms.provider === 'smspartner') {
+    return {
+      apiKey: config.sms.apiKey,
+      phoneNumbers: phone,
+      message,
+      sender: config.sms.senderName,
+    };
+  }
+
+  return {
+    phone,
+    message,
+    sender: config.sms.senderName,
+  };
+}
+
+function buildHeaders() {
+  const headers = { 'Content-Type': 'application/json' };
+  if (config.sms.provider !== 'smspartner') {
+    headers.Authorization = `${config.sms.authScheme} ${config.sms.apiKey}`.trim();
+  }
+  return headers;
+}
+
+async function parseResponseBody(response) {
+  const contentType = response.headers?.get?.('content-type') || '';
+  if (contentType.includes('application/json')) {
+    return response.json();
+  }
+
+  const text = await response.text?.();
+  if (!text) return null;
+
+  try {
+    return JSON.parse(text);
+  } catch (_error) {
+    return text;
+  }
+}
+
 const SmsService = {
   async sendSMS(phone, message) {
-    // STUB MODE — for development
     if (!config.sms.apiKey) {
-      console.warn(`📱 [SMS STUB] To: ${phone} | Message: ${message}`);
+      if (!config.isTest) {
+        console.warn(`[SMS STUB] To: ${phone} | Message: ${message}`);
+      }
       return { success: true, mode: 'stub', message: 'SMS logged (stub mode)' };
     }
 
-    // REAL MODE — will be connected in Week 3
     try {
       const response = await globalThis.fetch(config.sms.apiUrl, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${config.sms.apiKey}`,
-        },
-        body: JSON.stringify({ phone, message, sender: config.sms.senderName }),
+        headers: buildHeaders(),
+        body: JSON.stringify(buildPayload(phone, message)),
       });
 
-      const data = await response.json();
+      const data = await parseResponseBody(response);
       if (!response.ok) {
-        console.error(`❌ SMS API error: ${JSON.stringify(data)}`);
-        return { success: false, mode: 'api', error: data };
+        console.error(`SMS API error: ${JSON.stringify(data)}`);
+        return {
+          success: false,
+          mode: 'api',
+          provider: config.sms.provider,
+          status: response.status,
+          error: data,
+        };
       }
-      return { success: true, mode: 'api', data };
+      return { success: true, mode: 'api', provider: config.sms.provider, data };
     } catch (error) {
-      console.error(`❌ SMS send error: ${error.message}`);
-      return { success: false, mode: 'api', error: error.message };
+      console.error(`SMS send error: ${error.message}`);
+      return {
+        success: false,
+        mode: 'api',
+        provider: config.sms.provider,
+        error: error.message,
+      };
     }
   },
 

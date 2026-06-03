@@ -44,9 +44,9 @@ class NotificationService {
     return this.sendNotification({destinataire_id: rv.parent_id, destinataire_type: "parent", type: "CONFIRMATION", canal: "sms", titre: "Confirmation de rendez-vous", message: "Votre RDV est confirme pour le "+ds+".", reference_id: rv.id, reference_type: "rendez_vous", phone});
   }
   async sendAlerteStock(cId, vNom, qte) {
-    const { rows: nurses } = await pool.query("SELECT id, telephone FROM personnel WHERE centre_id = $1 AND role = 'infirmier'", [cId]);
+    const { rows: nurses } = await pool.query("SELECT id FROM personnel WHERE centre_id = $1 AND role = 'infirmier'", [cId]);
     const notifs = [];
-    for (const n of nurses) { notifs.push(await this.sendNotification({destinataire_id: n.id, destinataire_type: "personnel", type: "ALERTE_STOCK", canal: "in_app", titre: "Alerte stock vaccin", message: "Stock bas: "+vNom+" - il reste "+qte+" dose(s).", reference_type: "stock", phone: n.telephone})); }
+    for (const n of nurses) { notifs.push(await this.sendNotification({destinataire_id: n.id, destinataire_type: "personnel", type: "ALERTE_STOCK", canal: "in_app", titre: "Alerte stock vaccin", message: "Stock bas: "+vNom+" - il reste "+qte+" dose(s).", reference_type: "stock"})); }
     return notifs;
   }
   async sendRappelSession(sId) {
@@ -54,9 +54,9 @@ class NotificationService {
     const sess = rows[0];
     if (!sess) return null;
     const ds = this._ds(sess);
-    const { rows: nurses } = await pool.query("SELECT id, telephone FROM personnel WHERE centre_id = $1 AND role = 'infirmier'", [sess.centre_id]);
+    const { rows: nurses } = await pool.query("SELECT id FROM personnel WHERE centre_id = $1 AND role = 'infirmier'", [sess.centre_id]);
     const notifs = [];
-    for (const n of nurses) { notifs.push(await this.sendNotification({destinataire_id: n.id, destinataire_type: "personnel", type: "INFO", canal: "in_app", titre: "Rappel session de vaccination", message: "Rappel: session prevue le "+ds+".", reference_id: sId, reference_type: "session", phone: n.telephone})); }
+    for (const n of nurses) { notifs.push(await this.sendNotification({destinataire_id: n.id, destinataire_type: "personnel", type: "INFO", canal: "in_app", titre: "Rappel session de vaccination", message: "Rappel: session prevue le "+ds+".", reference_id: sId, reference_type: "session"})); }
     return notifs;
   }
 }

@@ -54,9 +54,11 @@ const config = {
 
   // SMS
   sms: {
+    provider: process.env.SMS_PROVIDER || 'generic',
     apiKey: process.env.SMS_API_KEY || '',
     senderName: process.env.SMS_SENDER_NAME || 'VacciniKids',
     apiUrl: process.env.SMS_API_URL || 'https://api.smspartner.fr/v1/send',
+    authScheme: process.env.SMS_AUTH_SCHEME || 'Bearer',
   },
 
   
