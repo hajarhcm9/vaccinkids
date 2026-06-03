@@ -1,7 +1,3 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
-const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:8080/api';
-
 export const MOCK_SESSIONS = [
   {
     id: 's1',
@@ -9,6 +5,8 @@ export const MOCK_SESSIONS = [
     time: '09:00',
     centerName: 'Centre Es-Salaam',
     centerAddress: 'Rue Ibn Sina, Oujda',
+    centerLatitude: 34.6814,
+    centerLongitude: -1.9086,
     vaccine: 'Pentavalent (3ème dose)',
     totalSlots: 20,
     bookedSlots: 17,
@@ -21,6 +19,8 @@ export const MOCK_SESSIONS = [
     time: '10:30',
     centerName: 'Centre Es-Salaam',
     centerAddress: 'Rue Ibn Sina, Oujda',
+    centerLatitude: 34.6814,
+    centerLongitude: -1.9086,
     vaccine: 'ROR (1ère dose)',
     totalSlots: 15,
     bookedSlots: 15,
@@ -33,6 +33,8 @@ export const MOCK_SESSIONS = [
     time: '08:30',
     centerName: 'Centre Es-Salaam',
     centerAddress: 'Rue Ibn Sina, Oujda',
+    centerLatitude: 34.6814,
+    centerLongitude: -1.9086,
     vaccine: 'BCG',
     totalSlots: 25,
     bookedSlots: 8,
@@ -45,6 +47,8 @@ export const MOCK_SESSIONS = [
     time: '11:00',
     centerName: 'Centre Es-Salaam',
     centerAddress: 'Rue Ibn Sina, Oujda',
+    centerLatitude: 34.6814,
+    centerLongitude: -1.9086,
     vaccine: 'Hépatite B (2ème dose)',
     totalSlots: 20,
     bookedSlots: 19,
@@ -57,6 +61,8 @@ export const MOCK_SESSIONS = [
     time: '09:30',
     centerName: 'Centre Es-Salaam',
     centerAddress: 'Rue Ibn Sina, Oujda',
+    centerLatitude: 34.6814,
+    centerLongitude: -1.9086,
     vaccine: 'Pentavalent (1ère dose)',
     totalSlots: 20,
     bookedSlots: 3,
@@ -78,7 +84,6 @@ export const MOCK_BOOKINGS = [
 ];
 
 export const sessionService = {
-
   getSessions: async () => {
     try {
       // TODO: Remplacer par appel API réel
@@ -96,51 +101,43 @@ export const sessionService = {
   },
 
   getSessionById: async (sessionId) => {
-    try {
-      await new Promise((r) => setTimeout(r, 400));
-      const session = MOCK_SESSIONS.find((s) => s.id === sessionId);
-      if (!session) throw new Error('Session introuvable.');
-      return { success: true, session };
-    } catch (error) {
-      throw error;
-    }
+    await new Promise((r) => setTimeout(r, 400));
+    const session = MOCK_SESSIONS.find((s) => s.id === sessionId);
+    if (!session) throw new Error('Session introuvable.');
+    return { success: true, session };
   },
 
   bookSession: async (sessionId, babyId, babyName) => {
-    try {
-      // TODO: Remplacer par appel API réel
-      // const token = await AsyncStorage.getItem('authToken');
-      // const response = await fetch(`${API_BASE_URL}/sessions/${sessionId}/book`, {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //     'Authorization': `Bearer ${token}`,
-      //   },
-      //   body: JSON.stringify({ babyId }),
-      // });
-      // return await response.json();
+    // TODO: Remplacer par appel API réel
+    // const token = await AsyncStorage.getItem('authToken');
+    // const response = await fetch(`${API_BASE_URL}/sessions/${sessionId}/book`, {
+    //   method: 'POST',
+    //   headers: {
+    //     'Content-Type': 'application/json',
+    //     'Authorization': `Bearer ${token}`,
+    //   },
+    //   body: JSON.stringify({ babyId }),
+    // });
+    // return await response.json();
 
-      await new Promise((r) => setTimeout(r, 900));
-      const session = MOCK_SESSIONS.find((s) => s.id === sessionId);
-      if (!session) throw new Error('Session introuvable.');
-      if (session.bookedSlots >= session.totalSlots) {
-        throw new Error('Cette session est complète.');
-      }
-      session.bookedSlots += 1;
-      const booking = {
-        id: `b_${Date.now()}`,
-        sessionId,
-        babyId,
-        babyName,
-        status: 'confirmed',
-        queueNumber: session.bookedSlots,
-        bookedAt: new Date().toISOString(),
-      };
-      MOCK_BOOKINGS.push(booking);
-      return { success: true, booking };
-    } catch (error) {
-      throw error;
+    await new Promise((r) => setTimeout(r, 900));
+    const session = MOCK_SESSIONS.find((s) => s.id === sessionId);
+    if (!session) throw new Error('Session introuvable.');
+    if (session.bookedSlots >= session.totalSlots) {
+      throw new Error('Cette session est complète.');
     }
+    session.bookedSlots += 1;
+    const booking = {
+      id: `b_${Date.now()}`,
+      sessionId,
+      babyId,
+      babyName,
+      status: 'confirmed',
+      queueNumber: session.bookedSlots,
+      bookedAt: new Date().toISOString(),
+    };
+    MOCK_BOOKINGS.push(booking);
+    return { success: true, booking };
   },
 
   joinWaitlist: async (sessionId, babyId, babyName) => {

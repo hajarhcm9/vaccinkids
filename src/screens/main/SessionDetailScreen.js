@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View, Text, StyleSheet, StatusBar, ScrollView,
-  TouchableOpacity, ActivityIndicator, Alert, Platform,
+  TouchableOpacity, ActivityIndicator, Alert, Platform, Linking,
 } from 'react-native';
 import { colors, typography, spacing, borderRadius, shadows } from '../../theme';
 import { sessionService } from '../../services/sessionService';
@@ -123,6 +123,22 @@ const SessionDetailScreen = ({ route, navigation }) => {
     );
   };
 
+  const handleOpenDirections = async () => {
+    const hasCoordinates = session.centerLatitude && session.centerLongitude;
+    const destination = hasCoordinates
+      ? `${session.centerLatitude},${session.centerLongitude}`
+      : encodeURIComponent(`${session.centerName}, ${session.centerAddress}`);
+    const url = Platform.OS === 'ios'
+      ? `http://maps.apple.com/?daddr=${destination}`
+      : `https://www.google.com/maps/dir/?api=1&destination=${destination}`;
+
+    try {
+      await Linking.openURL(url);
+    } catch (error) {
+      Alert.alert('Itinéraire indisponible', "Impossible d'ouvrir l'application de cartes.");
+    }
+  };
+
   const formatDate = (dateStr) =>
     new Date(dateStr).toLocaleDateString('fr-FR', {
       weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
@@ -190,6 +206,10 @@ const SessionDetailScreen = ({ route, navigation }) => {
               </View>
             </View>
           ))}
+          <TouchableOpacity style={styles.directionsBtn} onPress={handleOpenDirections}>
+            <Text style={styles.directionsIcon}>↗</Text>
+            <Text style={styles.directionsText}>Itinéraire vers le centre</Text>
+          </TouchableOpacity>
         </View>
 
         <View style={styles.card}>
@@ -302,6 +322,9 @@ const styles = StyleSheet.create({
   infoIcon: { fontSize: 18, width: 24, textAlign: 'center', marginTop: 1 },
   infoLabel: { fontSize: typography.fontSizes.xs, color: colors.textHint, textTransform: 'uppercase', letterSpacing: 0.5, fontWeight: typography.fontWeights.medium },
   infoValue: { fontSize: typography.fontSizes.sm, color: colors.textPrimary, fontWeight: typography.fontWeights.medium, textTransform: 'capitalize', marginTop: 1 },
+  directionsBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm, minHeight: 44, borderRadius: borderRadius.md, borderWidth: 1.5, borderColor: colors.primary, backgroundColor: colors.primaryLight, marginTop: spacing.xs },
+  directionsIcon: { color: colors.primary, fontSize: typography.fontSizes.md, fontWeight: typography.fontWeights.bold },
+  directionsText: { color: colors.primary, fontSize: typography.fontSizes.sm, fontWeight: typography.fontWeights.semibold },
   fillHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   cardTitle: { fontSize: typography.fontSizes.md, fontWeight: typography.fontWeights.semibold, color: colors.textPrimary },
   liveDot: { flexDirection: 'row', alignItems: 'center', gap: 4 },
