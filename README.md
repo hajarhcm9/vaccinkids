@@ -34,6 +34,27 @@ API at http://localhost:3000
 **Development only:** created by `npm run seed:dev`. The command refuses to run when
 `NODE_ENV=production`; production administrators must be provisioned separately.
 
+## Production Admin Bootstrap
+
+After migrations, create the first production administrator once:
+
+```bash
+BOOTSTRAP_ADMIN_CIN=... \
+BOOTSTRAP_ADMIN_NOM=... \
+BOOTSTRAP_ADMIN_PRENOM=... \
+BOOTSTRAP_ADMIN_PASSWORD=... \
+BOOTSTRAP_ADMIN_CENTRE_ID=1 \
+npm run admin:bootstrap
+```
+
+The command requires a strong password, writes an audit event and refuses to run when an
+administrator already exists. Remove the bootstrap variables immediately after use.
+
+## Tests
+
+`npm test` recreates the dedicated `TEST_DB_NAME` database before running Jest. For
+safety, the database name must end with `_test`; the development database is never reset.
+
 ## Authentication Flow
 
 **Personnel Login:**

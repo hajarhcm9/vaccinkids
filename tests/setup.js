@@ -1,7 +1,7 @@
 process.env.NODE_ENV = 'test';
 process.env.DB_HOST = 'localhost';
 process.env.DB_PORT = '5433';
-process.env.DB_NAME = 'vaccinikids';
+process.env.DB_NAME = process.env.TEST_DB_NAME || 'vaccinikids_test';
 process.env.DB_USER = 'vaccinikids_user';
 process.env.DB_PASSWORD = 'vaccinikids_password';
 process.env.JWT_SECRET = 'test-secret-key';

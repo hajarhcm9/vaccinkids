@@ -27,6 +27,8 @@ CREATE TABLE IF NOT EXISTS personnel (
   role VARCHAR(20) NOT NULL CHECK (role IN ('infirmier', 'admin')),
   centre_id INTEGER NOT NULL REFERENCES centre(id) ON DELETE RESTRICT,
   est_actif BOOLEAN NOT NULL DEFAULT TRUE,
+  failed_login_attempts INTEGER NOT NULL DEFAULT 0 CHECK (failed_login_attempts >= 0),
+  locked_until TIMESTAMP WITH TIME ZONE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -37,6 +39,7 @@ CREATE TABLE IF NOT EXISTS parent (
   telephone VARCHAR(20) UNIQUE NOT NULL,
   nom VARCHAR(100) NOT NULL,
   prenom VARCHAR(100) NOT NULL,
+  email VARCHAR(255),
   langue_preferee VARCHAR(5) NOT NULL DEFAULT 'fr' CHECK (langue_preferee IN ('fr', 'ar')),
   fcm_token TEXT,
   nb_absences_consecutives INTEGER NOT NULL DEFAULT 0,

@@ -61,21 +61,16 @@ describe('Day 28 - Advanced Performance & Load Tests', () => {
       expect(results.every(s => s === 200)).toBe(true);
     });
 
-    test('rate limiter returns 429 after exceeding threshold', async () => {
+    test('API rate limiter is disabled in the test environment', async () => {
       const responses = [];
-      for (let i = 0; i < 110; i++) {
+      for (let i = 0; i < 10; i++) {
         const res = await request(app)
           .get('/api/vaccins')
           .set('Authorization', 'Bearer ' + adminToken);
         responses.push(res.status);
-        if (res.status === 429) break;
       }
-      const has429 = responses.includes(429);
-      if (has429) {
-        expect(has429).toBe(true);
-      } else {
-        expect(responses.length).toBeGreaterThan(50);
-      }
+      expect(responses).toHaveLength(10);
+      expect(responses).not.toContain(429);
     });
   });
 

@@ -18,7 +18,7 @@ VacciniKids est déjà un produit conséquent. Le dépôt contient quatre surfac
 3. une application Android native pour le personnel et l'administration ;
 4. deux interfaces web statiques pour l'administration et la salle d'attente.
 
-La suite de tests API est riche : **28 suites et 459 tests sont découverts**. La couverture
+La suite de tests API est riche : **28 suites et 459 tests passent**. La couverture
 mesurée avant nettoyage est d'environ **76 % des instructions** et **60 % des branches**.
 La structure backend suit globalement un découpage routes, contrôleurs, services et
 modèles.
@@ -26,8 +26,8 @@ modèles.
 Le principal risque n'est pas l'absence de fonctionnalités. Il vient de l'écart entre un
 prototype très avancé et un produit déployable : configuration mobile locale, identité
 app encore temporaire, migrations historiquement dispersées, sécurité des secrets et
-tokens à renforcer, absence de CI/CD, absence de procédure de livraison, lint non
-respecté, et manque de tests sur les deux applications mobiles.
+tokens à renforcer, absence de procédure de livraison complète et manque de tests sur
+les deux applications mobiles.
 
 Le cahier des charges fourni a été lu pendant l'audit. Il fixe notamment comme objectifs
 le scénario C à 0 % de gaspillage, un temps d'attente inférieur à 30 minutes, un pilote de
@@ -41,14 +41,14 @@ conservé au moins 5 ans.
 | Domaine | État | Verdict |
 |---|---:|---|
 | Fonctionnalités API | Bon | Beaucoup de cas métier déjà présents |
-| Tests API | Bon | 459 tests découverts, `forceExit` retiré et pools fermés |
+| Tests API | Bon | 459/459 passent sur bases de test dédiées |
 | Base de données | Moyen | Migrations consolidées et exécutées, validation vierge requise |
 | Sécurité backend | Moyen | Bon socle, plusieurs points P0/P1 restent |
 | App parent React Native | Moyen | Fonctionnelle en développement, non configurée pour release |
 | App personnel Android | Moyen | Fonctionnelle en développement, URL locale codée en dur |
 | Interface admin web | Prototype | Auth en `localStorage`, à durcir |
 | Documentation | Moyen | README amélioré, runbook production manquant |
-| CI/CD | Absent | Aucun workflow automatique |
+| CI/CD | Partiel | Backend, benchmarks, bundle et builds Android automatisés |
 | Livrabilité production | Bloquée | P0 et P1 à fermer avant livraison |
 
 ---
@@ -102,8 +102,8 @@ conservé au moins 5 ans.
 |---|---|
 | Suite API avant nettoyage | 27 suites, 451 tests passés |
 | Suite API après nettoyage | 26 suites passées, 1 échec `ECONNRESET` sur 451 tests |
-| Suite API après stabilisation | Run de référence : 28 suites et 458 tests passés |
-| Tests ciblés du durcissement OTP | 6 suites et 141 tests passés |
+| Suite fonctionnelle hermétique | 26 suites et 400 tests passés |
+| Benchmarks isolés | 2 suites et 59 tests passés |
 | Couverture API | Environ 76 % instructions, 60 % branches |
 | Bundle React Native Android | Succès |
 | Build debug app parent Android | Succès avec Java 17 et `ANDROID_HOME` explicite |
@@ -112,18 +112,17 @@ conservé au moins 5 ans.
 | `git diff --check` | Succès |
 | `npm audit` | 0 vulnérabilité après override ciblé de `uuid` |
 | Lint | Succès, 0 problème |
-| `npm run migrate` sur base Docker existante | Succès, migrations jusqu'à `010` |
-| Migrations sur base PostgreSQL vierge temporaire | Succès, 9 migrations exécutées |
+| `npm run migrate` sur base Docker existante | Succès, migrations jusqu'à `012` |
+| Migrations sur base PostgreSQL vierge temporaire | Succès, 11 migrations exécutées |
 | Contrôle base vierge | `code_hash` présent, colonne `code` absente, 0 compte démo |
+| Bootstrap premier admin | Création auditée réussie, seconde exécution refusée |
+| Reset de sécurité | Refuse toute base dont le nom ne se termine pas par `_test` |
 | `docker compose config` | Succès |
 
-Un ancien run avait rencontré un `ECONNRESET` isolé. Après fermeture explicite des pools
-dans toutes les suites concernées, retrait de `forceExit` et mise à jour des tests modèles
-désormais découverts par Jest, le run de référence passe les **458 tests** et termine
-naturellement. Un test OTP supplémentaire porte désormais le total découvert à 459.
-Des relances complètes supplémentaires ont encore montré des échecs inter-suite variables
-dans les tests performance, export et vaccination, alors que chaque suite ciblée repasse.
-L'herméticité des données de test reste donc un chantier P1 distinct.
+`npm test` recrée maintenant une base dédiée suffixée `_test`, applique les migrations et
+le seed de développement, puis exécute 400 tests fonctionnels. Les 59 benchmarks sont
+exécutés séparément par `npm run test:performance`, chacun sur une nouvelle base. Cette
+séparation élimine les collisions de données et les épuisements de sockets inter-suite.
 
 Les builds Android ne doivent pas dépendre du JDK par défaut de la machine. Le JDK local
 25.0.3 fait échouer Gradle/Kotlin ; Java 17 fonctionne. La version Java et `ANDROID_HOME`
@@ -283,7 +282,7 @@ ou accessible publiquement.
 **Constat**
 
 Les migrations ont été consolidées pendant cet audit. La chaîne complète a ensuite été
-exécutée avec succès sur une base PostgreSQL vierge temporaire : 9 migrations appliquées,
+exécutée avec succès sur une base PostgreSQL vierge temporaire : 11 migrations appliquées,
 schéma OTP hashé vérifié et aucun compte de démonstration créé.
 
 **Risque**
@@ -342,21 +341,19 @@ documentés et testés.
 
 ## 5. Priorité élevée P1
 
-### P1-01 - Aucun pipeline CI/CD
+### P1-01 - Pipeline CI/CD - Partiellement corrigé
 
-Il n'existe aucun workflow automatisé pour :
+Le workflow `.github/workflows/ci.yml` automatise désormais :
 
-- installer les dépendances de façon reproductible ;
-- exécuter lint et tests ;
-- tester les migrations ;
-- construire les deux apps Android ;
-- construire ou archiver iOS ;
-- auditer les dépendances ;
-- produire des artefacts signés ;
-- déployer l'API.
+- installation reproductible avec `npm ci` ;
+- lint, audit npm et tests fonctionnels sur PostgreSQL éphémère ;
+- benchmarks sur bases recréées ;
+- migrations complètes depuis zéro ;
+- bundle React Native Android ;
+- builds debug des deux applications Android.
 
-**Action recommandée :** créer une CI sur chaque pull request avec `npm ci`, lint,
-tests, migration sur PostgreSQL éphémère, bundle React Native et builds Android debug.
+**Reste à faire :** signer et publier les artefacts release, construire/archiver iOS et
+automatiser le déploiement vers staging puis production.
 
 ### P1-02 - Lint non conforme - Corrigé
 
@@ -472,8 +469,9 @@ réexécutée sans supprimer des comptes référencés.
 
 Comptes prévisibles ou données fictives présents en production.
 
-**Reste à faire :** créer le premier admin de production via une commande sécurisée et
-auditée, sans mot de passe par défaut.
+La commande `npm run admin:bootstrap` crée le premier admin avec mot de passe fort et
+audit, puis refuse toute seconde exécution. Les variables de bootstrap doivent être
+retirées immédiatement après utilisation.
 
 ### P1-11 - Audit applicatif incomplet
 
@@ -764,7 +762,7 @@ Chaque scénario doit avoir un test transactionnel PostgreSQL réel.
 ### État mesuré
 
 - 28 suites Jest passent ;
-- 459 tests sont découverts ; le dernier run ciblé passe 141/141 tests concernés ;
+- 459/459 tests passent : 400 fonctionnels et 59 benchmarks isolés ;
 - couverture globale : environ 76 % instructions, 60 % branches ;
 - lint : 0 problème ;
 - Jest termine naturellement sans `forceExit`.
@@ -774,7 +772,8 @@ Chaque scénario doit avoir un test transactionnel PostgreSQL réel.
 - la couverture mobile reste très faible malgré l'inclusion de `src/__tests__` ;
 - beaucoup de modèles ont une couverture faible ;
 - peu de tests réels PostgreSQL transactionnels ;
-- pas de test de migration depuis zéro ;
+- les migrations depuis zéro sont vérifiées par chaque `npm test`, mais pas encore
+  comparées automatiquement à une copie anonymisée ;
 - pas de test mobile React Native visible ;
 - uniquement tests Android exemples, pas de parcours métier ;
 - pas de test iOS ;
@@ -899,7 +898,7 @@ Le runbook doit répondre précisément à :
 - [ ] Configurer signatures release.
 - [x] Séparer seeds de développement.
 - [x] Corriger fuite Jest et retirer `forceExit`.
-- [ ] Ajouter CI backend et builds Android debug.
+- [x] Ajouter CI backend et builds Android debug.
 - [ ] Faire revue de conformité et confidentialité.
 - [ ] Décider et planifier les exigences CDC absentes : triage, sensibilisation,
   WebSocket/Redis et sessions multi-vaccins.
@@ -993,7 +992,7 @@ nouvelle séquence directement sur la base de production.
 | R-004 | OTP stocké en clair | P0 | Backend/Sécurité | Fermé |
 | R-005 | Historique migrations divergent | P0 | Backend/DBA | Base vierge validée |
 | R-006 | Conformité données de santé | P0 | Produit/Juridique | Ouvert |
-| R-007 | Absence CI/CD | P1 | DevOps | Ouvert |
+| R-007 | Absence CI/CD | P1 | DevOps | Partiellement fermé |
 | R-008 | Lint non exploitable | P1 | Équipe dev | Fermé |
 | R-009 | Fuite de handles Jest masquée | P1 | Backend | Fermé |
 | R-010 | Couverture mobile insuffisante | P1 | Mobile/QA | Ouvert |

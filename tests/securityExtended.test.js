@@ -292,8 +292,9 @@ describe('Day 23 - Securite', () => {
       const columns = result.rows.map(r => r.column_name);
       expect(columns).toContain('user_id');
       expect(columns).toContain('action');
-      expect(columns).toContain('resource');
-      expect(columns).toContain('created_at');
+      expect(columns).toContain('table_name');
+      expect(columns).toContain('record_id');
+      expect(columns).toContain('timestamp');
     });
 
     it('should have failed_login_attempts column in personnel', async () => {
