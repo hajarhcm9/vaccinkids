@@ -27,13 +27,15 @@ celui-ci transforme la lecture fichier par fichier en registre d'actions executa
 ## 2. Decision de livraison
 
 Le socle API dispose d'une suite de tests consequente et les builds debug Android passent.
-Cependant, trois faits interdisent actuellement une livraison :
+Au debut de l'analyse, trois faits interdisaient une livraison :
 
-1. `/api/sync` permet des mutations generiques sans autorisation objet ou centre ;
+1. `/api/sync` permettait des mutations generiques sans autorisation objet ou centre ;
 2. plusieurs operations cliniques critiques ne sont pas atomiques et peuvent depasser
    capacites ou doses sous concurrence ;
 3. une grande partie de l'application Android personnel/admin est une maquette locale qui
    affiche des succes sans modifier le backend.
+
+Le premier point est ferme par P0-01. Les deux autres restent bloquants.
 
 La bonne strategie est de geler le perimetre fonctionnel, fermer tous les P0, puis rendre
 les parcours retenus reellement bout en bout. Ajouter de nouveaux ecrans avant cela
@@ -41,7 +43,7 @@ augmenterait le risque de fausse confiance.
 
 ## 3. Registre P0
 
-### P0-01 - Remplacer les mutations generiques de synchronisation
+### P0-01 - Remplacer les mutations generiques de synchronisation - Corrige
 
 **Preuves**
 
@@ -61,17 +63,22 @@ augmenterait le risque de fausse confiance.
 Un infirmier authentifie peut modifier ou supprimer des donnees d'autres centres, des
 enfants, rendez-vous, vaccinations, sessions et files d'attente.
 
-**Actions**
+**Correctifs appliques**
 
-- Desactiver temporairement le push et la resolution `CLIENT_WINS` en production.
-- Remplacer `applyChange` par des commandes metier explicites reutilisant les services
-  autorises.
-- Definir une matrice role, entite, operation, centre et proprietaire.
-- Interdire au client de definir les identites serveur et les champs d'audit.
-- Rendre chaque lot transactionnel, idempotent et borne.
-- Corriger les requetes de pull et ne plus masquer les erreurs de schema.
-- Ajouter des tests d'attaque inter-centre, inter-parent, suppression, changement de
-  proprietaire, rejeu et conflit.
+- push force a l'etat desactive en production et resolution `CLIENT_WINS` retiree ;
+- suppression de `applyChange`, de l'insertion arbitraire en queue et de toute creation ou
+  suppression generique ;
+- matrice explicite limitee aux transitions de statut autorisees pour rendez-vous,
+  sessions et file d'attente ;
+- verification du centre avant verrouillage et mutation ;
+- payload limite strictement a `statut`, identites et champs d'audit interdits ;
+- lots transactionnels, cle d'operation client unique et rejeu idempotent ;
+- pull parent/infirmier corrige, borne a 500 lignes par entite et erreurs non masquees ;
+- tests d'attaque inter-centre, champs interdits, creation/suppression, rollback de lot,
+  rejeu et conflit `SERVER_WINS`.
+
+Les creations de vaccination, bebe et rendez-vous restent volontairement refusees par la
+sync jusqu'a disponibilite de commandes metier transactionnelles dediees.
 
 **Critere d'acceptation**
 
@@ -271,7 +278,7 @@ specifique restent couverts par les tests de regression et la revue de leur grou
 | `src/controllers/*.js` | Logique souvent correcte en sequentiel | Sortir workflows critiques dans des services transactionnels |
 | `src/models/*.js` | Acces SQL lisibles, invariants incomplets | Ajouter verrous, contraintes et methodes transactionnelles |
 | `src/models/migrations/*.sql` | Chaine executable | Ajouter invariants, migration upgrade testee et plan rollback |
-| `src/services/syncService.js` | Dangereux en production | Reconcevoir avant activation |
+| `src/services/syncService.js`, `syncCommandService.js` | P0-01 corrige, push production desactive | Maintenir la matrice restrictive jusqu'aux commandes transactionnelles |
 | `src/services/*Notification*`, SMS/email/PDF/export | Fonctionnels en test | Valider fournisseurs, scopes, PII, retry et audit |
 | `src/middleware/*.js` | Bon socle, garanties partielles | Autorisation ressource, erreurs generiques, rate limit partage, audit garanti |
 | `src/config/*.js`, `src/server.js`, `src/app.js` | Configuration amelioree | Separer jobs, valider production et ajouter observabilite |
@@ -296,7 +303,7 @@ specifique restent couverts par les tests de regression et la revue de leur grou
 
 ### Lot 1 - Fermer les breches
 
-1. Desactiver le push sync et `CLIENT_WINS`.
+1. Maintenir le push sync desactive en production et `CLIENT_WINS` interdit.
 2. Introduire l'autorisation objet/centre et sa matrice de tests.
 3. Transactionner reservation, vaccination et flacon.
 4. Masquer les ecrans personnel/admin fictifs dans le build pilote.

@@ -1,6 +1,7 @@
 'use strict';
 
 var syncService = require('../services/syncService');
+var config = require('../config');
 var responseHandler = require('../utils/responseHandler');
 var success = responseHandler.success;
 var error = responseHandler.error;
@@ -10,7 +11,7 @@ var pull = async function (req, res, next) {
     var since = req.query.since;
     var userId = req.user.id || req.user.userId;
     var userRole = req.user.role;
-    var result = await syncService.pullChanges(since, userId, userRole);
+    var result = await syncService.pullChanges(since, userId, userRole, req.user.centre_id);
     return success(res, 200, 'Sync pull successful', result);
   } catch (err) {
     return next(err);
@@ -19,6 +20,9 @@ var pull = async function (req, res, next) {
 
 var push = async function (req, res, next) {
   try {
+    if (!config.sync.pushEnabled) {
+      return error(res, 'Sync push is temporarily disabled', 503);
+    }
     var items = req.body.items;
     var userId = req.user.id || req.user.userId;
     var userRole = req.user.role;
@@ -57,49 +61,18 @@ var getQueue = async function (req, res, next) {
   }
 };
 
-var addToQueue = async function (req, res, next) {
-  try {
-    var operation = req.body.operation;
-    var entity_type = req.body.entity_type;
-    var entity_id = req.body.entity_id;
-    var payload = req.body.payload;
-    var client_timestamp = req.body.client_timestamp;
-    var userId = req.user.id || req.user.userId;
-    var userRole = req.user.role;
-    if (!operation || !entity_type || !payload) {
-      return error(res, 'operation, entity_type and payload are required', 400);
-    }
-    if (!['CREATE', 'UPDATE', 'DELETE'].includes(operation)) {
-      return error(res, 'Invalid operation. Must be CREATE, UPDATE or DELETE', 400);
-    }
-    var item = await syncService.addToQueue(
-      userId,
-      userRole,
-      operation,
-      entity_type,
-      entity_id,
-      payload,
-      client_timestamp,
-    );
-    return success(res, 201, 'Added to sync queue', item);
-  } catch (err) {
-    return next(err);
-  }
-};
-
 var resolveConflict = async function (req, res, next) {
   try {
     var id = req.params.id;
     var resolution = req.body.resolution;
-    var userId = req.user.id || req.user.userId;
     var userRole = req.user.role;
     if (!resolution) {
       return error(res, 'Resolution strategy is required', 400);
     }
-    if (!['SERVER_WINS', 'CLIENT_WINS'].includes(resolution)) {
-      return error(res, 'Invalid resolution. Must be SERVER_WINS or CLIENT_WINS', 400);
+    if (resolution !== 'SERVER_WINS') {
+      return error(res, 'Only SERVER_WINS conflict resolution is allowed', 400);
     }
-    var result = await syncService.resolveConflict(parseInt(id), resolution, userId, userRole);
+    var result = await syncService.resolveConflict(parseInt(id), resolution, userRole);
     return success(res, 200, 'Conflict resolved', result);
   } catch (err) {
     return next(err);
@@ -111,6 +84,5 @@ module.exports = {
   push: push,
   getStatus: getStatus,
   getQueue: getQueue,
-  addToQueue: addToQueue,
   resolveConflict: resolveConflict,
 };

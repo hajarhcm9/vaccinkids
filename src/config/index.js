@@ -102,6 +102,12 @@ const config = {
   swaggerEnabled: process.env.SWAGGER_ENABLED
     ? process.env.SWAGGER_ENABLED === 'true'
     : process.env.NODE_ENV !== 'production',
+
+  sync: {
+    pushEnabled:
+      process.env.NODE_ENV !== 'production' &&
+      (!process.env.SYNC_PUSH_ENABLED || process.env.SYNC_PUSH_ENABLED === 'true'),
+  },
 };
 
 module.exports = config;

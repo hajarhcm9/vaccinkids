@@ -1,321 +1,230 @@
 'use strict';
 
-const { pool } = require('../config/database');
+const database = require('../config/database');
+const pool = database.pool;
+const getClient = database.getClient;
+const ApiError = require('../utils/ApiError');
+const syncCommandService = require('./syncCommandService');
 
-const SYNC_TABLES = [
-  { table: 'rendez_vous', identifier: 'rendez_vous', entity: 'rendez_vous' },
-  { table: 'bebe', identifier: 'bebe', entity: 'bebe' },
-  { table: 'vaccination', identifier: 'vaccination', entity: 'vaccination' },
-  { table: 'session', identifier: '"session"', entity: 'session' },
-  { table: 'file_attente', identifier: 'file_attente', entity: 'file_attente' },
-];
-
-const VALID_ENTITIES = SYNC_TABLES.map(function (t) {
-  return t.entity;
+const MAX_PULL_ROWS_PER_ENTITY = 500;
+const CLIENT_OPERATION_ID_PATTERN = /^[A-Za-z0-9._:-]{1,100}$/;
+const ENTITY_ALIASES = Object.freeze({
+  rendez_vous: 'rv',
+  bebe: 'b',
+  vaccination: 'vac',
+  session: 's',
+  file_attente: 'fa',
 });
-const ENTITY_BY_NAME = SYNC_TABLES.reduce(function (acc, item) {
-  acc[item.entity] = item;
-  return acc;
-}, {});
 
-const ENTITY_COLUMNS = {
-  rendez_vous: [
-    'id',
-    'session_id',
-    'parent_id',
-    'bebe_id',
-    'statut',
-    'numero_attente',
-    'date_creation',
-    'updated_at',
-  ],
-  bebe: [
-    'id',
-    'parent_id',
-    'prenom',
-    'nom',
-    'date_naissance',
-    'sexe',
-    'photo_url',
-    'code_qr',
-    'created_at',
-    'updated_at',
-  ],
-  vaccination: [
-    'id',
-    'rendez_vous_id',
-    'personnel_id',
-    'flacon_id',
-    'date_heure',
-    'poids',
-    'taille',
-    'reactions',
-    'created_at',
-    'updated_at',
-  ],
-  session: [
-    'id',
-    'centre_id',
-    'vaccin_id',
-    'date_session',
-    'heure_debut',
-    'heure_fin',
-    'statut',
-    'max_inscriptions',
-    'created_at',
-    'updated_at',
-  ],
-  file_attente: [
-    'id',
-    'numero_attente',
-    'rendez_vous_id',
-    'centre_id',
-    'session_id',
-    'parent_id',
-    'bebe_id',
-    'statut',
-    'heure_arrivee',
-    'heure_debut_service',
-    'heure_fin_service',
-    'created_at',
-    'updated_at',
-  ],
-};
+const PULL_QUERIES = Object.freeze({
+  admin: Object.freeze({
+    rendez_vous: 'SELECT rv.* FROM rendez_vous rv',
+    bebe: 'SELECT b.* FROM bebe b',
+    vaccination: 'SELECT vac.* FROM vaccination vac',
+    session: 'SELECT s.* FROM session s',
+    file_attente: 'SELECT fa.* FROM file_attente fa',
+  }),
+  infirmier: Object.freeze({
+    rendez_vous:
+      'SELECT rv.* FROM rendez_vous rv JOIN session s ON s.id = rv.session_id WHERE s.centre_id = $3',
+    bebe:
+      'SELECT DISTINCT b.* FROM bebe b JOIN rendez_vous rv ON rv.bebe_id = b.id ' +
+      'JOIN session s ON s.id = rv.session_id WHERE s.centre_id = $3',
+    vaccination:
+      'SELECT vac.* FROM vaccination vac JOIN rendez_vous rv ON rv.id = vac.rendez_vous_id ' +
+      'JOIN session s ON s.id = rv.session_id WHERE s.centre_id = $3',
+    session: 'SELECT s.* FROM session s WHERE s.centre_id = $3',
+    file_attente: 'SELECT fa.* FROM file_attente fa WHERE fa.centre_id = $3',
+  }),
+  parent: Object.freeze({
+    rendez_vous: 'SELECT rv.* FROM rendez_vous rv WHERE rv.parent_id = $3',
+    bebe: 'SELECT b.* FROM bebe b WHERE b.parent_id = $3',
+    vaccination:
+      'SELECT vac.* FROM vaccination vac JOIN rendez_vous rv ON rv.id = vac.rendez_vous_id ' +
+      'WHERE rv.parent_id = $3',
+    session:
+      'SELECT DISTINCT s.* FROM session s LEFT JOIN rendez_vous rv ON rv.session_id = s.id ' +
+      "WHERE ((s.date_session >= CURRENT_DATE AND s.statut NOT IN ('ANNULEE', 'TERMINEE')) OR rv.parent_id = $3)",
+    file_attente: 'SELECT fa.* FROM file_attente fa WHERE fa.parent_id = $3',
+  }),
+});
 
-const getEntityMeta = function (entityType) {
-  var meta = ENTITY_BY_NAME[entityType];
-  if (!meta) throw new Error('Invalid entity type: ' + entityType);
-  return meta;
-};
+function parseSince(since) {
+  if (!since) return new Date(0);
+  const parsed = new Date(since);
+  if (Number.isNaN(parsed.getTime())) throw ApiError.badRequest('Invalid since timestamp');
+  return parsed;
+}
 
-const quoteColumn = function (column) {
-  return '"' + column + '"';
-};
-
-const filterPayload = function (entityType, payload) {
-  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
-    throw new Error('Payload must be an object');
+function getPullScope(userId, userRole, centreId) {
+  if (!PULL_QUERIES[userRole]) throw ApiError.forbidden('Role cannot use synchronization');
+  if (userRole === 'infirmier') {
+    if (!centreId) throw ApiError.forbidden('No centre assigned to this personnel account');
+    return Number(centreId);
   }
-  var allowed = ENTITY_COLUMNS[entityType];
-  if (!allowed) throw new Error('Invalid entity type: ' + entityType);
+  return Number(userId);
+}
 
-  var filtered = {};
-  var keys = Object.keys(payload);
-  for (var i = 0; i < keys.length; i++) {
-    var key = keys[i];
-    if (!allowed.includes(key)) {
-      throw new Error('Invalid column for ' + entityType + ': ' + key);
-    }
-    filtered[key] = payload[key];
-  }
-  return filtered;
-};
+function appendDeltaBounds(entity, baseQuery) {
+  const hasWhere = /\bWHERE\b/i.test(baseQuery);
+  const alias = ENTITY_ALIASES[entity];
+  return (
+    baseQuery +
+    (hasWhere ? ' AND ' : ' WHERE ') +
+    alias +
+    '.updated_at > $1 AND ' +
+    alias +
+    '.updated_at <= $2 ORDER BY ' +
+    alias +
+    '.updated_at ASC, ' +
+    alias +
+    '.id ASC LIMIT ' +
+    MAX_PULL_ROWS_PER_ENTITY
+  );
+}
 
-const pullChanges = async function (since, userId, userRole) {
-  var changes = {};
-  var sinceDate = since ? new Date(since) : new Date(0);
+async function pullChanges(since, userId, userRole, centreId) {
+  const sinceDate = parseSince(since);
+  const upperBound = new Date();
+  const scope = getPullScope(userId, userRole, centreId);
+  const queries = PULL_QUERIES[userRole];
+  const changes = {};
+  const hasMore = {};
 
-  for (var i = 0; i < SYNC_TABLES.length; i++) {
-    var item = SYNC_TABLES[i];
-    var table = item.table;
-    var identifier = item.identifier;
-    var entity = item.entity;
-    try {
-      var query = 'SELECT * FROM ' + identifier + ' WHERE updated_at > $1';
-      var params = [sinceDate];
-
-      if (userRole === 'parent') {
-        if (table === 'rendez_vous' || table === 'bebe' || table === 'file_attente') {
-          query += ' AND parent_id = $2';
-          params.push(userId);
-        } else if (table === 'vaccination') {
-          query += ' AND bebe_id IN (SELECT id FROM bebe WHERE parent_id = $2)';
-          params.push(userId);
-        }
-      } else if (userRole === 'infirmier') {
-        if (table === 'rendez_vous') {
-          query += ' AND centre_id = (SELECT centre_id FROM personnel WHERE id = $2)';
-          params.push(userId);
-        }
-      }
-
-      query += ' ORDER BY updated_at ASC LIMIT 500';
-      var result = await pool.query(query, params);
-      changes[entity] = result.rows;
-    } catch (err) {
-      changes[entity] = [];
-    }
+  for (const [entity, baseQuery] of Object.entries(queries)) {
+    const params = userRole === 'admin' ? [sinceDate, upperBound] : [sinceDate, upperBound, scope];
+    const result = await pool.query(appendDeltaBounds(entity, baseQuery), params);
+    changes[entity] = result.rows;
+    hasMore[entity] = result.rows.length === MAX_PULL_ROWS_PER_ENTITY;
   }
 
-  return { changes: changes, timestamp: new Date().toISOString() };
-};
+  return { changes, hasMore, timestamp: upperBound.toISOString() };
+}
 
-const checkConflict = async function (item) {
-  if (!item.entity_type || !item.entity_id) return false;
-  if (!VALID_ENTITIES.includes(item.entity_type)) return false;
+function validatePushItem(item) {
+  if (!item || typeof item !== 'object' || Array.isArray(item)) {
+    throw ApiError.badRequest('Each sync item must be an object');
+  }
+  if (!CLIENT_OPERATION_ID_PATTERN.test(String(item.client_operation_id || ''))) {
+    throw ApiError.badRequest('client_operation_id is required and has an invalid format');
+  }
+  if (!item.client_timestamp || Number.isNaN(new Date(item.client_timestamp).getTime())) {
+    throw ApiError.badRequest('A valid client_timestamp is required');
+  }
+  if (new Date(item.client_timestamp).getTime() > Date.now() + 5 * 60 * 1000) {
+    throw ApiError.badRequest('client_timestamp is too far in the future');
+  }
+}
 
+async function findReplay(client, userId, userRole, clientOperationId) {
+  const result = await client.query(
+    'SELECT id, operation, entity_type, entity_id, payload, client_timestamp, status, ' +
+      'conflict_resolution, error_message FROM sync_queue ' +
+      'WHERE user_id = $1 AND user_role = $2 AND client_operation_id = $3',
+    [userId, userRole, clientOperationId],
+  );
+  return result.rows[0] || null;
+}
+
+function assertReplayMatches(replay, item) {
+  const storedPayload =
+    typeof replay.payload === 'string' ? JSON.parse(replay.payload) : replay.payload;
+  const sameCommand =
+    replay.operation === item.operation &&
+    replay.entity_type === item.entity_type &&
+    Number(replay.entity_id) === Number(item.entity_id) &&
+    JSON.stringify(storedPayload) === JSON.stringify(item.payload) &&
+    new Date(replay.client_timestamp).getTime() === new Date(item.client_timestamp).getTime();
+  if (!sameCommand) {
+    throw ApiError.conflict('client_operation_id was already used for a different command');
+  }
+}
+
+async function logResult(client, item, userId, userRole, status, errorMessage) {
+  const result = await client.query(
+    'INSERT INTO sync_queue ' +
+      '(user_id, user_role, operation, entity_type, entity_id, payload, client_timestamp, ' +
+      'client_operation_id, status, conflict_resolution, error_message) ' +
+      'VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *',
+    [
+      userId,
+      userRole,
+      item.operation,
+      item.entity_type,
+      item.entity_id,
+      JSON.stringify(item.payload),
+      item.client_timestamp,
+      item.client_operation_id,
+      status,
+      'SERVER_WINS',
+      errorMessage || null,
+    ],
+  );
+  return result.rows[0];
+}
+
+async function pushChanges(items, userId, userRole) {
+  for (const item of items) {
+    validatePushItem(item);
+    syncCommandService.assertCommandAllowed(item, userRole);
+  }
+
+  const client = await getClient();
   try {
-    var result = await pool.query(
-      'SELECT updated_at FROM ' + getEntityMeta(item.entity_type).identifier + ' WHERE id = $1',
-      [item.entity_id],
-    );
-    if (result.rows.length === 0) return false;
-    var serverUpdated = new Date(result.rows[0].updated_at);
-    var clientUpdated = new Date(item.client_timestamp);
-    return serverUpdated > clientUpdated;
-  } catch (err) {
-    return false;
-  }
-};
+    await client.query('BEGIN');
+    const results = [];
 
-const applyChange = async function (item) {
-  var operation = item.operation;
-  var entity_type = item.entity_type;
-  var entity_id = item.entity_id;
-  var payload = item.payload;
-
-  var meta = getEntityMeta(entity_type);
-  var tableIdentifier = meta.identifier;
-
-  if (operation === 'CREATE') {
-    var safePayload = filterPayload(entity_type, payload);
-    var createColumns = Object.keys(safePayload);
-    if (createColumns.length === 0)
-      throw new Error('Payload must contain at least one valid column');
-    var columns = createColumns.map(quoteColumn).join(', ');
-    var values = Object.values(safePayload);
-    var placeholders = values
-      .map(function (_, i) {
-        return '$' + (i + 1);
-      })
-      .join(', ');
-    var result = await pool.query(
-      'INSERT INTO ' +
-        tableIdentifier +
-        ' (' +
-        columns +
-        ') VALUES (' +
-        placeholders +
-        ') RETURNING *',
-      values,
-    );
-    return result.rows[0];
-  }
-
-  if (operation === 'UPDATE') {
-    var updatePayload = filterPayload(entity_type, payload);
-    var updateColumns = Object.keys(updatePayload).filter(function (col) {
-      return col !== 'id' && col !== 'updated_at';
-    });
-    if (updateColumns.length === 0)
-      throw new Error('Payload must contain at least one valid update column');
-    var updateValues = updateColumns.map(function (col) {
-      return updatePayload[col];
-    });
-    var setClause = updateColumns
-      .map(function (col, i) {
-        return quoteColumn(col) + ' = $' + (i + 1);
-      })
-      .join(', ');
-    var updateResult = await pool.query(
-      'UPDATE ' +
-        tableIdentifier +
-        ' SET ' +
-        setClause +
-        ', updated_at = NOW() WHERE id = $' +
-        (updateValues.length + 1) +
-        ' RETURNING *',
-      updateValues.concat([entity_id]),
-    );
-    return updateResult.rows[0];
-  }
-
-  if (operation === 'DELETE') {
-    var deleteResult = await pool.query(
-      'DELETE FROM ' + tableIdentifier + ' WHERE id = $1 RETURNING *',
-      [entity_id],
-    );
-    return deleteResult.rows[0];
-  }
-
-  throw new Error('Unknown operation: ' + operation);
-};
-
-const pushChanges = async function (items, userId, userRole) {
-  var results = [];
-
-  for (var i = 0; i < items.length; i++) {
-    var item = items[i];
-    try {
-      var conflict = await checkConflict(item);
-
-      if (conflict) {
-        var queueResult = await pool.query(
-          'INSERT INTO sync_queue (user_id, user_role, operation, entity_type, entity_id, payload, client_timestamp, status, conflict_resolution) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *',
-          [
-            userId,
-            userRole,
-            item.operation,
-            item.entity_type,
-            item.entity_id,
-            JSON.stringify(item.payload),
-            item.client_timestamp || new Date(),
-            'CONFLICT',
-            'SERVER_WINS',
-          ],
-        );
-        results.push({ status: 'CONFLICT', item: queueResult.rows[0] });
-      } else {
-        var applied = await applyChange(item, userId, userRole);
-        await pool.query(
-          'INSERT INTO sync_queue (user_id, user_role, operation, entity_type, entity_id, payload, client_timestamp, status, conflict_resolution) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *',
-          [
-            userId,
-            userRole,
-            item.operation,
-            item.entity_type,
-            item.entity_id,
-            JSON.stringify(item.payload),
-            item.client_timestamp || new Date(),
-            'APPLIED',
-            'SERVER_WINS',
-          ],
-        );
-        results.push({ status: 'APPLIED', item: applied });
+    for (const item of items) {
+      const replay = await findReplay(client, userId, userRole, item.client_operation_id);
+      if (replay) {
+        assertReplayMatches(replay, item);
+        results.push({ status: replay.status, replay: true, queueItemId: replay.id });
+        continue;
       }
-    } catch (err) {
-      await pool.query(
-        'INSERT INTO sync_queue (user_id, user_role, operation, entity_type, entity_id, payload, client_timestamp, status, conflict_resolution, error_message) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)',
-        [
+
+      const commandResult = await syncCommandService.executeCommand(client, item, userId, userRole);
+      if (commandResult.conflict) {
+        const queueItem = await logResult(
+          client,
+          item,
           userId,
           userRole,
-          item.operation,
-          item.entity_type,
-          item.entity_id,
-          JSON.stringify(item.payload),
-          item.client_timestamp || new Date(),
-          'REJECTED',
-          'SERVER_WINS',
-          err.message,
-        ],
-      );
-      results.push({ status: 'REJECTED', error: err.message });
+          'CONFLICT',
+          'Server resource is newer than the client command',
+        );
+        results.push({ status: 'CONFLICT', replay: false, queueItemId: queueItem.id });
+        continue;
+      }
+
+      const queueItem = await logResult(client, item, userId, userRole, 'APPLIED');
+      results.push({
+        status: 'APPLIED',
+        replay: commandResult.replay,
+        queueItemId: queueItem.id,
+        item: commandResult.item,
+      });
     }
+
+    await client.query('COMMIT');
+    return results;
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
   }
+}
 
-  return results;
-};
-
-const getSyncStatus = async function (userId, userRole) {
-  var pending = await pool.query(
+async function getSyncStatus(userId, userRole) {
+  const pending = await pool.query(
     'SELECT COUNT(*) as count FROM sync_queue WHERE user_id = $1 AND user_role = $2 AND status = $3',
     [userId, userRole, 'PENDING'],
   );
-  var conflicts = await pool.query(
+  const conflicts = await pool.query(
     'SELECT COUNT(*) as count FROM sync_queue WHERE user_id = $1 AND user_role = $2 AND status = $3',
     [userId, userRole, 'CONFLICT'],
   );
-  var lastSync = await pool.query(
+  const lastSync = await pool.query(
     'SELECT MAX(server_timestamp) as last_sync FROM sync_queue WHERE user_id = $1 AND user_role = $2 AND status = $3',
     [userId, userRole, 'APPLIED'],
   );
@@ -325,127 +234,41 @@ const getSyncStatus = async function (userId, userRole) {
     conflictCount: parseInt(conflicts.rows[0].count),
     lastSync: lastSync.rows[0].last_sync || null,
   };
-};
+}
 
-const addToQueue = async function (
-  userId,
-  userRole,
-  operation,
-  entityType,
-  entityId,
-  payload,
-  clientTimestamp,
-) {
-  var result = await pool.query(
-    'INSERT INTO sync_queue (user_id, user_role, operation, entity_type, entity_id, payload, client_timestamp, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
-    [
-      userId,
-      userRole,
-      operation,
-      entityType,
-      entityId,
-      JSON.stringify(payload),
-      clientTimestamp || new Date(),
-      'PENDING',
-    ],
-  );
-  return result.rows[0];
-};
-
-const getPendingQueue = async function (userId, userRole) {
-  var result = await pool.query(
+async function getPendingQueue(userId, userRole) {
+  if (userRole === 'admin') {
+    const adminResult = await pool.query(
+      'SELECT * FROM sync_queue WHERE status IN ($1, $2) ORDER BY client_timestamp ASC',
+      ['PENDING', 'CONFLICT'],
+    );
+    return adminResult.rows;
+  }
+  const result = await pool.query(
     'SELECT * FROM sync_queue WHERE user_id = $1 AND user_role = $2 AND status IN ($3, $4) ORDER BY client_timestamp ASC',
     [userId, userRole, 'PENDING', 'CONFLICT'],
   );
   return result.rows;
-};
+}
 
-const resolveConflict = async function (queueId, resolution, userId, userRole) {
-  var existing = await pool.query(
-    'SELECT * FROM sync_queue WHERE id = $1 AND user_id = $2 AND user_role = $3',
-    [queueId, userId, userRole],
+async function resolveConflict(queueId, resolution, userRole) {
+  if (resolution !== 'SERVER_WINS') {
+    throw ApiError.badRequest('Only SERVER_WINS conflict resolution is allowed');
+  }
+  if (userRole !== 'admin') throw ApiError.forbidden('Only administrators can resolve conflicts');
+  const result = await pool.query(
+    'UPDATE sync_queue SET status = $1, conflict_resolution = $2, resolved_at = NOW() ' +
+      'WHERE id = $3 AND status = $4 RETURNING *',
+    ['REJECTED', 'SERVER_WINS', queueId, 'CONFLICT'],
   );
-
-  if (existing.rows.length === 0) {
-    throw new Error('Queue item not found');
-  }
-
-  var item = existing.rows[0];
-
-  if (resolution === 'SERVER_WINS') {
-    await pool.query(
-      'UPDATE sync_queue SET status = $1, conflict_resolution = $2, resolved_at = NOW() WHERE id = $3',
-      ['REJECTED', 'SERVER_WINS', queueId],
-    );
-    return { status: 'REJECTED', resolution: 'SERVER_WINS' };
-  }
-
-  if (resolution === 'CLIENT_WINS') {
-    var payload = typeof item.payload === 'string' ? JSON.parse(item.payload) : item.payload;
-    var applied = await applyChange(
-      {
-        operation: item.operation,
-        entity_type: item.entity_type,
-        entity_id: item.entity_id,
-        payload: payload,
-      },
-      userId,
-      userRole,
-    );
-
-    await pool.query(
-      'UPDATE sync_queue SET status = $1, conflict_resolution = $2, resolved_at = NOW() WHERE id = $3',
-      ['APPLIED', 'CLIENT_WINS', queueId],
-    );
-    return { status: 'APPLIED', resolution: 'CLIENT_WINS', item: applied };
-  }
-
-  throw new Error('Unknown resolution: ' + resolution);
-};
-
-const processQueue = async function (userId, userRole) {
-  var pending = await pool.query(
-    'SELECT * FROM sync_queue WHERE user_id = $1 AND user_role = $2 AND status = $3 ORDER BY client_timestamp ASC',
-    [userId, userRole, 'PENDING'],
-  );
-
-  var results = [];
-  for (var i = 0; i < pending.rows.length; i++) {
-    var item = pending.rows[i];
-    try {
-      var payload = typeof item.payload === 'string' ? JSON.parse(item.payload) : item.payload;
-      await applyChange(
-        {
-          operation: item.operation,
-          entity_type: item.entity_type,
-          entity_id: item.entity_id,
-          payload: payload,
-        },
-        userId,
-        userRole,
-      );
-
-      await pool.query('UPDATE sync_queue SET status = $1 WHERE id = $2', ['APPLIED', item.id]);
-      results.push({ id: item.id, status: 'APPLIED' });
-    } catch (err) {
-      await pool.query('UPDATE sync_queue SET status = $1, error_message = $2 WHERE id = $3', [
-        'REJECTED',
-        err.message,
-        item.id,
-      ]);
-      results.push({ id: item.id, status: 'REJECTED', error: err.message });
-    }
-  }
-
-  return results;
-};
+  if (!result.rows[0]) throw ApiError.notFound('Conflict queue item not found');
+  return { status: 'REJECTED', resolution: 'SERVER_WINS' };
+}
 
 module.exports = {
-  pullChanges: pullChanges,
-  pushChanges: pushChanges,
-  getSyncStatus: getSyncStatus,
-  addToQueue: addToQueue,
-  getPendingQueue: getPendingQueue,
-  resolveConflict: resolveConflict,
-  processQueue: processQueue,
+  pullChanges,
+  pushChanges,
+  getSyncStatus,
+  getPendingQueue,
+  resolveConflict,
 };

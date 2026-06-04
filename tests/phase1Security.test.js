@@ -6,7 +6,7 @@ describe('Phase 1 security hardening', () => {
     jest.clearAllMocks();
   });
 
-  it('rejects malicious sync payload column names before building entity SQL', async () => {
+  it('rejects arbitrary sync fields before opening a database transaction', async () => {
     var queries = [];
     var mockPool = {
       query: jest.fn(async function(sql, params) {
@@ -23,17 +23,16 @@ describe('Phase 1 security hardening', () => {
     });
 
     var syncService = require('../src/services/syncService');
-    var result = await syncService.pushChanges([{
-      operation: 'CREATE',
-      entity_type: 'bebe',
+    await expect(syncService.pushChanges([{
+      client_operation_id: 'malicious-column',
+      client_timestamp: new Date().toISOString(),
+      operation: 'UPDATE',
+      entity_type: 'session',
+      entity_id: 1,
       payload: { 'id; DROP TABLE parent;--': 'bad' }
-    }], 1, 'admin');
+    }], 1, 'admin')).rejects.toThrow('Only the statut field');
 
-    expect(result[0].status).toBe('REJECTED');
-    expect(result[0].error).toContain('Invalid column');
-    expect(queries.some(function(sql) {
-      return sql.indexOf('INSERT INTO bebe') === 0 || sql.indexOf('DROP TABLE') !== -1;
-    })).toBe(false);
+    expect(queries).toHaveLength(0);
   });
 
   it('uses a parameterized file-attente stats filter and rejects SQL text in centreId', async () => {
@@ -57,5 +56,33 @@ describe('Phase 1 security hardening', () => {
       expect.stringContaining('centre_id = $1'),
       [1]
     );
+  });
+
+  it('keeps sync push disabled in production even when the environment tries to enable it', () => {
+    var original = {};
+    var values = {
+      NODE_ENV: 'production',
+      SYNC_PUSH_ENABLED: 'true',
+      JWT_SECRET: 'production-jwt-secret',
+      JWT_REFRESH_SECRET: 'production-refresh-secret',
+      OTP_HASH_SECRET: 'production-otp-secret',
+      DB_USER: 'production-db-user',
+      DB_PASSWORD: 'production-db-password'
+    };
+    Object.keys(values).forEach(function(key) {
+      original[key] = process.env[key];
+      process.env[key] = values[key];
+    });
+
+    try {
+      jest.resetModules();
+      var config = require('../src/config');
+      expect(config.sync.pushEnabled).toBe(false);
+    } finally {
+      Object.keys(values).forEach(function(key) {
+        if (original[key] === undefined) delete process.env[key];
+        else process.env[key] = original[key];
+      });
+    }
   });
 });

@@ -336,13 +336,13 @@ describe('Day 27 - Performance Tests', () => {
       }
     });
 
-    test('sync queue add within 3s', async () => {
+    test('disabled arbitrary sync queue insertion responds within 3s', async () => {
       const { result, elapsed } = await timed(() =>
         request(app).post('/api/sync/queue').set('Authorization', 'Bearer ' + adminToken).send({
           operation: 'CREATE', entity_type: 'vaccination', payload: { perf_test: true }
         })
       );
-      expect([200, 201, 400]).toContain(result.status);
+      expect(result.status).toBe(404);
       expect(elapsed).toBeLessThan(3000);
     });
   });

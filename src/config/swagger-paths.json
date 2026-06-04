@@ -3884,13 +3884,21 @@
             "schema": {
               "type": "object",
               "required": [
-                "changes"
+                "items"
               ],
               "properties": {
-                "changes": {
+                "items": {
                   "type": "array",
                   "items": {
-                    "type": "object"
+                    "type": "object",
+                    "required": [
+                      "client_operation_id",
+                      "client_timestamp",
+                      "operation",
+                      "entity_type",
+                      "entity_id",
+                      "payload"
+                    ]
                   }
                 }
               }
@@ -3901,6 +3909,9 @@
       "responses": {
         "200": {
           "description": "Changes appliques"
+        },
+        "503": {
+          "description": "Push desactive en production"
         }
       }
     }
@@ -3937,53 +3948,6 @@
       "responses": {
         "200": {
           "description": "Queue"
-        }
-      }
-    },
-    "post": {
-      "tags": [
-        "Sync"
-      ],
-      "summary": "Ajouter a la file de sync",
-      "security": [
-        {
-          "bearerAuth": []
-        }
-      ],
-      "requestBody": {
-        "required": true,
-        "content": {
-          "application/json": {
-            "schema": {
-              "type": "object",
-              "required": [
-                "model",
-                "action",
-                "data"
-              ],
-              "properties": {
-                "model": {
-                  "type": "string"
-                },
-                "action": {
-                  "type": "string",
-                  "enum": [
-                    "create",
-                    "update",
-                    "delete"
-                  ]
-                },
-                "data": {
-                  "type": "object"
-                }
-              }
-            }
-          }
-        }
-      },
-      "responses": {
-        "201": {
-          "description": "Ajoute"
         }
       }
     }

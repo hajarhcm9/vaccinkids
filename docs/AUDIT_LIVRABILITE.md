@@ -21,7 +21,7 @@ VacciniKids est déjà un produit conséquent. Le dépôt contient quatre surfac
 3. une application Android native pour le personnel et l'administration ;
 4. deux interfaces web statiques pour l'administration et la salle d'attente.
 
-La suite de tests API est riche : **28 suites et 461 tests passent**. La couverture
+La suite de tests API est riche : **28 suites et 452 tests passent**. La couverture
 mesurée avant nettoyage est d'environ **76 % des instructions** et **60 % des branches**.
 La structure backend suit globalement un découpage routes, contrôleurs, services et
 modèles.
@@ -44,7 +44,7 @@ conservé au moins 5 ans.
 | Domaine | État | Verdict |
 |---|---:|---|
 | Fonctionnalités API | Bon | Beaucoup de cas métier déjà présents |
-| Tests API | Bon | 461/461 passent sur bases de test dédiées |
+| Tests API | Bon | 452/452 passent sur bases de test dédiées |
 | Base de données | Moyen | Migrations consolidées et exécutées, validation vierge requise |
 | Sécurité backend | Moyen | Bon socle, plusieurs points P0/P1 restent |
 | App parent React Native | Moyen | Fonctionnelle en développement, non configurée pour release |
@@ -105,7 +105,7 @@ conservé au moins 5 ans.
 |---|---|
 | Suite API avant nettoyage | 27 suites, 451 tests passés |
 | Suite API après nettoyage | 26 suites passées, 1 échec `ECONNRESET` sur 451 tests |
-| Suite fonctionnelle hermétique | 26 suites et 400 tests passés |
+| Suite fonctionnelle hermétique | 26 suites et 393 tests passés |
 | Benchmarks isolés | 2 suites et 59 tests passés |
 | Couverture API | Environ 76 % instructions, 60 % branches |
 | Bundle React Native Android | Succès |
@@ -126,7 +126,7 @@ conservé au moins 5 ans.
 | Configuration release sans secrets/URL | Refus contrôlé des deux builds Android |
 
 `npm test` recrée maintenant une base dédiée suffixée `_test`, applique les migrations et
-le seed de développement, puis exécute 400 tests fonctionnels. Les 59 benchmarks sont
+le seed de développement, puis exécute 393 tests fonctionnels. Les 59 benchmarks sont
 exécutés séparément par `npm run test:performance`, chacun sur une nouvelle base. Cette
 séparation élimine les collisions de données et les épuisements de sockets inter-suite.
 
@@ -396,7 +396,7 @@ PostgreSQL possèdent maintenant un teardown explicite. Jest termine naturelleme
 
 ### P1-04 - Tests mobiles insuffisants
 
-Les 461 tests couvrent principalement l'API. Il n'existe pas de couverture significative
+Les 452 tests couvrent principalement l'API. Il n'existe pas de couverture significative
 des écrans React Native ni de l'application Android native.
 
 **Minimum avant livraison**
@@ -771,7 +771,7 @@ Chaque scénario doit avoir un test transactionnel PostgreSQL réel.
 ### État mesuré
 
 - 28 suites Jest passent ;
-- 461/461 tests passent : 402 fonctionnels et 59 benchmarks isolés ;
+- 452/452 tests passent : 393 fonctionnels et 59 benchmarks isolés ;
 - couverture globale : environ 76 % instructions, 60 % branches ;
 - lint : 0 problème ;
 - Jest termine naturellement sans `forceExit`.

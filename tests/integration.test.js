@@ -330,7 +330,7 @@ describe('Day 26 - Integration Tests (TC-01 to TC-10)', () => {
       expect(res.status).toBe(200);
     });
 
-    test('sync queue operations', async () => {
+    test('sync queue rejects arbitrary insertion and allows authenticated reads', async () => {
       const addRes = await request(app)
         .post('/api/sync/queue')
         .set('Authorization', 'Bearer ' + adminToken)
@@ -339,7 +339,7 @@ describe('Day 26 - Integration Tests (TC-01 to TC-10)', () => {
           entity_type: 'vaccination',
           payload: { test: true }
         });
-      expect([200,201,400]).toContain(addRes.status);if(addRes.status>=400)console.log('SYNC QUEUE ERROR:',addRes.body);
+      expect(addRes.status).toBe(404);
 
       const getRes = await request(app)
         .get('/api/sync/queue')
