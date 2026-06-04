@@ -10,6 +10,7 @@ import AppointmentsScreen from '../screens/main/AppointmentsScreen';
 import HealthBookScreen from '../screens/main/HealthBookScreen';
 import ProfileScreen from '../screens/main/ProfileScreen';
 import NotificationsScreen from '../screens/main/NotificationsScreen';
+import QueueScreen from '../screens/main/QueueScreen';
 
 import { preferencesService } from '../services/preferencesService';
 import { mobileNotificationService } from '../services/mobileNotificationService';
@@ -59,6 +60,7 @@ const HomeStack = () => (
   <Stack.Navigator screenOptions={{ headerShown: false, animation: 'slide_from_right' }}>
     <Stack.Screen name="HomeMain" component={HomeScreen} />
     <Stack.Screen name="SessionDetail" component={SessionDetailScreen} />
+    <Stack.Screen name="Queue" component={QueueScreen} />
   </Stack.Navigator>
 );
 

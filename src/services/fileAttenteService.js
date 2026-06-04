@@ -132,9 +132,11 @@ async function abandonEntry(id, parentId) {
 async function getParentPosition(parentId) {
   var result = await pool.query(
     'SELECT fa.*, ' +
-      "(SELECT COUNT(*) FROM file_attente fa2 WHERE fa2.centre_id = fa.centre_id AND fa2.statut = 'EN_ATTENTE' AND fa2.numero_attente < fa.numero_attente AND DATE(fa2.heure_arrivee) = CURRENT_DATE) AS position " +
+      "CASE WHEN fa.statut = 'EN_COURS' THEN 0 ELSE " +
+      "(SELECT COUNT(*) FROM file_attente fa2 WHERE fa2.centre_id = fa.centre_id AND fa2.statut = 'EN_ATTENTE' AND fa2.numero_attente < fa.numero_attente AND DATE(fa2.heure_arrivee) = CURRENT_DATE) END AS position " +
       'FROM file_attente fa ' +
-      "WHERE fa.parent_id = $1 AND fa.statut = 'EN_ATTENTE' AND DATE(fa.heure_arrivee) = CURRENT_DATE ORDER BY fa.numero_attente ASC LIMIT 1",
+      "WHERE fa.parent_id = $1 AND fa.statut IN ('EN_ATTENTE', 'EN_COURS') AND DATE(fa.heure_arrivee) = CURRENT_DATE " +
+      "ORDER BY CASE WHEN fa.statut = 'EN_COURS' THEN 0 ELSE 1 END, fa.numero_attente ASC LIMIT 1",
     [parentId],
   );
   return result.rows[0] || null;
@@ -143,13 +145,14 @@ async function getParentPosition(parentId) {
 async function getEstimatedWaitTime(parentId) {
   var entry = await getParentPosition(parentId);
   if (!entry) return { waitTimeMinutes: 0, position: 0 };
+  if (entry.statut === 'EN_COURS') return { waitTimeMinutes: 0, position: 0, status: entry.statut };
   var pos = parseInt(entry.position) || 0;
   var avgTime = await pool.query(
     'SELECT AVG(EXTRACT(EPOCH FROM (heure_fin_service - heure_debut_service)) / 60) AS avg_minutes ' +
       "FROM file_attente WHERE statut = 'TERMINE' AND DATE(heure_arrivee) = CURRENT_DATE",
   );
   var avgMin = parseFloat(avgTime.rows[0]?.avg_minutes) || 15;
-  return { waitTimeMinutes: Math.ceil(pos * avgMin), position: pos + 1 };
+  return { waitTimeMinutes: Math.ceil(pos * avgMin), position: pos + 1, status: entry.statut };
 }
 
 async function getStats(centreId) {

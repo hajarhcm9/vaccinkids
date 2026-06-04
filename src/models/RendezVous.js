@@ -17,7 +17,7 @@ const RendezVous = {
 
   async findByParent(parentId) {
     const result = await query(
-      'SELECT rdv.*, s.date_session, s.heure_debut, s.heure_fin, s.statut AS session_statut, ' +
+      'SELECT rdv.*, s.centre_id, s.date_session, s.heure_debut, s.heure_fin, s.statut AS session_statut, ' +
         'v.nom AS vaccin_nom, c.nom AS centre_nom, c.adresse AS centre_adresse, ' +
         'c.gps_lat AS centre_gps_lat, c.gps_lng AS centre_gps_lng, ' +
         'b.prenom AS bebe_prenom, b.nom AS bebe_nom ' +
@@ -69,7 +69,7 @@ const RendezVous = {
 
     const whereClause = conditions.length > 0 ? ' WHERE ' + conditions.join(' AND ') : '';
     const result = await query(
-      'SELECT rdv.*, s.date_session, s.heure_debut, s.heure_fin, s.statut AS session_statut, ' +
+      'SELECT rdv.*, s.centre_id, s.date_session, s.heure_debut, s.heure_fin, s.statut AS session_statut, ' +
         'v.nom AS vaccin_nom, c.nom AS centre_nom, c.adresse AS centre_adresse, ' +
         'c.gps_lat AS centre_gps_lat, c.gps_lng AS centre_gps_lng, ' +
         'b.prenom AS bebe_prenom, b.nom AS bebe_nom, ' +

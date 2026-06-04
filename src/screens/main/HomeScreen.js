@@ -198,7 +198,7 @@ const HomeScreen = ({ navigation }) => {
             { icon: '📅', label: 'Sessions', screen: 'Sessions' },
             { icon: '📋', label: 'Carnet', screen: 'HealthBook' },
             { icon: '🗓️', label: 'Rendez-vous', screen: 'Appointments' },
-            { icon: '👤', label: 'Profil', screen: 'Profile' },
+            { icon: '#', label: 'Ma file', screen: 'Queue' },
           ].map((item) => (
             <TouchableOpacity
               key={item.label}
