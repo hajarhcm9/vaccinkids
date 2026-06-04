@@ -9,5 +9,6 @@ process.env.JWT_REFRESH_SECRET = 'test-refresh-secret';
 process.env.JWT_EXPIRES_IN = '15m';
 process.env.JWT_REFRESH_EXPIRES_IN = '7d';
 process.env.OTP_EXPIRY_MINUTES = '5';
+process.env.OTP_HASH_SECRET = 'test-only-otp-hash-secret';
 process.env.SMS_API_KEY = '';
 process.env.PORT = '0';

@@ -66,19 +66,13 @@ describe('Statistics & Dashboard (Day 12)', () => {
 
     it('should deny parent access', async () => {
       const phone = '+212600000088';
-      await request(app)
+      const otpResponse = await request(app)
         .post('/api/auth/parent/send-otp')
         .send({ telephone: phone });
 
-      const otpRes = await pool.query(
-        "SELECT code FROM otp_codes WHERE telephone = $1 ORDER BY created_at DESC LIMIT 1",
-        [phone]
-      );
-      const otp = otpRes.rows[0]?.code;
-
       const verifyRes = await request(app)
         .post('/api/auth/parent/verify-otp')
-        .send({ telephone: phone, code: otp });
+        .send({ telephone: phone, code: otpResponse.body.data.devOtp });
 
       const parentToken = verifyRes.body.data?.tokens?.accessToken || verifyRes.body.data?.token;
 

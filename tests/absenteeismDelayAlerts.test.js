@@ -67,30 +67,22 @@ beforeAll(async () => {
   nurseToken = nurseLogin.body.data.tokens.accessToken;
 
   // Register parent 1
-  await request(app)
+  const otpResponse1 = await request(app)
     .post('/api/auth/parent/send-otp')
     .send({ telephone: TEST_PHONE });
-  const otp1 = await pool.query(
-    'SELECT code FROM otp_codes WHERE telephone = $1 AND est_verifie = FALSE ORDER BY created_at DESC LIMIT 1',
-    [TEST_PHONE]
-  );
   const verify1 = await request(app)
     .post('/api/auth/parent/verify-otp')
-    .send({ telephone: TEST_PHONE, code: otp1.rows[0].code });
+    .send({ telephone: TEST_PHONE, code: otpResponse1.body.data.devOtp });
   parentToken = verify1.body.data.tokens.accessToken;
   parentId = verify1.body.data.user.id;
 
   // Register parent 2
-  await request(app)
+  const otpResponse2 = await request(app)
     .post('/api/auth/parent/send-otp')
     .send({ telephone: TEST_PHONE2 });
-  const otp2 = await pool.query(
-    'SELECT code FROM otp_codes WHERE telephone = $1 AND est_verifie = FALSE ORDER BY created_at DESC LIMIT 1',
-    [TEST_PHONE2]
-  );
   const verify2 = await request(app)
     .post('/api/auth/parent/verify-otp')
-    .send({ telephone: TEST_PHONE2, code: otp2.rows[0].code });
+    .send({ telephone: TEST_PHONE2, code: otpResponse2.body.data.devOtp });
   parent2Token = verify2.body.data.tokens.accessToken;
   parent2Id = verify2.body.data.user.id;
 

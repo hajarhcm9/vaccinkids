@@ -15,15 +15,6 @@ let testBebeId;
 let testSessionId;
 let testRdvId;
 
-// Helper: get real OTP from DB
-async function getOTP(telephone) {
-  const res = await pool.query(
-    'SELECT code FROM otp_codes WHERE telephone = $1 AND est_verifie = FALSE ORDER BY created_at DESC LIMIT 1',
-    [telephone]
-  );
-  return res.rows[0]?.code;
-}
-
 beforeAll(async () => {
   // Clear require cache
   delete require.cache[require.resolve('../src/app')];

@@ -16,6 +16,14 @@ function requireEnv(key) {
   return value;
 }
 
+function getOtpHashSecret() {
+  if (process.env.OTP_HASH_SECRET) return requireEnv('OTP_HASH_SECRET');
+  if (process.env.NODE_ENV === 'production') return requireEnv('OTP_HASH_SECRET');
+
+  console.warn('WARNING: OTP_HASH_SECRET is not set. Using the development-only fallback.');
+  return 'dev-only-otp-hash-secret-change-before-production';
+}
+
 /**
  * Centralized application configuration
  * Security-sensitive settings must come from environment variables.
@@ -51,6 +59,7 @@ const config = {
     length: parseInt(process.env.OTP_LENGTH, 10) || 6,
     expiryMinutes: parseInt(process.env.OTP_EXPIRY_MINUTES, 10) || 5,
     maxAttempts: parseInt(process.env.OTP_MAX_ATTEMPTS, 10) || 5,
+    hashSecret: getOtpHashSecret(),
   },
 
   // SMS

@@ -60,16 +60,10 @@ beforeAll(async () => {
   nurseToken = nurseLogin.body.data.tokens.accessToken;
 
   // Register parent via OTP
-  await request(app)
+  const otpResponse = await request(app)
     .post('/api/auth/parent/send-otp')
     .send({ telephone: TEST_PHONE });
-
-  // Fetch the real OTP code from DB
-  const otpResult = await pool.query(
-    'SELECT code FROM otp_codes WHERE telephone = $1 AND est_verifie = FALSE ORDER BY created_at DESC LIMIT 1',
-    [TEST_PHONE]
-  );
-  const otpCode = otpResult.rows[0].code;
+  const otpCode = otpResponse.body.data.devOtp;
 
   const verifyRes = await request(app)
     .post('/api/auth/parent/verify-otp')

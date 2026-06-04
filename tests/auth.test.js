@@ -21,6 +21,16 @@ describe('Auth Endpoints', () => {
       expect(res.status).toBe(200);
       expect(res.body.status).toBe('success');
       expect(res.body.data).toHaveProperty('otpSent', true);
+
+      const otp = await pool.query(
+        `SELECT code_hash
+         FROM otp_codes
+         WHERE telephone = $1
+         ORDER BY created_at DESC LIMIT 1`,
+        ['+212661234567'],
+      );
+      expect(otp.rows[0].code_hash).toHaveLength(64);
+      expect(otp.rows[0].code_hash).not.toContain(res.body.data.devOtp);
     });
 
     it('should reject invalid phone', async () => {
@@ -44,13 +54,10 @@ describe('Auth Endpoints', () => {
         .post('/api/auth/parent/send-otp')
         .send({ telephone: '0677889901' });
       const otpCode = sendRes.body.data.devOtp || sendRes.body.data.otpCode;
-      if (!otpCode) {
-        console.log('OTP response:', JSON.stringify(sendRes.body));
-      }
       const res = await request(app)
         .post('/api/auth/parent/verify-otp')
         .send({ telephone: '0677889901', code: otpCode });
-expect(res.status).toBe(201);
+      expect(res.status).toBe(201);
       expect(res.body.data).toHaveProperty('tokens');
       expect(res.body.data.tokens).toHaveProperty('accessToken');
     });
@@ -60,6 +67,34 @@ expect(res.status).toBe(201);
         .post('/api/auth/parent/verify-otp')
         .send({ telephone: '0677889901', code: '000000' });
       expect(res.status).toBe(401);
+    });
+
+    it('should reject the test bypass when no active OTP was requested', async () => {
+      const res = await request(app)
+        .post('/api/auth/parent/verify-otp')
+        .send({ telephone: '0677889910', code: '123456' });
+      expect(res.status).toBe(401);
+    });
+
+    it('should invalidate an OTP after the maximum failed attempts', async () => {
+      const phone = '0677889903';
+      await request(app).post('/api/auth/parent/send-otp').send({ telephone: phone });
+
+      for (let attempt = 0; attempt < 5; attempt++) {
+        const res = await request(app)
+          .post('/api/auth/parent/verify-otp')
+          .send({ telephone: phone, code: '000000' });
+        expect(res.status).toBe(401);
+      }
+
+      const otp = await pool.query(
+        `SELECT failed_attempts, est_verifie
+         FROM otp_codes
+         WHERE telephone = $1
+         ORDER BY created_at DESC LIMIT 1`,
+        ['+212677889903'],
+      );
+      expect(otp.rows[0]).toMatchObject({ failed_attempts: 5, est_verifie: true });
     });
   });
 

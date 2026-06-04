@@ -2,6 +2,15 @@ const crypto = require('crypto');
 const { query } = require('../config/database');
 const config = require('../config');
 
+const hashOTP = (telephone, code) =>
+  crypto.createHmac('sha256', config.otp.hashSecret).update(`${telephone}:${code}`).digest('hex');
+
+const matchesHash = (expectedHash, actualHash) => {
+  const expected = Buffer.from(expectedHash, 'hex');
+  const actual = Buffer.from(actualHash, 'hex');
+  return expected.length === actual.length && crypto.timingSafeEqual(expected, actual);
+};
+
 const OtpService = {
   async generateOTP(telephone) {
     // 1. Invalidate any existing unused OTPs
@@ -20,11 +29,12 @@ const OtpService = {
     const expiryMinutes = config.otp.expiryMinutes;
     const expireAt = new Date(Date.now() + expiryMinutes * 60 * 1000);
 
-    // 4. Store in database
+    // 4. Store only a keyed hash so a database leak does not expose usable OTPs.
+    const codeHash = hashOTP(telephone, otp);
     const result = await query(
-      `INSERT INTO otp_codes (telephone, code, expire_at, failed_attempts)
+      `INSERT INTO otp_codes (telephone, code_hash, expire_at, failed_attempts)
        VALUES ($1, $2, $3, 0) RETURNING id, telephone, expire_at`,
-      [telephone, otp, expireAt],
+      [telephone, codeHash, expireAt],
     );
 
     return { id: result.rows[0].id, otp, telephone, expireAt, expiryMinutes };
@@ -43,11 +53,13 @@ const OtpService = {
          RETURNING id`,
         [telephone],
       );
-      return { valid: true, otpId: bypassResult.rows[0]?.id };
+      if (bypassResult.rows.length > 0) {
+        return { valid: true, otpId: bypassResult.rows[0].id };
+      }
     }
 
     const result = await query(
-      `SELECT id, telephone, code, expire_at, est_verifie, failed_attempts
+      `SELECT id, telephone, code_hash, expire_at, est_verifie, failed_attempts
        FROM otp_codes
        WHERE telephone = $1
          AND est_verifie = FALSE
@@ -66,7 +78,8 @@ const OtpService = {
 
     const otpRecord = result.rows[0];
 
-    if (otpRecord.code !== code) {
+    const candidateHash = hashOTP(telephone, code);
+    if (!matchesHash(otpRecord.code_hash, candidateHash)) {
       const failedResult = await query(
         `UPDATE otp_codes
          SET failed_attempts = failed_attempts + 1,
@@ -98,5 +111,7 @@ const OtpService = {
     return result.rowCount;
   },
 };
+
+OtpService.hashOTP = hashOTP;
 
 module.exports = OtpService;

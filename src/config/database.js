@@ -2,6 +2,10 @@ const { Pool } = require('pg');
 require('dotenv').config({ quiet: true });
 
 const describeDbError = (error) => {
+  if (Array.isArray(error.errors) && error.errors.length > 0) {
+    return error.errors.map(describeDbError).join('; ');
+  }
+
   const details = [
     error.message,
     error.code && `code=${error.code}`,

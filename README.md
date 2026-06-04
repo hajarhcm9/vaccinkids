@@ -19,7 +19,8 @@ For the complete delivery audit and prioritized remaining work, see
 5. `npm install`
 6. Set `DB_PORT=5433` in `.env` when using Docker
 7. `npm run migrate`
-8. `npm run dev` (nodemon)
+8. `npm run seed:dev` to install the optional local test accounts
+9. `npm run dev` (nodemon)
 
 API at http://localhost:3000
 
@@ -30,7 +31,8 @@ API at http://localhost:3000
 | Admin    | ADMIN01   | admin123    | Centre Es-Salaam |
 | Infirmier| INFIRM01  | infirmier123| Centre Es-Salaam |
 
-**Seeded by migration 002_seed_admin_and_fixes.sql**
+**Development only:** created by `npm run seed:dev`. The command refuses to run when
+`NODE_ENV=production`; production administrators must be provisioned separately.
 
 ## Authentication Flow
 

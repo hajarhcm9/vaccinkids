@@ -18,7 +18,7 @@ VacciniKids est déjà un produit conséquent. Le dépôt contient quatre surfac
 3. une application Android native pour le personnel et l'administration ;
 4. deux interfaces web statiques pour l'administration et la salle d'attente.
 
-La suite de tests API est riche : **28 suites et 457 tests passent**. La couverture
+La suite de tests API est riche : **28 suites et 459 tests sont découverts**. La couverture
 mesurée avant nettoyage est d'environ **76 % des instructions** et **60 % des branches**.
 La structure backend suit globalement un découpage routes, contrôleurs, services et
 modèles.
@@ -41,7 +41,7 @@ conservé au moins 5 ans.
 | Domaine | État | Verdict |
 |---|---:|---|
 | Fonctionnalités API | Bon | Beaucoup de cas métier déjà présents |
-| Tests API | Bon | 457 tests passent, `forceExit` retiré et pools fermés |
+| Tests API | Bon | 459 tests découverts, `forceExit` retiré et pools fermés |
 | Base de données | Moyen | Migrations consolidées et exécutées, validation vierge requise |
 | Sécurité backend | Moyen | Bon socle, plusieurs points P0/P1 restent |
 | App parent React Native | Moyen | Fonctionnelle en développement, non configurée pour release |
@@ -102,7 +102,8 @@ conservé au moins 5 ans.
 |---|---|
 | Suite API avant nettoyage | 27 suites, 451 tests passés |
 | Suite API après nettoyage | 26 suites passées, 1 échec `ECONNRESET` sur 451 tests |
-| Suite API après stabilisation | 28 suites, 457 tests passés, arrêt naturel de Jest |
+| Suite API après stabilisation | Run de référence : 28 suites et 458 tests passés |
+| Tests ciblés du durcissement OTP | 6 suites et 141 tests passés |
 | Couverture API | Environ 76 % instructions, 60 % branches |
 | Bundle React Native Android | Succès |
 | Build debug app parent Android | Succès avec Java 17 et `ANDROID_HOME` explicite |
@@ -111,12 +112,18 @@ conservé au moins 5 ans.
 | `git diff --check` | Succès |
 | `npm audit` | 0 vulnérabilité après override ciblé de `uuid` |
 | Lint | Succès, 0 problème |
-| `npm run migrate` sur base Docker existante | Succès, migrations jusqu'à `009` |
+| `npm run migrate` sur base Docker existante | Succès, migrations jusqu'à `010` |
+| Migrations sur base PostgreSQL vierge temporaire | Succès, 9 migrations exécutées |
+| Contrôle base vierge | `code_hash` présent, colonne `code` absente, 0 compte démo |
 | `docker compose config` | Succès |
 
 Un ancien run avait rencontré un `ECONNRESET` isolé. Après fermeture explicite des pools
 dans toutes les suites concernées, retrait de `forceExit` et mise à jour des tests modèles
-désormais découverts par Jest, le run final passe les **457 tests** et termine naturellement.
+désormais découverts par Jest, le run de référence passe les **458 tests** et termine
+naturellement. Un test OTP supplémentaire porte désormais le total découvert à 459.
+Des relances complètes supplémentaires ont encore montré des échecs inter-suite variables
+dans les tests performance, export et vaccination, alors que chaque suite ciblée repasse.
+L'herméticité des données de test reste donc un chantier P1 distinct.
 
 Les builds Android ne doivent pas dépendre du JDK par défaut de la machine. Le JDK local
 25.0.3 fait échouer Gradle/Kotlin ; Java 17 fonctionne. La version Java et `ANDROID_HOME`
@@ -247,36 +254,37 @@ Build non publiable et clé de signature non maîtrisée.
 - activer minification et tester les règles ProGuard/R8 ;
 - documenter la rotation et la sauvegarde de la clé.
 
-### P0-04 - OTP insuffisamment durci
+### P0-04 - OTP insuffisamment durci - Corrigé pour la production
 
 **Constat actualisé**
 
 - OTP désormais généré avec `crypto.randomInt()` ;
-- OTP encore stocké en clair en base ;
+- OTP stocké uniquement sous forme de HMAC SHA-256 lié au téléphone ;
 - code universel `123456` désormais limité à `NODE_ENV=test` ;
+- le bypass de test exige qu'un OTP actif ait d'abord été demandé ;
 - OTP retourné uniquement en développement ou test ;
-- limite de tentatives ajoutée et OTP invalidé après dépassement.
+- limite de tentatives ajoutée et OTP invalidé après dépassement ;
+- `OTP_HASH_SECRET` obligatoire au démarrage en production ;
+- migration `010` supprimant la colonne `code` et invalidant les anciens OTP.
 
 **Risque**
 
 Prise de contrôle de comptes parents si un environnement de staging est mal configuré
 ou accessible publiquement.
 
-**À faire**
+**Reste à faire**
 
-- utiliser `crypto.randomInt()` ;
-- stocker uniquement un hash de l'OTP ;
-- limiter les essais et verrouiller après plusieurs échecs ;
-- réserver le bypass à un flag de test explicite impossible en staging ;
-- ne jamais renvoyer l'OTP depuis une API accessible ;
-- ajouter tests de brute force et de concurrence.
+- ne jamais exposer un environnement de développement sur Internet ;
+- ajouter un test de concurrence sur plusieurs vérifications simultanées ;
+- définir une procédure de rotation de `OTP_HASH_SECRET`, qui invalide les OTP actifs.
 
-### P0-05 - Validation réelle des migrations requise
+### P0-05 - Validation réelle des migrations requise - Partiellement corrigé
 
 **Constat**
 
-Les migrations ont été consolidées pendant cet audit. Historiquement, plusieurs
-migrations n'étaient jamais exécutées par le serveur.
+Les migrations ont été consolidées pendant cet audit. La chaîne complète a ensuite été
+exécutée avec succès sur une base PostgreSQL vierge temporaire : 9 migrations appliquées,
+schéma OTP hashé vérifié et aucun compte de démonstration créé.
 
 **Risque**
 
@@ -285,7 +293,6 @@ index peuvent manquer selon l'historique de déploiement.
 
 **À faire**
 
-- lancer toutes les migrations sur une base PostgreSQL vierge ;
 - lancer les migrations sur une copie anonymisée d'une base existante ;
 - comparer les schémas obtenus ;
 - ajouter un test automatisé de migration ;
@@ -381,7 +388,7 @@ PostgreSQL possèdent maintenant un teardown explicite. Jest termine naturelleme
 
 ### P1-04 - Tests mobiles insuffisants
 
-Les 457 tests couvrent principalement l'API. Il n'existe pas de couverture significative
+Les 459 tests couvrent principalement l'API. Il n'existe pas de couverture significative
 des écrans React Native ni de l'application Android native.
 
 **Minimum avant livraison**
@@ -454,19 +461,19 @@ Pour une `DATABASE_URL` distante, la configuration utilise
 **Action recommandée :** faire lire `POSTGRES_*` au compose, aligner les ports et fournir
 un démarrage local vérifié de bout en bout.
 
-### P1-10 - Données de démonstration dans les migrations de production
+### P1-10 - Données de démonstration dans les migrations de production - Corrigé
 
-La migration `002_seed_admin_and_fixes.sql` crée des comptes et données de test.
+La migration `002_seed_admin_and_fixes.sql` a été retirée. Les comptes et stocks de
+développement sont maintenant dans `seeds/development.sql` et installés uniquement par
+`npm run seed:dev`. Cette commande refuse explicitement `NODE_ENV=production` et peut être
+réexécutée sans supprimer des comptes référencés.
 
 **Risque**
 
 Comptes prévisibles ou données fictives présents en production.
 
-**Action recommandée :**
-
-- séparer migrations de schéma et seed de développement ;
-- ne jamais créer de mot de passe par défaut en production ;
-- créer le premier admin via une commande sécurisée et auditée.
+**Reste à faire :** créer le premier admin de production via une commande sécurisée et
+auditée, sans mot de passe par défaut.
 
 ### P1-11 - Audit applicatif incomplet
 
@@ -757,7 +764,7 @@ Chaque scénario doit avoir un test transactionnel PostgreSQL réel.
 ### État mesuré
 
 - 28 suites Jest passent ;
-- 457 tests passent ;
+- 459 tests sont découverts ; le dernier run ciblé passe 141/141 tests concernés ;
 - couverture globale : environ 76 % instructions, 60 % branches ;
 - lint : 0 problème ;
 - Jest termine naturellement sans `forceExit`.
@@ -884,13 +891,13 @@ Le runbook doit répondre précisément à :
 
 ### Phase 1 - Stabilisation immédiate
 
-- [ ] Valider migrations sur base vierge et copie anonymisée.
+- [ ] Valider migrations sur copie anonymisée. Base vierge validée.
 - [x] Corriger configuration Docker locale.
-- [ ] Corriger OTP P0. Durcissement partiel effectué, hash restant.
+- [x] Corriger OTP P0 pour la production.
 - [ ] Définir URLs et environnements mobiles.
 - [ ] Renommer l'identité release de l'app parent.
 - [ ] Configurer signatures release.
-- [ ] Séparer seeds de développement.
+- [x] Séparer seeds de développement.
 - [x] Corriger fuite Jest et retirer `forceExit`.
 - [ ] Ajouter CI backend et builds Android debug.
 - [ ] Faire revue de conformité et confidentialité.
@@ -983,8 +990,8 @@ nouvelle séquence directement sur la base de production.
 | R-001 | Apps release incapables d'appeler l'API | P0 | Mobile/DevOps | Ouvert |
 | R-002 | Identité `ProjeteTemp` en publication | P0 | Mobile | Ouvert |
 | R-003 | Signature Android release debug | P0 | Mobile/DevOps | Ouvert |
-| R-004 | OTP stocké en clair | P0 | Backend/Sécurité | Partiellement corrigé |
-| R-005 | Historique migrations divergent | P0 | Backend/DBA | À valider |
+| R-004 | OTP stocké en clair | P0 | Backend/Sécurité | Fermé |
+| R-005 | Historique migrations divergent | P0 | Backend/DBA | Base vierge validée |
 | R-006 | Conformité données de santé | P0 | Produit/Juridique | Ouvert |
 | R-007 | Absence CI/CD | P1 | DevOps | Ouvert |
 | R-008 | Lint non exploitable | P1 | Équipe dev | Fermé |
@@ -993,7 +1000,7 @@ nouvelle séquence directement sur la base de production.
 | R-011 | Tokens web dans localStorage | P1 | Web/Sécurité | Ouvert |
 | R-012 | Refresh tokens en clair | P1 | Backend/Sécurité | Ouvert |
 | R-013 | SSL DB permissif | P1 | Backend/DevOps | Ouvert |
-| R-014 | Seeds démo en production | P1 | Backend/DevOps | Ouvert |
+| R-014 | Seeds démo en production | P1 | Backend/DevOps | Fermé |
 | R-015 | Audit incomplet | P1 | Backend/Sécurité | Ouvert |
 | R-016 | Pas de monitoring | P1 | DevOps | Ouvert |
 | R-017 | Vulnérabilités dépendances | P2 | Équipe dev | Fermé |

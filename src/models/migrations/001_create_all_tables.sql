@@ -171,7 +171,7 @@ CREATE TABLE IF NOT EXISTS audit_log (
 CREATE TABLE IF NOT EXISTS otp_codes (
   id SERIAL PRIMARY KEY,
   telephone VARCHAR(20) NOT NULL,
-  code VARCHAR(6) NOT NULL,
+  code_hash CHAR(64) NOT NULL,
   expire_at TIMESTAMP WITH TIME ZONE NOT NULL,
   est_verifie BOOLEAN NOT NULL DEFAULT FALSE,
   failed_attempts INTEGER NOT NULL DEFAULT 0 CHECK (failed_attempts >= 0),

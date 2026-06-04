@@ -18,16 +18,10 @@ beforeAll(async () => {
 
   // Create a test parent and get token
   const parentPhone = '+212600000099';
-  await request(app)
+  const otpResponse = await request(app)
     .post('/api/auth/parent/send-otp')
     .send({ telephone: parentPhone });
-
-  // Get OTP from DB
-  const otpRes = await pool.query(
-    "SELECT code FROM otp_codes WHERE telephone = $1 ORDER BY created_at DESC LIMIT 1",
-    [parentPhone]
-  );
-  const otp = otpRes.rows[0]?.code;
+  const otp = otpResponse.body.data.devOtp;
 
   const verifyRes = await request(app)
     .post('/api/auth/parent/verify-otp')

@@ -19,7 +19,8 @@
     "docker:down": "docker-compose down",
     "docker:logs": "docker-compose logs -f postgres",
     "db:test": "node scripts/test-db.js",
-    "migrate": "node scripts/migrate.js"
+    "migrate": "node scripts/migrate.js",
+    "seed:dev": "node scripts/seed-development.js"
   },
   "keywords": [],
   "author": "",
