@@ -15,11 +15,19 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:3000/api/\"")
     }
 
     buildTypes {
+        debug {
+            manifestPlaceholders["networkSecurityConfig"] = "@xml/network_security_config"
+        }
         release {
-            isMinifyEnabled = false
+            val releaseApiUrl = providers.environmentVariable("STAFF_API_BASE_URL").orNull
+                ?: "https://invalid.example/api/"
+            buildConfigField("String", "API_BASE_URL", "\"${releaseApiUrl.trimEnd('/')}/\"")
+            manifestPlaceholders["networkSecurityConfig"] = "@xml/network_security_config_release"
+            isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -35,6 +43,15 @@ android {
     }
     buildFeatures {
         buildConfig = true
+    }
+}
+
+gradle.taskGraph.whenReady {
+    if (allTasks.any { it.name.contains("Release") }) {
+        val releaseApiUrl = providers.environmentVariable("STAFF_API_BASE_URL").orNull
+        require(releaseApiUrl?.startsWith("https://") == true) {
+            "STAFF_API_BASE_URL must be set to an HTTPS URL for release builds"
+        }
     }
 }
 

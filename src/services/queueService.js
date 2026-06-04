@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { API_BASE_URL } from '../config/mobileApi';
 
-const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:3000/api';
 const CACHE_KEY = 'cached_parent_queue';
 
 async function api(path, options = {}) {

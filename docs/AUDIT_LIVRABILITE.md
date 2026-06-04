@@ -18,7 +18,7 @@ VacciniKids est déjà un produit conséquent. Le dépôt contient quatre surfac
 3. une application Android native pour le personnel et l'administration ;
 4. deux interfaces web statiques pour l'administration et la salle d'attente.
 
-La suite de tests API est riche : **28 suites et 459 tests passent**. La couverture
+La suite de tests API est riche : **28 suites et 461 tests passent**. La couverture
 mesurée avant nettoyage est d'environ **76 % des instructions** et **60 % des branches**.
 La structure backend suit globalement un découpage routes, contrôleurs, services et
 modèles.
@@ -41,7 +41,7 @@ conservé au moins 5 ans.
 | Domaine | État | Verdict |
 |---|---:|---|
 | Fonctionnalités API | Bon | Beaucoup de cas métier déjà présents |
-| Tests API | Bon | 459/459 passent sur bases de test dédiées |
+| Tests API | Bon | 461/461 passent sur bases de test dédiées |
 | Base de données | Moyen | Migrations consolidées et exécutées, validation vierge requise |
 | Sécurité backend | Moyen | Bon socle, plusieurs points P0/P1 restent |
 | App parent React Native | Moyen | Fonctionnelle en développement, non configurée pour release |
@@ -113,11 +113,14 @@ conservé au moins 5 ans.
 | `npm audit` | 0 vulnérabilité après override ciblé de `uuid` |
 | Lint | Succès, 0 problème |
 | `npm run migrate` sur base Docker existante | Succès, migrations jusqu'à `012` |
-| Migrations sur base PostgreSQL vierge temporaire | Succès, 11 migrations exécutées |
+| Migrations sur base PostgreSQL vierge temporaire | Succès, 13 migrations exécutées |
 | Contrôle base vierge | `code_hash` présent, colonne `code` absente, 0 compte démo |
 | Bootstrap premier admin | Création auditée réussie, seconde exécution refusée |
 | Reset de sécurité | Refuse toute base dont le nom ne se termine pas par `_test` |
 | `docker compose config` | Succès |
+| Rotation/hash des refresh tokens | Succès, réutilisation détectée et famille révoquée |
+| Migration `013` sur base existante | Succès après déduplication des anciens JWT |
+| Configuration release sans secrets/URL | Refus contrôlé des deux builds Android |
 
 `npm test` recrée maintenant une base dédiée suffixée `_test`, applique les migrations et
 le seed de développement, puis exécute 400 tests fonctionnels. Les 59 benchmarks sont
@@ -187,7 +190,7 @@ tests mobiles. La faire maintenant sans ces protections augmenterait le risque d
 
 ## 4. Bloquants de livraison P0
 
-### P0-01 - Configuration de production des clients mobiles absente
+### P0-01 - Configuration de production des clients mobiles - Partiellement corrigé
 
 **Constat**
 
@@ -201,12 +204,17 @@ tests mobiles. La faire maintenant sans ces protections augmenterait le risque d
 
 Les applications distribuées ne peuvent pas atteindre l'API de production.
 
-**À faire**
+**Correctifs appliqués**
 
-- définir des environnements `dev`, `staging`, `production` ;
-- injecter l'URL API au build ;
-- interdire HTTP hors debug ;
-- documenter la configuration de chaque environnement ;
+- génération explicite de la configuration React Native via `npm run mobile:configure` ;
+- environnements `development`, `staging` et `production`, avec HTTPS obligatoire hors
+  développement ;
+- URL de l'app personnel injectée dans `BuildConfig`, avec HTTPS obligatoire en release ;
+- configuration Android release interdisant le trafic HTTP ;
+- documentation des commandes de déploiement et release.
+
+**Reste à faire**
+
 - tester sur au moins un appareil physique Android et iOS.
 
 **Critère d'acceptation**
@@ -235,12 +243,12 @@ tardif pouvant casser signatures, Firebase, deep links et stores.
 - créer icônes, splash screens et métadonnées finales ;
 - connecter les identifiants aux projets Firebase correspondants.
 
-### P0-03 - Signature release Android parent utilise le keystore debug
+### P0-03 - Signature release Android parent - Configuration corrigée, clé requise
 
-**Constat**
+**Constat actualisé**
 
-Le build `release` de `android/app/build.gradle` utilise actuellement
-`signingConfigs.debug`.
+Le build release n'utilise plus le keystore debug, exige quatre variables de signature et
+refuse explicitement de démarrer sans elles. R8 est activé.
 
 **Risque**
 
@@ -282,7 +290,7 @@ ou accessible publiquement.
 **Constat**
 
 Les migrations ont été consolidées pendant cet audit. La chaîne complète a ensuite été
-exécutée avec succès sur une base PostgreSQL vierge temporaire : 11 migrations appliquées,
+exécutée avec succès sur une base PostgreSQL vierge temporaire : 13 migrations appliquées,
 schéma OTP hashé vérifié et aucun compte de démonstration créé.
 
 **Risque**
@@ -326,10 +334,10 @@ Risque juridique, opérationnel et de confidentialité majeur.
 - le CDC exige HTTPS/TLS 1.3 : aucun déploiement HTTPS vérifiable n'est fourni ;
 - le CDC exige le chiffrement AES-256 des données de santé au repos : non démontré ;
 - le CDC exige un journal append-only conservé au moins 5 ans ;
-- l'audit actuel est une table SQL modifiable et supprimable par un accès base disposant
-  des droits nécessaires ;
-- connexions, déconnexions, accès carnet et exports ne sont pas tous garantis dans
-  l'audit actuel.
+- la table d'audit refuse désormais `UPDATE` et `DELETE` via trigger PostgreSQL, mais un
+  propriétaire/superutilisateur de base peut toujours contourner ce contrôle ;
+- connexions et déconnexions réussies sont désormais journalisées ; accès carnet et
+  exports ne sont pas encore tous garantis dans l'audit actuel.
 
 **Critère d'acceptation**
 
@@ -385,7 +393,7 @@ PostgreSQL possèdent maintenant un teardown explicite. Jest termine naturelleme
 
 ### P1-04 - Tests mobiles insuffisants
 
-Les 459 tests couvrent principalement l'API. Il n'existe pas de couverture significative
+Les 461 tests couvrent principalement l'API. Il n'existe pas de couverture significative
 des écrans React Native ni de l'application Android native.
 
 **Minimum avant livraison**
@@ -425,28 +433,22 @@ Les interfaces `public/admin` et `public/waiting-room` stockent les tokens dans
 - réduire les durées de session ;
 - renforcer CSP et supprimer tout contenu inline non nécessaire.
 
-### P1-07 - Refresh tokens stockés en clair
+### P1-07 - Refresh tokens stockés en clair - Corrigé
 
 La base stocke le refresh token JWT complet. Une fuite de base permettrait de réutiliser
 les sessions encore valides.
 
-**Action recommandée :**
+La migration `013` déduplique les anciens tokens, stocke uniquement leur hash SHA-256 et
+ajoute les familles de tokens. Chaque refresh tourne le token dans une transaction avec
+verrou PostgreSQL. La réutilisation d'un token révoqué invalide toute sa famille.
 
-- stocker un hash du refresh token ;
-- faire de la rotation de token ;
-- détecter la réutilisation ;
-- révoquer la famille de tokens en cas de suspicion.
-
-### P1-08 - SSL PostgreSQL trop permissif
+### P1-08 - SSL PostgreSQL trop permissif - Corrigé
 
 Pour une `DATABASE_URL` distante, la configuration utilise
 `rejectUnauthorized: false`.
 
-**Action recommandée :**
-
-- utiliser une chaîne de certificats valide ;
-- rendre le mode SSL configurable ;
-- interdire le contournement de validation en production.
+`DATABASE_SSL_MODE=verify-full` valide désormais le certificat par défaut. Une CA peut
+être injectée via `DATABASE_SSL_CA`. Le mode permissif `require` est refusé en production.
 
 ### P1-09 - Docker et `.env.example` incohérents
 
@@ -473,18 +475,20 @@ La commande `npm run admin:bootstrap` crée le premier admin avec mot de passe f
 audit, puis refuse toute seconde exécution. Les variables de bootstrap doivent être
 retirées immédiatement après utilisation.
 
-### P1-11 - Audit applicatif incomplet
+### P1-11 - Audit applicatif incomplet - Partiellement corrigé
 
 Le middleware d'audit :
 
-- ignore volontairement l'authentification ;
+- couvre désormais les mutations d'authentification réussies ;
 - ne connaît qu'un sous-ensemble de tables ;
 - écrit après la réponse sans garantir la persistance ;
 - peut enregistrer des objets complets contenant des données sensibles ;
 - ne lie pas l'écriture audit à la transaction métier.
 
-**Action recommandée :** définir une politique d'audit, masquer les champs sensibles,
-garantir l'intégrité, prévoir rétention et export, et surveiller les échecs.
+Les champs usuels de mot de passe, token, OTP et clé privée sont désormais masqués avant
+insertion. La table est append-only pour les droits applicatifs ordinaires. Il reste à
+définir la politique complète, couvrir les événements manquants, garantir l'écriture avec
+la transaction métier, prévoir rétention/export externe et surveiller les échecs.
 
 ### P1-12 - Absence de monitoring et d'observabilité
 
@@ -543,12 +547,12 @@ la main.
 **Action :** valider l'OpenAPI en CI puis générer ou au minimum tester les DTO clients
 contre le contrat.
 
-### P2-06 - Swagger exposé sans règle d'environnement
+### P2-06 - Swagger exposé sans règle d'environnement - Corrigé
 
 Les routes `/api/docs` et `/api-docs` sont toujours montées.
 
-**Action :** décider si la documentation est publique ; sinon la désactiver ou la
-protéger en production.
+Swagger est désormais désactivé par défaut en production et peut être activé
+explicitement avec `SWAGGER_ENABLED=true`.
 
 ### P2-07 - Dépendances avec avis de sécurité
 
@@ -579,22 +583,24 @@ Le rate limiter mémoire ne protège pas correctement une API multi-instance et 
 **Action :** utiliser un store partagé, définir des limites par endpoint et tester les
 réponses `429`.
 
-### P2-11 - Sauvegarde Android personnel autorisée
+### P2-11 - Sauvegarde Android personnel autorisée - Corrigé
 
-L'app personnel définit `android:allowBackup="true"` alors qu'elle manipule des données
-et tokens sensibles.
+L'app personnel définissait `android:allowBackup="true"` alors qu'elle manipule des
+données et tokens sensibles.
 
-**Action :** désactiver ou restreindre précisément sauvegarde et extraction.
+`android:allowBackup` est désactivé pour l'app personnel.
 
 ### P2-12 - Identité de l'app personnel générique
 
 Le package `com.example.vaccinkid` doit être remplacé avant publication.
 
-### P2-13 - Release Android personnel non minifiée
+### P2-13 - Release Android personnel non minifiée - Corrigé
 
-`isMinifyEnabled = false` en release.
+La release utilisait `isMinifyEnabled = false`.
 
-**Action :** activer R8, ajouter règles de conservation Retrofit/Room et tester.
+R8 est activé avec des règles de conservation Retrofit/Room. Le build debug passe ; le
+build release refuse correctement une URL absente ou non HTTPS et devra être validé avec
+l'URL réelle.
 
 ### P2-14 - Localisation incomplète
 
@@ -762,7 +768,7 @@ Chaque scénario doit avoir un test transactionnel PostgreSQL réel.
 ### État mesuré
 
 - 28 suites Jest passent ;
-- 459/459 tests passent : 400 fonctionnels et 59 benchmarks isolés ;
+- 461/461 tests passent : 402 fonctionnels et 59 benchmarks isolés ;
 - couverture globale : environ 76 % instructions, 60 % branches ;
 - lint : 0 problème ;
 - Jest termine naturellement sans `forceExit`.
@@ -893,9 +899,9 @@ Le runbook doit répondre précisément à :
 - [ ] Valider migrations sur copie anonymisée. Base vierge validée.
 - [x] Corriger configuration Docker locale.
 - [x] Corriger OTP P0 pour la production.
-- [ ] Définir URLs et environnements mobiles.
+- [x] Définir URLs et environnements mobiles. Validation appareils physiques restante.
 - [ ] Renommer l'identité release de l'app parent.
-- [ ] Configurer signatures release.
+- [x] Interdire signature debug en release et charger la signature parent par variables.
 - [x] Séparer seeds de développement.
 - [x] Corriger fuite Jest et retirer `forceExit`.
 - [x] Ajouter CI backend et builds Android debug.
@@ -909,12 +915,12 @@ Le runbook doit répondre précisément à :
 - [x] Faire passer lint à zéro erreur.
 - [ ] Ajouter tests PostgreSQL réels et concurrence.
 - [ ] Ajouter tests mobiles critiques.
-- [ ] Hash et rotation des refresh tokens.
+- [x] Hash et rotation des refresh tokens.
 - [ ] Durcir stockage de sessions web.
-- [ ] Durcir SSL PostgreSQL.
+- [x] Durcir SSL PostgreSQL.
 - [ ] Ajouter observabilité.
 - [x] Traiter vulnérabilités npm.
-- [ ] Protéger ou désactiver Swagger en production.
+- [x] Protéger ou désactiver Swagger en production.
 
 ### Phase 3 - Préproduction
 

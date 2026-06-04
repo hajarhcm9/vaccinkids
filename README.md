@@ -10,6 +10,13 @@ VacciniKids contains:
 For the complete delivery audit and prioritized remaining work, see
 [`docs/AUDIT_LIVRABILITE.md`](docs/AUDIT_LIVRABILITE.md).
 
+Operational documentation:
+
+- [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md)
+- [`docs/SECURITY.md`](docs/SECURITY.md)
+- [`docs/RELEASE_ANDROID_PARENT.md`](docs/RELEASE_ANDROID_PARENT.md)
+- [`docs/RELEASE_ANDROID_STAFF.md`](docs/RELEASE_ANDROID_STAFF.md)
+
 ## Quick Start
 
 1. Clone repo

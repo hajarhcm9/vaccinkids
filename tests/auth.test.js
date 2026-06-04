@@ -146,6 +146,12 @@ describe('Auth Endpoints', () => {
       expect(res.status).toBe(200);
       expect(res.body.data.user.role).toBe('admin');
       expect(res.body.data.tokens).toHaveProperty('accessToken');
+      const stored = await pool.query(
+        'SELECT token_hash FROM refresh_tokens WHERE user_id = $1 AND user_role = $2 ORDER BY id DESC LIMIT 1',
+        [res.body.data.user.id, 'admin'],
+      );
+      expect(stored.rows[0].token_hash).toHaveLength(64);
+      expect(stored.rows[0].token_hash).not.toBe(res.body.data.tokens.refreshToken);
     });
 
     it('should login nurse', async () => {
@@ -175,6 +181,27 @@ describe('Auth Endpoints', () => {
         .post('/api/auth/personnel/login')
         .send({});
       expect(res.status).toBe(400);
+    });
+  });
+
+  describe('POST /api/auth/refresh', () => {
+    it('should rotate refresh tokens and reject reuse', async () => {
+      const login = await request(app)
+        .post('/api/auth/personnel/login')
+        .send({ cin: 'ADMIN01', mot_de_passe: 'admin123' });
+      const original = login.body.data.tokens.refreshToken;
+
+      const rotated = await request(app).post('/api/auth/refresh').send({ refreshToken: original });
+      expect(rotated.status).toBe(200);
+      expect(rotated.body.data.tokens.refreshToken).not.toBe(original);
+
+      const reused = await request(app).post('/api/auth/refresh').send({ refreshToken: original });
+      expect(reused.status).toBe(401);
+
+      const familyRevoked = await request(app)
+        .post('/api/auth/refresh')
+        .send({ refreshToken: rotated.body.data.tokens.refreshToken });
+      expect(familyRevoked.status).toBe(401);
     });
   });
 

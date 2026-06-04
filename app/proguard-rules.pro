@@ -19,3 +19,7 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+-keepattributes Signature, *Annotation*
+-keep class com.example.vaccinkid.network.dto.** { *; }
+-keep class * extends androidx.room.RoomDatabase

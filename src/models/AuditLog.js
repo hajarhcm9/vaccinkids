@@ -1,12 +1,46 @@
 const { query } = require('../config/database');
 
+const sensitiveFields = new Set([
+  'code',
+  'code_hash',
+  'devOtp',
+  'fcm_token',
+  'mot_de_passe',
+  'otpCode',
+  'password',
+  'privateKey',
+  'accessToken',
+  'refreshToken',
+  'token',
+]);
+
+const redactSensitiveValues = (value) => {
+  if (Array.isArray(value)) return value.map(redactSensitiveValues);
+  if (!value || typeof value !== 'object') return value;
+
+  return Object.fromEntries(
+    Object.entries(value).map(([key, nestedValue]) => [
+      key,
+      sensitiveFields.has(key) ? '[REDACTED]' : redactSensitiveValues(nestedValue),
+    ]),
+  );
+};
+
 const AuditLog = {
   async create(entry) {
     const { table_name, record_id, action, old_values, new_values, user_id, user_role } = entry;
     const result = await query(
       `INSERT INTO audit_log (table_name, record_id, action, old_values, new_values, user_id, user_role)
        VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
-      [table_name, record_id, action, old_values, new_values, user_id, user_role],
+      [
+        table_name,
+        record_id,
+        action,
+        redactSensitiveValues(old_values),
+        redactSensitiveValues(new_values),
+        user_id,
+        user_role,
+      ],
     );
     return result.rows[0];
   },

@@ -99,6 +99,22 @@ describe('Day 23 - Securite', () => {
     });
   });
 
+  describe('Append-only audit log', () => {
+    it('should reject updates and deletes of audit events', async () => {
+      const inserted = await pool.query(
+        `INSERT INTO audit_log (table_name, record_id, action, user_role)
+         VALUES ('security_test', 1, 'INSERT', 'admin') RETURNING id`,
+      );
+      const id = inserted.rows[0].id;
+
+      await expect(pool.query('UPDATE audit_log SET action = $1 WHERE id = $2', ['UPDATE', id]))
+        .rejects.toThrow('audit_log is append-only');
+      await expect(pool.query('DELETE FROM audit_log WHERE id = $1', [id])).rejects.toThrow(
+        'audit_log is append-only',
+      );
+    });
+  });
+
   // =====================
   // Input Sanitization
   // =====================

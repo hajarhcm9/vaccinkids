@@ -32,6 +32,22 @@ const requireEnv = (key) => {
   return value;
 };
 
+const getSslConfig = () => {
+  const mode = process.env.DATABASE_SSL_MODE || 'verify-full';
+  if (mode === 'disable') return false;
+  if (mode === 'require') {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('DATABASE_SSL_MODE=require is forbidden in production; use verify-full');
+    }
+    return { rejectUnauthorized: false };
+  }
+  if (mode !== 'verify-full') throw new Error(`Unsupported DATABASE_SSL_MODE: ${mode}`);
+
+  const ssl = { rejectUnauthorized: true };
+  if (process.env.DATABASE_SSL_CA) ssl.ca = process.env.DATABASE_SSL_CA.replace(/\\n/g, '\n');
+  return ssl;
+};
+
 /**
  * PostgreSQL connection pool configuration
  */
@@ -39,11 +55,10 @@ const poolConfig = process.env.DATABASE_URL
   ? {
       connectionString: process.env.DATABASE_URL,
       ssl:
-        process.env.DATABASE_URL &&
-        !process.env.DATABASE_URL.includes('localhost') &&
-        !process.env.DATABASE_URL.includes('127.0.0.1')
-          ? { rejectUnauthorized: false }
-          : false,
+        process.env.DATABASE_URL.includes('localhost') ||
+        process.env.DATABASE_URL.includes('127.0.0.1')
+          ? false
+          : getSslConfig(),
       max: 20,
       idleTimeoutMillis: 30000,
       connectionTimeoutMillis: 5000,

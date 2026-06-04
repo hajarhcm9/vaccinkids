@@ -1,6 +1,11 @@
 const jwt = require('jsonwebtoken');
-const { query } = require('../config/database');
+const crypto = require('crypto');
+const { query, getClient } = require('../config/database');
 const config = require('../config');
+
+const hashToken = (token) => crypto.createHash('sha256').update(token).digest('hex');
+const runQuery = (client, text, params) =>
+  client ? client.query(text, params) : query(text, params);
 
 const TokenService = {
   generateAccessToken(payload) {
@@ -11,13 +16,20 @@ const TokenService = {
     return jwt.sign(payload, config.jwt.refreshSecret, { expiresIn: config.jwt.refreshExpiresIn });
   },
 
-  async generateAuthTokens(user) {
+  async generateAuthTokens(user, options = {}) {
     const accessPayload = {
       userId: user.id,
       role: user.role,
       telephone: user.telephone || undefined,
     };
-    const refreshPayload = { userId: user.id, role: user.role, tokenType: 'refresh' };
+    const familyId = options.familyId || crypto.randomUUID();
+    const refreshPayload = {
+      userId: user.id,
+      role: user.role,
+      tokenType: 'refresh',
+      familyId,
+      jti: crypto.randomUUID(),
+    };
 
     const accessToken = this.generateAccessToken(accessPayload);
     const refreshToken = this.generateRefreshToken(refreshPayload);
@@ -25,9 +37,11 @@ const TokenService = {
     const decoded = jwt.decode(accessToken);
     const refreshDecoded = jwt.decode(refreshToken);
 
-    await query(
-      `INSERT INTO refresh_tokens (user_id, user_role, token, expire_at) VALUES ($1, $2, $3, $4)`,
-      [user.id, user.role, refreshToken, new Date(refreshDecoded.exp * 1000)],
+    await runQuery(
+      options.client,
+      `INSERT INTO refresh_tokens (user_id, user_role, token_hash, family_id, expire_at)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [user.id, user.role, hashToken(refreshToken), familyId, new Date(refreshDecoded.exp * 1000)],
     );
 
     return { accessToken, refreshToken, accessTokenExpiry: decoded.exp * 1000 };
@@ -63,32 +77,75 @@ const TokenService = {
 
   async refreshAuthTokens(refreshToken) {
     const decoded = this.verifyRefreshToken(refreshToken);
+    const tokenHash = hashToken(refreshToken);
+    const client = await getClient();
+    let transactionClosed = false;
 
-    const result = await query(
-      `SELECT * FROM refresh_tokens WHERE token = $1 AND est_revoque = FALSE AND expire_at > CURRENT_TIMESTAMP`,
-      [refreshToken],
-    );
+    try {
+      await client.query('BEGIN');
+      const result = await client.query(
+        `SELECT * FROM refresh_tokens WHERE token_hash = $1 FOR UPDATE`,
+        [tokenHash],
+      );
+      const storedToken = result.rows[0];
 
-    if (result.rows.length === 0) {
-      const err = new Error('Refresh token not found or revoked');
-      err.statusCode = 401;
-      throw err;
+      if (!storedToken || storedToken.expire_at <= new Date()) {
+        const err = new Error('Refresh token not found or expired');
+        err.statusCode = 401;
+        throw err;
+      }
+
+      if (storedToken.est_revoque) {
+        await client.query(
+          `UPDATE refresh_tokens
+           SET est_revoque = TRUE, revoked_at = COALESCE(revoked_at, CURRENT_TIMESTAMP)
+           WHERE family_id = $1`,
+          [storedToken.family_id],
+        );
+        await client.query('COMMIT');
+        transactionClosed = true;
+        const err = new Error('Refresh token reuse detected; session family revoked');
+        err.statusCode = 401;
+        throw err;
+      }
+
+      const tokens = await this.generateAuthTokens(
+        { id: decoded.userId, role: decoded.role },
+        { familyId: storedToken.family_id, client },
+      );
+      await client.query(
+        `UPDATE refresh_tokens
+         SET est_revoque = TRUE, revoked_at = CURRENT_TIMESTAMP, replaced_by_hash = $2
+         WHERE token_hash = $1`,
+        [tokenHash, hashToken(tokens.refreshToken)],
+      );
+      await client.query('COMMIT');
+      transactionClosed = true;
+      return tokens;
+    } catch (error) {
+      if (!transactionClosed) await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
     }
-
-    await query('UPDATE refresh_tokens SET est_revoque = TRUE WHERE token = $1', [refreshToken]);
-
-    return this.generateAuthTokens({ id: decoded.userId, role: decoded.role });
   },
 
   async revokeAllUserTokens(userId, userRole) {
     await query(
-      'UPDATE refresh_tokens SET est_revoque = TRUE WHERE user_id = $1 AND user_role = $2',
+      `UPDATE refresh_tokens
+       SET est_revoque = TRUE, revoked_at = COALESCE(revoked_at, CURRENT_TIMESTAMP)
+       WHERE user_id = $1 AND user_role = $2`,
       [userId, userRole],
     );
   },
 
   async revokeToken(token) {
-    await query('UPDATE refresh_tokens SET est_revoque = TRUE WHERE token = $1', [token]);
+    await query(
+      `UPDATE refresh_tokens
+       SET est_revoque = TRUE, revoked_at = COALESCE(revoked_at, CURRENT_TIMESTAMP)
+       WHERE token_hash = $1`,
+      [hashToken(token)],
+    );
   },
 };
 

@@ -24,7 +24,7 @@ const tableFromPath = (path) => {
 
 const auditMiddleware = async (req, res, next) => {
   const action = methodToAction[req.method];
-  if (!action || !req.originalUrl.startsWith('/api/') || req.originalUrl.startsWith('/api/auth')) {
+  if (!action || !req.originalUrl.startsWith('/api/')) {
     return next();
   }
 
