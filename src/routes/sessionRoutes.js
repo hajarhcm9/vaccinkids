@@ -9,6 +9,7 @@ router.get('/', authenticate, SessionController.getAvailable);
 router.get('/today', authenticate, authorize('infirmier', 'admin'), SessionController.getToday);
 router.get('/:id', authenticate, SessionController.getOne);
 router.post('/:id/inscrire', authenticate, authorize('parent'), SessionController.inscrire);
+router.post('/:id/waitlist', authenticate, authorize('parent'), SessionController.joinWaitlist);
 router.post(
   '/',
   authenticate,

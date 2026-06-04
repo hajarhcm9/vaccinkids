@@ -12,6 +12,7 @@ const SessionController = {
     const sessions = await Session.findAll({
       centreId: req.query.centre_id,
       vaccinId: req.query.vaccin_id,
+      upcomingOnly: req.user.role === 'parent',
     });
     return success(res, 200, 'Available sessions retrieved', sessions);
   }),
@@ -93,6 +94,47 @@ const SessionController = {
 
     const rdv = await RendezVous.create({ session_id: sessionId, parent_id: parentId, bebe_id });
     return success(res, 201, 'Inscription successful', rdv);
+  }),
+
+  joinWaitlist: catchAsync(async (req, res, next) => {
+    const parentId = req.user.id;
+    const sessionId = req.params.id;
+    const { bebe_id } = req.body;
+    if (!bebe_id) return next(ApiError.badRequest('bebe_id is required'));
+
+    const session = await Session.findById(sessionId);
+    if (!session) return next(ApiError.notFound('Session not found'));
+    if (!REGISTRATION_OPEN_STATUSES.includes(session.statut)) {
+      return next(ApiError.badRequest('Session is not open for registration'));
+    }
+
+    const bebe = await Bebe.findById(bebe_id);
+    if (!bebe) return next(ApiError.notFound('Baby not found'));
+    if (bebe.parent_id !== parentId) {
+      return next(ApiError.forbidden('This baby does not belong to you'));
+    }
+
+    const exists = await RendezVous.existsBySessionAndBebe(sessionId, bebe_id);
+    if (exists) {
+      return next(ApiError.badRequest('This baby already has an appointment for this session'));
+    }
+
+    const activeRegistrations = await RendezVous.countActiveBySession(sessionId);
+    if (activeRegistrations < session.max_inscriptions) {
+      return next(ApiError.badRequest('Session still has available spots'));
+    }
+
+    const rdv = await RendezVous.create({
+      session_id: sessionId,
+      parent_id: parentId,
+      bebe_id,
+      statut: 'EN_LISTE_ATTENTE',
+    });
+    const counts = await RendezVous.countBySession(sessionId);
+    return success(res, 201, 'Waitlist registration successful', {
+      ...rdv,
+      position: parseInt(counts.en_liste_attente),
+    });
   }),
 };
 

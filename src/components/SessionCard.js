@@ -20,9 +20,7 @@ const SessionCard = ({ session, onPress, booked = false }) => {
 
       <View style={styles.header}>
         <View style={styles.dateBox}>
-          <Text style={styles.dateDay}>
-            {new Date(session.date).getDate()}
-          </Text>
+          <Text style={styles.dateDay}>{new Date(session.date).getDate()}</Text>
           <Text style={styles.dateMonth}>
             {new Date(session.date).toLocaleDateString('fr-FR', { month: 'short' })}
           </Text>
@@ -30,21 +28,18 @@ const SessionCard = ({ session, onPress, booked = false }) => {
         <View style={styles.headerInfo}>
           <Text style={styles.vaccine}>{session.vaccine}</Text>
           <Text style={styles.time}>🕐 {session.time}</Text>
-          <Text style={styles.doctor}>👨‍⚕️ {session.doctorName}</Text>
+          <Text style={styles.doctor}>📍 {session.centerName}</Text>
         </View>
       </View>
 
       <View style={styles.divider} />
 
-      <FillBar
-        booked={session.bookedSlots}
-        total={session.totalSlots}
-        showLabel
-        size="md"
-      />
+      <FillBar booked={session.bookedSlots} total={session.totalSlots} showLabel size="md" />
 
       <View style={styles.footer}>
-        <Text style={styles.center}>📍 {session.centerName}</Text>
+        <Text style={styles.center}>
+          {session.centerAddress || 'Adresse du centre indisponible'}
+        </Text>
         <View style={[styles.actionBtn, isFull && styles.actionBtnFull]}>
           <Text style={[styles.actionBtnText, isFull && styles.actionBtnTextFull]}>
             {booked ? 'Voir détail' : isFull ? "Liste d'attente" : 'Réserver'}

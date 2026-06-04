@@ -1,26 +1,33 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-  View, Text, StyleSheet, StatusBar, FlatList,
-  TouchableOpacity, TextInput, ActivityIndicator,
-  RefreshControl, Platform,
+  View,
+  Text,
+  StyleSheet,
+  StatusBar,
+  FlatList,
+  TouchableOpacity,
+  TextInput,
+  ActivityIndicator,
+  RefreshControl,
+  Platform,
 } from 'react-native';
 import { colors, typography, spacing, borderRadius, shadows } from '../../theme';
 import { sessionService } from '../../services/sessionService';
 import SessionCard from '../../components/SessionCard';
 
 const FILTERS = [
-  { key: 'all',   label: 'Toutes' },
-  { key: 'open',  label: 'Disponibles' },
-  { key: 'full',  label: 'Complètes' },
+  { key: 'all', label: 'Toutes' },
+  { key: 'open', label: 'Disponibles' },
+  { key: 'full', label: 'Complètes' },
 ];
 
 const SessionsScreen = ({ navigation }) => {
-  const [sessions, setSessions]     = useState([]);
-  const [filtered, setFiltered]     = useState([]);
-  const [bookings, setBookings]     = useState([]);
-  const [filter, setFilter]         = useState('all');
-  const [search, setSearch]         = useState('');
-  const [loading, setLoading]       = useState(true);
+  const [sessions, setSessions] = useState([]);
+  const [filtered, setFiltered] = useState([]);
+  const [bookings, setBookings] = useState([]);
+  const [filter, setFilter] = useState('all');
+  const [search, setSearch] = useState('');
+  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   const loadData = useCallback(async () => {
@@ -40,7 +47,9 @@ const SessionsScreen = ({ navigation }) => {
     }
   }, []);
 
-  useEffect(() => { loadData(); }, [loadData]);
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const applyFilters = (data, f, s) => {
     let result = [...data];
@@ -49,8 +58,7 @@ const SessionsScreen = ({ navigation }) => {
       const q = s.toLowerCase();
       result = result.filter(
         (sess) =>
-          sess.vaccine.toLowerCase().includes(q) ||
-          sess.doctorName.toLowerCase().includes(q)
+          sess.vaccine.toLowerCase().includes(q) || sess.centerName.toLowerCase().includes(q),
       );
     }
     setFiltered(result);
@@ -61,9 +69,14 @@ const SessionsScreen = ({ navigation }) => {
   }, [filter, search, sessions]);
 
   const isBooked = (sessionId) =>
-    bookings.some((b) => b.sessionId === sessionId && b.status === 'confirmed');
+    bookings.some(
+      (b) => b.sessionId === sessionId && ['confirmed', 'pending', 'waitlist'].includes(b.status),
+    );
 
-  const onRefresh = () => { setRefreshing(true); loadData(); };
+  const onRefresh = () => {
+    setRefreshing(true);
+    loadData();
+  };
 
   if (loading) {
     return (
@@ -145,7 +158,10 @@ const SessionsScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.background },
   loadingContainer: {
-    flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background,
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.background,
   },
   header: {
     backgroundColor: colors.primary,
@@ -220,7 +236,9 @@ const styles = StyleSheet.create({
   },
   list: { padding: spacing.lg, paddingBottom: spacing.xxxl },
   emptyContainer: {
-    alignItems: 'center', paddingTop: spacing.xxxl, gap: spacing.md,
+    alignItems: 'center',
+    paddingTop: spacing.xxxl,
+    gap: spacing.md,
   },
   emptyIcon: { fontSize: 48 },
   emptyTitle: {

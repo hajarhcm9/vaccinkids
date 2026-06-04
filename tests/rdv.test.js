@@ -111,6 +111,69 @@ describe('Rendez-vous Endpoints', () => {
     });
   });
 
+  describe('GET /api/sessions - Parent display data', () => {
+    it('should return enriched upcoming sessions with live registration counts', async () => {
+      const res = await request(app)
+        .get('/api/sessions')
+        .set('Authorization', 'Bearer ' + parentToken);
+
+      expect(res.status).toBe(200);
+      const session = res.body.data.find((item) => item.id === sessionId);
+      expect(session).toBeDefined();
+      expect(session).toHaveProperty('centre_nom');
+      expect(session).toHaveProperty('vaccin_nom');
+      expect(session).toHaveProperty('inscrits');
+    });
+  });
+
+  describe('POST /api/sessions/:id/waitlist', () => {
+    it('should add another baby to the waitlist when a session is full', async () => {
+      const fullSessionRes = await request(app)
+        .post('/api/sessions')
+        .set('Authorization', 'Bearer ' + adminToken)
+        .send({
+          centre_id: 1,
+          vaccin_id: 3,
+          date_session: new Date(Date.now() + 8 * 86400000).toISOString().split('T')[0],
+          heure_debut: '09:00',
+          heure_fin: '13:00',
+          max_inscriptions: 1,
+        });
+      const fullSessionId = fullSessionRes.body.data.id;
+
+      const secondBabyRes = await request(app)
+        .post('/api/carnet/bebe')
+        .set('Authorization', 'Bearer ' + parentToken)
+        .send({
+          prenom: 'WaitlistBebe',
+          nom: 'Day8',
+          date_naissance: '2025-04-01',
+          sexe: 'M',
+        });
+
+      await request(app)
+        .post('/api/rendez-vous')
+        .set('Authorization', 'Bearer ' + parentToken)
+        .send({ session_id: fullSessionId, bebe_id: bebeId });
+
+      const res = await request(app)
+        .post('/api/sessions/' + fullSessionId + '/waitlist')
+        .set('Authorization', 'Bearer ' + parentToken)
+        .send({ bebe_id: secondBabyRes.body.data.id });
+
+      expect(res.status).toBe(201);
+      expect(res.body.data.statut).toBe('EN_LISTE_ATTENTE');
+      expect(res.body.data.position).toBe(1);
+
+      const availability = await request(app)
+        .get('/api/rendez-vous/session/' + fullSessionId + '/availability')
+        .set('Authorization', 'Bearer ' + parentToken);
+
+      expect(availability.body.data.inscrits).toBe(1);
+      expect(availability.body.data.en_liste_attente).toBe(1);
+    });
+  });
+
   describe('PATCH /api/rendez-vous/:id - Status updates', () => {
     it('should allow nurse to confirm', async () => {
       const res = await request(app)

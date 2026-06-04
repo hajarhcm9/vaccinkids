@@ -1,5 +1,16 @@
 const { query } = require('../config/database');
 
+const SESSION_SELECT =
+  'SELECT s.*, c.nom AS centre_nom, c.adresse AS centre_adresse, ' +
+  'c.gps_lat AS centre_gps_lat, c.gps_lng AS centre_gps_lng, v.nom AS vaccin_nom, ' +
+  "COUNT(rdv.id) FILTER (WHERE rdv.statut NOT IN ('ANNULE', 'EN_LISTE_ATTENTE'))::int AS inscrits " +
+  'FROM session s ' +
+  'LEFT JOIN centre c ON c.id = s.centre_id ' +
+  'LEFT JOIN vaccin v ON v.id = s.vaccin_id ' +
+  'LEFT JOIN rendez_vous rdv ON rdv.session_id = s.id ';
+
+const SESSION_GROUP_BY = ' GROUP BY s.id, c.nom, c.adresse, c.gps_lat, c.gps_lng, v.nom';
+
 const Session = {
   async create(data) {
     const { centre_id, vaccin_id, date_session, heure_debut, heure_fin, max_inscriptions, statut } =
@@ -21,7 +32,7 @@ const Session = {
   },
 
   async findById(id) {
-    const result = await query('SELECT * FROM session WHERE id = $1', [id]);
+    const result = await query(SESSION_SELECT + 'WHERE s.id = $1' + SESSION_GROUP_BY, [id]);
     return result.rows[0];
   },
 
@@ -31,21 +42,29 @@ const Session = {
 
     if (filters.centreId) {
       values.push(filters.centreId);
-      conditions.push(`centre_id = $${values.length}`);
+      conditions.push(`s.centre_id = $${values.length}`);
     }
 
     if (filters.vaccinId) {
       values.push(filters.vaccinId);
-      conditions.push(`vaccin_id = $${values.length}`);
+      conditions.push(`s.vaccin_id = $${values.length}`);
     }
 
     if (filters.dateSession) {
       values.push(filters.dateSession);
-      conditions.push(`date_session = $${values.length}`);
+      conditions.push(`s.date_session = $${values.length}`);
+    }
+
+    if (filters.upcomingOnly) {
+      conditions.push('s.date_session >= CURRENT_DATE');
+      conditions.push("s.statut NOT IN ('ANNULEE', 'TERMINEE')");
     }
 
     const whereClause = conditions.length > 0 ? ` WHERE ${conditions.join(' AND ')}` : '';
-    const result = await query(`SELECT * FROM session${whereClause} ORDER BY date_session`, values);
+    const result = await query(
+      SESSION_SELECT + whereClause + SESSION_GROUP_BY + ' ORDER BY s.date_session, s.heure_debut',
+      values,
+    );
     return result.rows;
   },
 

@@ -2,10 +2,10 @@ const { query } = require('../config/database');
 
 const RendezVous = {
   async create(data) {
-    const { session_id, parent_id, bebe_id } = data;
+    const { session_id, parent_id, bebe_id, statut = 'EN_ATTENTE' } = data;
     const result = await query(
       'INSERT INTO rendez_vous (session_id, parent_id, bebe_id, statut) VALUES ($1, $2, $3, $4) RETURNING *',
-      [session_id, parent_id, bebe_id, 'EN_ATTENTE'],
+      [session_id, parent_id, bebe_id, statut],
     );
     return result.rows[0];
   },
@@ -18,10 +18,13 @@ const RendezVous = {
   async findByParent(parentId) {
     const result = await query(
       'SELECT rdv.*, s.date_session, s.heure_debut, s.heure_fin, s.statut AS session_statut, ' +
-        'v.nom AS vaccin_nom, b.prenom AS bebe_prenom, b.nom AS bebe_nom ' +
+        'v.nom AS vaccin_nom, c.nom AS centre_nom, c.adresse AS centre_adresse, ' +
+        'c.gps_lat AS centre_gps_lat, c.gps_lng AS centre_gps_lng, ' +
+        'b.prenom AS bebe_prenom, b.nom AS bebe_nom ' +
         'FROM rendez_vous rdv ' +
         'JOIN session s ON s.id = rdv.session_id ' +
         'JOIN vaccin v ON v.id = s.vaccin_id ' +
+        'JOIN centre c ON c.id = s.centre_id ' +
         'JOIN bebe b ON b.id = rdv.bebe_id ' +
         'WHERE rdv.parent_id = $1 ORDER BY s.date_session DESC',
       [parentId],
@@ -67,11 +70,14 @@ const RendezVous = {
     const whereClause = conditions.length > 0 ? ' WHERE ' + conditions.join(' AND ') : '';
     const result = await query(
       'SELECT rdv.*, s.date_session, s.heure_debut, s.heure_fin, s.statut AS session_statut, ' +
-        'v.nom AS vaccin_nom, b.prenom AS bebe_prenom, b.nom AS bebe_nom, ' +
+        'v.nom AS vaccin_nom, c.nom AS centre_nom, c.adresse AS centre_adresse, ' +
+        'c.gps_lat AS centre_gps_lat, c.gps_lng AS centre_gps_lng, ' +
+        'b.prenom AS bebe_prenom, b.nom AS bebe_nom, ' +
         'p.nom AS parent_nom, p.prenom AS parent_prenom ' +
         'FROM rendez_vous rdv ' +
         'JOIN session s ON s.id = rdv.session_id ' +
         'JOIN vaccin v ON v.id = s.vaccin_id ' +
+        'JOIN centre c ON c.id = s.centre_id ' +
         'JOIN bebe b ON b.id = rdv.bebe_id ' +
         'JOIN parent p ON p.id = rdv.parent_id' +
         whereClause +
@@ -92,7 +98,7 @@ const RendezVous = {
   async countBySession(sessionId) {
     const result = await query(
       'SELECT COUNT(*) AS total, ' +
-        "COUNT(*) FILTER (WHERE statut NOT IN ('ANNULE')) AS actifs, " +
+        "COUNT(*) FILTER (WHERE statut NOT IN ('ANNULE', 'EN_LISTE_ATTENTE')) AS actifs, " +
         "COUNT(*) FILTER (WHERE statut = 'EN_ATTENTE') AS en_attente, " +
         "COUNT(*) FILTER (WHERE statut = 'CONFIRME') AS confirmes, " +
         "COUNT(*) FILTER (WHERE statut = 'PRESENT') AS presents, " +

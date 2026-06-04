@@ -99,6 +99,7 @@ const RendezVousController = {
       places_restantes: Math.max(0, spotsLeft),
       en_attente: parseInt(counts.en_attente),
       confirmes: parseInt(counts.confirmes),
+      en_liste_attente: parseInt(counts.en_liste_attente),
       disponible: spotsLeft > 0 && !['ANNULEE', 'TERMINEE'].includes(session.statut),
     });
   }),
