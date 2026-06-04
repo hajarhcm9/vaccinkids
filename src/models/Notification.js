@@ -65,16 +65,13 @@ class Notification {
   }
 
   static async findById(id) {
-    const { rows } = await pool.query(
-      'SELECT * FROM notification WHERE id = $1',
-      [id]
-    );
+    const { rows } = await pool.query('SELECT * FROM notification WHERE id = $1', [id]);
     return rows[0] || null;
   }
 
   static async findByDestinataire(
     destinataire_id,
-    { page = 1, limit = 20, non_seulement = false, destinataire_type = 'parent' } = {}
+    { page = 1, limit = 20, non_seulement = false, destinataire_type = 'parent' } = {},
   ) {
     const offset = (page - 1) * limit;
     let whereClause = 'WHERE destinataire_id = $1 AND destinataire_type = $2';
@@ -94,11 +91,7 @@ class Notification {
     const countResult = await pool.query(countSql, params);
     const total = countResult.rows[0].total;
 
-    const dataResult = await pool.query(dataSql, [
-      ...params,
-      limit,
-      offset,
-    ]);
+    const dataResult = await pool.query(dataSql, [...params, limit, offset]);
 
     return {
       rows: dataResult.rows,
@@ -111,7 +104,7 @@ class Notification {
   static async markAsRead(id) {
     const { rows } = await pool.query(
       `UPDATE notification SET lu = TRUE, updated_at = NOW() WHERE id = $1 RETURNING *`,
-      [id]
+      [id],
     );
     return rows[0] || null;
   }
@@ -120,7 +113,7 @@ class Notification {
     const { rowCount } = await pool.query(
       `UPDATE notification SET lu = TRUE, updated_at = NOW()
        WHERE destinataire_id = $1 AND destinataire_type = $2 AND lu = FALSE`,
-      [destinataire_id, destinataire_type]
+      [destinataire_id, destinataire_type],
     );
     return rowCount;
   }
@@ -129,7 +122,7 @@ class Notification {
     const { rows } = await pool.query(
       `SELECT COUNT(*)::int AS count FROM notification
        WHERE destinataire_id = $1 AND destinataire_type = $2 AND lu = FALSE`,
-      [destinataire_id, destinataire_type]
+      [destinataire_id, destinataire_type],
     );
     return rows[0].count;
   }
@@ -137,7 +130,7 @@ class Notification {
   static async deleteOld(daysOld) {
     const { rowCount } = await pool.query(
       `DELETE FROM notification WHERE created_at < NOW() - ($1 || ' days')::INTERVAL`,
-      [daysOld]
+      [daysOld],
     );
     return rowCount;
   }
@@ -146,7 +139,7 @@ class Notification {
     const { rows } = await pool.query(
       `UPDATE notification SET envoye = TRUE, date_envoi = NOW(), updated_at = NOW()
        WHERE id = $1 RETURNING *`,
-      [id]
+      [id],
     );
     return rows[0] || null;
   }

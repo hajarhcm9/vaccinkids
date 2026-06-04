@@ -34,19 +34,20 @@ const paginated = (res, items, total, page, limit) => {
   });
 };
 
-
 /**
  * Not found response (404)
  */
-var notFound = function(res, message) {
+var notFound = function (res, message) {
   return res.status(404).json({ status: 'error', message: message || 'Resource not found' });
 };
 
 /**
  * Error response
  */
-var error = function(res, message, statusCode) {
-  return res.status(statusCode || 500).json({ status: 'error', message: message || 'Internal Server Error' });
+var error = function (res, message, statusCode) {
+  return res
+    .status(statusCode || 500)
+    .json({ status: 'error', message: message || 'Internal Server Error' });
 };
 
 module.exports = { success, created, noContent, paginated, notFound, error };

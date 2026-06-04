@@ -28,7 +28,7 @@ const AbsenteeismController = {
     return success(res, 200, message, {
       ...result,
       alert: result.isHabitualAbsent
-        ? 'Ce parent a 2 absences consecutives ou plus. Une notification d\'alerte a ete envoyee.'
+        ? "Ce parent a 2 absences consecutives ou plus. Une notification d'alerte a ete envoyee."
         : null,
     });
   }),
@@ -43,7 +43,7 @@ const AbsenteeismController = {
 
     const result = await absenteeismService.processSessionNoShows(
       parseInt(sessionId),
-      gracePeriodMinutes ? parseInt(gracePeriodMinutes) : 15
+      gracePeriodMinutes ? parseInt(gracePeriodMinutes) : 15,
     );
 
     if (!result.processed) {
@@ -65,7 +65,9 @@ const AbsenteeismController = {
    */
   getHabitualAbsents: catchAsync(async (req, res, next) => {
     const { centreId } = req.query;
-    const absents = await absenteeismService.getHabitualAbsents(centreId ? parseInt(centreId) : null);
+    const absents = await absenteeismService.getHabitualAbsents(
+      centreId ? parseInt(centreId) : null,
+    );
     return success(res, 200, 'Liste des absents habituels', absents);
   }),
 
@@ -92,7 +94,7 @@ const AbsenteeismController = {
    */
   getAbsenteismeStats: catchAsync(async (req, res, next) => {
     const stats = await absenteeismService.getAbsenteismeStats();
-    return success(res, 200, 'Statistiques d\'absenteisme', stats);
+    return success(res, 200, "Statistiques d'absenteisme", stats);
   }),
 };
 

@@ -11,7 +11,7 @@ import {
   RefreshControl,
   Platform,
 } from 'react-native';
-import { colors, typography, spacing, borderRadius, shadows } from '../../theme';
+import { colors, typography, spacing, borderRadius } from '../../theme';
 import { sessionService } from '../../services/sessionService';
 import SessionCard from '../../components/SessionCard';
 

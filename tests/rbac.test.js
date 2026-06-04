@@ -1,5 +1,8 @@
 const request = require('supertest');
 const app = require('../src/app');
+const { pool } = require('../src/config/database');
+
+afterAll(() => pool.end());
 
 describe('RBAC - Role Based Access Control', () => {
   let adminToken, nurseToken, parentToken;

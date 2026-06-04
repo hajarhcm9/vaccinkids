@@ -8,21 +8,21 @@ router.post(
   '/rdv-confirmation/:rdvId',
   authMiddleware.authenticate,
   rbacMiddleware.authorize('admin', 'infirmier'),
-  emailController.sendRdvConfirmation
+  emailController.sendRdvConfirmation,
 );
 
 router.post(
   '/rdv-rappel/:rdvId',
   authMiddleware.authenticate,
   rbacMiddleware.authorize('admin', 'infirmier'),
-  emailController.sendRdvReminder
+  emailController.sendRdvReminder,
 );
 
 router.post(
   '/vaccination-certificate/:vaccinationId',
   authMiddleware.authenticate,
   rbacMiddleware.authorize('admin', 'infirmier'),
-  emailController.sendVaccinationCertificate
+  emailController.sendVaccinationCertificate,
 );
 
 module.exports = router;

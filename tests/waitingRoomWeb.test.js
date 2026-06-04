@@ -2,6 +2,9 @@
 
 const request = require('supertest');
 const app = require('../src/app');
+const { pool } = require('../src/config/database');
+
+afterAll(() => pool.end());
 
 describe('Phase 5 - Waiting Room Display', () => {
   test('serves the waiting-room display shell', async () => {

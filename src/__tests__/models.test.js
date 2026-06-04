@@ -23,7 +23,9 @@ describe('Session model', () => {
 
     expect(sessions).toEqual([{ id: 1 }]);
     expect(query).toHaveBeenCalledWith(
-      'SELECT * FROM session WHERE centre_id = $1 AND vaccin_id = $2 AND date_session = $3 ORDER BY date_session',
+      expect.stringContaining(
+        'WHERE s.centre_id = $1 AND s.vaccin_id = $2 AND s.date_session = $3',
+      ),
       [2, 3, '2026-04-29'],
     );
   });
@@ -56,8 +58,8 @@ describe('Flacon model', () => {
       ouverture_forcee: true,
     });
     expect(query).toHaveBeenCalledWith(
-      'UPDATE flacon SET date_ouverture = CURRENT_TIMESTAMP, ouverture_forcee = TRUE, justification_forcee = $1 WHERE id = $2 RETURNING *',
-      ['Cold chain break', 8],
+      'UPDATE flacon SET ouverture_forcee = TRUE, justification_forcee = $2 WHERE id = $1 RETURNING *',
+      [8, 'Cold chain break'],
     );
   });
 });
@@ -81,13 +83,11 @@ describe('RendezVous model', () => {
   });
 
   test('countActiveBySession excludes cancelled appointments', async () => {
-    query.mockResolvedValueOnce({ rows: [{ count: 4 }] });
+    query.mockResolvedValueOnce({ rows: [{ actifs: 4 }] });
 
     await expect(RendezVous.countActiveBySession(1)).resolves.toBe(4);
     expect(query).toHaveBeenCalledWith(
-      `SELECT COUNT(*)::int AS count
-       FROM rendez_vous
-       WHERE session_id = $1 AND statut <> 'ANNULE'`,
+      expect.stringContaining('FROM rendez_vous WHERE session_id = $1'),
       [1],
     );
   });

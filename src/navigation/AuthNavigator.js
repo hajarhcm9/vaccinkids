@@ -15,20 +15,9 @@ const AuthNavigator = () => {
         gestureEnabled: true,
       }}
     >
-      <Stack.Screen
-        name="Login"
-        component={LoginScreen}
-        options={{ gestureEnabled: false }}
-      />
-      <Stack.Screen
-        name="OtpVerification"
-        component={OtpVerificationScreen}
-      />
-      <Stack.Screen
-        name="AddBaby"
-        component={AddBabyScreen}
-        options={{ gestureEnabled: false }}
-      />
+      <Stack.Screen name="Login" component={LoginScreen} options={{ gestureEnabled: false }} />
+      <Stack.Screen name="OtpVerification" component={OtpVerificationScreen} />
+      <Stack.Screen name="AddBaby" component={AddBabyScreen} options={{ gestureEnabled: false }} />
     </Stack.Navigator>
   );
 };

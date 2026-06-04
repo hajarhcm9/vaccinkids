@@ -11,7 +11,8 @@ class DelayAlertService {
    * Uses EXTRACT(EPOCH FROM interval) / 86400 to get days as numeric.
    */
   async getDelayedVaccinesForBebe(bebeId) {
-    const res = await pool.query(`
+    const res = await pool.query(
+      `
       SELECT
         b.id AS bebe_id, b.prenom AS bebe_prenom, b.nom AS bebe_nom,
         b.date_naissance,
@@ -34,7 +35,9 @@ class DelayAlertService {
         )
         AND CURRENT_DATE > (b.date_naissance + (v.age_cible_semaines * INTERVAL '1 week') + INTERVAL '7 days')
       ORDER BY jours_retard DESC
-    `, [bebeId]);
+    `,
+      [bebeId],
+    );
     return res.rows;
   }
 
@@ -43,7 +46,8 @@ class DelayAlertService {
    * Returns babies grouped by delay severity.
    */
   async getDelayedVaccinesByCentre(centreId) {
-    const res = await pool.query(`
+    const res = await pool.query(
+      `
       SELECT
         b.id AS bebe_id, b.prenom AS bebe_prenom, b.nom AS bebe_nom,
         b.date_naissance,
@@ -72,11 +76,15 @@ class DelayAlertService {
         )
       ORDER BY jours_retard DESC
       LIMIT 500
-    `, [centreId]);
+    `,
+      [centreId],
+    );
 
-    const severe = res.rows.filter(r => parseInt(r.jours_retard) > 30);
-    const moderate = res.rows.filter(r => parseInt(r.jours_retard) > 7 && parseInt(r.jours_retard) <= 30);
-    const mild = res.rows.filter(r => parseInt(r.jours_retard) <= 7);
+    const severe = res.rows.filter((r) => parseInt(r.jours_retard) > 30);
+    const moderate = res.rows.filter(
+      (r) => parseInt(r.jours_retard) > 7 && parseInt(r.jours_retard) <= 30,
+    );
+    const mild = res.rows.filter((r) => parseInt(r.jours_retard) <= 7);
 
     return {
       totalRetards: res.rows.length,
@@ -221,7 +229,14 @@ class DelayAlertService {
             type: 'ALERTE_STOCK',
             canal: 'in_app',
             titre: 'Retard vaccinal detecte',
-            message: 'Le vaccin ' + retard.vaccin_nom + ' pour ' + retard.bebe_prenom + ' est en retard de ' + retard.jours_retard + ' jours. Veuillez prendre rendez-vous.',
+            message:
+              'Le vaccin ' +
+              retard.vaccin_nom +
+              ' pour ' +
+              retard.bebe_prenom +
+              ' est en retard de ' +
+              retard.jours_retard +
+              ' jours. Veuillez prendre rendez-vous.',
             reference_id: retard.bebe_id,
             reference_type: 'bebe',
           });

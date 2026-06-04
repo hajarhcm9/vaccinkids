@@ -9,9 +9,9 @@ let cachedAccessTokenExpiry = 0;
 function hasFirebaseCredentials() {
   return Boolean(
     config.firebase.projectId &&
-      config.firebase.privateKey &&
-      config.firebase.privateKey.includes('BEGIN PRIVATE KEY') &&
-      config.firebase.clientEmail,
+    config.firebase.privateKey &&
+    config.firebase.privateKey.includes('BEGIN PRIVATE KEY') &&
+    config.firebase.clientEmail,
   );
 }
 

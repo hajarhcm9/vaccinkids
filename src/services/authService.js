@@ -35,7 +35,7 @@ export const authService = {
       });
       const data = await parseApiResponse(response);
       if (data.data?.devOtp) {
-        console.log(`[DEV] OTP pour ${phoneNumber}: ${data.data.devOtp}`);
+        console.warn(`[DEV] OTP pour ${phoneNumber}: ${data.data.devOtp}`);
       }
       return { success: true, message: data.message || 'OTP envoyé avec succès' };
     } catch (error) {

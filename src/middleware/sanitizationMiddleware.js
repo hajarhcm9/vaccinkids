@@ -29,9 +29,8 @@ const sanitizeInput = (req, res, next) => {
       }
     }
   }
-  next();
+  return next();
 };
-
 
 const preventNoSQLInjection = (req, res, next) => {
   const check = (obj) => {
@@ -45,7 +44,7 @@ const preventNoSQLInjection = (req, res, next) => {
   if (check(req.body) || check(req.query)) {
     return res.status(400).json({ error: 'NoSQL injection detected' });
   }
-  next();
+  return next();
 };
 
 module.exports = { sanitizeInput, preventNoSQLInjection, sanitizeString };

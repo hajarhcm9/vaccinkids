@@ -60,7 +60,7 @@ const OtpVerificationScreen = ({ navigation, route }) => {
 
   // Compte à rebours pour le renvoi
   useEffect(() => {
-    if (resendTimer <= 0) return;
+    if (resendTimer <= 0) return undefined;
     const interval = setInterval(() => {
       setResendTimer((prev) => {
         if (prev <= 1) {
@@ -184,9 +184,7 @@ const OtpVerificationScreen = ({ navigation, route }) => {
           {/* Indicateur d'erreur */}
           {hasError && (
             <View style={styles.errorBox}>
-              <Text style={styles.errorText}>
-                ✕ Code incorrect. Vérifiez et réessayez.
-              </Text>
+              <Text style={styles.errorText}>✕ Code incorrect. Vérifiez et réessayez.</Text>
             </View>
           )}
 
@@ -223,10 +221,7 @@ const OtpVerificationScreen = ({ navigation, route }) => {
           </TouchableOpacity>
 
           {/* Changer de numéro */}
-          <TouchableOpacity
-            onPress={() => navigation.goBack()}
-            style={styles.changeNumberBtn}
-          >
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.changeNumberBtn}>
             <Text style={styles.changeNumberText}>{t.changeNumber}</Text>
           </TouchableOpacity>
 

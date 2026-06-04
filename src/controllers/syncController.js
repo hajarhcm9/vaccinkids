@@ -5,7 +5,7 @@ var responseHandler = require('../utils/responseHandler');
 var success = responseHandler.success;
 var error = responseHandler.error;
 
-var pull = async function(req, res, next) {
+var pull = async function (req, res, next) {
   try {
     var since = req.query.since;
     var userId = req.user.id || req.user.userId;
@@ -17,7 +17,7 @@ var pull = async function(req, res, next) {
   }
 };
 
-var push = async function(req, res, next) {
+var push = async function (req, res, next) {
   try {
     var items = req.body.items;
     var userId = req.user.id || req.user.userId;
@@ -35,7 +35,7 @@ var push = async function(req, res, next) {
   }
 };
 
-var getStatus = async function(req, res, next) {
+var getStatus = async function (req, res, next) {
   try {
     var userId = req.user.id || req.user.userId;
     var userRole = req.user.role;
@@ -46,7 +46,7 @@ var getStatus = async function(req, res, next) {
   }
 };
 
-var getQueue = async function(req, res, next) {
+var getQueue = async function (req, res, next) {
   try {
     var userId = req.user.id || req.user.userId;
     var userRole = req.user.role;
@@ -57,7 +57,7 @@ var getQueue = async function(req, res, next) {
   }
 };
 
-var addToQueue = async function(req, res, next) {
+var addToQueue = async function (req, res, next) {
   try {
     var operation = req.body.operation;
     var entity_type = req.body.entity_type;
@@ -72,14 +72,22 @@ var addToQueue = async function(req, res, next) {
     if (!['CREATE', 'UPDATE', 'DELETE'].includes(operation)) {
       return error(res, 'Invalid operation. Must be CREATE, UPDATE or DELETE', 400);
     }
-    var item = await syncService.addToQueue(userId, userRole, operation, entity_type, entity_id, payload, client_timestamp);
+    var item = await syncService.addToQueue(
+      userId,
+      userRole,
+      operation,
+      entity_type,
+      entity_id,
+      payload,
+      client_timestamp,
+    );
     return success(res, 201, 'Added to sync queue', item);
   } catch (err) {
     return next(err);
   }
 };
 
-var resolveConflict = async function(req, res, next) {
+var resolveConflict = async function (req, res, next) {
   try {
     var id = req.params.id;
     var resolution = req.body.resolution;
@@ -104,5 +112,5 @@ module.exports = {
   getStatus: getStatus,
   getQueue: getQueue,
   addToQueue: addToQueue,
-  resolveConflict: resolveConflict
+  resolveConflict: resolveConflict,
 };

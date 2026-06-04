@@ -1,5 +1,8 @@
 const request = require('supertest');
 const app = require('../src/app');
+const { pool } = require('../src/config/database');
+
+afterAll(() => pool.end());
 
 describe('Vaccination & Flacon Endpoints', () => {
   let adminToken, nurseToken, parentToken, sessionId, rdvId, flaconId, bebeId;

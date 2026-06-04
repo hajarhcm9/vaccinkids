@@ -1,13 +1,21 @@
 const { query } = require('../config/database');
+const ApiError = require('../utils/ApiError');
 
 const RendezVous = {
   async create(data) {
     const { session_id, parent_id, bebe_id, statut = 'EN_ATTENTE' } = data;
-    const result = await query(
-      'INSERT INTO rendez_vous (session_id, parent_id, bebe_id, statut) VALUES ($1, $2, $3, $4) RETURNING *',
-      [session_id, parent_id, bebe_id, statut],
-    );
-    return result.rows[0];
+    try {
+      const result = await query(
+        'INSERT INTO rendez_vous (session_id, parent_id, bebe_id, statut) VALUES ($1, $2, $3, $4) RETURNING *',
+        [session_id, parent_id, bebe_id, statut],
+      );
+      return result.rows[0];
+    } catch (error) {
+      if (error.code === '23505') {
+        throw ApiError.conflict('Ce bébé est déjà inscrit à cette session');
+      }
+      throw error;
+    }
   },
 
   async findById(id) {

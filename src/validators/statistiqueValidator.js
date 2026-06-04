@@ -1,5 +1,3 @@
-const { validate, schemas } = require('../middleware/validationMiddleware');
-
 const statistiqueSchemas = {
   vaccinationsMensuelles: {
     annee: { type: 'number', required: false },

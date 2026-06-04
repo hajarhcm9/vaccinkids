@@ -29,9 +29,7 @@ export const AppInput = ({
   ...rest
 }) => (
   <View style={inputStyles.wrapper}>
-    {label && (
-      <Text style={[inputStyles.label, isRTL && inputStyles.rtl]}>{label}</Text>
-    )}
+    {label && <Text style={[inputStyles.label, isRTL && inputStyles.rtl]}>{label}</Text>}
     <TextInput
       ref={inputRef}
       style={[
@@ -51,9 +49,7 @@ export const AppInput = ({
       editable={editable}
       {...rest}
     />
-    {error && (
-      <Text style={[inputStyles.errorText, isRTL && inputStyles.rtl]}>⚠ {error}</Text>
-    )}
+    {error && <Text style={[inputStyles.errorText, isRTL && inputStyles.rtl]}>⚠ {error}</Text>}
   </View>
 );
 
@@ -90,12 +86,7 @@ export const AppButton = ({
           size="small"
         />
       ) : (
-        <Text
-          style={[
-            btnStyles.label,
-            variant === 'outline' && btnStyles.labelOutline,
-          ]}
-        >
+        <Text style={[btnStyles.label, variant === 'outline' && btnStyles.labelOutline]}>
           {label}
         </Text>
       )}
@@ -108,9 +99,7 @@ export const AppButton = ({
 // ─────────────────────────────────────────
 export const SegmentedControl = ({ label, options, value, onChange, isRTL, error }) => (
   <View style={segStyles.wrapper}>
-    {label && (
-      <Text style={[segStyles.label, isRTL && segStyles.rtl]}>{label}</Text>
-    )}
+    {label && <Text style={[segStyles.label, isRTL && segStyles.rtl]}>{label}</Text>}
     <View style={[segStyles.row, isRTL && segStyles.rowRTL]}>
       {options.map((opt) => (
         <TouchableOpacity
@@ -121,20 +110,13 @@ export const SegmentedControl = ({ label, options, value, onChange, isRTL, error
           accessibilityState={{ selected: value === opt.value }}
         >
           <Text style={segStyles.icon}>{opt.icon}</Text>
-          <Text
-            style={[
-              segStyles.btnText,
-              value === opt.value && segStyles.btnTextActive,
-            ]}
-          >
+          <Text style={[segStyles.btnText, value === opt.value && segStyles.btnTextActive]}>
             {opt.label}
           </Text>
         </TouchableOpacity>
       ))}
     </View>
-    {error && (
-      <Text style={[segStyles.errorText, isRTL && segStyles.rtl]}>⚠ {error}</Text>
-    )}
+    {error && <Text style={[segStyles.errorText, isRTL && segStyles.rtl]}>⚠ {error}</Text>}
   </View>
 );
 

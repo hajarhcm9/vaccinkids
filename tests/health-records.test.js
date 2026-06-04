@@ -1,5 +1,8 @@
 const request = require('supertest');
 const app = require('../src/app');
+const { pool } = require('../src/config/database');
+
+afterAll(() => pool.end());
 
 describe('Day 10 - Health Records & Stock', () => {
   let adminToken, nurseToken, parentToken, bebeId;

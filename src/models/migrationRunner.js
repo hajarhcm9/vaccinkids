@@ -1,11 +1,11 @@
 const fs = require('fs');
 const path = require('path');
-const { query } = require('../config/database');
+const { getClient } = require('../config/database');
 
 const MIGRATIONS_DIR = path.join(__dirname, 'migrations');
 
-async function ensureMigrationTable() {
-  await query(`
+async function ensureMigrationTable(client) {
+  await client.query(`
     CREATE TABLE IF NOT EXISTS _migrations (
       id SERIAL PRIMARY KEY,
       filename VARCHAR(255) NOT NULL UNIQUE,
@@ -14,16 +14,17 @@ async function ensureMigrationTable() {
   `);
 }
 
-async function getExecutedMigrations() {
-  const result = await query('SELECT filename FROM _migrations ORDER BY id');
+async function getExecutedMigrations(client) {
+  const result = await client.query('SELECT filename FROM _migrations ORDER BY id');
   return result.rows.map((row) => row.filename);
 }
 
 async function runMigrations() {
+  const client = await getClient();
   try {
     console.warn('🔄 Checking for pending migrations...');
-    await ensureMigrationTable();
-    const executed = await getExecutedMigrations();
+    await ensureMigrationTable(client);
+    const executed = await getExecutedMigrations(client);
     const files = fs
       .readdirSync(MIGRATIONS_DIR)
       .filter((f) => f.endsWith('.sql'))
@@ -39,15 +40,15 @@ async function runMigrations() {
       if (executed.includes(file)) continue;
       console.warn(`📋 Running migration: ${file}`);
       const sql = fs.readFileSync(path.join(MIGRATIONS_DIR, file), 'utf8');
-      await query('BEGIN');
+      await client.query('BEGIN');
       try {
-        await query(sql);
-        await query('INSERT INTO _migrations (filename) VALUES ($1)', [file]);
-        await query('COMMIT');
+        await client.query(sql);
+        await client.query('INSERT INTO _migrations (filename) VALUES ($1)', [file]);
+        await client.query('COMMIT');
         console.warn(`✅ Migration ${file} executed successfully`);
         executedCount++;
       } catch (error) {
-        await query('ROLLBACK');
+        await client.query('ROLLBACK');
         console.error(`❌ Migration ${file} failed:`, error.message);
         throw error;
       }
@@ -61,6 +62,8 @@ async function runMigrations() {
   } catch (error) {
     console.error('❌ Migration failed:', error.message);
     throw error;
+  } finally {
+    client.release();
   }
 }
 

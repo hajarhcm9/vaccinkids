@@ -9,7 +9,12 @@ const { passwordStrengthCheck } = require('../middleware/passwordStrengthMiddlew
 // PUBLIC
 router.post('/parent/send-otp', validate(schemas.sendOTP), AuthController.sendOTP);
 router.post('/parent/verify-otp', validate(schemas.verifyOTP), AuthController.verifyOTP);
-router.post('/personnel/login', checkAccountLock, validate(schemas.personnelLogin), AuthController.personnelLogin);
+router.post(
+  '/personnel/login',
+  checkAccountLock,
+  validate(schemas.personnelLogin),
+  AuthController.personnelLogin,
+);
 router.post('/refresh', AuthController.refreshToken);
 
 // PROTECTED

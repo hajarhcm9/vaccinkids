@@ -20,13 +20,13 @@ const FillBar = ({ booked = 0, total = 1, showLabel = true, animated = true, siz
 
   const getColor = () => {
     if (percent >= 100) return colors.danger;
-    if (percent >= 80)  return colors.warning;
+    if (percent >= 80) return colors.warning;
     return colors.success;
   };
 
   const getLabel = () => {
     if (percent >= 100) return 'Complet';
-    if (percent >= 80)  return 'Presque complet';
+    if (percent >= 80) return 'Presque complet';
     return 'Disponible';
   };
 
@@ -36,7 +36,9 @@ const FillBar = ({ booked = 0, total = 1, showLabel = true, animated = true, siz
     <View style={styles.wrapper}>
       {showLabel && (
         <View style={styles.labelRow}>
-          <Text style={styles.placesText}>{booked}/{total} places</Text>
+          <Text style={styles.placesText}>
+            {booked}/{total} places
+          </Text>
           <View style={[styles.statusBadge, { backgroundColor: getColor() + '20' }]}>
             <View style={[styles.statusDot, { backgroundColor: getColor() }]} />
             <Text style={[styles.statusText, { color: getColor() }]}>{getLabel()}</Text>

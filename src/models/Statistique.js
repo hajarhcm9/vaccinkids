@@ -18,26 +18,32 @@ class Statistique {
   }
 
   static async getDashboardCentre(centreId) {
-    const { rows } = await pool.query(`
+    const { rows } = await pool.query(
+      `
       SELECT
         (SELECT COUNT(*)::int FROM session WHERE centre_id = $1 AND date_session >= CURRENT_DATE) AS sessions_a_venir,
         (SELECT COUNT(*)::int FROM rendez_vous rv JOIN session s ON s.id = rv.session_id WHERE s.centre_id = $1 AND rv.statut = 'EN_ATTENTE') AS rdv_en_attente,
         (SELECT COUNT(*)::int FROM rendez_vous rv JOIN session s ON s.id = rv.session_id WHERE s.centre_id = $1 AND rv.statut = 'CONFIRME') AS rdv_confirmes,
         (SELECT COUNT(*)::int FROM vaccination v JOIN rendez_vous rv ON rv.id = v.rendez_vous_id JOIN session s ON s.id = rv.session_id WHERE s.centre_id = $1) AS total_vaccinations,
         (SELECT COUNT(*)::int FROM stock WHERE centre_id = $1 AND quantite_disponible <= seuil_alerte) AS alertes_stock
-    `, [centreId]);
+    `,
+      [centreId],
+    );
     return rows[0];
   }
 
   static async getVaccinationsMensuelles(annee) {
     const year = annee || new Date().getFullYear();
-    const { rows } = await pool.query(`
+    const { rows } = await pool.query(
+      `
       SELECT TO_CHAR(v.date_heure, 'YYYY-MM') AS mois, COUNT(*)::int AS nombre
       FROM vaccination v
       WHERE EXTRACT(YEAR FROM v.date_heure) = $1
       GROUP BY TO_CHAR(v.date_heure, 'YYYY-MM')
       ORDER BY mois
-    `, [year]);
+    `,
+      [year],
+    );
     return rows;
   }
 

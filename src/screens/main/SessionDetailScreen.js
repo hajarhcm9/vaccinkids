@@ -66,7 +66,9 @@ const SessionDetailScreen = ({ route, navigation }) => {
       try {
         const data = await sessionService.pollSessionFill(sessionId);
         if (data) setFillData(data);
-      } catch {}
+      } catch {
+        // Polling failures are retried on the next interval.
+      }
     }, POLL_INTERVAL);
     return () => clearInterval(pollRef.current);
   }, [sessionId]);

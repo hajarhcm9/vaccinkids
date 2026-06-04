@@ -9,6 +9,3 @@ CREATE INDEX IF NOT EXISTS idx_audit_action_table ON audit_log(action, table_nam
 
 -- Index for recent activity queries
 CREATE INDEX IF NOT EXISTS idx_audit_timestamp_desc ON audit_log(timestamp DESC);
-
--- Grant permissions
-GRANT SELECT ON audit_log TO vaccinikids_user;

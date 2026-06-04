@@ -5,7 +5,12 @@ const { success } = require('../utils/responseHandler');
 const searchGlobal = catchAsync(async (req, res) => {
   const { q } = req.query;
   if (!q || q.trim().length < 2) {
-    return success(res, 200, 'Search query too short', { bebes: [], parents: [], centres: [], vaccins: [] });
+    return success(res, 200, 'Search query too short', {
+      bebes: [],
+      parents: [],
+      centres: [],
+      vaccins: [],
+    });
   }
   const userId = req.user.centre_id;
   const role = req.user.role;

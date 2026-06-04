@@ -11,42 +11,38 @@ router.use(authenticate);
 router.post(
   '/mark-absent/:rdvId',
   authorize('infirmier', 'admin'),
-  AbsenteeismController.markAbsent
+  AbsenteeismController.markAbsent,
 );
 
 // Process all no-shows for a session - nurse or admin only
 router.post(
   '/process-session/:sessionId',
   authorize('infirmier', 'admin'),
-  AbsenteeismController.processSessionNoShows
+  AbsenteeismController.processSessionNoShows,
 );
 
 // Get habitual absents - admin only
 router.get(
   '/habitual-absents',
   authorize('admin', 'infirmier'),
-  AbsenteeismController.getHabitualAbsents
+  AbsenteeismController.getHabitualAbsents,
 );
 
 // Get parent absence history - admin or nurse (or parent for themselves)
 router.get(
   '/parent/:parentId/history',
   authorize('admin', 'infirmier'),
-  AbsenteeismController.getParentAbsenceHistory
+  AbsenteeismController.getParentAbsenceHistory,
 );
 
 // Get session absences - nurse or admin
 router.get(
   '/session/:sessionId/absents',
   authorize('infirmier', 'admin'),
-  AbsenteeismController.getSessionAbsences
+  AbsenteeismController.getSessionAbsences,
 );
 
 // Get absenteeism statistics - admin only
-router.get(
-  '/stats',
-  authorize('admin'),
-  AbsenteeismController.getAbsenteismeStats
-);
+router.get('/stats', authorize('admin'), AbsenteeismController.getAbsenteismeStats);
 
 module.exports = router;

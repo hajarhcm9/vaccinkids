@@ -12,6 +12,10 @@ beforeAll(async () => {
   delete require.cache[require.resolve('../src/app')];
   app = require('../src/app');
 
+  // Make the suite repeatable after an interrupted previous run.
+  await pool.query("DELETE FROM personnel WHERE cin = 'TESTCREAT'");
+  await pool.query("DELETE FROM centre WHERE nom = 'Test Centre Day20'");
+
   // Create test admin directly in DB
   const adminHash = await bcrypt.hash('AdminDay20!', 10);
   const adminRes = await pool.query(

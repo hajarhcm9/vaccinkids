@@ -2,6 +2,8 @@ const request = require('supertest');
 const app = require('../src/app');
 const { pool } = require('../src/config/database');
 
+afterAll(() => pool.end());
+
 describe('Auth Endpoints', () => {
   describe('GET /health', () => {
     it('should return server status', async () => {

@@ -50,7 +50,10 @@ const markAsRead = catchAsync(async (req, res) => {
     throw ApiError.notFound('Notification not found');
   }
 
-  if (notification.destinataire_id !== userId || notification.destinataire_type !== destinataireType) {
+  if (
+    notification.destinataire_id !== userId ||
+    notification.destinataire_type !== destinataireType
+  ) {
     throw ApiError.forbidden('You can only mark your own notifications as read');
   }
 

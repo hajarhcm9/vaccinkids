@@ -1,4 +1,5 @@
 const bcrypt = require('bcrypt');
+const config = require('../config');
 const { handleFailedLogin, handleSuccessfulLogin } = require('../middleware/bruteForceProtection');
 const OtpService = require('../services/otpService');
 const SmsService = require('../services/smsService');
@@ -33,7 +34,7 @@ const AuthController = {
       otpSent: smsResult.success,
       mode: smsResult.mode,
     };
-    if (process.env.NODE_ENV !== 'production') responseData.devOtp = otpResult.otp;
+    if (config.isDev || config.isTest) responseData.devOtp = otpResult.otp;
 
     return success(res, 200, 'OTP code sent successfully', responseData);
   }),
@@ -106,7 +107,8 @@ const AuthController = {
   }),
 
   updateFcmToken: catchAsync(async (req, res, next) => {
-    if (req.user.role !== 'parent') return next(ApiError.forbidden('Only parents can register FCM tokens'));
+    if (req.user.role !== 'parent')
+      return next(ApiError.forbidden('Only parents can register FCM tokens'));
 
     const updated = await Parent.updateFcmToken(req.user.id, req.body.fcm_token);
     if (!updated) return next(ApiError.notFound('Parent not found'));
@@ -125,11 +127,17 @@ const AuthController = {
     if (!isValidCIN(cin)) return next(ApiError.badRequest('Invalid CIN format'));
 
     const personnel = await Personnel.findByCIN(cin);
-    if (!personnel) { await handleFailedLogin(cin); return next(ApiError.unauthorized('Invalid CIN or password')); }
+    if (!personnel) {
+      await handleFailedLogin(cin);
+      return next(ApiError.unauthorized('Invalid CIN or password'));
+    }
     if (!personnel.est_actif) return next(ApiError.forbidden('Your account has been deactivated.'));
 
     const isPasswordValid = await bcrypt.compare(mot_de_passe, personnel.mot_de_passe);
-    if (!isPasswordValid) { await handleFailedLogin(cin); return next(ApiError.unauthorized('Invalid CIN or password')); };
+    if (!isPasswordValid) {
+      await handleFailedLogin(cin);
+      return next(ApiError.unauthorized('Invalid CIN or password'));
+    }
 
     const tokens = await TokenService.generateAuthTokens({
       id: personnel.id,
@@ -137,7 +145,7 @@ const AuthController = {
     });
 
     await handleSuccessfulLogin(cin);
-      return success(res, 200, 'Login successful', {
+    return success(res, 200, 'Login successful', {
       user: {
         id: personnel.id,
         cin: personnel.cin,

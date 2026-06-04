@@ -1,4 +1,4 @@
-require('dotenv').config();
+require('dotenv').config({ quiet: true });
 
 function requireEnv(key) {
   var value = process.env[key];
@@ -50,6 +50,7 @@ const config = {
   otp: {
     length: parseInt(process.env.OTP_LENGTH, 10) || 6,
     expiryMinutes: parseInt(process.env.OTP_EXPIRY_MINUTES, 10) || 5,
+    maxAttempts: parseInt(process.env.OTP_MAX_ATTEMPTS, 10) || 5,
   },
 
   // SMS
@@ -61,7 +62,6 @@ const config = {
     authScheme: process.env.SMS_AUTH_SCHEME || 'Bearer',
   },
 
-  
   // Email
   email: {
     host: process.env.EMAIL_HOST || 'smtp.ethereal.email',

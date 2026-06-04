@@ -66,6 +66,7 @@ afterAll(async function() {
   } catch (e) {
     // ignore cleanup errors
   }
+  await pool.end();
 });
 
 describe('Day 16 - Email and PDF', function() {

@@ -14,12 +14,7 @@ Object.assign(schemas, notificationSchemas);
  * @desc    Get the authenticated user's notifications (paginated)
  * @access  Parent
  */
-router.get(
-  '/me',
-  authenticate,
-  authorize('parent'),
-  notificationController.getMyNotifications
-);
+router.get('/me', authenticate, authorize('parent'), notificationController.getMyNotifications);
 
 /**
  * @route   GET /api/notifications/unread-count
@@ -30,7 +25,7 @@ router.get(
   '/unread-count',
   authenticate,
   authorize('parent'),
-  notificationController.getUnreadCount
+  notificationController.getUnreadCount,
 );
 
 /**
@@ -38,24 +33,14 @@ router.get(
  * @desc    Mark a notification as read
  * @access  Parent
  */
-router.patch(
-  '/:id/read',
-  authenticate,
-  authorize('parent'),
-  notificationController.markAsRead
-);
+router.patch('/:id/read', authenticate, authorize('parent'), notificationController.markAsRead);
 
 /**
  * @route   PATCH /api/notifications/read-all
  * @desc    Mark all notifications as read
  * @access  Parent
  */
-router.patch(
-  '/read-all',
-  authenticate,
-  authorize('parent'),
-  notificationController.markAllRead
-);
+router.patch('/read-all', authenticate, authorize('parent'), notificationController.markAllRead);
 
 /**
  * @route   POST /api/notifications/send
@@ -67,7 +52,7 @@ router.post(
   authenticate,
   authorize('infirmier', 'admin'),
   validate(schemas.notificationSend),
-  notificationController.sendManual
+  notificationController.sendManual,
 );
 
 module.exports = router;

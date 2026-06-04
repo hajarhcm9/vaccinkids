@@ -1,13 +1,5 @@
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  Modal,
-  StyleSheet,
-  Platform,
-  ScrollView,
-} from 'react-native';
+import { View, Text, TouchableOpacity, Modal, StyleSheet, ScrollView } from 'react-native';
 import { colors, typography, spacing, borderRadius, shadows } from '../theme';
 
 // Génère une liste d'années (de l'année courante - 5 ans à aujourd'hui)
@@ -21,8 +13,34 @@ const getYears = () => {
 };
 
 const MONTHS = {
-  fr: ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'],
-  ar: ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'],
+  fr: [
+    'Janvier',
+    'Février',
+    'Mars',
+    'Avril',
+    'Mai',
+    'Juin',
+    'Juillet',
+    'Août',
+    'Septembre',
+    'Octobre',
+    'Novembre',
+    'Décembre',
+  ],
+  ar: [
+    'يناير',
+    'فبراير',
+    'مارس',
+    'أبريل',
+    'مايو',
+    'يونيو',
+    'يوليو',
+    'أغسطس',
+    'سبتمبر',
+    'أكتوبر',
+    'نوفمبر',
+    'ديسمبر',
+  ],
 };
 
 const getDaysInMonth = (month, year) => new Date(year, month, 0).getDate();
@@ -40,9 +58,15 @@ const DatePickerInput = ({ label, value, onChange, isRTL, lang = 'fr', error }) 
   const [showModal, setShowModal] = useState(false);
   const today = new Date();
 
-  const [selectedDay, setSelectedDay] = useState(value ? new Date(value).getDate() : today.getDate());
-  const [selectedMonth, setSelectedMonth] = useState(value ? new Date(value).getMonth() + 1 : today.getMonth() + 1);
-  const [selectedYear, setSelectedYear] = useState(value ? new Date(value).getFullYear() : today.getFullYear());
+  const [selectedDay, setSelectedDay] = useState(
+    value ? new Date(value).getDate() : today.getDate(),
+  );
+  const [selectedMonth, setSelectedMonth] = useState(
+    value ? new Date(value).getMonth() + 1 : today.getMonth() + 1,
+  );
+  const [selectedYear, setSelectedYear] = useState(
+    value ? new Date(value).getFullYear() : today.getFullYear(),
+  );
 
   const years = getYears();
   const months = MONTHS[lang];
@@ -50,22 +74,36 @@ const DatePickerInput = ({ label, value, onChange, isRTL, lang = 'fr', error }) 
   const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
 
   const handleConfirm = () => {
-    const dateStr = `${selectedYear}-${String(selectedMonth).padStart(2,'0')}-${String(selectedDay).padStart(2,'0')}`;
+    const dateStr = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}-${String(selectedDay).padStart(2, '0')}`;
     onChange(dateStr);
     setShowModal(false);
   };
 
   const labels = {
-    fr: { title: 'Date de naissance', confirm: 'Confirmer', cancel: 'Annuler', day: 'Jour', month: 'Mois', year: 'Année', placeholder: 'Sélectionner la date' },
-    ar: { title: 'تاريخ الميلاد', confirm: 'تأكيد', cancel: 'إلغاء', day: 'اليوم', month: 'الشهر', year: 'السنة', placeholder: 'اختر التاريخ' },
+    fr: {
+      title: 'Date de naissance',
+      confirm: 'Confirmer',
+      cancel: 'Annuler',
+      day: 'Jour',
+      month: 'Mois',
+      year: 'Année',
+      placeholder: 'Sélectionner la date',
+    },
+    ar: {
+      title: 'تاريخ الميلاد',
+      confirm: 'تأكيد',
+      cancel: 'إلغاء',
+      day: 'اليوم',
+      month: 'الشهر',
+      year: 'السنة',
+      placeholder: 'اختر التاريخ',
+    },
   };
   const l = labels[lang];
 
   return (
     <View style={styles.wrapper}>
-      {label && (
-        <Text style={[styles.label, isRTL && styles.rtl]}>{label}</Text>
-      )}
+      {label && <Text style={[styles.label, isRTL && styles.rtl]}>{label}</Text>}
 
       <TouchableOpacity
         style={[styles.trigger, error && styles.triggerError]}
@@ -80,9 +118,7 @@ const DatePickerInput = ({ label, value, onChange, isRTL, lang = 'fr', error }) 
         <Text style={styles.chevron}>▾</Text>
       </TouchableOpacity>
 
-      {error && (
-        <Text style={[styles.errorText, isRTL && styles.rtl]}>⚠ {error}</Text>
-      )}
+      {error && <Text style={[styles.errorText, isRTL && styles.rtl]}>⚠ {error}</Text>}
 
       {/* Modal sélecteur */}
       <Modal visible={showModal} transparent animationType="slide">
@@ -129,7 +165,12 @@ const DatePickerInput = ({ label, value, onChange, isRTL, lang = 'fr', error }) 
                       style={[styles.item, selectedMonth === idx + 1 && styles.itemSelected]}
                       onPress={() => setSelectedMonth(idx + 1)}
                     >
-                      <Text style={[styles.itemText, selectedMonth === idx + 1 && styles.itemTextSelected]}>
+                      <Text
+                        style={[
+                          styles.itemText,
+                          selectedMonth === idx + 1 && styles.itemTextSelected,
+                        ]}
+                      >
                         {m}
                       </Text>
                     </TouchableOpacity>
@@ -147,7 +188,9 @@ const DatePickerInput = ({ label, value, onChange, isRTL, lang = 'fr', error }) 
                       style={[styles.item, selectedYear === y && styles.itemSelected]}
                       onPress={() => setSelectedYear(y)}
                     >
-                      <Text style={[styles.itemText, selectedYear === y && styles.itemTextSelected]}>
+                      <Text
+                        style={[styles.itemText, selectedYear === y && styles.itemTextSelected]}
+                      >
                         {y}
                       </Text>
                     </TouchableOpacity>

@@ -49,7 +49,11 @@ const AdminController = {
    * Update a personnel member.
    */
   updatePersonnel: catchAsync(async (req, res, next) => {
-    const result = await adminService.updatePersonnel(parseInt(req.params.id), req.body, req.user.id);
+    const result = await adminService.updatePersonnel(
+      parseInt(req.params.id),
+      req.body,
+      req.user.id,
+    );
 
     if (result.error) {
       return res.status(400).json({ status: 'error', message: result.error });
@@ -165,7 +169,7 @@ const AdminController = {
    */
   getAuditLog: catchAsync(async (req, res, next) => {
     const result = await adminService.getAuditLog(req.query);
-    return success(res, 200, 'Journal d\'audit', result);
+    return success(res, 200, "Journal d'audit", result);
   }),
 
   /**
@@ -174,7 +178,7 @@ const AdminController = {
    */
   getAuditStats: catchAsync(async (req, res, next) => {
     const result = await adminService.getAuditStats();
-    return success(res, 200, 'Statistiques du journal d\'audit', result);
+    return success(res, 200, "Statistiques du journal d'audit", result);
   }),
 
   // ==========================================

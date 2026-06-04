@@ -32,7 +32,12 @@ router.get(
 router.get('/', authenticate, authorize('infirmier', 'admin'), RendezVousController.getAll);
 
 // Single appointment
-router.get('/:id', authenticate, authorize('parent', 'infirmier', 'admin'), RendezVousController.getOne);
+router.get(
+  '/:id',
+  authenticate,
+  authorize('parent', 'infirmier', 'admin'),
+  RendezVousController.getOne,
+);
 
 // Update status
 router.patch(

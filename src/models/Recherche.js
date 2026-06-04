@@ -10,27 +10,24 @@ class Recherche {
         `SELECT b.id, b.nom, b.prenom, b.date_naissance, p.nom AS parent_nom, p.prenom AS parent_prenom
          FROM bebe b LEFT JOIN parent p ON b.parent_id = p.id
          WHERE b.nom ILIKE $1 OR b.prenom ILIKE $1`,
-        [term]
+        [term],
       );
       results.bebes = bebes.rows;
 
       const parents = await pool.query(
         `SELECT id, nom, prenom, telephone FROM parent
          WHERE nom ILIKE $1 OR prenom ILIKE $1 OR telephone ILIKE $1`,
-        [term]
+        [term],
       );
       results.parents = parents.rows;
 
       const centres = await pool.query(
         `SELECT id, nom, adresse FROM centre WHERE nom ILIKE $1 OR adresse ILIKE $1`,
-        [term]
+        [term],
       );
       results.centres = centres.rows;
 
-      const vaccins = await pool.query(
-        `SELECT id, nom FROM vaccin WHERE nom ILIKE $1`,
-        [term]
-      );
+      const vaccins = await pool.query(`SELECT id, nom FROM vaccin WHERE nom ILIKE $1`, [term]);
       results.vaccins = vaccins.rows;
     } else {
       const bebes = await pool.query(
@@ -39,7 +36,7 @@ class Recherche {
          JOIN rendez_vous rv ON rv.bebe_id = b.id
          JOIN session s ON s.id = rv.session_id
          WHERE s.centre_id = $1 AND (b.nom ILIKE $2 OR b.prenom ILIKE $2)`,
-        [userId, term]
+        [userId, term],
       );
       results.bebes = bebes.rows;
     }
@@ -89,7 +86,7 @@ class Recherche {
        ${where}
        ORDER BY s.date_session DESC, s.heure_debut ASC
        LIMIT 50`,
-      params
+      params,
     );
     return rows;
   }
@@ -134,7 +131,7 @@ class Recherche {
        ${where}
        ORDER BY v.date_heure DESC
        LIMIT 50`,
-      params
+      params,
     );
     return rows;
   }
@@ -175,7 +172,7 @@ class Recherche {
        ${where}
        ORDER BY s.date_session DESC, s.heure_debut ASC
        LIMIT 50`,
-      params
+      params,
     );
     return rows;
   }

@@ -16,7 +16,7 @@ class AbsenteeismService {
 
       const sessionRes = await client.query(
         'SELECT id, statut, date_session, heure_debut, centre_id FROM session WHERE id = $1 FOR UPDATE',
-        [sessionId]
+        [sessionId],
       );
       if (sessionRes.rows.length === 0) {
         await client.query('ROLLBACK');
@@ -28,7 +28,7 @@ class AbsenteeismService {
       if (session.statut !== 'EN_COURS') {
         await client.query('ROLLBACK');
         client.release();
-        return { processed: false, error: 'La session n\'est pas EN_COURS' };
+        return { processed: false, error: "La session n'est pas EN_COURS" };
       }
 
       // Check if grace period has elapsed
@@ -49,7 +49,7 @@ class AbsenteeismService {
       // Find all CONFIRME and EN_ATTENTE RDVs that haven't shown up
       const noShowsRes = await client.query(
         'SELECT id, parent_id, bebe_id, statut FROM rendez_vous WHERE session_id = $1 AND statut IN ($2, $3) FOR UPDATE',
-        [sessionId, 'CONFIRME', 'EN_ATTENTE']
+        [sessionId, 'CONFIRME', 'EN_ATTENTE'],
       );
 
       const markedAbsent = [];
@@ -61,19 +61,19 @@ class AbsenteeismService {
           // Mark as ABSENT
           await client.query(
             'UPDATE rendez_vous SET statut = $1, updated_at = NOW() WHERE id = $2',
-            ['ABSENT', rdv.id]
+            ['ABSENT', rdv.id],
           );
 
           // Increment parent consecutive absence counter
           await client.query(
             'UPDATE parent SET nb_absences_consecutives = nb_absences_consecutives + 1, updated_at = NOW() WHERE id = $1',
-            [rdv.parent_id]
+            [rdv.parent_id],
           );
 
           // Get parent info
           const parentRes = await client.query(
             'SELECT id, telephone, nom, prenom, nb_absences_consecutives FROM parent WHERE id = $1',
-            [rdv.parent_id]
+            [rdv.parent_id],
           );
           const parent = parentRes.rows[0];
 
@@ -86,14 +86,14 @@ class AbsenteeismService {
           // Check if we should promote someone from waitlist
           const nextWaitlisted = await client.query(
             'SELECT id, parent_id, bebe_id FROM rendez_vous WHERE session_id = $1 AND statut = $2 ORDER BY date_creation ASC LIMIT 1 FOR UPDATE',
-            [sessionId, 'EN_LISTE_ATTENTE']
+            [sessionId, 'EN_LISTE_ATTENTE'],
           );
 
           if (nextWaitlisted.rows.length > 0) {
             const wl = nextWaitlisted.rows[0];
             await client.query(
               'UPDATE rendez_vous SET statut = $1, updated_at = NOW() WHERE id = $2',
-              ['EN_ATTENTE', wl.id]
+              ['EN_ATTENTE', wl.id],
             );
             promoted.push({
               rdvId: wl.id,
@@ -112,12 +112,11 @@ class AbsenteeismService {
                 JSON.stringify({ statut: rdv.statut }),
                 JSON.stringify({ statut: 'ABSENT', reason: 'no_show_auto' }),
                 'system',
-              ]
+              ],
             );
           } catch (auditErr) {
             // Audit log failure should not block the main operation
           }
-
         } catch (err) {
           errors.push({ rdvId: rdv.id, error: err.message });
         }
@@ -127,7 +126,11 @@ class AbsenteeismService {
       client.release();
       return { processed: true, markedAbsent, promoted, errors };
     } catch (err) {
-      try { await client.query('ROLLBACK'); } catch (e) {}
+      try {
+        await client.query('ROLLBACK');
+      } catch (rollbackError) {
+        console.warn('[Absenteeism] Rollback failed:', rollbackError.message);
+      }
       client.release();
       // Return error object instead of throwing
       return { processed: false, error: err.message };
@@ -144,7 +147,7 @@ class AbsenteeismService {
 
       const rdvRes = await client.query(
         'SELECT id, session_id, parent_id, bebe_id, statut FROM rendez_vous WHERE id = $1 FOR UPDATE',
-        [rdvId]
+        [rdvId],
       );
       if (rdvRes.rows.length === 0) {
         await client.query('ROLLBACK');
@@ -172,21 +175,21 @@ class AbsenteeismService {
       const oldStatut = rdv.statut;
 
       // Mark as ABSENT
-      await client.query(
-        'UPDATE rendez_vous SET statut = $1, updated_at = NOW() WHERE id = $2',
-        ['ABSENT', rdvId]
-      );
+      await client.query('UPDATE rendez_vous SET statut = $1, updated_at = NOW() WHERE id = $2', [
+        'ABSENT',
+        rdvId,
+      ]);
 
       // Increment parent consecutive absence counter
       await client.query(
         'UPDATE parent SET nb_absences_consecutives = nb_absences_consecutives + 1, updated_at = NOW() WHERE id = $1',
-        [rdv.parent_id]
+        [rdv.parent_id],
       );
 
       // Get updated parent info
       const parentRes = await client.query(
         'SELECT id, telephone, nom, prenom, nb_absences_consecutives FROM parent WHERE id = $1',
-        [rdv.parent_id]
+        [rdv.parent_id],
       );
       const parent = parentRes.rows[0];
       const isHabitualAbsent = parent.nb_absences_consecutives >= 2;
@@ -195,15 +198,15 @@ class AbsenteeismService {
       let promotedRdv = null;
       const nextWlRes = await client.query(
         'SELECT id, parent_id, bebe_id FROM rendez_vous WHERE session_id = $1 AND statut = $2 ORDER BY date_creation ASC LIMIT 1 FOR UPDATE',
-        [rdv.session_id, 'EN_LISTE_ATTENTE']
+        [rdv.session_id, 'EN_LISTE_ATTENTE'],
       );
 
       if (nextWlRes.rows.length > 0) {
         const wl = nextWlRes.rows[0];
-        await client.query(
-          'UPDATE rendez_vous SET statut = $1, updated_at = NOW() WHERE id = $2',
-          ['EN_ATTENTE', wl.id]
-        );
+        await client.query('UPDATE rendez_vous SET statut = $1, updated_at = NOW() WHERE id = $2', [
+          'EN_ATTENTE',
+          wl.id,
+        ]);
         promotedRdv = { rdvId: wl.id, parentId: wl.parent_id };
       }
 
@@ -218,7 +221,7 @@ class AbsenteeismService {
             JSON.stringify({ statut: oldStatut }),
             JSON.stringify({ statut: 'ABSENT', reason: 'no_show_manual' }),
             'infirmier',
-          ]
+          ],
         );
       } catch (auditErr) {
         // Non-blocking
@@ -228,7 +231,11 @@ class AbsenteeismService {
       client.release();
       return { rdv: { id: rdvId, statut: 'ABSENT' }, parent, promotedRdv, isHabitualAbsent };
     } catch (err) {
-      try { await client.query('ROLLBACK'); } catch (e) {}
+      try {
+        await client.query('ROLLBACK');
+      } catch (rollbackError) {
+        console.warn('[Absenteeism] Rollback failed:', rollbackError.message);
+      }
       client.release();
       return { error: err.message };
     }
@@ -240,7 +247,7 @@ class AbsenteeismService {
   async resetConsecutiveAbsences(parentId) {
     await pool.query(
       'UPDATE parent SET nb_absences_consecutives = 0, updated_at = NOW() WHERE id = $1',
-      [parentId]
+      [parentId],
     );
   }
 
@@ -274,7 +281,8 @@ class AbsenteeismService {
    * Get absence history for a specific parent.
    */
   async getParentAbsenceHistory(parentId) {
-    const res = await pool.query(`
+    const res = await pool.query(
+      `
       SELECT rdv.id AS rdv_id, rdv.statut, rdv.updated_at,
              s.date_session, s.heure_debut,
              v.nom AS vaccin_nom,
@@ -285,7 +293,9 @@ class AbsenteeismService {
       JOIN bebe b ON b.id = rdv.bebe_id
       WHERE rdv.parent_id = $1 AND rdv.statut = 'ABSENT'
       ORDER BY s.date_session DESC
-    `, [parentId]);
+    `,
+      [parentId],
+    );
     return res.rows;
   }
 
@@ -293,7 +303,8 @@ class AbsenteeismService {
    * Get all absences for a specific session.
    */
   async getSessionAbsences(sessionId) {
-    const res = await pool.query(`
+    const res = await pool.query(
+      `
       SELECT rdv.id AS rdv_id, rdv.updated_at,
              p.id AS parent_id, p.telephone, p.nom AS parent_nom, p.prenom AS parent_prenom,
              p.nb_absences_consecutives,
@@ -303,7 +314,9 @@ class AbsenteeismService {
       JOIN bebe b ON b.id = rdv.bebe_id
       WHERE rdv.session_id = $1 AND rdv.statut = 'ABSENT'
       ORDER BY rdv.updated_at DESC
-    `, [sessionId]);
+    `,
+      [sessionId],
+    );
     return res.rows;
   }
 
@@ -371,9 +384,7 @@ class AbsenteeismService {
   startAutoMarkAbsentCron(checkIntervalMs = 60000) {
     const intervalId = setInterval(async () => {
       try {
-        const sessionsRes = await pool.query(
-          "SELECT id FROM session WHERE statut = 'EN_COURS'"
-        );
+        const sessionsRes = await pool.query("SELECT id FROM session WHERE statut = 'EN_COURS'");
         for (const session of sessionsRes.rows) {
           await this.processSessionNoShows(session.id);
         }
@@ -385,7 +396,7 @@ class AbsenteeismService {
     return {
       stop() {
         clearInterval(intervalId);
-        console.log('[AbsenteeismCron] Stopped');
+        console.warn('[AbsenteeismCron] Stopped');
       },
     };
   }

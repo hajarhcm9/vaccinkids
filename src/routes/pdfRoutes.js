@@ -8,21 +8,21 @@ router.get(
   '/vaccination-certificate/:vaccinationId',
   authMiddleware.authenticate,
   rbacMiddleware.authorize('admin', 'infirmier'),
-  pdfController.downloadVaccinationCertificate
+  pdfController.downloadVaccinationCertificate,
 );
 
 router.get(
   '/carnet/:bebeId',
   authMiddleware.authenticate,
   rbacMiddleware.authorize('admin', 'infirmier'),
-  pdfController.downloadCarnet
+  pdfController.downloadCarnet,
 );
 
 router.get(
   '/rdv-confirmation/:rdvId',
   authMiddleware.authenticate,
   rbacMiddleware.authorize('admin', 'infirmier'),
-  pdfController.downloadRdvConfirmation
+  pdfController.downloadRdvConfirmation,
 );
 
 module.exports = router;

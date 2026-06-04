@@ -1,5 +1,5 @@
 const delayAlertService = require('../services/delayAlertService');
-const { success, notFound, error } = require('../utils/responseHandler');
+const { success } = require('../utils/responseHandler');
 const catchAsync = require('../utils/catchAsync');
 
 const DelayAlertController = {

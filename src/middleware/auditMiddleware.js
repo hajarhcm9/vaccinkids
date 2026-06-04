@@ -33,9 +33,19 @@ const auditMiddleware = async (req, res, next) => {
   if ((action === 'UPDATE' || action === 'DELETE') && req.params && req.params.id) {
     try {
       const tableName = tableFromPath(req.originalUrl);
-      const knownTables = new Set(['bebe', 'flacon', 'rendez_vous', 'session', 'stock', 'vaccin', 'vaccination']);
+      const knownTables = new Set([
+        'bebe',
+        'flacon',
+        'rendez_vous',
+        'session',
+        'stock',
+        'vaccin',
+        'vaccination',
+      ]);
       if (knownTables.has(tableName)) {
-        const result = await pool.query(`SELECT * FROM ${tableName} WHERE id = $1`, [req.params.id]);
+        const result = await pool.query(`SELECT * FROM ${tableName} WHERE id = $1`, [
+          req.params.id,
+        ]);
         if (result.rows.length > 0) oldRecord = result.rows[0];
       }
     } catch (e) {
@@ -56,7 +66,12 @@ const auditMiddleware = async (req, res, next) => {
 
     const data = responseBody && responseBody.data;
     const record = Array.isArray(data) ? data[0] : data;
-    const recordId = record && typeof record === 'object' && record.id ? record.id : (req.params && req.params.id ? parseInt(req.params.id) : 0);
+    const recordId =
+      record && typeof record === 'object' && record.id
+        ? record.id
+        : req.params && req.params.id
+          ? parseInt(req.params.id)
+          : 0;
 
     AuditLog.create({
       table_name: tableFromPath(req.originalUrl),

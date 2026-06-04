@@ -1,12 +1,5 @@
 import React, { useState } from 'react';
-import {
-  View,
-  TextInput,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  Platform,
-} from 'react-native';
+import { View, TextInput, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { colors, typography, spacing, borderRadius } from '../theme';
 
 const COUNTRY_CODES = [

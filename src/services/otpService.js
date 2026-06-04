@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const { query } = require('../config/database');
 const config = require('../config');
 
@@ -12,10 +13,8 @@ const OtpService = {
 
     // 2. Generate random OTP code
     const otpLength = config.otp.length;
-    let otp = '';
-    for (let i = 0; i < otpLength; i++) {
-      otp += Math.floor(Math.random() * 10).toString();
-    }
+    const maximum = 10 ** otpLength;
+    const otp = crypto.randomInt(0, maximum).toString().padStart(otpLength, '0');
 
     // 3. Calculate expiry
     const expiryMinutes = config.otp.expiryMinutes;
@@ -23,8 +22,8 @@ const OtpService = {
 
     // 4. Store in database
     const result = await query(
-      `INSERT INTO otp_codes (telephone, code, expire_at)
-       VALUES ($1, $2, $3) RETURNING id, telephone, code, expire_at`,
+      `INSERT INTO otp_codes (telephone, code, expire_at, failed_attempts)
+       VALUES ($1, $2, $3, 0) RETURNING id, telephone, expire_at`,
       [telephone, otp, expireAt],
     );
 
@@ -32,20 +31,30 @@ const OtpService = {
   },
 
   async verifyOTP(telephone, code) {
-    // Test bypass: accept '123456' when not in production
-    if (process.env.NODE_ENV !== 'production' && code === '123456') {
-      await query('UPDATE otp_codes SET est_verifie = TRUE WHERE telephone = $1 AND est_verifie = FALSE', [telephone]);
-      const bypassResult = await query('SELECT id FROM otp_codes WHERE telephone = $1 ORDER BY created_at DESC LIMIT 1', [telephone]);
+    // Explicit test-only bypass for integration tests.
+    if (config.isTest && code === '123456') {
+      const bypassResult = await query(
+        `UPDATE otp_codes SET est_verifie = TRUE
+         WHERE id = (
+           SELECT id FROM otp_codes
+           WHERE telephone = $1 AND est_verifie = FALSE
+           ORDER BY created_at DESC LIMIT 1
+         )
+         RETURNING id`,
+        [telephone],
+      );
       return { valid: true, otpId: bypassResult.rows[0]?.id };
     }
 
-
     const result = await query(
-      `SELECT id, telephone, code, expire_at, est_verifie
+      `SELECT id, telephone, code, expire_at, est_verifie, failed_attempts
        FROM otp_codes
-       WHERE telephone = $1 AND est_verifie = FALSE AND expire_at > CURRENT_TIMESTAMP
+       WHERE telephone = $1
+         AND est_verifie = FALSE
+         AND expire_at > CURRENT_TIMESTAMP
+         AND failed_attempts < $2
        ORDER BY created_at DESC LIMIT 1`,
-      [telephone],
+      [telephone, config.otp.maxAttempts],
     );
 
     if (result.rows.length === 0) {
@@ -58,7 +67,25 @@ const OtpService = {
     const otpRecord = result.rows[0];
 
     if (otpRecord.code !== code) {
-      return { valid: false, reason: 'Code OTP incorrect. Veuillez réessayer.' };
+      const failedResult = await query(
+        `UPDATE otp_codes
+         SET failed_attempts = failed_attempts + 1,
+             est_verifie = failed_attempts + 1 >= $2
+         WHERE id = $1
+         RETURNING failed_attempts`,
+        [otpRecord.id, config.otp.maxAttempts],
+      );
+      const attemptsRemaining = Math.max(
+        0,
+        config.otp.maxAttempts - failedResult.rows[0].failed_attempts,
+      );
+      return {
+        valid: false,
+        reason:
+          attemptsRemaining > 0
+            ? `Code OTP incorrect. ${attemptsRemaining} tentative(s) restante(s).`
+            : 'Code OTP invalide. Veuillez demander un nouveau code.',
+      };
     }
 
     await query('UPDATE otp_codes SET est_verifie = TRUE WHERE id = $1', [otpRecord.id]);

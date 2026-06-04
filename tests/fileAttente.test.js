@@ -1,4 +1,8 @@
 const request = require('supertest');
+const { pool } = require('../src/config/database');
+
+afterAll(() => pool.end());
+
 describe("Day 21 - File d'attente digitale", () => {
   let adminToken, nurseToken, parentToken, parentToken2;
   let adminApp;

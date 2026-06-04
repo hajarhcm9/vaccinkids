@@ -1,7 +1,7 @@
 const exportService = require('../services/exportService');
-const { success, error } = require('../utils/responseHandler');
+const { error } = require('../utils/responseHandler');
 
-const exportPDF = async function(req, res) {
+const exportPDF = async function (req, res) {
   try {
     if (req.user.role !== 'admin') {
       return error(res, 'Acces refuse', 403);
@@ -15,20 +15,19 @@ const exportPDF = async function(req, res) {
     if (year < 2020 || year > 2100) {
       return error(res, 'Annee invalide', 400);
     }
-    var pdfBuffer = await exportService.generateMonthlyPDF(
-      centreId, month, year
-    );
+    var pdfBuffer = await exportService.generateMonthlyPDF(centreId, month, year);
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition',
-      'attachment; filename=rapport-vaccination-' + month + '-' + year + '.pdf'
+    res.setHeader(
+      'Content-Disposition',
+      'attachment; filename=rapport-vaccination-' + month + '-' + year + '.pdf',
     );
     return res.send(pdfBuffer);
   } catch (err) {
-     return error(res, err.message, 500);
+    return error(res, err.message, 500);
   }
 };
 
-const exportExcel = async function(req, res) {
+const exportExcel = async function (req, res) {
   try {
     if (req.user.role !== 'admin') {
       return error(res, 'Acces refuse', 403);
@@ -36,18 +35,15 @@ const exportExcel = async function(req, res) {
     var centreId = req.query.centre_id || null;
     var startDate = req.query.start_date || null;
     var endDate = req.query.end_date || null;
-    var buffer = await exportService.generateExcelExport(
-      centreId, startDate, endDate
+    var buffer = await exportService.generateExcelExport(centreId, startDate, endDate);
+    res.setHeader(
+      'Content-Type',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     );
-    res.setHeader('Content-Type',
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-    );
-    res.setHeader('Content-Disposition',
-      'attachment; filename=export-vaccinations.xlsx'
-    );
+    res.setHeader('Content-Disposition', 'attachment; filename=export-vaccinations.xlsx');
     return res.send(buffer);
   } catch (err) {
-     return error(res, err.message, 500);
+    return error(res, err.message, 500);
   }
 };
 

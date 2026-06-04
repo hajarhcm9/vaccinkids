@@ -1,10 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import {
-  View,
-  TextInput,
-  StyleSheet,
-  Platform,
-} from 'react-native';
+import { View, TextInput, StyleSheet, Platform } from 'react-native';
 import { colors, typography, spacing, borderRadius } from '../theme';
 
 const OTP_LENGTH = 6;
@@ -56,18 +51,13 @@ const OtpInput = ({ value, onChange, hasError }) => {
     <View style={styles.container}>
       {Array.from({ length: OTP_LENGTH }).map((_, index) => {
         const digit = value[index] || '';
-        const isFocused = false; // Géré par le style focus natif
         const isFilled = digit.length > 0;
 
         return (
           <TextInput
             key={index}
             ref={(ref) => (inputs.current[index] = ref)}
-            style={[
-              styles.box,
-              isFilled && styles.boxFilled,
-              hasError && styles.boxError,
-            ]}
+            style={[styles.box, isFilled && styles.boxFilled, hasError && styles.boxError]}
             value={digit}
             onChangeText={(text) => handleChange(text, index)}
             onKeyPress={(e) => handleKeyPress(e, index)}

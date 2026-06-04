@@ -55,7 +55,7 @@ const translations = {
     successMsg: (name) => `Le profil de ${name} a été créé avec succès.`,
     // Résumé
     summaryTitle: 'Vérification',
-    summarySubtitle: 'Confirmez les informations avant d\'enregistrer',
+    summarySubtitle: "Confirmez les informations avant d'enregistrer",
     name: 'Nom complet',
     birthDate: 'Date de naissance',
     gender: 'Sexe',
@@ -176,7 +176,7 @@ const AddBabyScreen = ({ navigation, route }) => {
   const handleSubmit = async () => {
     setLoading(true);
     try {
-      const result = await babyService.addBaby({
+      await babyService.addBaby({
         firstName: form.firstName.trim(),
         lastName: form.lastName.trim(),
         birthDate: form.birthDate,
@@ -205,7 +205,10 @@ const AddBabyScreen = ({ navigation, route }) => {
     //     setField('photoUri', response.assets[0].uri);
     //   }
     // });
-    Alert.alert('Photo', 'Intégration react-native-image-picker à ajouter.\n(npm install react-native-image-picker)');
+    Alert.alert(
+      'Photo',
+      'Intégration react-native-image-picker à ajouter.\n(npm install react-native-image-picker)',
+    );
   };
 
   // ─── Calcul de l'âge pour le résumé ───
@@ -226,7 +229,23 @@ const AddBabyScreen = ({ navigation, route }) => {
   const formatDateDisplay = (d) => {
     if (!d) return '';
     const [y, m, day] = d.split('-');
-    const months = { fr: ['jan','fév','mar','avr','mai','jun','jul','aoû','sep','oct','nov','déc'], ar: ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'] };
+    const months = {
+      fr: ['jan', 'fév', 'mar', 'avr', 'mai', 'jun', 'jul', 'aoû', 'sep', 'oct', 'nov', 'déc'],
+      ar: [
+        'يناير',
+        'فبراير',
+        'مارس',
+        'أبريل',
+        'مايو',
+        'يونيو',
+        'يوليو',
+        'أغسطس',
+        'سبتمبر',
+        'أكتوبر',
+        'نوفمبر',
+        'ديسمبر',
+      ],
+    };
     return `${day} ${months[language][parseInt(m) - 1]} ${y}`;
   };
 
@@ -280,7 +299,9 @@ const AddBabyScreen = ({ navigation, route }) => {
               {language === 'fr' ? 'Identité du bébé' : 'هوية الطفل'}
             </Text>
             <Text style={[styles.stepSubtitle, isRTL && styles.rtl]}>
-              {language === 'fr' ? 'Ces informations seront utilisées pour son carnet de santé.' : 'ستُستخدم هذه المعلومات في دفتر صحته.'}
+              {language === 'fr'
+                ? 'Ces informations seront utilisées pour son carnet de santé.'
+                : 'ستُستخدم هذه المعلومات في دفتر صحته.'}
             </Text>
 
             <AppInput

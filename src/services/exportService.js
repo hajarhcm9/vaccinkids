@@ -3,25 +3,36 @@ const PDFDocument = require('pdfkit');
 const ExcelJS = require('exceljs');
 
 const MONTH_NAMES = [
-  'Janvier', 'Fevrier', 'Mars', 'Avril', 'Mai', 'Juin',
-  'Juillet', 'Aout', 'Septembre', 'Octobre', 'Novembre', 'Decembre'
+  'Janvier',
+  'Fevrier',
+  'Mars',
+  'Avril',
+  'Mai',
+  'Juin',
+  'Juillet',
+  'Aout',
+  'Septembre',
+  'Octobre',
+  'Novembre',
+  'Decembre',
 ];
 
-const generateMonthlyPDF = async function(centreId, month, year) {
+const generateMonthlyPDF = async function (centreId, month, year) {
   var cId = centreId || null;
   var startDate = new Date(year, month - 1, 1);
   var endDate = new Date(year, month, 1);
 
   var centreResult;
   if (cId) {
-    centreResult = await pool.query(
-      'SELECT * FROM centre WHERE id = $1', [cId]
-    );
+    centreResult = await pool.query('SELECT * FROM centre WHERE id = $1', [cId]);
   } else {
     centreResult = await pool.query('SELECT * FROM centre LIMIT 1');
   }
-  var centre = centreResult.rows[0] ||
-    { nom: 'Centre Es-Salaaam', adresse: 'Oujda', telephone: '' };
+  var centre = centreResult.rows[0] || {
+    nom: 'Centre Es-Salaaam',
+    adresse: 'Oujda',
+    telephone: '',
+  };
 
   var rdvParams = [startDate, endDate];
   var rdvQuery = 'SELECT rdv.statut, COUNT(*) as count';
@@ -40,7 +51,11 @@ const generateMonthlyPDF = async function(centreId, month, year) {
   var rdvResult = await pool.query(rdvQuery, rdvParams);
 
   var rdvStats = {
-    total: 0, CONFIRME: 0, EN_ATTENTE: 0, ANNULE: 0, TERMINE: 0
+    total: 0,
+    CONFIRME: 0,
+    EN_ATTENTE: 0,
+    ANNULE: 0,
+    TERMINE: 0,
   };
   for (var i = 0; i < rdvResult.rows.length; i++) {
     var row = rdvResult.rows[i];
@@ -61,7 +76,11 @@ const generateMonthlyPDF = async function(centreId, month, year) {
   var sessResult = await pool.query(sessQuery, sessParams);
 
   var sessStats = {
-    total: 0, TERMINEE: 0, ANNULEE: 0, CONFIRMEE: 0, EN_COURS: 0
+    total: 0,
+    TERMINEE: 0,
+    ANNULEE: 0,
+    CONFIRMEE: 0,
+    EN_COURS: 0,
   };
   for (var j = 0; j < sessResult.rows.length; j++) {
     var sRow = sessResult.rows[j];
@@ -69,36 +88,28 @@ const generateMonthlyPDF = async function(centreId, month, year) {
     sessStats.total += parseInt(sRow.count);
   }
 
-  return new Promise(function(resolve, reject) {
+  return new Promise(function (resolve, reject) {
     try {
       var doc = new PDFDocument({ size: 'A4', margin: 50 });
       var chunks = [];
-      doc.on('data', function(chunk) { chunks.push(chunk); });
-      doc.on('end', function() {
+      doc.on('data', function (chunk) {
+        chunks.push(chunk);
+      });
+      doc.on('end', function () {
         resolve(Buffer.concat(chunks));
       });
 
-      doc.fontSize(20).text(
-        'Rapport Mensuel', { align: 'center' }
-      );
+      doc.fontSize(20).text('Rapport Mensuel', { align: 'center' });
       doc.moveDown(0.5);
-      doc.fontSize(14).text(
-        centre.nom + ' - ' +
-        MONTH_NAMES[month - 1] + ' ' + year,
-        { align: 'center' }
-      );
+      doc
+        .fontSize(14)
+        .text(centre.nom + ' - ' + MONTH_NAMES[month - 1] + ' ' + year, { align: 'center' });
       doc.moveDown(0.3);
-      doc.fontSize(10).text(
-        'Adresse: ' + (centre.adresse || 'N/A'),
-        { align: 'center' }
-      );
+      doc.fontSize(10).text('Adresse: ' + (centre.adresse || 'N/A'), { align: 'center' });
       doc.moveDown(1.5);
       doc.moveTo(50, doc.y).lineTo(545, doc.y).stroke();
       doc.moveDown(0.5);
-      doc.fontSize(14).text(
-        'Statistiques des Rendez-vous',
-        { underline: true }
-      );
+      doc.fontSize(14).text('Statistiques des Rendez-vous', { underline: true });
       doc.moveDown(0.5);
       doc.fontSize(11);
       doc.text('Total: ' + rdvStats.total);
@@ -109,10 +120,7 @@ const generateMonthlyPDF = async function(centreId, month, year) {
       doc.moveDown(1.5);
       doc.moveTo(50, doc.y).lineTo(545, doc.y).stroke();
       doc.moveDown(0.5);
-      doc.fontSize(14).text(
-        'Statistiques des Sessions',
-        { underline: true }
-      );
+      doc.fontSize(14).text('Statistiques des Sessions', { underline: true });
       doc.moveDown(0.5);
       doc.fontSize(11);
       doc.text('Total: ' + sessStats.total);
@@ -127,8 +135,7 @@ const generateMonthlyPDF = async function(centreId, month, year) {
   });
 };
 
-
-const generateExcelExport = async function(centreId, startDate, endDate) {
+const generateExcelExport = async function (centreId, startDate, endDate) {
   var cId = centreId || null;
   var params = [];
   var pIdx = 1;
@@ -178,7 +185,7 @@ const generateExcelExport = async function(centreId, startDate, endDate) {
     { header: 'Date Vaccination', key: 'dvc', width: 18 },
     { header: 'Poids (kg)', key: 'poids', width: 12 },
     { header: 'Taille (cm)', key: 'taille', width: 12 },
-    { header: 'Reactions', key: 'react', width: 30 }
+    { header: 'Reactions', key: 'react', width: 30 },
   ];
   sheet.getRow(1).font = { bold: true };
 
@@ -187,17 +194,15 @@ const generateExcelExport = async function(centreId, startDate, endDate) {
     sheet.addRow({
       id: r.id,
       bebe: r.bebe_nom + ' ' + r.bebe_prenom,
-      dnaiss: r.date_naissance ?
-        r.date_naissance.toISOString().split('T')[0] : '',
+      dnaiss: r.date_naissance ? r.date_naissance.toISOString().split('T')[0] : '',
       vaccin: r.vaccin_nom,
       lot: r.numero_lot || '',
       fab: r.fabricant || '',
       perso: r.personnel_nom + ' ' + r.personnel_prenom,
-      dvc: r.date_heure ?
-        r.date_heure.toISOString().split('T')[0] : '',
+      dvc: r.date_heure ? r.date_heure.toISOString().split('T')[0] : '',
       poids: r.poids || '',
       taille: r.taille || '',
-      react: r.reactions || ''
+      react: r.reactions || '',
     });
   }
 
@@ -208,5 +213,5 @@ const generateExcelExport = async function(centreId, startDate, endDate) {
 
 module.exports = {
   generateMonthlyPDF,
-  generateExcelExport
+  generateExcelExport,
 };

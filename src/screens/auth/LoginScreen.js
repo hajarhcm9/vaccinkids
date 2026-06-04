@@ -30,7 +30,7 @@ const translations = {
     phoneLabel: 'Numéro de téléphone',
     continueBtn: 'Continuer',
     termsText: 'En continuant, vous acceptez nos',
-    termsLink: 'Conditions d\'utilisation',
+    termsLink: "Conditions d'utilisation",
     andText: 'et notre',
     privacyLink: 'Politique de confidentialité',
     phoneRequired: 'Veuillez entrer votre numéro de téléphone.',
@@ -62,7 +62,8 @@ const LoginScreen = ({ navigation }) => {
   const t = translations[language];
 
   useEffect(() => {
-    preferencesService.getLanguage()
+    preferencesService
+      .getLanguage()
       .then(setLanguage)
       .catch(() => {});
   }, []);
@@ -134,18 +135,12 @@ const LoginScreen = ({ navigation }) => {
             {LANGUAGES.map((lang) => (
               <TouchableOpacity
                 key={lang.code}
-                style={[
-                  styles.langBtn,
-                  language === lang.code && styles.langBtnActive,
-                ]}
+                style={[styles.langBtn, language === lang.code && styles.langBtnActive]}
                 onPress={() => switchLanguage(lang.code)}
                 accessibilityLabel={`Changer la langue en ${lang.label}`}
               >
                 <Text
-                  style={[
-                    styles.langBtnText,
-                    language === lang.code && styles.langBtnTextActive,
-                  ]}
+                  style={[styles.langBtnText, language === lang.code && styles.langBtnTextActive]}
                 >
                   {lang.label}
                 </Text>
@@ -183,9 +178,7 @@ const LoginScreen = ({ navigation }) => {
 
           {/* CGU */}
           <Text style={[styles.terms, isRTL && styles.textRTL]}>
-            {t.termsText}{' '}
-            <Text style={styles.link}>{t.termsLink}</Text>{' '}
-            {t.andText}{' '}
+            {t.termsText} <Text style={styles.link}>{t.termsLink}</Text> {t.andText}{' '}
             <Text style={styles.link}>{t.privacyLink}</Text>
           </Text>
         </View>

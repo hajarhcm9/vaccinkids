@@ -1,20 +1,18 @@
-version: '3.8'
-
 services:
   postgres:
     image: postgres:15-alpine
     container_name: vaccinikids-db
     restart: unless-stopped
     ports:
-      - '5433:5432'
+      - '${DB_PORT:-5433}:5432'
     environment:
-      POSTGRES_USER: vaccinikids_user
-      POSTGRES_PASSWORD: vaccinikids_password
-      POSTGRES_DB: vaccinikids
+      POSTGRES_USER: ${POSTGRES_USER:-vaccinikids_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-vaccinikids_password}
+      POSTGRES_DB: ${POSTGRES_DB:-vaccinikids}
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U vaccinikids_user -d vaccinikids']
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-vaccinikids_user} -d ${POSTGRES_DB:-vaccinikids}']
       interval: 10s
       timeout: 5s
       retries: 5

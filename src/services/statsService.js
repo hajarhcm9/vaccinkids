@@ -18,7 +18,7 @@ class StatsService {
     if (centreId) {
       const r = await pool.query(
         'SELECT COUNT(DISTINCT b.id) AS total FROM bebe b JOIN rendez_vous rdv ON rdv.bebe_id = b.id JOIN session s ON s.id = rdv.session_id WHERE s.centre_id = $1',
-        [centreId]
+        [centreId],
       );
       bebeTotal = parseInt(r.rows[0]?.total) || 0;
     } else {
@@ -31,7 +31,9 @@ class StatsService {
     const totalParents = parseInt(parentRes.rows[0]?.total) || 0;
 
     // Total centres
-    const centreRes = await pool.query('SELECT COUNT(*) AS total FROM centre WHERE est_actif = TRUE');
+    const centreRes = await pool.query(
+      'SELECT COUNT(*) AS total FROM centre WHERE est_actif = TRUE',
+    );
     const totalCentres = parseInt(centreRes.rows[0]?.total) || 0;
 
     // Total vaccinations done
@@ -39,7 +41,7 @@ class StatsService {
     if (centreId) {
       const r = await pool.query(
         'SELECT COUNT(*) AS total FROM vaccination vac JOIN rendez_vous rdv ON rdv.id = vac.rendez_vous_id JOIN session s ON s.id = rdv.session_id WHERE s.centre_id = $1',
-        [centreId]
+        [centreId],
       );
       totalVaccinations = parseInt(r.rows[0]?.total) || 0;
     } else {
@@ -52,7 +54,7 @@ class StatsService {
     if (centreId) {
       const r = await pool.query(
         'SELECT COUNT(*) AS total FROM rendez_vous rdv JOIN session s ON s.id = rdv.session_id WHERE s.centre_id = $1',
-        [centreId]
+        [centreId],
       );
       totalRdvs = parseInt(r.rows[0]?.total) || 0;
     } else {
@@ -74,7 +76,7 @@ class StatsService {
          FROM rendez_vous rdv
          JOIN session s ON s.id = rdv.session_id
          WHERE s.centre_id = $1 AND rdv.statut IN ('PRESENT', 'ABSENT')`,
-        [centreId]
+        [centreId],
       );
       absentData = r.rows[0] || {};
     } else {
@@ -98,7 +100,7 @@ class StatsService {
         `SELECT COUNT(*) AS total FROM session
          WHERE date_session BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL '7 days'
          AND statut IN ('PLANIFIEE', 'CONFIRMEE') AND centre_id = $1`,
-        [centreId]
+        [centreId],
       );
       sessionsAvenir = parseInt(r.rows[0]?.total) || 0;
     } else {
@@ -115,17 +117,19 @@ class StatsService {
     if (centreId) {
       const r = await pool.query(
         'SELECT COUNT(*) AS total FROM stock WHERE quantite_disponible <= seuil_alerte AND centre_id = $1',
-        [centreId]
+        [centreId],
       );
       alertesStock = parseInt(r.rows[0]?.total) || 0;
     } else {
-      const r = await pool.query('SELECT COUNT(*) AS total FROM stock WHERE quantite_disponible <= seuil_alerte');
+      const r = await pool.query(
+        'SELECT COUNT(*) AS total FROM stock WHERE quantite_disponible <= seuil_alerte',
+      );
       alertesStock = parseInt(r.rows[0]?.total) || 0;
     }
 
     // Habitual absents count
     const habitualRes = await pool.query(
-      'SELECT COUNT(*) AS total FROM parent WHERE nb_absences_consecutives >= 2'
+      'SELECT COUNT(*) AS total FROM parent WHERE nb_absences_consecutives >= 2',
     );
     const absentsHabituels = parseInt(habitualRes.rows[0]?.total) || 0;
 
@@ -174,7 +178,8 @@ class StatsService {
   async getCouvertureVaccinale(centreId) {
     const params = centreId ? [parseInt(centreId)] : [];
     // Coverage per vaccine
-    const vaccineRes = await pool.query(`
+    const vaccineRes = await pool.query(
+      `
       SELECT
         v.id AS vaccin_id,
         v.nom AS vaccin_nom,
@@ -203,7 +208,9 @@ class StatsService {
       ) vaccinated ON TRUE
       WHERE v.est_actif = TRUE
       ORDER BY v.age_cible_semaines ASC
-    `, params);
+    `,
+      params,
+    );
 
     // Coverage per centre
     const centreRes = await pool.query(`
@@ -262,14 +269,18 @@ class StatsService {
     const cFilter = centreId ? ' AND s.centre_id = $1' : '';
 
     // Status distribution
-    const statusRes = await pool.query(`
+    const statusRes = await pool.query(
+      `
       SELECT s.statut, COUNT(*) AS nb
       FROM session s WHERE 1=1 ${cFilter}
       GROUP BY s.statut ORDER BY nb DESC
-    `, params);
+    `,
+      params,
+    );
 
     // Fill rate per session
-    const fillRes = await pool.query(`
+    const fillRes = await pool.query(
+      `
       SELECT
         s.id, s.date_session, v.nom AS vaccin_nom, c.nom AS centre_nom,
         s.max_inscriptions,
@@ -283,10 +294,13 @@ class StatsService {
       GROUP BY s.id, s.date_session, v.nom, c.nom, s.max_inscriptions
       ORDER BY s.date_session DESC
       LIMIT 50
-    `, params);
+    `,
+      params,
+    );
 
     // Average fill rate
-    const avgFillRes = await pool.query(`
+    const avgFillRes = await pool.query(
+      `
       SELECT
         ROUND(AVG(nb_inscrits::numeric / NULLIF(max_inscriptions, 0) * 100), 1) AS avg_taux_remplissage
       FROM (
@@ -296,10 +310,13 @@ class StatsService {
         WHERE 1=1 ${cFilter}
         GROUP BY s.id, s.max_inscriptions
       ) sub
-    `, params);
+    `,
+      params,
+    );
 
     // Monthly sessions count
-    const monthlyRes = await pool.query(`
+    const monthlyRes = await pool.query(
+      `
       SELECT
         TO_CHAR(s.date_session, 'YYYY-MM') AS mois,
         COUNT(*) AS nb_sessions,
@@ -308,7 +325,9 @@ class StatsService {
       FROM session s WHERE 1=1 ${cFilter}
       GROUP BY TO_CHAR(s.date_session, 'YYYY-MM')
       ORDER BY mois DESC LIMIT 12
-    `, params);
+    `,
+      params,
+    );
 
     return {
       statusDistribution: statusRes.rows,
@@ -330,16 +349,20 @@ class StatsService {
     const cFilter = centreId ? ' AND s.centre_id = $1' : '';
 
     // Status distribution
-    const statusRes = await pool.query(`
+    const statusRes = await pool.query(
+      `
       SELECT rdv.statut, COUNT(*) AS nb
       FROM rendez_vous rdv
       JOIN session s ON s.id = rdv.session_id
       WHERE 1=1 ${cFilter}
       GROUP BY rdv.statut ORDER BY nb DESC
-    `, params);
+    `,
+      params,
+    );
 
     // Monthly trend
-    const monthlyRes = await pool.query(`
+    const monthlyRes = await pool.query(
+      `
       SELECT
         TO_CHAR(s.date_session, 'YYYY-MM') AS mois,
         COUNT(*) AS total_rdvs,
@@ -352,10 +375,13 @@ class StatsService {
       WHERE 1=1 ${cFilter}
       GROUP BY TO_CHAR(s.date_session, 'YYYY-MM')
       ORDER BY mois DESC LIMIT 12
-    `, params);
+    `,
+      params,
+    );
 
     // Daily trend (last 30 days)
-    const dailyRes = await pool.query(`
+    const dailyRes = await pool.query(
+      `
       SELECT
         s.date_session,
         COUNT(*) AS total_rdvs,
@@ -367,7 +393,9 @@ class StatsService {
       ${cFilter}
       GROUP BY s.date_session
       ORDER BY s.date_session DESC
-    `, params);
+    `,
+      params,
+    );
 
     return {
       statusDistribution: statusRes.rows,
@@ -388,7 +416,8 @@ class StatsService {
     const cFilter = centreId ? ' AND st.centre_id = $1' : '';
 
     // Stock overview per vaccine per centre
-    const overviewRes = await pool.query(`
+    const overviewRes = await pool.query(
+      `
       SELECT
         st.centre_id, c.nom AS centre_nom,
         st.vaccin_id, v.nom AS vaccin_nom,
@@ -399,25 +428,34 @@ class StatsService {
       JOIN vaccin v ON v.id = st.vaccin_id
       WHERE 1=1 ${cFilter}
       ORDER BY est_bas DESC, st.quantite_disponible ASC
-    `, params);
+    `,
+      params,
+    );
 
     // Low stock count
-    const lowStockRes = await pool.query(`
+    const lowStockRes = await pool.query(
+      `
       SELECT COUNT(*) AS total FROM stock st
       WHERE st.quantite_disponible <= st.seuil_alerte ${cFilter}
-    `, params);
+    `,
+      params,
+    );
 
     // Total stock value (doses)
-    const totalRes = await pool.query(`
+    const totalRes = await pool.query(
+      `
       SELECT
         SUM(st.quantite_disponible) AS total_doses,
         COUNT(DISTINCT st.vaccin_id) AS nb_vaccins_diff,
         COUNT(DISTINCT st.centre_id) AS nb_centres
       FROM stock st WHERE 1=1 ${cFilter}
-    `, params);
+    `,
+      params,
+    );
 
     // Vial waste stats
-    const wasteRes = await pool.query(`
+    const wasteRes = await pool.query(
+      `
       SELECT
         v.nom AS vaccin_nom,
         SUM(f.doses_utilisees) AS total_doses_utilisees,
@@ -431,7 +469,9 @@ class StatsService {
       ${centreId ? 'JOIN session s ON s.id = f.session_id AND s.centre_id = $1' : ''}
       GROUP BY v.id, v.nom
       ORDER BY taux_gaspillage DESC
-    `, params);
+    `,
+      params,
+    );
 
     return {
       alerteStockBas: parseInt(lowStockRes.rows[0]?.total) || 0,
@@ -455,7 +495,8 @@ class StatsService {
     const cFilter = centreId ? ' AND s.centre_id = $1' : '';
 
     // Global rate
-    const globalRes = await pool.query(`
+    const globalRes = await pool.query(
+      `
       SELECT
         COUNT(*) AS total_rdvs,
         SUM(CASE WHEN rdv.statut = 'ABSENT' THEN 1 ELSE 0 END) AS total_absences,
@@ -466,10 +507,13 @@ class StatsService {
       FROM rendez_vous rdv
       JOIN session s ON s.id = rdv.session_id
       WHERE rdv.statut IN ('PRESENT', 'ABSENT') ${cFilter}
-    `, params);
+    `,
+      params,
+    );
 
     // By month
-    const monthRes = await pool.query(`
+    const monthRes = await pool.query(
+      `
       SELECT
         TO_CHAR(s.date_session, 'YYYY-MM') AS mois,
         COUNT(*) AS nb_rdvs,
@@ -483,10 +527,13 @@ class StatsService {
       WHERE rdv.statut IN ('PRESENT', 'ABSENT') ${cFilter}
       GROUP BY TO_CHAR(s.date_session, 'YYYY-MM')
       ORDER BY mois DESC LIMIT 12
-    `, params);
+    `,
+      params,
+    );
 
     // By centre
-    const centreRes = await pool.query(`
+    const centreRes = await pool.query(
+      `
       SELECT
         c.id AS centre_id, c.nom AS centre_nom,
         COUNT(*) AS nb_rdvs,
@@ -502,10 +549,13 @@ class StatsService {
       ${centreId ? 'AND s.centre_id = $1' : ''}
       GROUP BY c.id, c.nom
       ORDER BY taux_absenteisme DESC
-    `, params);
+    `,
+      params,
+    );
 
     // Top absent parents
-    const topAbsentsRes = await pool.query(`
+    const topAbsentsRes = await pool.query(
+      `
       SELECT
         p.id AS parent_id, p.telephone, p.nom, p.prenom,
         p.nb_absences_consecutives,
@@ -518,7 +568,9 @@ class StatsService {
       GROUP BY p.id, p.telephone, p.nom, p.prenom, p.nb_absences_consecutives
       ORDER BY total_absences DESC
       LIMIT 10
-    `, params);
+    `,
+      params,
+    );
 
     const global = globalRes.rows[0] || {};
 
@@ -563,7 +615,8 @@ class StatsService {
     `);
 
     // Recent measurements
-    const recentRes = await pool.query(`
+    const recentRes = await pool.query(
+      `
       SELECT cr.date_mesure, cr.poids, cr.taille, cr.age_semaines,
              b.prenom AS bebe_prenom, b.nom AS bebe_nom
       FROM croissance cr
@@ -571,7 +624,9 @@ class StatsService {
       ${centreId ? 'WHERE EXISTS (SELECT 1 FROM rendez_vous rdv JOIN session s ON s.id = rdv.session_id WHERE rdv.bebe_id = b.id AND s.centre_id = $1)' : ''}
       ORDER BY cr.date_mesure DESC
       LIMIT 20
-    `, params);
+    `,
+      params,
+    );
 
     return {
       totalMesures: parseInt(totalRes.rows[0]?.total) || 0,
@@ -673,8 +728,9 @@ class StatsService {
     const where = conditions.length > 0 ? 'WHERE ' + conditions.join(' AND ') : '';
 
     switch (type) {
-      case 'vaccinations':
-        const vaccRes = await pool.query(`
+      case 'vaccinations': {
+        const vaccRes = await pool.query(
+          `
           SELECT
             vac.date_heure AS date_vaccination,
             b.prenom AS bebe_prenom, b.nom AS bebe_nom, b.date_naissance,
@@ -694,11 +750,15 @@ class StatsService {
           ${where}
           ORDER BY vac.date_heure DESC
           LIMIT 1000
-        `, params);
+        `,
+          params,
+        );
         return { type, data: vaccRes.rows, count: vaccRes.rows.length };
+      }
 
-      case 'absenteisme':
-        const absRes = await pool.query(`
+      case 'absenteisme': {
+        const absRes = await pool.query(
+          `
           SELECT
             s.date_session, s.heure_debut,
             v.nom AS vaccin_nom, c.nom AS centre_nom,
@@ -714,11 +774,15 @@ class StatsService {
           ${where}
           ORDER BY s.date_session DESC
           LIMIT 1000
-        `, params);
+        `,
+          params,
+        );
         return { type, data: absRes.rows, count: absRes.rows.length };
+      }
 
-      case 'sessions':
-        const sessRes = await pool.query(`
+      case 'sessions': {
+        const sessRes = await pool.query(
+          `
           SELECT
             s.date_session, s.heure_debut, s.heure_fin, s.statut,
             s.max_inscriptions,
@@ -733,11 +797,15 @@ class StatsService {
                   s.max_inscriptions, v.nom, c.nom
           ORDER BY s.date_session DESC
           LIMIT 1000
-        `, params);
+        `,
+          params,
+        );
         return { type, data: sessRes.rows, count: sessRes.rows.length };
+      }
 
-      case 'stock':
-        const stockRes = await pool.query(`
+      case 'stock': {
+        const stockRes = await pool.query(
+          `
           SELECT
             c.nom AS centre_nom, v.nom AS vaccin_nom,
             st.quantite_disponible, st.seuil_alerte,
@@ -747,11 +815,19 @@ class StatsService {
           JOIN vaccin v ON v.id = st.vaccin_id
           ${centreId ? 'WHERE st.centre_id = $1' : ''}
           ORDER BY st.quantite_disponible ASC
-        `, params);
+        `,
+          params,
+        );
         return { type, data: stockRes.rows, count: stockRes.rows.length };
+      }
 
       default:
-        return { type, data: [], count: 0, error: 'Type non supporte. Utilisez: vaccinations, absenteisme, sessions, stock' };
+        return {
+          type,
+          data: [],
+          count: 0,
+          error: 'Type non supporte. Utilisez: vaccinations, absenteisme, sessions, stock',
+        };
     }
   }
 }

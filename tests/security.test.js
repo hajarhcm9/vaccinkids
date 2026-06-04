@@ -1,5 +1,8 @@
 const request = require('supertest');
 const app = require('../src/app');
+const { pool } = require('../src/config/database');
+
+afterAll(() => pool.end());
 
 describe('Security Hardening (Day 13)', () => {
   describe('Helmet - Secure Headers', () => {

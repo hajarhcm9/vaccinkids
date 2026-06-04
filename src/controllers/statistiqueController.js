@@ -26,19 +26,19 @@ const getVaccinationsMensuelles = catchAsync(async (req, res) => {
 });
 
 const getRdvParStatut = catchAsync(async (req, res) => {
-  const centreId = req.user.role === 'admin' ? (req.query.centre_id || null) : req.user.centre_id;
+  const centreId = req.user.role === 'admin' ? req.query.centre_id || null : req.user.centre_id;
   const data = await Statistique.getRdvParStatut(centreId);
   return success(res, 200, 'Rendez-vous par statut', data);
 });
 
 const getStockAlertes = catchAsync(async (req, res) => {
-  const centreId = req.user.role === 'admin' ? (req.query.centre_id || null) : req.user.centre_id;
+  const centreId = req.user.role === 'admin' ? req.query.centre_id || null : req.user.centre_id;
   const data = await Statistique.getStockAlertes(centreId);
   return success(res, 200, 'Alertes de stock', data);
 });
 
 const getTopVaccins = catchAsync(async (req, res) => {
-  const centreId = req.user.role === 'admin' ? (req.query.centre_id || null) : req.user.centre_id;
+  const centreId = req.user.role === 'admin' ? req.query.centre_id || null : req.user.centre_id;
   const data = await Statistique.getTopVaccins(centreId);
   return success(res, 200, 'Top vaccins', data);
 });
