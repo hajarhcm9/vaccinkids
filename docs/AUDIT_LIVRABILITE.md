@@ -7,6 +7,9 @@ documentation et dépôt Git.
 **Conclusion actuelle :** projet fonctionnel et bien couvert côté API, mais **pas encore
 livrable en production** sans traiter les éléments P0 et P1 ci-dessous.
 
+L'analyse fichier par fichier, le registre d'actions priorise et la definition de sortie
+sont maintenus dans [`ANALYSE_PROFONDE_LIVRABILITE.md`](ANALYSE_PROFONDE_LIVRABILITE.md).
+
 ---
 
 ## 1. Résumé exécutif
