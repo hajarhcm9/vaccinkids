@@ -1,11 +1,9 @@
 const request = require('supertest');
-const app = require('../src/app');
-
-describe('Day 21 - File d\'attente digitale', () => {
+describe("Day 21 - File d'attente digitale", () => {
   let adminToken, nurseToken, parentToken, parentToken2;
-  let adminApp, app2;
+  let adminApp;
   let centreId = 1;
-  let sessionId, rdvId, bebeId, bebeId2;
+  let sessionId, rdvId, rdvId2, bebeId, bebeId2, secondEntryId;
 
   beforeAll(async () => {
     delete require.cache[require.resolve('../src/app')];
@@ -24,15 +22,11 @@ describe('Day 21 - File d\'attente digitale', () => {
     nurseToken = nurseRes.body.data.tokens.accessToken;
 
     // Login as parent
-    await request(adminApp)
-      .post('/api/auth/parent/send-otp')
-      .send({ telephone: '+212600000099' });
+    await request(adminApp).post('/api/auth/parent/send-otp').send({ telephone: '+212600000099' });
     const otpRes = await request(adminApp)
       .post('/api/auth/parent/verify-otp')
       .send({ telephone: '+212600000099', code: '123456' });
     parentToken = otpRes.body.data.tokens.accessToken;
-    const parentId = otpRes.body.data.user.id;
-
     // Create a session for testing
     const sessRes = await request(adminApp)
       .post('/api/sessions')
@@ -43,7 +37,7 @@ describe('Day 21 - File d\'attente digitale', () => {
         date_session: '2030-06-01',
         heure_debut: '08:00',
         heure_fin: '12:00',
-        max_inscriptions: 20
+        max_inscriptions: 20,
       });
     sessionId = sessRes.body.data?.session?.id || sessRes.body.data?.id;
 
@@ -60,6 +54,24 @@ describe('Day 21 - File d\'attente digitale', () => {
       .set('Authorization', 'Bearer ' + parentToken)
       .send({ session_id: sessionId, bebe_id: bebeId });
     rdvId = rdvRes.body.data?.rendez_vous?.id || rdvRes.body.data?.id;
+
+    await request(adminApp).post('/api/auth/parent/send-otp').send({ telephone: '+212600000098' });
+    const otpRes2 = await request(adminApp)
+      .post('/api/auth/parent/verify-otp')
+      .send({ telephone: '+212600000098', code: '123456' });
+    parentToken2 = otpRes2.body.data.tokens.accessToken;
+
+    const bebeRes2 = await request(adminApp)
+      .post('/api/carnet/bebe')
+      .set('Authorization', 'Bearer ' + parentToken2)
+      .send({ prenom: 'OtherQueue', nom: 'Baby', date_naissance: '2024-02-15', sexe: 'F' });
+    bebeId2 = bebeRes2.body.data?.bebe?.id || bebeRes2.body.data?.id;
+
+    const rdvRes2 = await request(adminApp)
+      .post('/api/rendez-vous')
+      .set('Authorization', 'Bearer ' + parentToken2)
+      .send({ session_id: sessionId, bebe_id: bebeId2 });
+    rdvId2 = rdvRes2.body.data?.rendez_vous?.id || rdvRes2.body.data?.id;
   });
 
   // ==========================================
@@ -68,7 +80,12 @@ describe('Day 21 - File d\'attente digitale', () => {
       const res = await request(adminApp)
         .post('/api/file-attente/')
         .set('Authorization', 'Bearer ' + parentToken)
-        .send({ bebe_id: bebeId, centre_id: centreId, session_id: sessionId, rendez_vous_id: rdvId });
+        .send({
+          bebe_id: bebeId,
+          centre_id: centreId,
+          session_id: sessionId,
+          rendez_vous_id: rdvId,
+        });
       expect(res.status).toBe(201);
       expect(res.body.data).toHaveProperty('numero_attente');
       expect(res.body.data).toHaveProperty('statut', 'EN_ATTENTE');
@@ -87,6 +104,50 @@ describe('Day 21 - File d\'attente digitale', () => {
         .post('/api/file-attente/')
         .send({ bebe_id: bebeId, centre_id: centreId });
       expect(res.status).toBe(401);
+    });
+
+    test('should reject a child or appointment belonging to another parent', async () => {
+      const res = await request(adminApp)
+        .post('/api/file-attente/')
+        .set('Authorization', 'Bearer ' + parentToken)
+        .send({
+          bebe_id: bebeId2,
+          centre_id: centreId,
+          session_id: sessionId,
+          rendez_vous_id: rdvId2,
+        });
+      expect(res.status).toBe(403);
+    });
+
+    test('should reject duplicate active queue entries', async () => {
+      const res = await request(adminApp)
+        .post('/api/file-attente/')
+        .set('Authorization', 'Bearer ' + parentToken)
+        .send({
+          bebe_id: bebeId,
+          centre_id: centreId,
+          session_id: sessionId,
+          rendez_vous_id: rdvId,
+        });
+      expect(res.status).toBe(409);
+    });
+
+    test('should prevent a parent from abandoning another parent queue entry', async () => {
+      const joinRes = await request(adminApp)
+        .post('/api/file-attente/')
+        .set('Authorization', 'Bearer ' + parentToken2)
+        .send({
+          bebe_id: bebeId2,
+          centre_id: centreId,
+          session_id: sessionId,
+          rendez_vous_id: rdvId2,
+        });
+      secondEntryId = joinRes.body.data.id;
+
+      const res = await request(adminApp)
+        .patch('/api/file-attente/' + secondEntryId + '/abandon')
+        .set('Authorization', 'Bearer ' + parentToken);
+      expect(res.status).toBe(404);
     });
   });
 
