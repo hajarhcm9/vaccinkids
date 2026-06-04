@@ -56,7 +56,7 @@ const translations = {
   },
 };
 
-const ProfileScreen = ({ onLanguageChange }) => {
+const ProfileScreen = ({ navigation, onLanguageChange }) => {
   const [language, setLanguage] = useState('fr');
   const { signOut } = useContext(AuthContext);
   const isRTL = language === 'ar';
@@ -146,7 +146,11 @@ const ProfileScreen = ({ onLanguageChange }) => {
         <View style={styles.menuCard}>
           <MenuRow icon="👶" label={t.children} onPress={() => {}} />
           <View style={styles.menuDivider} />
-          <MenuRow icon="🔔" label={t.notifications} onPress={() => {}} />
+          <MenuRow
+            icon="🔔"
+            label={t.notifications}
+            onPress={() => navigation.navigate('Notifications')}
+          />
           <View style={styles.menuDivider} />
           <MenuRow icon="📱" label={t.personalInfo} onPress={() => {}} />
         </View>

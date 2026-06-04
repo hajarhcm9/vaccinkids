@@ -9,8 +9,10 @@ import SessionDetailScreen from '../screens/main/SessionDetailScreen';
 import AppointmentsScreen from '../screens/main/AppointmentsScreen';
 import HealthBookScreen from '../screens/main/HealthBookScreen';
 import ProfileScreen from '../screens/main/ProfileScreen';
+import NotificationsScreen from '../screens/main/NotificationsScreen';
 
 import { preferencesService } from '../services/preferencesService';
+import { mobileNotificationService } from '../services/mobileNotificationService';
 import { colors, typography, spacing, borderRadius } from '../theme';
 
 const Tab = createBottomTabNavigator();
@@ -60,8 +62,20 @@ const HomeStack = () => (
   </Stack.Navigator>
 );
 
+const ProfileStack = ({ onLanguageChange, onUnreadCountChange }) => (
+  <Stack.Navigator screenOptions={{ headerShown: false, animation: 'slide_from_right' }}>
+    <Stack.Screen name="ProfileMain">
+      {(props) => <ProfileScreen {...props} onLanguageChange={onLanguageChange} />}
+    </Stack.Screen>
+    <Stack.Screen name="Notifications">
+      {(props) => <NotificationsScreen {...props} onUnreadCountChange={onUnreadCountChange} />}
+    </Stack.Screen>
+  </Stack.Navigator>
+);
+
 const MainNavigator = () => {
   const [language, setLanguage] = useState('fr');
+  const [unreadCount, setUnreadCount] = useState(0);
   const t = translations[language] || translations.fr;
 
   useEffect(() => {
@@ -69,6 +83,18 @@ const MainNavigator = () => {
       .getLanguage()
       .then(setLanguage)
       .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    const loadUnreadCount = () => {
+      mobileNotificationService
+        .getUnreadCount()
+        .then(setUnreadCount)
+        .catch(() => {});
+    };
+    loadUnreadCount();
+    const interval = setInterval(loadUnreadCount, 60_000);
+    return () => clearInterval(interval);
   }, []);
 
   return (
@@ -119,10 +145,10 @@ const MainNavigator = () => {
         name="Profile"
         options={{
           tabBarLabel: t.profile,
-          tabBarIcon: ({ focused }) => <TabIcon emoji="👤" focused={focused} />,
+          tabBarIcon: ({ focused }) => <TabIcon emoji="👤" focused={focused} badge={unreadCount} />,
         }}
       >
-        {() => <ProfileScreen onLanguageChange={setLanguage} />}
+        {() => <ProfileStack onLanguageChange={setLanguage} onUnreadCountChange={setUnreadCount} />}
       </Tab.Screen>
     </Tab.Navigator>
   );
