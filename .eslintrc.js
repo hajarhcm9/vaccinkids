@@ -5,7 +5,7 @@ module.exports = {
     jest: true,
   },
   extends: ['eslint:recommended', 'prettier'],
-  plugins: ['prettier'],
+  plugins: ['prettier', 'react'],
   parserOptions: {
     ecmaVersion: 'latest',
     sourceType: 'module',
@@ -15,6 +15,8 @@ module.exports = {
   },
   rules: {
     'prettier/prettier': 'error',
+    'react/jsx-uses-react': 'error',
+    'react/jsx-uses-vars': 'error',
     'no-unused-vars': ['warn', { argsIgnorePattern: '^next$' }],
     'no-console': ['warn', { allow: ['warn', 'error'] }],
     'no-underscore-dangle': 'off',
