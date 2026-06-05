@@ -51,9 +51,14 @@ class AdminDashboardFragment : Fragment() {
         root.addView(navButton("Personnel", GestionPersonnelFragment()))
         root.addView(navButton("Centres", GestionCentresFragment()))
         root.addView(navButton("Vaccins", GestionVaccinsFragment()))
+        root.addView(navButton("Sessions", GestionSessionsFragment()))
         root.addView(Button(requireContext()).apply {
             text = "Stock"
             setOnClickListener { startActivity(Intent(requireContext(), GestionStocksActivity::class.java)) }
+        })
+        root.addView(Button(requireContext()).apply {
+            text = "Statistiques"
+            setOnClickListener { startActivity(Intent(requireContext(), StatsAdminActivity::class.java)) }
         })
         root.addView(Button(requireContext()).apply {
             text = "Exports"

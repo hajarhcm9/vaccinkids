@@ -83,9 +83,28 @@ data class SessionDto(
     val inscrits: Int? = null
 )
 
+data class SessionRequest(
+    @SerializedName("centre_id") val centreId: Int? = null,
+    @SerializedName("vaccin_id") val vaccinId: Int? = null,
+    @SerializedName("date_session") val dateSession: String? = null,
+    @SerializedName("heure_debut") val heureDebut: String? = null,
+    @SerializedName("heure_fin") val heureFin: String? = null,
+    @SerializedName("max_inscriptions") val maxInscriptions: Int? = null,
+    val statut: String? = null
+)
+
 data class UpdateStockRequest(
     @SerializedName("quantite_disponible") val quantiteDisponible: Int? = null,
-    @SerializedName("seuil_alerte") val seuilAlerte: Int? = null
+    @SerializedName("seuil_alerte") val seuilAlerte: Int? = null,
+    val motif: String? = null
+)
+
+data class UpsertStockRequest(
+    @SerializedName("centre_id") val centreId: Int,
+    @SerializedName("vaccin_id") val vaccinId: Int,
+    @SerializedName("quantite_disponible") val quantiteDisponible: Int,
+    @SerializedName("seuil_alerte") val seuilAlerte: Int? = null,
+    val motif: String? = null
 )
 
 data class FlaconDto(
@@ -342,4 +361,20 @@ data class AdminAuditLogListDto(
     val total: Int = 0,
     val page: Int = 1,
     val totalPages: Int = 1
+)
+
+data class StockMovementDto(
+    val id: Int,
+    @SerializedName("stock_id") val stockId: Int? = null,
+    @SerializedName("centre_id") val centreId: Int? = null,
+    @SerializedName("vaccin_id") val vaccinId: Int? = null,
+    val type: String? = null,
+    @SerializedName("quantite_avant") val quantiteAvant: Int? = null,
+    @SerializedName("quantite_apres") val quantiteApres: Int? = null,
+    @SerializedName("seuil_avant") val seuilAvant: Int? = null,
+    @SerializedName("seuil_apres") val seuilApres: Int? = null,
+    val motif: String? = null,
+    @SerializedName("vaccin_nom") val vaccinNom: String? = null,
+    @SerializedName("centre_nom") val centreNom: String? = null,
+    @SerializedName("created_at") val createdAt: String? = null
 )

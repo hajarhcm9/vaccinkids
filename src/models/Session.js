@@ -88,7 +88,15 @@ const Session = {
     const fields = [];
     const values = [id];
     let paramIndex = 2;
-    const allowedFields = ['statut', 'max_inscriptions'];
+    const allowedFields = [
+      'centre_id',
+      'vaccin_id',
+      'date_session',
+      'heure_debut',
+      'heure_fin',
+      'max_inscriptions',
+      'statut',
+    ];
     for (const field of allowedFields) {
       if (data[field] !== undefined) {
         fields.push(`${field} = $${paramIndex}`);

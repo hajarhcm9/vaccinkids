@@ -22,17 +22,41 @@ interface ApiService {
     @GET("statistiques/top-vaccins")
     suspend fun getTopVaccins(@Query("centre_id") centreId: Int? = null): ApiResponse<List<Map<String, Any?>>>
 
+    @GET("stats/dashboard")
+    suspend fun getStatsDashboard(@Query("centreId") centreId: Int? = null): ApiResponse<Map<String, Any?>>
+
+    @GET("stats/rendez-vous")
+    suspend fun getStatsRendezVous(@Query("centreId") centreId: Int? = null): ApiResponse<Map<String, Any?>>
+
+    @GET("stats/stock")
+    suspend fun getStatsStock(@Query("centreId") centreId: Int? = null): ApiResponse<Map<String, Any?>>
+
+    @GET("stats/absenteisme")
+    suspend fun getStatsAbsenteisme(@Query("centreId") centreId: Int? = null): ApiResponse<Map<String, Any?>>
+
     @GET("sessions/today")
     suspend fun getTodaySessions(): ApiResponse<List<SessionDto>>
 
     @GET("sessions")
     suspend fun getSessions(@Query("centre_id") centreId: Int? = null): ApiResponse<List<SessionDto>>
 
+    @POST("sessions")
+    suspend fun createSession(@Body request: SessionRequest): ApiResponse<SessionDto>
+
+    @PATCH("sessions/{id}")
+    suspend fun updateSession(@Path("id") id: Int, @Body request: SessionRequest): ApiResponse<SessionDto>
+
     @PATCH("sessions/{id}/start")
     suspend fun startSession(@Path("id") id: Int): ApiResponse<SessionDto>
 
     @PATCH("sessions/{id}/end")
     suspend fun endSession(@Path("id") id: Int): ApiResponse<SessionDto>
+
+    @PATCH("sessions/{id}/confirm")
+    suspend fun confirmSession(@Path("id") id: Int): ApiResponse<SessionDto>
+
+    @PATCH("sessions/{id}/cancel")
+    suspend fun cancelSession(@Path("id") id: Int): ApiResponse<SessionDto>
 
     @GET("stock/centre/{centreId}")
     suspend fun getStock(@Path("centreId") centreId: Int): ApiResponse<List<StockDto>>
@@ -41,7 +65,13 @@ interface ApiService {
     suspend fun updateStock(@Path("id") id: Int, @Body request: UpdateStockRequest): ApiResponse<StockDto>
 
     @POST("stock")
-    suspend fun upsertStock(@Body request: Map<String, Int>): ApiResponse<StockDto>
+    suspend fun upsertStock(@Body request: UpsertStockRequest): ApiResponse<StockDto>
+
+    @GET("stock/movements")
+    suspend fun getStockMovements(
+        @Query("centre_id") centreId: Int? = null,
+        @Query("stock_id") stockId: Int? = null
+    ): ApiResponse<List<StockMovementDto>>
 
     @GET("admin/personnel")
     suspend fun getAdminPersonnel(

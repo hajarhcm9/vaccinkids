@@ -186,10 +186,12 @@ const schemas = {
     vaccin_id: { type: 'integer', required: true },
     quantite_disponible: { type: 'integer', required: true, min: 0 },
     seuil_alerte: { type: 'integer', min: 0 },
+    motif: { type: 'string', maxLength: 500 },
   },
   updateStock: {
     quantite_disponible: { type: 'integer', min: 0 },
     seuil_alerte: { type: 'integer', min: 0 },
+    motif: { type: 'string', maxLength: 500 },
   },
 };
 

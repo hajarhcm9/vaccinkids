@@ -19,6 +19,13 @@ router.get(
   StockController.getLowStock,
 );
 
+router.get(
+  '/movements',
+  authenticate,
+  authorize('admin'),
+  StockController.getMovements,
+);
+
 router.post(
   '/',
   authenticate,
