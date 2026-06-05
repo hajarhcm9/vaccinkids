@@ -40,6 +40,70 @@ interface ApiService {
     @PATCH("stock/{id}")
     suspend fun updateStock(@Path("id") id: Int, @Body request: UpdateStockRequest): ApiResponse<StockDto>
 
+    @POST("stock")
+    suspend fun upsertStock(@Body request: Map<String, Int>): ApiResponse<StockDto>
+
+    @GET("admin/personnel")
+    suspend fun getAdminPersonnel(
+        @Query("page") page: Int = 1,
+        @Query("limit") limit: Int = 100,
+        @Query("search") search: String? = null
+    ): ApiResponse<AdminPersonnelListDto>
+
+    @POST("admin/personnel")
+    suspend fun createAdminPersonnel(@Body request: AdminPersonnelRequest): ApiResponse<AdminPersonnelEnvelopeDto>
+
+    @PATCH("admin/personnel/{id}")
+    suspend fun updateAdminPersonnel(
+        @Path("id") id: Int,
+        @Body request: AdminPersonnelRequest
+    ): ApiResponse<AdminPersonnelEnvelopeDto>
+
+    @PATCH("admin/personnel/{id}/deactivate")
+    suspend fun deactivateAdminPersonnel(@Path("id") id: Int): ApiResponse<Map<String, Any?>>
+
+    @PATCH("admin/personnel/{id}/reactivate")
+    suspend fun reactivateAdminPersonnel(@Path("id") id: Int): ApiResponse<Map<String, Any?>>
+
+    @GET("admin/centres")
+    suspend fun getAdminCentres(
+        @Query("page") page: Int = 1,
+        @Query("limit") limit: Int = 100,
+        @Query("search") search: String? = null
+    ): ApiResponse<AdminCentreListDto>
+
+    @POST("admin/centres")
+    suspend fun createAdminCentre(@Body request: AdminCentreRequest): ApiResponse<AdminCentreEnvelopeDto>
+
+    @PATCH("admin/centres/{id}")
+    suspend fun updateAdminCentre(
+        @Path("id") id: Int,
+        @Body request: AdminCentreRequest
+    ): ApiResponse<AdminCentreEnvelopeDto>
+
+    @PATCH("admin/centres/{id}/deactivate")
+    suspend fun deactivateAdminCentre(@Path("id") id: Int): ApiResponse<Map<String, Any?>>
+
+    @GET("admin/audit-log")
+    suspend fun getAdminAuditLog(
+        @Query("page") page: Int = 1,
+        @Query("limit") limit: Int = 50,
+        @Query("action") action: String? = null,
+        @Query("table_name") tableName: String? = null
+    ): ApiResponse<AdminAuditLogListDto>
+
+    @GET("vaccins")
+    suspend fun getVaccins(@Query("all") all: Boolean = true): ApiResponse<List<VaccinDto>>
+
+    @POST("vaccins")
+    suspend fun createVaccin(@Body request: VaccinRequest): ApiResponse<VaccinDto>
+
+    @PATCH("vaccins/{id}")
+    suspend fun updateVaccin(@Path("id") id: Int, @Body request: VaccinRequest): ApiResponse<VaccinDto>
+
+    @DELETE("vaccins/{id}")
+    suspend fun deactivateVaccin(@Path("id") id: Int): ApiResponse<VaccinDto>
+
     @POST("flacons")
     suspend fun createFlacon(@Body request: CreateFlaconRequest): ApiResponse<FlaconDto>
 

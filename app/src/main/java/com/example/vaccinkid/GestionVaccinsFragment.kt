@@ -8,72 +8,63 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
-import android.widget.Spinner
 import android.widget.TextView
-import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.core.view.setPadding
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.vaccinkid.model.AdminPersonnelDto
-import com.example.vaccinkid.model.AdminPersonnelRequest
+import com.example.vaccinkid.model.VaccinDto
+import com.example.vaccinkid.model.VaccinRequest
 import com.example.vaccinkid.network.ApiClient
 import kotlinx.coroutines.launch
 
-class GestionPersonnelFragment : Fragment() {
+class GestionVaccinsFragment : Fragment() {
     private lateinit var messageView: TextView
-    private lateinit var totalView: TextView
-    private lateinit var adapter: PersonnelAdapter
+    private lateinit var adapter: VaccinAdapter
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        adapter = PersonnelAdapter(
-            onEdit = { showForm(it) },
-            onToggle = { togglePersonnel(it) }
-        )
+        adapter = VaccinAdapter(onEdit = { showForm(it) }, onDeactivate = { deactivate(it) })
         return LinearLayout(requireContext()).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(20)
             addView(TextView(requireContext()).apply {
-                text = "Gestion personnel"
+                text = "Gestion vaccins"
                 textSize = 22f
                 setTypeface(typeface, android.graphics.Typeface.BOLD)
             })
-            totalView = TextView(requireContext())
-            addView(totalView)
             messageView = TextView(requireContext()).apply { setPadding(0, 8, 0, 8) }
             addView(messageView)
             addView(Button(requireContext()).apply {
-                text = "Ajouter personnel"
+                text = "Ajouter vaccin"
                 setOnClickListener { showForm(null) }
             })
             addView(Button(requireContext()).apply {
                 text = "Rafraichir"
-                setOnClickListener { loadPersonnel() }
+                setOnClickListener { loadVaccins() }
             })
             addView(RecyclerView(requireContext()).apply {
                 layoutManager = LinearLayoutManager(requireContext())
-                adapter = this@GestionPersonnelFragment.adapter
+                adapter = this@GestionVaccinsFragment.adapter
             }, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f))
         }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        loadPersonnel()
+        loadVaccins()
     }
 
-    private fun loadPersonnel() {
+    private fun loadVaccins() {
         messageView.text = "Chargement..."
         viewLifecycleOwner.lifecycleScope.launch {
             try {
-                val response = ApiClient.apiService.getAdminPersonnel()
+                val response = ApiClient.apiService.getVaccins(all = true)
                 val data = response.data
-                if (response.status != "success" || data == null) throw Exception(response.message ?: "Personnel indisponible")
-                adapter.submit(data.personnel)
-                totalView.text = "Personnel: ${data.personnel.count { it.estActif == true }} actif(s) / ${data.total}"
-                messageView.text = ""
+                if (response.status != "success" || data == null) throw Exception(response.message ?: "Vaccins indisponibles")
+                adapter.submit(data)
+                messageView.text = "${data.size} vaccin(s)"
             } catch (e: Exception) {
                 adapter.submit(emptyList())
                 messageView.text = e.message ?: "Erreur reseau"
@@ -81,80 +72,62 @@ class GestionPersonnelFragment : Fragment() {
         }
     }
 
-    private fun showForm(item: AdminPersonnelDto?) {
+    private fun showForm(item: VaccinDto?) {
         val root = LinearLayout(requireContext()).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(24)
         }
-        val cin = edit("CIN").also { it.setText(item?.cin ?: "") }
         val nom = edit("Nom").also { it.setText(item?.nom ?: "") }
-        val prenom = edit("Prenom").also { it.setText(item?.prenom ?: "") }
-        val centreId = edit("Centre ID").also { it.setText(item?.centreId?.toString() ?: "1") }
-        val password = edit("Mot de passe ${if (item == null) "" else "(laisser vide si inchange)"}")
-        val role = Spinner(requireContext()).apply {
-            adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, listOf("infirmier", "admin"))
-            setSelection(if (item?.role == "admin") 1 else 0)
-        }
-        listOf(cin, nom, prenom, centreId, role, password).forEach { root.addView(it) }
+        val doses = edit("Doses par flacon").also { it.setText(item?.dosesParFlacon?.toString() ?: "") }
+        val age = edit("Age cible semaines").also { it.setText(item?.ageCibleSemaines?.toString() ?: "") }
+        val maladies = edit("Maladies ciblees").also { it.setText(item?.maladiesCiblees ?: "") }
+        listOf(nom, doses, age, maladies).forEach { root.addView(it) }
 
         AlertDialog.Builder(requireContext())
-            .setTitle(if (item == null) "Ajouter personnel" else "Modifier personnel")
+            .setTitle(if (item == null) "Ajouter vaccin" else "Modifier vaccin")
             .setView(root)
             .setNegativeButton("Annuler", null)
             .setPositiveButton("Valider") { _, _ ->
-                val request = AdminPersonnelRequest(
-                    cin = cin.text.toString().trim().takeIf { item == null },
+                val request = VaccinRequest(
                     nom = nom.text.toString().trim(),
-                    prenom = prenom.text.toString().trim(),
-                    role = role.selectedItem.toString(),
-                    centreId = centreId.text.toString().trim().toIntOrNull(),
-                    motDePasse = password.text.toString().trim().ifBlank { null }
+                    dosesParFlacon = doses.text.toString().trim().toIntOrNull(),
+                    ageCibleSemaines = age.text.toString().trim().toIntOrNull(),
+                    maladiesCiblees = maladies.text.toString().trim()
                 )
-                savePersonnel(item?.id, request)
+                saveVaccin(item?.id, request)
             }
             .show()
     }
 
-    private fun savePersonnel(id: Int?, request: AdminPersonnelRequest) {
-        if (request.nom.isNullOrBlank() || request.prenom.isNullOrBlank() || request.centreId == null) {
-            messageView.text = "Nom, prenom et centre sont obligatoires."
-            return
-        }
-        if (id == null && (request.cin.isNullOrBlank() || request.motDePasse.isNullOrBlank())) {
-            messageView.text = "CIN et mot de passe sont obligatoires a la creation."
+    private fun saveVaccin(id: Int?, request: VaccinRequest) {
+        if (request.nom.isNullOrBlank() || request.dosesParFlacon == null || request.ageCibleSemaines == null || request.maladiesCiblees.isNullOrBlank()) {
+            messageView.text = "Nom, doses, age et maladies sont obligatoires."
             return
         }
         viewLifecycleOwner.lifecycleScope.launch {
             try {
-                val response = if (id == null) {
-                    ApiClient.apiService.createAdminPersonnel(request)
-                } else {
-                    ApiClient.apiService.updateAdminPersonnel(id, request.copy(cin = null))
-                }
+                val response = if (id == null) ApiClient.apiService.createVaccin(request)
+                else ApiClient.apiService.updateVaccin(id, request)
                 if (response.status != "success") throw Exception(response.message ?: "Enregistrement refuse")
                 Toast.makeText(requireContext(), "Confirme par le serveur", Toast.LENGTH_SHORT).show()
-                loadPersonnel()
+                loadVaccins()
             } catch (e: Exception) {
                 messageView.text = e.message ?: "Erreur reseau"
             }
         }
     }
 
-    private fun togglePersonnel(item: AdminPersonnelDto) {
+    private fun deactivate(item: VaccinDto) {
         AlertDialog.Builder(requireContext())
-            .setTitle(if (item.estActif == true) "Desactiver" else "Reactiver")
-            .setMessage("${item.prenom ?: ""} ${item.nom ?: ""}")
+            .setTitle("Desactiver vaccin")
+            .setMessage(item.nom ?: "Vaccin #${item.id}")
             .setNegativeButton("Annuler", null)
             .setPositiveButton("Confirmer") { _, _ ->
                 viewLifecycleOwner.lifecycleScope.launch {
                     try {
-                        val response = if (item.estActif == true) {
-                            ApiClient.apiService.deactivateAdminPersonnel(item.id)
-                        } else {
-                            ApiClient.apiService.reactivateAdminPersonnel(item.id)
-                        }
-                        if (response.status != "success") throw Exception(response.message ?: "Action refusee")
-                        loadPersonnel()
+                        val response = ApiClient.apiService.deactivateVaccin(item.id)
+                        if (response.status != "success") throw Exception(response.message ?: "Desactivation refusee")
+                        loadVaccins()
                     } catch (e: Exception) {
                         messageView.text = e.message ?: "Erreur reseau"
                     }
@@ -166,12 +139,12 @@ class GestionPersonnelFragment : Fragment() {
     private fun edit(hintText: String): EditText = EditText(requireContext()).apply { hint = hintText }
 }
 
-private class PersonnelAdapter(
-    private val onEdit: (AdminPersonnelDto) -> Unit,
-    private val onToggle: (AdminPersonnelDto) -> Unit
-) : RecyclerView.Adapter<PersonnelAdapter.ViewHolder>() {
-    private var items: List<AdminPersonnelDto> = emptyList()
-    fun submit(next: List<AdminPersonnelDto>) {
+private class VaccinAdapter(
+    private val onEdit: (VaccinDto) -> Unit,
+    private val onDeactivate: (VaccinDto) -> Unit
+) : RecyclerView.Adapter<VaccinAdapter.ViewHolder>() {
+    private var items: List<VaccinDto> = emptyList()
+    fun submit(next: List<VaccinDto>) {
         items = next
         notifyDataSetChanged()
     }
@@ -179,34 +152,36 @@ private class PersonnelAdapter(
         return ViewHolder(LinearLayout(parent.context).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(16)
-        }, onEdit, onToggle)
+        }, onEdit, onDeactivate)
     }
     override fun getItemCount() = items.size
     override fun onBindViewHolder(holder: ViewHolder, position: Int) = holder.bind(items[position])
 
     class ViewHolder(
         private val root: LinearLayout,
-        private val onEdit: (AdminPersonnelDto) -> Unit,
-        private val onToggle: (AdminPersonnelDto) -> Unit
+        private val onEdit: (VaccinDto) -> Unit,
+        private val onDeactivate: (VaccinDto) -> Unit
     ) : RecyclerView.ViewHolder(root) {
-        fun bind(item: AdminPersonnelDto) {
+        fun bind(item: VaccinDto) {
             root.removeAllViews()
             root.addView(TextView(root.context).apply {
-                text = "${item.prenom ?: ""} ${item.nom ?: ""} - ${item.role ?: "-"}"
+                text = "${item.nom ?: "Vaccin #${item.id}"} - ${if (item.estActif == false) "Inactif" else "Actif"}"
                 textSize = 16f
                 setTypeface(typeface, android.graphics.Typeface.BOLD)
             })
             root.addView(TextView(root.context).apply {
-                text = "CIN ${item.cin ?: "-"} | Centre ${item.centreNom ?: item.centreId ?: "-"} | ${if (item.estActif == true) "Actif" else "Inactif"}"
+                text = "Doses/flacon ${item.dosesParFlacon ?: "-"} | Age ${item.ageCibleSemaines ?: "-"} sem."
             })
+            root.addView(TextView(root.context).apply { text = item.maladiesCiblees ?: "-" })
             val row = LinearLayout(root.context).apply { orientation = LinearLayout.HORIZONTAL }
             row.addView(Button(root.context).apply {
                 text = "Modifier"
                 setOnClickListener { onEdit(item) }
             }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
             row.addView(Button(root.context).apply {
-                text = if (item.estActif == true) "Desactiver" else "Reactiver"
-                setOnClickListener { onToggle(item) }
+                text = "Desactiver"
+                isEnabled = item.estActif != false
+                setOnClickListener { onDeactivate(item) }
             }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
             root.addView(row)
         }

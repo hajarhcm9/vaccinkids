@@ -248,3 +248,98 @@ data class SyncPushResultDto(
     val status: String,
     val error: String? = null
 )
+
+data class AdminPersonnelDto(
+    val id: Int,
+    val cin: String? = null,
+    val nom: String? = null,
+    val prenom: String? = null,
+    val role: String? = null,
+    @SerializedName("centre_id") val centreId: Int? = null,
+    @SerializedName("centre_nom") val centreNom: String? = null,
+    @SerializedName("est_actif") val estActif: Boolean? = null
+)
+
+data class AdminPersonnelListDto(
+    val personnel: List<AdminPersonnelDto> = emptyList(),
+    val total: Int = 0,
+    val page: Int = 1,
+    val totalPages: Int = 1
+)
+
+data class AdminPersonnelEnvelopeDto(val personnel: AdminPersonnelDto? = null)
+
+data class AdminPersonnelRequest(
+    val cin: String? = null,
+    val nom: String? = null,
+    val prenom: String? = null,
+    @SerializedName("mot_de_passe") val motDePasse: String? = null,
+    val role: String? = null,
+    @SerializedName("centre_id") val centreId: Int? = null,
+    @SerializedName("est_actif") val estActif: Boolean? = null
+)
+
+data class AdminCentreDto(
+    val id: Int,
+    val nom: String? = null,
+    val adresse: String? = null,
+    val telephone: String? = null,
+    @SerializedName("gps_lat") val gpsLat: Double? = null,
+    @SerializedName("gps_lng") val gpsLng: Double? = null,
+    @SerializedName("est_actif") val estActif: Boolean? = null,
+    @SerializedName("nb_personnel") val nbPersonnel: Int? = null,
+    @SerializedName("nb_sessions") val nbSessions: Int? = null,
+    @SerializedName("alertes_stock") val alertesStock: Int? = null
+)
+
+data class AdminCentreListDto(
+    val centres: List<AdminCentreDto> = emptyList(),
+    val total: Int = 0,
+    val page: Int = 1,
+    val totalPages: Int = 1
+)
+
+data class AdminCentreEnvelopeDto(val centre: AdminCentreDto? = null)
+
+data class AdminCentreRequest(
+    val nom: String? = null,
+    val adresse: String? = null,
+    val telephone: String? = null,
+    @SerializedName("gps_lat") val gpsLat: Double? = null,
+    @SerializedName("gps_lng") val gpsLng: Double? = null,
+    @SerializedName("est_actif") val estActif: Boolean? = null
+)
+
+data class VaccinDto(
+    val id: Int,
+    val nom: String? = null,
+    @SerializedName("doses_par_flacon") val dosesParFlacon: Int? = null,
+    @SerializedName("age_cible_semaines") val ageCibleSemaines: Int? = null,
+    @SerializedName("maladies_ciblees") val maladiesCiblees: String? = null,
+    @SerializedName("est_actif") val estActif: Boolean? = null
+)
+
+data class VaccinRequest(
+    val nom: String? = null,
+    @SerializedName("doses_par_flacon") val dosesParFlacon: Int? = null,
+    @SerializedName("age_cible_semaines") val ageCibleSemaines: Int? = null,
+    @SerializedName("maladies_ciblees") val maladiesCiblees: String? = null,
+    @SerializedName("est_actif") val estActif: Boolean? = null
+)
+
+data class AdminAuditLogDto(
+    val id: Int,
+    @SerializedName("table_name") val tableName: String? = null,
+    @SerializedName("record_id") val recordId: Int? = null,
+    val action: String? = null,
+    @SerializedName("user_id") val userId: Int? = null,
+    @SerializedName("user_role") val userRole: String? = null,
+    val timestamp: String? = null
+)
+
+data class AdminAuditLogListDto(
+    val entries: List<AdminAuditLogDto> = emptyList(),
+    val total: Int = 0,
+    val page: Int = 1,
+    val totalPages: Int = 1
+)

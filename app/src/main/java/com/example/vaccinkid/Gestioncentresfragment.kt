@@ -5,145 +5,202 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.*
+import android.widget.Button
+import android.widget.EditText
+import android.widget.LinearLayout
+import android.widget.TextView
+import android.widget.Toast
+import androidx.core.view.setPadding
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.example.vaccinkid.model.AdminCentreDto
+import com.example.vaccinkid.model.AdminCentreRequest
+import com.example.vaccinkid.network.ApiClient
+import kotlinx.coroutines.launch
 
 class GestionCentresFragment : Fragment() {
+    private lateinit var messageView: TextView
+    private lateinit var totalView: TextView
+    private lateinit var adapter: CentreAdapter
 
-    private val centres = CentresOujdaData.tousLesCentres.toMutableList()
-    private lateinit var listViewCentres: ListView
-    private lateinit var tvTotalActifs: TextView
-
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        val view = inflater.inflate(R.layout.fragment_gestion_centres, container, false)
-        listViewCentres = view.findViewById(R.id.listViewCentres)
-        tvTotalActifs = view.findViewById(R.id.tvTotalActifs)
-        afficherCentres()
-        return view
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+        adapter = CentreAdapter(onEdit = { showForm(it) }, onDeactivate = { deactivateCentre(it) })
+        return LinearLayout(requireContext()).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(20)
+            addView(TextView(requireContext()).apply {
+                text = "Gestion centres"
+                textSize = 22f
+                setTypeface(typeface, android.graphics.Typeface.BOLD)
+            })
+            totalView = TextView(requireContext())
+            addView(totalView)
+            messageView = TextView(requireContext()).apply { setPadding(0, 8, 0, 8) }
+            addView(messageView)
+            addView(Button(requireContext()).apply {
+                text = "Ajouter centre"
+                setOnClickListener { showForm(null) }
+            })
+            addView(Button(requireContext()).apply {
+                text = "Rafraichir"
+                setOnClickListener { loadCentres() }
+            })
+            addView(RecyclerView(requireContext()).apply {
+                layoutManager = LinearLayoutManager(requireContext())
+                adapter = this@GestionCentresFragment.adapter
+            }, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f))
+        }
     }
 
-    private fun afficherCentres() {
-        val actifs = centres.count { it.estActif }
-        tvTotalActifs.text = "Centres actifs : $actifs / ${centres.size}"
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        loadCentres()
+    }
 
-        val adapter = object : ArrayAdapter<CentreVaccination>(
-            requireContext(),
-            R.layout.item_centre,
-            centres
-        ) {
-            override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
-                val itemView = convertView ?: LayoutInflater.from(context)
-                    .inflate(R.layout.item_centre, parent, false)
-                val centre = centres[position]
-
-                itemView.findViewById<TextView>(R.id.tvNomCentre).text = centre.nom
-                itemView.findViewById<TextView>(R.id.tvAdresseCentre).text = centre.adresse
-                itemView.findViewById<TextView>(R.id.tvTelCentre).text = "📞 ${centre.telephone}"
-
-                val tvStatut = itemView.findViewById<TextView>(R.id.tvStatutCentre)
-                val cardView = itemView.findViewById<androidx.cardview.widget.CardView>(R.id.cardCentre)
-                val btnDetail = itemView.findViewById<Button>(R.id.btnDetailCentre)
-
-                if (centre.estActif) {
-                    tvStatut.text = "✅ Actif"
-                    tvStatut.setTextColor(resources.getColor(android.R.color.holo_green_dark, null))
-                    cardView.alpha = 1.0f
-                    btnDetail.visibility = View.VISIBLE
-                } else {
-                    tvStatut.text = "🔒 Inactif"
-                    tvStatut.setTextColor(resources.getColor(android.R.color.darker_gray, null))
-                    cardView.alpha = 0.6f
-                    btnDetail.visibility = View.GONE
-                }
-
-                // Détail centre actif uniquement
-                btnDetail.setOnClickListener {
-                    afficherDetailCentre(centre)
-                }
-
-                // Long press → activer/désactiver (admin)
-                itemView.setOnLongClickListener {
-                    afficherDialogActivation(centre, position)
-                    true
-                }
-
-                return itemView
+    private fun loadCentres() {
+        messageView.text = "Chargement..."
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                val response = ApiClient.apiService.getAdminCentres()
+                val data = response.data
+                if (response.status != "success" || data == null) throw Exception(response.message ?: "Centres indisponibles")
+                adapter.submit(data.centres)
+                totalView.text = "Centres: ${data.centres.count { it.estActif == true }} actif(s) / ${data.total}"
+                messageView.text = ""
+            } catch (e: Exception) {
+                adapter.submit(emptyList())
+                messageView.text = e.message ?: "Erreur reseau"
             }
         }
-        listViewCentres.adapter = adapter
     }
 
-    // ─── Dialog détail centre actif ────────────────────────────────────────
-    private fun afficherDetailCentre(centre: CentreVaccination) {
-        val dialogView = LayoutInflater.from(requireContext())
-            .inflate(R.layout.dialog_detail_centre, null)
-
-        dialogView.findViewById<TextView>(R.id.tvDetailNom).text = centre.nom
-        dialogView.findViewById<TextView>(R.id.tvDetailAdresse).text = centre.adresse
-        dialogView.findViewById<TextView>(R.id.tvDetailTel).text = centre.telephone
-        dialogView.findViewById<TextView>(R.id.tvDetailCoords).text =
-            "GPS: ${centre.coordGpsLat}, ${centre.coordGpsLng}"
-
-        // Jours vaccination
-        val joursText = centre.joursVaccination.entries.joinToString("\n") { (jour, vaccins) ->
-            "$jour : ${vaccins.joinToString(", ")}"
+    private fun showForm(item: AdminCentreDto?) {
+        val root = LinearLayout(requireContext()).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(24)
         }
-        dialogView.findViewById<TextView>(R.id.tvDetailJours).text =
-            if (joursText.isNotEmpty()) joursText else "Non configuré"
+        val nom = edit("Nom").also { it.setText(item?.nom ?: "") }
+        val adresse = edit("Adresse").also { it.setText(item?.adresse ?: "") }
+        val telephone = edit("Telephone").also { it.setText(item?.telephone ?: "") }
+        val gpsLat = edit("GPS lat").also { it.setText(item?.gpsLat?.toString() ?: "") }
+        val gpsLng = edit("GPS lng").also { it.setText(item?.gpsLng?.toString() ?: "") }
+        listOf(nom, adresse, telephone, gpsLat, gpsLng).forEach { root.addView(it) }
 
-        val dialog = AlertDialog.Builder(requireContext())
-            .setView(dialogView)
-            .create()
-        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
-
-        dialogView.findViewById<Button>(R.id.btnFermerDetail).setOnClickListener {
-            dialog.dismiss()
-        }
-
-        dialog.show()
+        AlertDialog.Builder(requireContext())
+            .setTitle(if (item == null) "Ajouter centre" else "Modifier centre")
+            .setView(root)
+            .setNegativeButton("Annuler", null)
+            .setPositiveButton("Valider") { _, _ ->
+                saveCentre(
+                    item?.id,
+                    AdminCentreRequest(
+                        nom = nom.text.toString().trim(),
+                        adresse = adresse.text.toString().trim(),
+                        telephone = telephone.text.toString().trim(),
+                        gpsLat = gpsLat.text.toString().trim().toDoubleOrNull(),
+                        gpsLng = gpsLng.text.toString().trim().toDoubleOrNull()
+                    )
+                )
+            }
+            .show()
     }
 
-    // ─── Dialog activation/désactivation (admin) ───────────────────────────
-    private fun afficherDialogActivation(centre: CentreVaccination, position: Int) {
-        val dialogView = LayoutInflater.from(requireContext())
-            .inflate(R.layout.dialog_activation_centre, null)
-
-        val tvMessage = dialogView.findViewById<TextView>(R.id.tvMessageActivation)
-        val btnConfirmer = dialogView.findViewById<Button>(R.id.btnConfirmerActivation)
-        val tvTitre = dialogView.findViewById<TextView>(R.id.tvTitreActivation)
-
-        if (centre.estActif) {
-            tvTitre.text = "Désactiver le centre"
-            tvMessage.text = "Voulez-vous désactiver ${centre.nom} ?\nLes infirmiers ne pourront plus y accéder."
-            btnConfirmer.text = "Désactiver"
-        } else {
-            tvTitre.text = "Activer le centre"
-            tvMessage.text = "Voulez-vous activer ${centre.nom} ?\nLes infirmiers pourront accéder à ce centre."
-            btnConfirmer.text = "Activer"
+    private fun saveCentre(id: Int?, request: AdminCentreRequest) {
+        if (request.nom.isNullOrBlank() || request.adresse.isNullOrBlank() || request.telephone.isNullOrBlank()) {
+            messageView.text = "Nom, adresse et telephone sont obligatoires."
+            return
         }
-
-        val dialog = AlertDialog.Builder(requireContext())
-            .setView(dialogView)
-            .create()
-        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
-
-        dialogView.findViewById<Button>(R.id.btnAnnulerActivation).setOnClickListener {
-            dialog.dismiss()
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                val response = if (id == null) {
+                    ApiClient.apiService.createAdminCentre(request)
+                } else {
+                    ApiClient.apiService.updateAdminCentre(id, request)
+                }
+                if (response.status != "success") throw Exception(response.message ?: "Enregistrement refuse")
+                Toast.makeText(requireContext(), "Confirme par le serveur", Toast.LENGTH_SHORT).show()
+                loadCentres()
+            } catch (e: Exception) {
+                messageView.text = e.message ?: "Erreur reseau"
+            }
         }
+    }
 
-        btnConfirmer.setOnClickListener {
-            // TODO : appel API pour mettre à jour est_actif
-            val nouveauStatut = !centre.estActif
-            centres[position] = centre.copy(estActif = nouveauStatut)
-            afficherCentres()
-            val msg = if (nouveauStatut) "✅ ${centre.nom} activé" else "🔒 ${centre.nom} désactivé"
-            Toast.makeText(requireContext(), msg, Toast.LENGTH_LONG).show()
-            dialog.dismiss()
+    private fun deactivateCentre(item: AdminCentreDto) {
+        if (item.estActif != true) {
+            messageView.text = "Reactivation centre non exposee par l'API actuelle."
+            return
         }
+        AlertDialog.Builder(requireContext())
+            .setTitle("Desactiver le centre")
+            .setMessage("${item.nom ?: "Centre"} - sessions: ${item.nbSessions ?: 0}")
+            .setNegativeButton("Annuler", null)
+            .setPositiveButton("Confirmer") { _, _ ->
+                viewLifecycleOwner.lifecycleScope.launch {
+                    try {
+                        val response = ApiClient.apiService.deactivateAdminCentre(item.id)
+                        if (response.status != "success") throw Exception(response.message ?: "Desactivation refusee")
+                        loadCentres()
+                    } catch (e: Exception) {
+                        messageView.text = e.message ?: "Erreur reseau"
+                    }
+                }
+            }
+            .show()
+    }
 
-        dialog.show()
+    private fun edit(hintText: String): EditText = EditText(requireContext()).apply { hint = hintText }
+}
+
+private class CentreAdapter(
+    private val onEdit: (AdminCentreDto) -> Unit,
+    private val onDeactivate: (AdminCentreDto) -> Unit
+) : RecyclerView.Adapter<CentreAdapter.ViewHolder>() {
+    private var items: List<AdminCentreDto> = emptyList()
+    fun submit(next: List<AdminCentreDto>) {
+        items = next
+        notifyDataSetChanged()
+    }
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        return ViewHolder(LinearLayout(parent.context).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(16)
+        }, onEdit, onDeactivate)
+    }
+    override fun getItemCount() = items.size
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) = holder.bind(items[position])
+
+    class ViewHolder(
+        private val root: LinearLayout,
+        private val onEdit: (AdminCentreDto) -> Unit,
+        private val onDeactivate: (AdminCentreDto) -> Unit
+    ) : RecyclerView.ViewHolder(root) {
+        fun bind(item: AdminCentreDto) {
+            root.removeAllViews()
+            root.addView(TextView(root.context).apply {
+                text = "${item.nom ?: "Centre #${item.id}"} - ${if (item.estActif == true) "Actif" else "Inactif"}"
+                textSize = 16f
+                setTypeface(typeface, android.graphics.Typeface.BOLD)
+            })
+            root.addView(TextView(root.context).apply {
+                text = "${item.adresse ?: "-"} | Tel ${item.telephone ?: "-"}"
+            })
+            root.addView(TextView(root.context).apply {
+                text = "Personnel ${item.nbPersonnel ?: 0} | Sessions ${item.nbSessions ?: 0} | Alertes ${item.alertesStock ?: 0}"
+            })
+            val row = LinearLayout(root.context).apply { orientation = LinearLayout.HORIZONTAL }
+            row.addView(Button(root.context).apply {
+                text = "Modifier"
+                setOnClickListener { onEdit(item) }
+            }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+            row.addView(Button(root.context).apply {
+                text = "Desactiver"
+                isEnabled = item.estActif == true
+                setOnClickListener { onDeactivate(item) }
+            }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+            root.addView(row)
+        }
     }
 }
