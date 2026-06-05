@@ -15,7 +15,9 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:3000/api/\"")
+        val debugApiUrl = providers.environmentVariable("STAFF_API_BASE_URL").orNull
+            ?: "http://10.0.2.2:3000/api/"
+        buildConfigField("String", "API_BASE_URL", "\"${debugApiUrl.trimEnd('/')}/\"")
     }
 
     buildTypes {
