@@ -50,5 +50,23 @@ BEFORE UPDATE OF doses_par_flacon ON vaccin
 FOR EACH ROW EXECUTE FUNCTION prevent_vaccine_capacity_reduction();
 
 ALTER TABLE audit_log DROP CONSTRAINT IF EXISTS audit_log_action_check;
+
+DROP TRIGGER IF EXISTS audit_log_append_only ON audit_log;
+UPDATE audit_log
+SET
+  new_values = COALESCE(new_values, '{}'::jsonb) || jsonb_build_object('legacy_action', action),
+  action = CASE
+    WHEN action LIKE 'GET__api_exports%' THEN 'EXPORT'
+    WHEN action LIKE 'GET__%' THEN 'READ'
+    WHEN action LIKE 'POST__%' THEN 'INSERT'
+    WHEN action LIKE 'PATCH__%' OR action LIKE 'PUT__%' THEN 'UPDATE'
+    WHEN action LIKE 'DELETE__%' THEN 'DELETE'
+    ELSE 'UPDATE'
+  END
+WHERE action NOT IN ('INSERT', 'UPDATE', 'DELETE', 'READ', 'EXPORT');
+CREATE TRIGGER audit_log_append_only
+BEFORE UPDATE OR DELETE ON audit_log
+FOR EACH ROW EXECUTE FUNCTION prevent_audit_log_mutation();
+
 ALTER TABLE audit_log ADD CONSTRAINT audit_log_action_check
   CHECK (action IN ('INSERT', 'UPDATE', 'DELETE', 'READ', 'EXPORT'));
