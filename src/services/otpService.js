@@ -1,5 +1,5 @@
 const crypto = require('crypto');
-const { query } = require('../config/database');
+const { getClient, query } = require('../config/database');
 const config = require('../config');
 
 const hashOTP = (telephone, code) =>
@@ -11,44 +11,53 @@ const matchesHash = (expectedHash, actualHash) => {
   return expected.length === actual.length && crypto.timingSafeEqual(expected, actual);
 };
 
+const runQuery = (client, text, params) =>
+  client ? client.query(text, params) : query(text, params);
+
 const OtpService = {
   async generateOTP(telephone) {
-    // 1. Invalidate any existing unused OTPs
-    await query(
-      `UPDATE otp_codes SET est_verifie = TRUE
-       WHERE telephone = $1 AND est_verifie = FALSE AND expire_at > CURRENT_TIMESTAMP`,
-      [telephone],
-    );
-
-    // 2. Generate random OTP code
     const otpLength = config.otp.length;
     const maximum = 10 ** otpLength;
     const otp = crypto.randomInt(0, maximum).toString().padStart(otpLength, '0');
-
-    // 3. Calculate expiry
     const expiryMinutes = config.otp.expiryMinutes;
     const expireAt = new Date(Date.now() + expiryMinutes * 60 * 1000);
-
-    // 4. Store only a keyed hash so a database leak does not expose usable OTPs.
     const codeHash = hashOTP(telephone, otp);
-    const result = await query(
-      `INSERT INTO otp_codes (telephone, code_hash, expire_at, failed_attempts)
-       VALUES ($1, $2, $3, 0) RETURNING id, telephone, expire_at`,
-      [telephone, codeHash, expireAt],
-    );
 
-    return { id: result.rows[0].id, otp, telephone, expireAt, expiryMinutes };
+    const client = await getClient();
+    try {
+      await client.query('BEGIN');
+      await client.query(
+        `UPDATE otp_codes SET est_verifie = TRUE
+         WHERE telephone = $1 AND est_verifie = FALSE AND expire_at > CURRENT_TIMESTAMP`,
+        [telephone],
+      );
+      const result = await client.query(
+        `INSERT INTO otp_codes (telephone, code_hash, expire_at, failed_attempts)
+         VALUES ($1, $2, $3, 0) RETURNING id, telephone, expire_at`,
+        [telephone, codeHash, expireAt],
+      );
+      await client.query('COMMIT');
+      return { id: result.rows[0].id, otp, telephone, expireAt, expiryMinutes };
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
   },
 
-  async verifyOTP(telephone, code) {
-    // Explicit test-only bypass for integration tests.
+  async verifyOTP(telephone, code, options = {}) {
+    const client = options.client || null;
+
     if (config.isTest && code === '123456') {
-      const bypassResult = await query(
+      const bypassResult = await runQuery(
+        client,
         `UPDATE otp_codes SET est_verifie = TRUE
          WHERE id = (
            SELECT id FROM otp_codes
            WHERE telephone = $1 AND est_verifie = FALSE
            ORDER BY created_at DESC LIMIT 1
+           FOR UPDATE
          )
          RETURNING id`,
         [telephone],
@@ -58,14 +67,16 @@ const OtpService = {
       }
     }
 
-    const result = await query(
+    const result = await runQuery(
+      client,
       `SELECT id, telephone, code_hash, expire_at, est_verifie, failed_attempts
        FROM otp_codes
        WHERE telephone = $1
          AND est_verifie = FALSE
          AND expire_at > CURRENT_TIMESTAMP
          AND failed_attempts < $2
-       ORDER BY created_at DESC LIMIT 1`,
+       ORDER BY created_at DESC LIMIT 1
+       FOR UPDATE`,
       [telephone, config.otp.maxAttempts],
     );
 
@@ -80,7 +91,8 @@ const OtpService = {
 
     const candidateHash = hashOTP(telephone, code);
     if (!matchesHash(otpRecord.code_hash, candidateHash)) {
-      const failedResult = await query(
+      const failedResult = await runQuery(
+        client,
         `UPDATE otp_codes
          SET failed_attempts = failed_attempts + 1,
              est_verifie = failed_attempts + 1 >= $2
@@ -101,7 +113,9 @@ const OtpService = {
       };
     }
 
-    await query('UPDATE otp_codes SET est_verifie = TRUE WHERE id = $1', [otpRecord.id]);
+    await runQuery(client, 'UPDATE otp_codes SET est_verifie = TRUE WHERE id = $1', [
+      otpRecord.id,
+    ]);
 
     return { valid: true, otpId: otpRecord.id };
   },

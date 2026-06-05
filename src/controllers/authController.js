@@ -6,6 +6,7 @@ const SmsService = require('../services/smsService');
 const TokenService = require('../services/tokenService');
 const Parent = require('../models/Parent');
 const Personnel = require('../models/Personnel');
+const { getClient } = require('../config/database');
 const ApiError = require('../utils/ApiError');
 const catchAsync = require('../utils/catchAsync');
 const { isValidMoroccanPhone, normalizePhone, isValidCIN } = require('../utils/validator');
@@ -45,42 +46,66 @@ const AuthController = {
       return next(ApiError.badRequest('Phone number and OTP code are required'));
 
     const normalizedPhone = normalizePhone(telephone);
-    const otpResult = await OtpService.verifyOTP(normalizedPhone, code);
-    if (!otpResult.valid) return next(ApiError.unauthorized(otpResult.reason));
+    const client = await getClient();
+    let transactionClosed = false;
 
-    let parent = await Parent.findByPhone(normalizedPhone);
-    if (!parent) {
-      parent = await Parent.create({
-        telephone: normalizedPhone,
-        nom: 'Nouveau',
-        prenom: 'Parent',
-        langue_preferee: 'fr',
+    try {
+      await client.query('BEGIN');
+      const otpResult = await OtpService.verifyOTP(normalizedPhone, code, { client });
+      if (!otpResult.valid) {
+        await client.query('ROLLBACK');
+        transactionClosed = true;
+        return next(ApiError.unauthorized(otpResult.reason));
+      }
+
+      const parent = await Parent.upsertByPhone(
+        {
+          telephone: normalizedPhone,
+          nom: 'Nouveau',
+          prenom: 'Parent',
+          langue_preferee: 'fr',
+        },
+        client,
+      );
+      if (!parent.est_actif) {
+        await client.query('ROLLBACK');
+        transactionClosed = true;
+        return next(ApiError.forbidden('Your account has been deactivated.'));
+      }
+
+      const tokens = await TokenService.generateAuthTokens(
+        {
+          id: parent.id,
+          role: 'parent',
+          telephone: parent.telephone,
+        },
+        { client },
+      );
+
+      await client.query('COMMIT');
+      transactionClosed = true;
+      return created(res, 'Authentication successful', {
+        user: {
+          id: parent.id,
+          telephone: parent.telephone,
+          nom: parent.nom,
+          prenom: parent.prenom,
+          langue_preferee: parent.langue_preferee,
+          role: 'parent',
+          isNewUser: parent.nom === 'Nouveau',
+        },
+        tokens: {
+          accessToken: tokens.accessToken,
+          refreshToken: tokens.refreshToken,
+          expiresIn: tokens.accessTokenExpiry,
+        },
       });
+    } catch (error) {
+      if (!transactionClosed) await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
     }
-    if (!parent.est_actif) return next(ApiError.forbidden('Your account has been deactivated.'));
-
-    const tokens = await TokenService.generateAuthTokens({
-      id: parent.id,
-      role: 'parent',
-      telephone: parent.telephone,
-    });
-
-    return created(res, 'Authentication successful', {
-      user: {
-        id: parent.id,
-        telephone: parent.telephone,
-        nom: parent.nom,
-        prenom: parent.prenom,
-        langue_preferee: parent.langue_preferee,
-        role: 'parent',
-        isNewUser: parent.nom === 'Nouveau',
-      },
-      tokens: {
-        accessToken: tokens.accessToken,
-        refreshToken: tokens.refreshToken,
-        expiresIn: tokens.accessTokenExpiry,
-      },
-    });
   }),
 
   registerParent: catchAsync(async (req, res, next) => {
@@ -113,7 +138,7 @@ const AuthController = {
     const updated = await Parent.updateFcmToken(req.user.id, req.body.fcm_token);
     if (!updated) return next(ApiError.notFound('Parent not found'));
 
-    return success(res, 200, 'FCM token registered successfully', {
+  return success(res, 200, 'FCM token registered successfully', {
       parent_id: updated.id,
       push_enabled: Boolean(updated.fcm_token),
     });
@@ -213,6 +238,7 @@ const AuthController = {
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     await Personnel.update(req.user.id, { mot_de_passe: hashedPassword });
+    await TokenService.revokeAllUserTokens(req.user.id, req.user.role);
     return success(res, 200, 'Password changed successfully');
   }),
 };

@@ -41,8 +41,9 @@ class InfirmierAuthViewModel : ViewModel() {
 
     fun logout() {
         viewModelScope.launch {
+            val refreshToken = TokenManager.getRefreshToken()
             try {
-                ApiClient.apiService.logout()
+                ApiClient.apiService.logout(mapOf("refreshToken" to refreshToken))
             } catch (_: Exception) {
             } finally {
                 TokenManager.clearTokens()

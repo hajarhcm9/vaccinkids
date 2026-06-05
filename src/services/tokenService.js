@@ -77,6 +77,13 @@ const TokenService = {
 
   async refreshAuthTokens(refreshToken) {
     const decoded = this.verifyRefreshToken(refreshToken);
+    if (decoded.tokenType !== 'refresh' || !decoded.familyId || !decoded.userId || !decoded.role) {
+      const err = new Error('Invalid refresh token');
+      err.statusCode = 401;
+      err.code = 'REFRESH_TOKEN_INVALID';
+      throw err;
+    }
+
     const tokenHash = hashToken(refreshToken);
     const client = await getClient();
     let transactionClosed = false;
@@ -92,6 +99,25 @@ const TokenService = {
       if (!storedToken || storedToken.expire_at <= new Date()) {
         const err = new Error('Refresh token not found or expired');
         err.statusCode = 401;
+        throw err;
+      }
+
+      if (
+        storedToken.user_id !== decoded.userId ||
+        storedToken.user_role !== decoded.role ||
+        storedToken.family_id !== decoded.familyId
+      ) {
+        await client.query(
+          `UPDATE refresh_tokens
+           SET est_revoque = TRUE, revoked_at = COALESCE(revoked_at, CURRENT_TIMESTAMP)
+           WHERE family_id = $1`,
+          [storedToken.family_id],
+        );
+        await client.query('COMMIT');
+        transactionClosed = true;
+        const err = new Error('Refresh token binding mismatch');
+        err.statusCode = 401;
+        err.code = 'REFRESH_TOKEN_INVALID';
         throw err;
       }
 

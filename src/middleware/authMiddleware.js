@@ -2,12 +2,19 @@ const TokenService = require('../services/tokenService');
 const Parent = require('../models/Parent');
 const Personnel = require('../models/Personnel');
 const ApiError = require('../utils/ApiError');
-const { describeDbError } = require('../config/database');
 
 const normalizeAuthError = (error) => {
   if (error.statusCode) return error;
 
-  return ApiError.internal(`Authentication service unavailable: ${describeDbError(error)}`);
+  console.error(
+    JSON.stringify({
+      level: 'error',
+      event: 'auth_service_unavailable',
+      message: error.message,
+      code: error.code,
+    }),
+  );
+  return ApiError.internal('Authentication service unavailable');
 };
 
 const authenticate = async (req, res, next) => {

@@ -1,5 +1,8 @@
 const { query } = require('../config/database');
 
+const runQuery = (client, text, params) =>
+  client ? client.query(text, params) : query(text, params);
+
 const Parent = {
   async create(data) {
     const { telephone, nom, prenom, langue_preferee } = data;
@@ -21,6 +24,20 @@ const Parent = {
 
   async findByPhone(telephone) {
     const result = await query('SELECT * FROM parent WHERE telephone = $1', [telephone]);
+    return result.rows[0];
+  },
+
+  async upsertByPhone(data, client = null) {
+    const { telephone, nom, prenom, langue_preferee } = data;
+    const result = await runQuery(
+      client,
+      `INSERT INTO parent (telephone, nom, prenom, langue_preferee)
+       VALUES ($1, $2, $3, $4)
+       ON CONFLICT (telephone) DO UPDATE
+       SET updated_at = CURRENT_TIMESTAMP
+       RETURNING *`,
+      [telephone, nom, prenom, langue_preferee || 'fr'],
+    );
     return result.rows[0];
   },
 

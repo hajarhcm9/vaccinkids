@@ -120,10 +120,22 @@ app.use((req, res) => {
 
 app.use((err, req, res, next) => {
   const statusCode = err.statusCode || 500;
-  const message = err.message || 'Internal Server Error';
+  const isInternal = statusCode >= 500;
+  const message =
+    isInternal && !config.isDev ? 'Internal Server Error' : err.message || 'Internal Server Error';
 
-  if (config.isDev) {
-    console.error('🔤 Error:', err);
+  if (isInternal) {
+    console.error(
+      JSON.stringify({
+        level: 'error',
+        event: 'request_failed',
+        method: req.method,
+        path: req.originalUrl,
+        statusCode,
+        message: err.message,
+        stack: config.isDev ? err.stack : undefined,
+      }),
+    );
   }
 
   res.status(statusCode).json({

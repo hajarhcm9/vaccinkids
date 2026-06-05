@@ -1,4 +1,5 @@
 const request = require('supertest');
+const bcrypt = require('bcrypt');
 const app = require('../src/app');
 const { pool } = require('../src/config/database');
 
@@ -60,6 +61,38 @@ describe('Auth Endpoints', () => {
       expect(res.status).toBe(201);
       expect(res.body.data).toHaveProperty('tokens');
       expect(res.body.data.tokens).toHaveProperty('accessToken');
+    });
+
+    it('should allow only one concurrent verification to create a parent session', async () => {
+      const phone = '0677889911';
+      const normalizedPhone = '+212677889911';
+      await pool.query('DELETE FROM refresh_tokens WHERE user_role = $1 AND user_id IN (SELECT id FROM parent WHERE telephone = $2)', ['parent', normalizedPhone]);
+      await pool.query('DELETE FROM parent WHERE telephone = $1', [normalizedPhone]);
+      await pool.query('DELETE FROM otp_codes WHERE telephone = $1', [normalizedPhone]);
+
+      const sendRes = await request(app).post('/api/auth/parent/send-otp').send({ telephone: phone });
+      const otpCode = sendRes.body.data.devOtp || sendRes.body.data.otpCode;
+
+      const results = await Promise.all([
+        request(app).post('/api/auth/parent/verify-otp').send({ telephone: phone, code: otpCode }),
+        request(app).post('/api/auth/parent/verify-otp').send({ telephone: phone, code: otpCode }),
+      ]);
+
+      expect(results.map((res) => res.status).sort()).toEqual([201, 401]);
+
+      const parentCount = await pool.query('SELECT COUNT(*)::int AS count FROM parent WHERE telephone = $1', [
+        normalizedPhone,
+      ]);
+      expect(parentCount.rows[0].count).toBe(1);
+
+      const tokenCount = await pool.query(
+        `SELECT COUNT(*)::int AS count
+         FROM refresh_tokens rt
+         JOIN parent p ON p.id = rt.user_id
+         WHERE p.telephone = $1 AND rt.user_role = 'parent'`,
+        [normalizedPhone],
+      );
+      expect(tokenCount.rows[0].count).toBe(1);
     });
 
     it('should reject wrong OTP', async () => {
@@ -202,6 +235,42 @@ describe('Auth Endpoints', () => {
         .post('/api/auth/refresh')
         .send({ refreshToken: rotated.body.data.tokens.refreshToken });
       expect(familyRevoked.status).toBe(401);
+    });
+  });
+
+  describe('PUT /api/auth/change-password', () => {
+    it('should revoke existing refresh tokens after password change', async () => {
+      const cin = 'TMPP101';
+      const oldPassword = 'OldPass123!';
+      const newPassword = 'NewPass123!';
+      await pool.query('DELETE FROM personnel WHERE cin = $1', [cin]);
+      const passwordHash = await bcrypt.hash(oldPassword, 10);
+      await pool.query(
+        `INSERT INTO personnel (cin, nom, prenom, mot_de_passe, role, centre_id, est_actif)
+         VALUES ($1, 'Password', 'Change', $2, 'infirmier', 1, TRUE)`,
+        [cin, passwordHash],
+      );
+
+      const login = await request(app)
+        .post('/api/auth/personnel/login')
+        .send({ cin, mot_de_passe: oldPassword });
+      expect(login.status).toBe(200);
+
+      const refreshToken = login.body.data.tokens.refreshToken;
+      const accessToken = login.body.data.tokens.accessToken;
+      const changed = await request(app)
+        .put('/api/auth/change-password')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ currentPassword: oldPassword, newPassword });
+      expect(changed.status).toBe(200);
+
+      const refresh = await request(app).post('/api/auth/refresh').send({ refreshToken });
+      expect(refresh.status).toBe(401);
+
+      const newLogin = await request(app)
+        .post('/api/auth/personnel/login')
+        .send({ cin, mot_de_passe: newPassword });
+      expect(newLogin.status).toBe(200);
     });
   });
 

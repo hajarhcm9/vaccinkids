@@ -17,19 +17,32 @@ class TokenAuthenticator : Authenticator {
     override fun authenticate(route: Route?, response: Response): Request? {
         if (responseCount(response) >= 2) return null
 
-        val refreshToken = TokenManager.getRefreshToken() ?: return null
-        val authResponse = refreshAccessToken(refreshToken) ?: run {
-            TokenManager.clearTokens()
-            return null
-        }
-        val tokens = authResponse.tokens
-        val accessToken = tokens?.accessToken ?: authResponse.accessToken ?: return null
-        val newRefreshToken = tokens?.refreshToken ?: authResponse.refreshToken ?: refreshToken
-        TokenManager.saveTokens(accessToken, newRefreshToken)
+        val requestToken = response.request.header("Authorization")
+            ?.removePrefix("Bearer ")
+            ?.trim()
 
-        return response.request.newBuilder()
-            .header("Authorization", "Bearer $accessToken")
-            .build()
+        synchronized(REFRESH_LOCK) {
+            val currentAccessToken = TokenManager.getAccessToken()
+            if (!currentAccessToken.isNullOrBlank() && currentAccessToken != requestToken) {
+                return response.request.newBuilder()
+                    .header("Authorization", "Bearer $currentAccessToken")
+                    .build()
+            }
+
+            val refreshToken = TokenManager.getRefreshToken() ?: return null
+            val authResponse = refreshAccessToken(refreshToken) ?: run {
+                TokenManager.clearTokens()
+                return null
+            }
+            val tokens = authResponse.tokens
+            val accessToken = tokens?.accessToken ?: authResponse.accessToken ?: return null
+            val newRefreshToken = tokens?.refreshToken ?: authResponse.refreshToken ?: refreshToken
+            TokenManager.saveTokens(accessToken, newRefreshToken)
+
+            return response.request.newBuilder()
+                .header("Authorization", "Bearer $accessToken")
+                .build()
+        }
     }
 
     private fun refreshAccessToken(refreshToken: String): AuthResponse? {
@@ -59,5 +72,9 @@ class TokenAuthenticator : Authenticator {
     private interface RefreshService {
         @POST("auth/refresh")
         fun refreshToken(@Body request: RefreshRequest): Call<ApiResponse<AuthResponse>>
+    }
+
+    companion object {
+        private val REFRESH_LOCK = Any()
     }
 }
