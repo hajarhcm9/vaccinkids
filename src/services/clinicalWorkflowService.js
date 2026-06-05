@@ -18,29 +18,33 @@ const recordVaccination = async ({ user, rdvId, flaconId, poids, taille, reactio
     if (rdv.session_statut !== 'EN_COURS') {
       throw ApiError.badRequest('Session must be in progress to record vaccinations');
     }
+    if (!['CONFIRME', 'PRESENT'].includes(rdv.statut)) {
+      throw ApiError.badRequest('Appointment must be confirmed before vaccination');
+    }
+    if (!flaconId) {
+      throw ApiError.badRequest('Vial is required to record vaccination');
+    }
 
     const existing = await client.query('SELECT id FROM vaccination WHERE rendez_vous_id = $1', [
       rdvId,
     ]);
     if (existing.rows[0]) throw ApiError.conflict('Vaccination already recorded');
 
-    if (flaconId) {
-      const vialResult = await client.query(
-        `SELECT f.*, v.doses_par_flacon FROM flacon f
-         JOIN vaccin v ON v.id = f.vaccin_id WHERE f.id = $1 FOR UPDATE OF f`,
-        [flaconId],
-      );
-      const vial = vialResult.rows[0];
-      if (!vial) throw ApiError.notFound('Vial not found');
-      if (Number(vial.session_id) !== Number(rdv.session_id)) {
-        throw ApiError.badRequest('Vial does not belong to this session');
-      }
-      if (Number(vial.vaccin_id) !== Number(rdv.vaccin_id)) {
-        throw ApiError.badRequest('Vial vaccine does not match the session vaccine');
-      }
-      if (vial.doses_utilisees + vial.doses_gaspillees >= vial.doses_par_flacon) {
-        throw ApiError.conflict('This vial has no remaining doses');
-      }
+    const vialResult = await client.query(
+      `SELECT f.*, v.doses_par_flacon FROM flacon f
+       JOIN vaccin v ON v.id = f.vaccin_id WHERE f.id = $1 FOR UPDATE OF f`,
+      [flaconId],
+    );
+    const vial = vialResult.rows[0];
+    if (!vial) throw ApiError.notFound('Vial not found');
+    if (Number(vial.session_id) !== Number(rdv.session_id)) {
+      throw ApiError.badRequest('Vial does not belong to this session');
+    }
+    if (Number(vial.vaccin_id) !== Number(rdv.vaccin_id)) {
+      throw ApiError.badRequest('Vial vaccine does not match the session vaccine');
+    }
+    if (vial.doses_utilisees + vial.doses_gaspillees >= vial.doses_par_flacon) {
+      throw ApiError.conflict('This vial has no remaining doses');
     }
 
     const vaccination = await client.query(
@@ -49,12 +53,10 @@ const recordVaccination = async ({ user, rdvId, flaconId, poids, taille, reactio
        VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
       [rdvId, user.id, flaconId || null, poids || null, taille || null, reactions || null],
     );
-    if (flaconId) {
-      await client.query(
-        'UPDATE flacon SET doses_utilisees = doses_utilisees + 1, updated_at = NOW() WHERE id = $1',
-        [flaconId],
-      );
-    }
+    await client.query(
+      'UPDATE flacon SET doses_utilisees = doses_utilisees + 1, updated_at = NOW() WHERE id = $1',
+      [flaconId],
+    );
     await client.query(
       "UPDATE rendez_vous SET statut = 'PRESENT', updated_at = NOW() WHERE id = $1",
       [rdvId],

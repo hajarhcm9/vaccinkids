@@ -22,6 +22,18 @@ interface ApiService {
     @GET("statistiques/top-vaccins")
     suspend fun getTopVaccins(@Query("centre_id") centreId: Int? = null): ApiResponse<List<Map<String, Any?>>>
 
+    @GET("sessions/today")
+    suspend fun getTodaySessions(): ApiResponse<List<SessionDto>>
+
+    @GET("sessions")
+    suspend fun getSessions(@Query("centre_id") centreId: Int? = null): ApiResponse<List<SessionDto>>
+
+    @PATCH("sessions/{id}/start")
+    suspend fun startSession(@Path("id") id: Int): ApiResponse<SessionDto>
+
+    @PATCH("sessions/{id}/end")
+    suspend fun endSession(@Path("id") id: Int): ApiResponse<SessionDto>
+
     @GET("stock/centre/{centreId}")
     suspend fun getStock(@Path("centreId") centreId: Int): ApiResponse<List<StockDto>>
 
@@ -33,6 +45,9 @@ interface ApiService {
 
     @GET("flacons/session/{sessionId}")
     suspend fun getSessionFlacons(@Path("sessionId") sessionId: Int): ApiResponse<List<FlaconDto>>
+
+    @PATCH("flacons/{id}/waste")
+    suspend fun recordWaste(@Path("id") id: Int): ApiResponse<FlaconDto>
 
     @POST("vaccinations/{rdvId}")
     suspend fun createVaccination(

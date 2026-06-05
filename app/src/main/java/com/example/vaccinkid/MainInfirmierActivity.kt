@@ -33,6 +33,10 @@ class MainInfirmierActivity : AppCompatActivity() {
                     loadFragment(ScanQrFragment())
                     true
                 }
+                R.id.nav_queue -> {
+                    loadFragment(QueueFragment())
+                    true
+                }
                 else -> false
             }
         }

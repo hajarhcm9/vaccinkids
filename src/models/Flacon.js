@@ -17,7 +17,10 @@ const Flacon = {
 
   async findBySession(sessionId) {
     const result = await query(
-      'SELECT * FROM flacon WHERE session_id = $1 ORDER BY date_ouverture',
+      `SELECT f.*, v.doses_par_flacon
+       FROM flacon f JOIN vaccin v ON v.id = f.vaccin_id
+       WHERE f.session_id = $1
+       ORDER BY f.date_ouverture`,
       [sessionId],
     );
     return result.rows;
