@@ -117,10 +117,9 @@ abstract class AppDatabase : RoomDatabase() {
 
         fun getInstance(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
-                INSTANCE ?: Room.databaseBuilder(
+                INSTANCE ?: Room.inMemoryDatabaseBuilder(
                     context.applicationContext,
-                    AppDatabase::class.java,
-                    "vaccinkids_offline.db"
+                    AppDatabase::class.java
                 ).build().also { INSTANCE = it }
             }
         }

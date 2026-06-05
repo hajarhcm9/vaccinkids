@@ -7,8 +7,12 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.cardview.widget.CardView
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.vaccinkid.model.RendezVousDto
+import com.example.vaccinkid.network.ApiClient
+import kotlinx.coroutines.launch
 
 data class RdvItem(
     val heure: String,
@@ -38,32 +42,43 @@ class RdvListFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         val type = arguments?.getInt(ARG_TYPE) ?: 0
-
-        // Données mockées — à remplacer par API
-        val rdvList = if (type == 0) {
-            listOf(
-                RdvItem("09h00", "Youssef Amrani",   "BCG",          "Karim Amrani",   "EN ATTENTE"),
-                RdvItem("09h30", "Fatima Benali",    "Pentavalent",  "Sara Benali",    "CONFIRMÉ"),
-                RdvItem("10h00", "Adam El Fassi",    "Polio",        "Hassan El Fassi","EN ATTENTE"),
-                RdvItem("10h30", "Meryem Tazi",      "ROR",          "Leila Tazi",     "CONFIRMÉ"),
-                RdvItem("11h00", "Ibrahim Ouali",    "Hépatite B",   "Ahmed Ouali",    "ABSENT"),
-                RdvItem("11h30", "Nora Cherkaoui",   "BCG",          "Zineb Cherkaoui","EN ATTENTE"),
-            )
-        } else {
-            listOf(
-                RdvItem("Lun 09h", "Youssef Amrani",  "BCG",         "Karim Amrani",   "EN ATTENTE"),
-                RdvItem("Lun 10h", "Fatima Benali",   "Pentavalent", "Sara Benali",    "CONFIRMÉ"),
-                RdvItem("Mar 09h", "Adam El Fassi",   "Polio",       "Hassan El Fassi","EN ATTENTE"),
-                RdvItem("Mar 11h", "Meryem Tazi",     "ROR",         "Leila Tazi",     "CONFIRMÉ"),
-                RdvItem("Mer 09h", "Ibrahim Ouali",   "Hépatite B",  "Ahmed Ouali",    "ABSENT"),
-                RdvItem("Jeu 10h", "Nora Cherkaoui",  "BCG",         "Zineb Cherkaoui","EN ATTENTE"),
-                RdvItem("Ven 09h", "Khalid Mansouri", "Pentavalent", "Rim Mansouri",   "CONFIRMÉ"),
-            )
-        }
-
         val recycler = view.findViewById<RecyclerView>(R.id.recyclerRdv)
         recycler.layoutManager = LinearLayoutManager(requireContext())
-        recycler.adapter = RdvAdapter(rdvList)
+        recycler.adapter = RdvAdapter(listOf(RdvItem("", "Chargement...", "", "", "")))
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                val statut = if (type == 0) null else "CONFIRME"
+                val response = ApiClient.apiService.getRendezVous(statut = statut)
+                val data = response.data
+                val items = if (response.status == "success" && data != null) {
+                    data.map { it.toRdvItem() }
+                } else {
+                    listOf(RdvItem("", response.message ?: "Rendez-vous indisponibles", "", "", ""))
+                }
+                recycler.adapter = RdvAdapter(items.ifEmpty {
+                    listOf(RdvItem("", "Aucun rendez-vous retourne par le serveur", "", "", ""))
+                })
+            } catch (error: Exception) {
+                recycler.adapter = RdvAdapter(
+                    listOf(RdvItem("", error.message ?: "Erreur reseau", "", "", ""))
+                )
+            }
+        }
+    }
+
+    private fun RendezVousDto.toRdvItem(): RdvItem {
+        val enfant = listOfNotNull(bebePrenom, bebeNom).joinToString(" ").ifBlank { "Bebe #$bebeId" }
+        val parent = listOfNotNull(parentPrenom, parentNom).joinToString(" ").ifBlank {
+            parentTelephone ?: "Parent #$parentId"
+        }
+        return RdvItem(
+            heure = "RDV #$id",
+            enfant = enfant,
+            vaccin = "Session ${sessionId ?: "-"}",
+            parent = parent,
+            statut = statut ?: "INCONNU"
+        )
     }
 }
 

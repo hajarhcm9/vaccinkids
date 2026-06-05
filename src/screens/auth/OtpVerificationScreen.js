@@ -16,6 +16,8 @@ import { authService } from '../../services/authService';
 import { colors, typography, spacing, borderRadius, shadows } from '../../theme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AuthContext } from '../../context/AuthContext';
+import { accountCacheService } from '../../services/accountCacheService';
+import { secureTokenService } from '../../services/secureTokenService';
 
 const RESEND_DELAY = 60; // secondes
 
@@ -86,10 +88,12 @@ const OtpVerificationScreen = ({ navigation, route }) => {
     try {
       const result = await authService.verifyOtp(phoneNumber, otpCode);
 
-      // Sauvegarde du token JWT
-      await AsyncStorage.setItem('authToken', result.token);
-      await AsyncStorage.setItem('refreshToken', result.refreshToken);
-      await AsyncStorage.setItem('userPhone', phoneNumber);
+      await accountCacheService.purge();
+      await secureTokenService.saveSession({
+        accessToken: result.token,
+        refreshToken: result.refreshToken,
+        user: result.user,
+      });
       const fcmToken = await AsyncStorage.getItem('fcmToken');
       if (fcmToken) {
         await authService.registerFcmToken(result.token, fcmToken).catch((error) => {

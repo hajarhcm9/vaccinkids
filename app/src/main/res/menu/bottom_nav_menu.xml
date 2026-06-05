@@ -16,15 +16,4 @@
         android:icon="@drawable/ic_scan"
         android:title="Scan QR" />
 
-    <!-- ✅ NOUVEAU Semaine 2 -->
-    <item
-        android:id="@+id/nav_flacons"
-        android:icon="@android:drawable/ic_menu_manage"
-        android:title="Flacons" />
-
-    <item
-        android:id="@+id/nav_presences"
-        android:icon="@android:drawable/ic_menu_agenda"
-        android:title="Présences" />
-
 </menu>

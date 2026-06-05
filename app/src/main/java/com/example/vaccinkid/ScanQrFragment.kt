@@ -181,10 +181,6 @@ class ScanQrFragment : Fragment() {
         AlertDialog.Builder(requireContext())
             .setTitle("Carnet trouvé")
             .setMessage(message)
-            .setPositiveButton("Enregistrer vaccination") { _, _ ->
-                val fragment = EnregistrementVaccinationFragment.newInstance(fullName, bebe.id.toString())
-                navigateTo(fragment)
-            }
             .setNeutralButton("Courbes") { _, _ ->
                 navigateTo(GrowthChartFragment.newInstance(bebe.id, fullName))
             }

@@ -1,32 +1,8 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { API_BASE_URL } from '../config/mobileApi';
-
-async function parseApiResponse(response) {
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok || data.status === 'error') {
-    throw new Error(data.message || 'Erreur serveur');
-  }
-  return data.data ?? data;
-}
-
-async function getAuthToken() {
-  const token = await AsyncStorage.getItem('authToken');
-  if (!token) throw new Error('Session expirée. Reconnectez-vous.');
-  return token;
-}
+import { httpClient } from './httpClient';
 
 async function api(path, options = {}) {
-  const token = await getAuthToken();
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    ...options,
-    headers: {
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-      ...options.headers,
-    },
-  });
-  return parseApiResponse(response);
+  const payload = await httpClient.request(path, options);
+  return payload.data ?? payload;
 }
 
 function mapSessionStatus(session, bookedSlots, totalSlots) {

@@ -1,49 +1,23 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { API_BASE_URL } from '../config/mobileApi';
-
-const CACHE_KEY = 'cached_parent_queue';
+import { httpClient } from './httpClient';
 
 async function api(path, options = {}) {
-  const token = await AsyncStorage.getItem('authToken');
-  if (!token) throw new Error('Session expirée. Reconnectez-vous.');
-
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    ...options,
-    headers: {
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-      ...options.headers,
-    },
-  });
-  const payload = await response.json().catch(() => ({}));
-  if (!response.ok || payload.status === 'error') {
-    throw new Error(payload.message || "Impossible d'accéder à la file d'attente.");
-  }
+  const payload = await httpClient.request(path, options);
   return payload.data;
 }
 
 export const queueService = {
   getStatus: async () => {
-    try {
-      const [entry, wait] = await Promise.all([
-        api('/file-attente/me/position'),
-        api('/file-attente/me/wait-time'),
-      ]);
-      const status = {
-        entry: entry?.id ? entry : null,
-        position: Number(wait?.position || 0),
-        waitTimeMinutes: Number(wait?.waitTimeMinutes || 0),
-        isOffline: false,
-        lastSynced: new Date().toISOString(),
-      };
-      await AsyncStorage.setItem(CACHE_KEY, JSON.stringify(status));
-      return status;
-    } catch (error) {
-      const cached = await AsyncStorage.getItem(CACHE_KEY);
-      if (!cached) throw error;
-      return { ...JSON.parse(cached), isOffline: true };
-    }
+    const [entry, wait] = await Promise.all([
+      api('/file-attente/me/position'),
+      api('/file-attente/me/wait-time'),
+    ]);
+    return {
+      entry: entry?.id ? entry : null,
+      position: Number(wait?.position || 0),
+      waitTimeMinutes: Number(wait?.waitTimeMinutes || 0),
+      isOffline: false,
+      lastSynced: new Date().toISOString(),
+    };
   },
 
   join: async (booking) =>

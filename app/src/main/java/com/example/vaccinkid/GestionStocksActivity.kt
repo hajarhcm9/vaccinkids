@@ -1,43 +1,54 @@
 package com.example.vaccinkid
 
 import android.os.Bundle
+import android.view.View
 import android.widget.Button
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.vaccinkid.model.StockDto
+import com.example.vaccinkid.viewmodel.StockViewModel
 
 class GestionStocksActivity : AppCompatActivity() {
+    private lateinit var viewModel: StockViewModel
+    private lateinit var adapter: StockAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_gestion_stocks)
+        viewModel = ViewModelProvider(this)[StockViewModel::class.java]
 
         val recyclerView = findViewById<RecyclerView>(R.id.recyclerViewStocks)
         recyclerView.layoutManager = LinearLayoutManager(this)
-
-        // Données fictives
-        val stocks = listOf(
-            Stock("BCG", 12, false),
-            Stock("Pentavalent", 3, true), // Stock bas
-            Stock("Polio Oral", 25, false)
-        )
-
-        val adapter = StockAdapter(stocks)
+        adapter = StockAdapter(emptyList())
         recyclerView.adapter = adapter
 
-        findViewById<Button>(R.id.btnAjouterEntreeStock).setOnClickListener {
-            Toast.makeText(this, "Ouvrir formulaire d'entrée stock", Toast.LENGTH_SHORT).show()
+        findViewById<Button>(R.id.btnAjouterEntreeStock).visibility = View.GONE
+        viewModel.stock.observe(this) { result ->
+            result.fold(
+                onSuccess = { adapter.submitList(it.map { stock -> stock.toStock() }) },
+                onFailure = {
+                    adapter.submitList(
+                        listOf(Stock(it.message ?: "Stock indisponible", 0, false))
+                    )
+                }
+            )
         }
+        viewModel.loadStock()
     }
 }
 
-// Modèle de données
 data class Stock(val nomVaccin: String, val quantite: Int, val estStockBas: Boolean)
 
-// Adapter pour la RecyclerView
-class StockAdapter(private val stocks: List<Stock>) : RecyclerView.Adapter<StockAdapter.StockViewHolder>() {
+private fun StockDto.toStock(): Stock {
+    val quantite = quantiteDisponible ?: 0
+    val seuil = seuilAlerte ?: 0
+    return Stock(vaccinNom ?: nom ?: "Vaccin #${vaccinId ?: id}", quantite, seuil > 0 && quantite <= seuil)
+}
+
+class StockAdapter(private var stocks: List<Stock>) : RecyclerView.Adapter<StockAdapter.StockViewHolder>() {
 
     class StockViewHolder(view: android.view.View) : RecyclerView.ViewHolder(view) {
         val tvNom: TextView = view.findViewById(R.id.tvNomVaccinStock)
@@ -66,4 +77,9 @@ class StockAdapter(private val stocks: List<Stock>) : RecyclerView.Adapter<Stock
     }
 
     override fun getItemCount() = stocks.size
+
+    fun submitList(items: List<Stock>) {
+        stocks = items
+        notifyDataSetChanged()
+    }
 }

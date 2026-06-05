@@ -105,7 +105,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Veuillez entrer l'email et le mot de passe de votre centre."
+                    android:text="Veuillez entrer votre CIN et votre mot de passe."
                     android:textSize="13sp"
                     android:textColor="#B07050"
                     android:gravity="center"
@@ -117,7 +117,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="EMAIL DU CENTRE"
+                    android:text="CIN"
                     android:textSize="11sp"
                     android:textColor="#C8550A"
                     android:textStyle="bold"
@@ -128,8 +128,8 @@
                     android:id="@+id/etEmailInfirmier"
                     android:layout_width="match_parent"
                     android:layout_height="50dp"
-                    android:hint="exemple@centre.ma"
-                    android:inputType="textEmailAddress"
+                    android:hint="ADMIN01"
+                    android:inputType="textCapCharacters"
                     android:background="@drawable/input_orange_bg"
                     android:paddingHorizontal="16dp"
                     android:textSize="14sp"

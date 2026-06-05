@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import AuthNavigator from './src/navigation/AuthNavigator';
 import MainNavigator from './src/navigation/MainNavigator';
 import { colors } from './src/theme';
 import { AuthContext } from './src/context/AuthContext';
+import { httpClient } from './src/services/httpClient';
 
 const App = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -17,10 +17,11 @@ const App = () => {
 
   const checkAuthState = async () => {
     try {
-      const token = await AsyncStorage.getItem('authToken');
-      setIsAuthenticated(!!token);
+      await httpClient.validateSession();
+      setIsAuthenticated(true);
     } catch (error) {
       console.error('Auth check error:', error);
+      await httpClient.logout().catch(() => {});
       setIsAuthenticated(false);
     } finally {
       setIsLoading(false);
@@ -29,7 +30,10 @@ const App = () => {
 
   const authContextValue = {
     signIn: () => setIsAuthenticated(true),
-    signOut: () => setIsAuthenticated(false),
+    signOut: async () => {
+      await httpClient.logout();
+      setIsAuthenticated(false);
+    },
   };
 
   if (isLoading) {

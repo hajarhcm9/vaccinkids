@@ -1,30 +1,7 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { API_BASE_URL } from '../config/mobileApi';
-
-const CACHE_KEY = 'cached_notifications';
-
-async function getAuthToken() {
-  const token = await AsyncStorage.getItem('authToken');
-  if (!token) throw new Error('Session expirée. Reconnectez-vous.');
-  return token;
-}
+import { httpClient } from './httpClient';
 
 async function api(path, options = {}) {
-  const token = await getAuthToken();
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    ...options,
-    headers: {
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-      ...options.headers,
-    },
-  });
-  const payload = await response.json().catch(() => ({}));
-  if (!response.ok || payload.status === 'error') {
-    throw new Error(payload.message || 'Impossible de charger les notifications.');
-  }
-  return payload;
+  return httpClient.request(path, options);
 }
 
 function mapNotification(notification) {
@@ -44,24 +21,14 @@ function mapNotification(notification) {
 
 export const mobileNotificationService = {
   getNotifications: async ({ unreadOnly = false, page = 1, limit = 50 } = {}) => {
-    const cacheKey = `${CACHE_KEY}_${unreadOnly ? 'unread' : 'all'}`;
     const query = `page=${page}&limit=${limit}&non_seulement=${unreadOnly}`;
-
-    try {
-      const payload = await api(`/notifications/me?${query}`);
-      const result = {
-        notifications: (payload.data || []).map(mapNotification),
-        pagination: payload.pagination || {},
-        lastSynced: new Date().toISOString(),
-      };
-      await AsyncStorage.setItem(cacheKey, JSON.stringify(result));
-      return { ...result, isOffline: false };
-    } catch (error) {
-      const cached = await AsyncStorage.getItem(cacheKey);
-      if (!cached) throw error;
-      const result = JSON.parse(cached);
-      return { ...result, isOffline: true };
-    }
+    const payload = await api(`/notifications/me?${query}`);
+    return {
+      notifications: (payload.data || []).map(mapNotification),
+      pagination: payload.pagination || {},
+      lastSynced: new Date().toISOString(),
+      isOffline: false,
+    };
   },
 
   getUnreadCount: async () => {

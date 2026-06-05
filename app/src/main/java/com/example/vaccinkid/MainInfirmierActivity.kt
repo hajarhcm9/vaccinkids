@@ -33,15 +33,6 @@ class MainInfirmierActivity : AppCompatActivity() {
                     loadFragment(ScanQrFragment())
                     true
                 }
-                // ✅ NOUVEAU — Semaine 2
-                R.id.nav_flacons -> {
-                    loadFragment(GestionFlaconsFragment())
-                    true
-                }
-                R.id.nav_presences -> {
-                    loadFragment(GestionPresencesFragment())
-                    true
-                }
                 else -> false
             }
         }

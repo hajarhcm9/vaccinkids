@@ -52,6 +52,7 @@
     "pg": "^8.20.0",
     "react": "19.2.3",
     "react-native": "0.85.3",
+    "react-native-keychain": "^10.0.0",
     "react-native-safe-area-context": "5.8.0",
     "react-native-screens": "4.25.2",
     "swagger-jsdoc": "^6.2.8",

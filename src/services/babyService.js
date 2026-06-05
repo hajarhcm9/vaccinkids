@@ -1,15 +1,4 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { API_BASE_URL } from '../config/mobileApi';
-
-const BABIES_KEY = 'cached_babies';
-
-async function parseApiResponse(response) {
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok || data.status === 'error') {
-    throw new Error(data.message || 'Erreur serveur');
-  }
-  return data;
-}
+import { httpClient } from './httpClient';
 
 function toApiBaby(babyData) {
   return {
@@ -33,16 +22,6 @@ function fromApiBaby(baby) {
   };
 }
 
-async function getAuthToken() {
-  const token = await AsyncStorage.getItem('authToken');
-  if (!token) throw new Error('Session expirée. Reconnectez-vous.');
-  return token;
-}
-
-async function cacheBabies(babies) {
-  await AsyncStorage.setItem(BABIES_KEY, JSON.stringify(babies));
-}
-
 export const babyService = {
   /**
    * Ajoute un nouveau bébé pour le parent connecté
@@ -51,20 +30,11 @@ export const babyService = {
    */
   addBaby: async (babyData) => {
     try {
-      const token = await getAuthToken();
-      const response = await fetch(`${API_BASE_URL}/carnet/bebe`, {
+      const data = await httpClient.request('/carnet/bebe', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
         body: JSON.stringify(toApiBaby(babyData)),
       });
-      const data = await parseApiResponse(response);
       const baby = fromApiBaby(data.data);
-      const stored = await AsyncStorage.getItem(BABIES_KEY);
-      const babies = stored ? JSON.parse(stored) : [];
-      await cacheBabies([baby, ...babies.filter((item) => item.id !== baby.id)]);
       return { success: true, baby };
     } catch (error) {
       console.error('addBaby error:', error);
@@ -78,18 +48,12 @@ export const babyService = {
    */
   getBabies: async () => {
     try {
-      const token = await getAuthToken();
-      const response = await fetch(`${API_BASE_URL}/carnet/bebes`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await parseApiResponse(response);
+      const data = await httpClient.request('/carnet/bebes');
       const babies = (data.data || []).map(fromApiBaby);
-      await cacheBabies(babies);
       return babies;
     } catch (error) {
       console.error('getBabies error:', error);
-      const stored = await AsyncStorage.getItem(BABIES_KEY);
-      return stored ? JSON.parse(stored) : [];
+      throw error;
     }
   },
 };

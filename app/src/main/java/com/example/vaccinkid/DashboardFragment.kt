@@ -11,11 +11,16 @@ import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.cardview.widget.CardView
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProvider
+import com.example.vaccinkid.viewmodel.DashboardViewModel
+import com.example.vaccinkid.viewmodel.InfirmierAuthViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
 class DashboardFragment : Fragment() {
+    private lateinit var dashboardViewModel: DashboardViewModel
+    private lateinit var authViewModel: InfirmierAuthViewModel
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -26,16 +31,35 @@ class DashboardFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        dashboardViewModel = ViewModelProvider(this)[DashboardViewModel::class.java]
+        authViewModel = ViewModelProvider(this)[InfirmierAuthViewModel::class.java]
 
         // Date du jour
         val tvDate = view.findViewById<TextView>(R.id.tvDateDashboard)
         val sdf = SimpleDateFormat("EEEE dd MMMM yyyy", Locale.FRENCH)
         tvDate.text = sdf.format(Date()).replaceFirstChar { it.uppercase() }
 
-        // Stats mockées
-        view.findViewById<TextView>(R.id.tvStatRdv).text     = "12"
-        view.findViewById<TextView>(R.id.tvStatVaccines).text = "8"
-        view.findViewById<TextView>(R.id.tvStatAttente).text  = "4"
+        val tvStatRdv = view.findViewById<TextView>(R.id.tvStatRdv)
+        val tvStatVaccines = view.findViewById<TextView>(R.id.tvStatVaccines)
+        val tvStatAttente = view.findViewById<TextView>(R.id.tvStatAttente)
+        tvStatRdv.text = "..."
+        tvStatVaccines.text = "..."
+        tvStatAttente.text = "..."
+        dashboardViewModel.stats.observe(viewLifecycleOwner) { result ->
+            result.fold(
+                onSuccess = { stats ->
+                    tvStatRdv.text = (stats.rdvConfirmes ?: stats.rdvEnAttente ?: 0).toString()
+                    tvStatVaccines.text = (stats.totalVaccinations ?: 0).toString()
+                    tvStatAttente.text = (stats.rdvEnAttente ?: 0).toString()
+                },
+                onFailure = {
+                    tvStatRdv.text = "-"
+                    tvStatVaccines.text = "-"
+                    tvStatAttente.text = "-"
+                }
+            )
+        }
+        dashboardViewModel.loadStats()
 
         // Alerte session
         view.findViewById<CardView>(R.id.cardAlertSessionDash).setOnClickListener {
@@ -71,6 +95,7 @@ class DashboardFragment : Fragment() {
                 .setTitle("Déconnexion")
                 .setMessage("Voulez-vous vraiment vous déconnecter ?")
                 .setPositiveButton("Oui") { _, _ ->
+                    authViewModel.logout()
                     val intent = Intent(requireContext(), LoginInfirmierActivity::class.java)
                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
                     startActivity(intent)

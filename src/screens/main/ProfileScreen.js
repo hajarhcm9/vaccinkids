@@ -9,7 +9,6 @@ import {
   Alert,
   Platform,
 } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { colors, typography, spacing, borderRadius, shadows } from '../../theme';
 import { AuthContext } from '../../context/AuthContext';
 import { preferencesService } from '../../services/preferencesService';
@@ -82,8 +81,7 @@ const ProfileScreen = ({ navigation, onLanguageChange }) => {
         text: t.logout,
         style: 'destructive',
         onPress: async () => {
-          await AsyncStorage.multiRemove(['authToken', 'refreshToken', 'userPhone']);
-          signOut();
+          await signOut();
         },
       },
     ]);

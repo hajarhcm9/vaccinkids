@@ -16,15 +16,9 @@ class AdminDashboardFragment : Fragment() {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_admin_dashboard, container, false)
 
-        view.findViewById<CardView>(R.id.cardGestionCentres).setOnClickListener {
-            (activity as? AdminActivity)?.naviguerVers(GestionCentresFragment())
-        }
-        view.findViewById<CardView>(R.id.cardGestionPersonnel).setOnClickListener {
-            (activity as? AdminActivity)?.naviguerVers(GestionPersonnelFragment())
-        }
-        view.findViewById<CardView>(R.id.cardJoursDedies).setOnClickListener {
-            (activity as? AdminActivity)?.naviguerVers(ConfigJoursDediesFragment())
-        }
+        view.findViewById<CardView>(R.id.cardGestionCentres).visibility = View.GONE
+        view.findViewById<CardView>(R.id.cardGestionPersonnel).visibility = View.GONE
+        view.findViewById<CardView>(R.id.cardJoursDedies).visibility = View.GONE
         view.findViewById<CardView>(R.id.cardExports).setOnClickListener {
             startActivity(Intent(requireContext(), ExportsAdminActivity::class.java))
         }
