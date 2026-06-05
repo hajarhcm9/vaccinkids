@@ -1,43 +1,21 @@
 const RendezVous = require('../models/RendezVous');
 const Session = require('../models/Session');
-const Bebe = require('../models/Bebe');
 const ApiError = require('../utils/ApiError');
 const catchAsync = require('../utils/catchAsync');
 const { success, created } = require('../utils/responseHandler');
+const authorization = require('../services/resourceAuthorizationService');
+const bookingService = require('../services/bookingService');
 
 const RendezVousController = {
   // CREATE - Parent books appointment
   create: catchAsync(async (req, res, next) => {
     const { session_id, bebe_id } = req.body;
-    const parentId = req.user.id;
-
-    // Verify session exists and is bookable
-    const session = await Session.findById(session_id);
-    if (!session) return next(ApiError.notFound('Session not found'));
-    if (session.statut === 'ANNULEE' || session.statut === 'TERMINEE') {
-      return next(ApiError.badRequest('This session is no longer available for booking'));
-    }
-
-    // Check availability
-    const counts = await RendezVous.countBySession(session_id);
-    if (parseInt(counts.actifs) >= session.max_inscriptions) {
-      return next(ApiError.badRequest('Session is full. No more spots available.'));
-    }
-
-    // Verify baby belongs to this parent
-    const bebe = await Bebe.findById(bebe_id);
-    if (!bebe) return next(ApiError.notFound('Baby not found'));
-    if (bebe.parent_id !== parentId) {
-      return next(ApiError.forbidden('This baby does not belong to you'));
-    }
-
-    // Check duplicate booking
-    const exists = await RendezVous.existsBySessionAndBebe(session_id, bebe_id);
-    if (exists) {
-      return next(ApiError.badRequest('This baby already has an appointment for this session'));
-    }
-
-    const rdv = await RendezVous.create({ session_id, parent_id: parentId, bebe_id });
+    const rdv = await bookingService.book({
+      parentId: req.user.id,
+      sessionId: session_id,
+      bebeId: bebe_id,
+      allowedStatuses: ['EN_FORMATION', 'CONFIRMEE', 'EN_COURS'],
+    });
     return created(res, 'Appointment booked successfully', rdv);
   }),
 
@@ -48,6 +26,8 @@ const RendezVousController = {
     // Parents can only see their own appointments
     if (req.user.role === 'parent') {
       filters.parentId = req.user.id;
+    } else if (req.user.role === 'infirmier') {
+      filters.centreId = authorization.scopeCentre(req.user, req.query.centreId);
     }
 
     // Allow filtering by query params
@@ -61,19 +41,13 @@ const RendezVousController = {
 
   // READ ONE
   getOne: catchAsync(async (req, res, next) => {
-    const rdv = await RendezVous.findById(req.params.id);
-    if (!rdv) return next(ApiError.notFound('Appointment not found'));
-
-    // Parents can only see their own
-    if (req.user.role === 'parent' && rdv.parent_id !== req.user.id) {
-      return next(ApiError.forbidden('You can only view your own appointments'));
-    }
-
+    const rdv = await authorization.assertRendezVousAccess(req.user, req.params.id);
     return success(res, 200, 'Success', rdv);
   }),
 
   // GET BY SESSION - All appointments for a session
   getBySession: catchAsync(async (req, res, next) => {
+    await authorization.assertSessionAccess(req.user, req.params.sessionId);
     const rdvs = await RendezVous.findBySession(req.params.sessionId);
     return success(res, 200, 'Success', rdvs);
   }),
@@ -119,13 +93,7 @@ const RendezVousController = {
       return next(ApiError.forbidden('You cannot set status to ' + statut));
     }
 
-    const rdv = await RendezVous.findById(rdvId);
-    if (!rdv) return next(ApiError.notFound('Appointment not found'));
-
-    // Parents can only cancel their own
-    if (req.user.role === 'parent' && rdv.parent_id !== req.user.id) {
-      return next(ApiError.forbidden('You can only cancel your own appointments'));
-    }
+    const rdv = await authorization.assertRendezVousAccess(req.user, rdvId);
 
     // If confirming, assign queue number
     let updated;

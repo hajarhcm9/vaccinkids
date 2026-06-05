@@ -21,7 +21,7 @@ VacciniKids est déjà un produit conséquent. Le dépôt contient quatre surfac
 3. une application Android native pour le personnel et l'administration ;
 4. deux interfaces web statiques pour l'administration et la salle d'attente.
 
-La suite de tests API est riche : **28 suites et 452 tests passent**. La couverture
+La suite de tests API est riche : **27 suites fonctionnelles et 404 tests passent**. La couverture
 mesurée avant nettoyage est d'environ **76 % des instructions** et **60 % des branches**.
 La structure backend suit globalement un découpage routes, contrôleurs, services et
 modèles.
@@ -44,7 +44,7 @@ conservé au moins 5 ans.
 | Domaine | État | Verdict |
 |---|---:|---|
 | Fonctionnalités API | Bon | Beaucoup de cas métier déjà présents |
-| Tests API | Bon | 452/452 passent sur bases de test dédiées |
+| Tests API | Bon | 404/404 fonctionnels passent sur base de test dédiée |
 | Base de données | Moyen | Migrations consolidées et exécutées, validation vierge requise |
 | Sécurité backend | Moyen | Bon socle, plusieurs points P0/P1 restent |
 | App parent React Native | Moyen | Fonctionnelle en développement, non configurée pour release |
@@ -105,8 +105,8 @@ conservé au moins 5 ans.
 |---|---|
 | Suite API avant nettoyage | 27 suites, 451 tests passés |
 | Suite API après nettoyage | 26 suites passées, 1 échec `ECONNRESET` sur 451 tests |
-| Suite fonctionnelle hermétique | 26 suites et 393 tests passés |
-| Benchmarks isolés | 2 suites et 59 tests passés |
+| Suite fonctionnelle hermétique | 27 suites et 404 tests passés |
+| Benchmarks isolés | 31/59 tests repassés, relance complète bloquée par PostgreSQL indisponible |
 | Couverture API | Environ 76 % instructions, 60 % branches |
 | Bundle React Native Android | Succès |
 | Build debug app parent Android | Succès avec Java 17 et `ANDROID_HOME` explicite |
@@ -126,9 +126,11 @@ conservé au moins 5 ans.
 | Configuration release sans secrets/URL | Refus contrôlé des deux builds Android |
 
 `npm test` recrée maintenant une base dédiée suffixée `_test`, applique les migrations et
-le seed de développement, puis exécute 393 tests fonctionnels. Les 59 benchmarks sont
-exécutés séparément par `npm run test:performance`, chacun sur une nouvelle base. Cette
-séparation élimine les collisions de données et les épuisements de sockets inter-suite.
+le seed de développement, puis exécute 404 tests fonctionnels. Les 59 benchmarks sont
+exécutés séparément par `npm run test:performance`, chacun sur une nouvelle base. La
+dernière relance complète a été interrompue par l'indisponibilité locale de PostgreSQL
+après correction de l'audit ; `tests/performance2.test.js` doit être relancé dès que
+Docker/PostgreSQL est disponible.
 
 Les builds Android ne doivent pas dépendre du JDK par défaut de la machine. Le JDK local
 25.0.3 fait échouer Gradle/Kotlin ; Java 17 fonctionne. La version Java et `ANDROID_HOME`
@@ -396,7 +398,7 @@ PostgreSQL possèdent maintenant un teardown explicite. Jest termine naturelleme
 
 ### P1-04 - Tests mobiles insuffisants
 
-Les 452 tests couvrent principalement l'API. Il n'existe pas de couverture significative
+Les 463 tests couvrent principalement l'API. Il n'existe pas de couverture significative
 des écrans React Native ni de l'application Android native.
 
 **Minimum avant livraison**
@@ -770,8 +772,9 @@ Chaque scénario doit avoir un test transactionnel PostgreSQL réel.
 
 ### État mesuré
 
-- 28 suites Jest passent ;
-- 452/452 tests passent : 393 fonctionnels et 59 benchmarks isolés ;
+- 27 suites fonctionnelles Jest passent ;
+- 404/404 tests fonctionnels passent ;
+- 31/59 benchmarks repassés, puis relance bloquée par PostgreSQL local indisponible ;
 - couverture globale : environ 76 % instructions, 60 % branches ;
 - lint : 0 problème ;
 - Jest termine naturellement sans `forceExit`.

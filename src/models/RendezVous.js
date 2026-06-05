@@ -74,6 +74,10 @@ const RendezVous = {
       values.push(filters.bebeId);
       conditions.push('rdv.bebe_id = $' + idx++);
     }
+    if (filters.centreId) {
+      values.push(filters.centreId);
+      conditions.push('s.centre_id = $' + idx++);
+    }
 
     const whereClause = conditions.length > 0 ? ' WHERE ' + conditions.join(' AND ') : '';
     const result = await query(

@@ -18,6 +18,6 @@ router.patch('/:id/complete', authorize('infirmier', 'admin'), controller.comple
 router.patch('/:id/abandon', authorize('parent', 'infirmier', 'admin'), controller.abandonEntry);
 router.get('/me/position', authorize('parent'), controller.getMyPosition);
 router.get('/me/wait-time', authorize('parent'), controller.getWaitTime);
-router.get('/stats', authorize('admin'), controller.getStats);
+router.get('/stats', authorize('admin', 'infirmier'), controller.getStats);
 
 module.exports = router;

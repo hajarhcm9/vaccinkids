@@ -85,7 +85,7 @@ sync jusqu'a disponibilite de commandes metier transactionnelles dediees.
 Toute mutation sync produit le meme resultat et applique les memes autorisations que la
 route metier equivalente. Aucun payload ne peut changer le proprietaire ou le centre.
 
-### P0-02 - Imposer l'autorisation objet et centre
+### P0-02 - Imposer l'autorisation objet et centre - Corrige
 
 **Preuves**
 
@@ -103,21 +103,26 @@ route metier equivalente. Aucun payload ne peut changer le proprietaire ou le ce
 - PDF, emails, exports et historique d'absenteisme acceptent aussi des identifiants sans
   frontiere de centre explicite.
 
-**Actions**
+**Correctifs appliques**
 
-- Creer un service central d'autorisation des ressources.
-- Pour un infirmier, deriver le centre depuis son compte, jamais depuis le payload.
-- Pour un parent, joindre systematiquement la ressource a `parent_id`.
-- Pour un administrateur, journaliser les lectures et exports sensibles.
-- Appliquer les memes controles aux listes, exports, statistiques et documents.
-- Ajouter une matrice de tests negative couvrant chaque route et chaque role.
+- ajout de `resourceAuthorizationService`, point central pour verifier centre,
+  proprietaire, rendez-vous, session, enfant, vaccination, flacon, stock et file ;
+- centre infirmier derive du compte et refus explicite de tout identifiant de centre
+  different, notamment pour listes, statistiques, alertes et file d'attente ;
+- verification du proprietaire parent sur rendez-vous et enfants ;
+- controles appliques aux PDF, emails, historique d'absenteisme, vaccinations, flacons,
+  stock, rendez-vous, sessions, alertes et statistiques ;
+- statistiques infirmier bornees au centre, y compris les agregats auparavant globaux ;
+- lectures et exports sensibles administrateur journalises avec les actions `READ` et
+  `EXPORT` ;
+- matrice negative inter-centre et inter-parent ajoutee, en complement des tests sync.
 
 **Critere d'acceptation**
 
 Les tests prouvent qu'un parent ne voit que ses enfants et qu'un infirmier ne peut lire ou
 modifier que les ressources de son centre, y compris via listes, stats, sync et exports.
 
-### P0-03 - Rendre reservations, vaccinations et flacons atomiques
+### P0-03 - Rendre reservations, vaccinations et flacons atomiques - Corrige
 
 **Preuves**
 
@@ -129,15 +134,19 @@ modifier que les ressources de son centre, y compris via listes, stats, sync et 
 - `src/models/migrations/001_initial_schema.sql:108-135` n'impose ni maximum de doses ni
   unicite d'une vaccination par rendez-vous.
 
-**Actions**
+**Correctifs appliques**
 
-- Deplacer chaque workflow critique dans une transaction de service.
-- Verrouiller la session, le rendez-vous et le flacon concernes avec `FOR UPDATE` ou un
-  verrou advisory documente.
-- Ajouter contraintes DB : une vaccination par rendez-vous et total utilise/gaspille
-  inferieur ou egal aux doses du flacon.
-- Valider le centre du personnel, le centre de la session et les transitions de statut.
-- Tester deux requetes concurrentes pour la derniere place et la derniere dose.
+- reservations et liste d'attente deplacees dans `bookingService`, avec transaction et
+  verrou `FOR UPDATE` sur la session avant comptage et insertion ;
+- enregistrement vaccination et gaspillage deplace dans `clinicalWorkflowService`, avec
+  verrouillage du rendez-vous, de la session et du flacon ;
+- centre du personnel, session en cours, vaccin du flacon et capacite restante valides
+  dans la meme transaction ;
+- index unique garantissant une vaccination par rendez-vous ;
+- triggers PostgreSQL interdisant le depassement de capacite d'un flacon et la reduction
+  ulterieure d'une capacite sous les doses deja consommees ;
+- tests concurrents reels prouvant qu'une seule requete obtient la derniere place ou
+  consomme la derniere dose.
 
 **Critere d'acceptation**
 

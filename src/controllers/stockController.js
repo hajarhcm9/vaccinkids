@@ -2,17 +2,18 @@ const Stock = require('../models/Stock');
 const ApiError = require('../utils/ApiError');
 const catchAsync = require('../utils/catchAsync');
 const { success, created } = require('../utils/responseHandler');
+const authorization = require('../services/resourceAuthorizationService');
 
 const StockController = {
   getByCentre: catchAsync(async (req, res, next) => {
-    const centreId = req.params.centreId || req.user.centre_id;
+    const centreId = authorization.scopeCentre(req.user, req.params.centreId);
     if (!centreId) return next(ApiError.badRequest('Centre ID required'));
     const stock = await Stock.findByCentre(centreId);
     return success(res, 200, 'Stock retrieved', stock);
   }),
 
   getLowStock: catchAsync(async (req, res, next) => {
-    const centreId = req.params.centreId || req.user.centre_id;
+    const centreId = authorization.scopeCentre(req.user, req.params.centreId);
     if (!centreId) return next(ApiError.badRequest('Centre ID required'));
     const lowStock = await Stock.findLowStock(centreId);
     return success(res, 200, 'Low stock alerts retrieved', lowStock);

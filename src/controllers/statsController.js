@@ -1,6 +1,9 @@
 const statsService = require('../services/statsService');
 const { success } = require('../utils/responseHandler');
 const catchAsync = require('../utils/catchAsync');
+const authorization = require('../services/resourceAuthorizationService');
+
+const centreFor = (req) => authorization.scopeCentre(req.user, req.query.centreId);
 
 const StatsController = {
   /**
@@ -9,8 +12,7 @@ const StatsController = {
    * Query params: centreId (optional)
    */
   getDashboard: catchAsync(async (req, res, next) => {
-    const { centreId } = req.query;
-    const result = await statsService.getDashboard(centreId ? parseInt(centreId) : null);
+    const result = await statsService.getDashboard(centreFor(req));
     return success(res, 200, 'Tableau de bord', result);
   }),
 
@@ -20,8 +22,7 @@ const StatsController = {
    * Query params: centreId (optional)
    */
   getCouvertureVaccinale: catchAsync(async (req, res, next) => {
-    const { centreId } = req.query;
-    const result = await statsService.getCouvertureVaccinale(centreId ? parseInt(centreId) : null);
+    const result = await statsService.getCouvertureVaccinale(centreFor(req));
     return success(res, 200, 'Couverture vaccinale', result);
   }),
 
@@ -31,8 +32,7 @@ const StatsController = {
    * Query params: centreId (optional)
    */
   getSessionStats: catchAsync(async (req, res, next) => {
-    const { centreId } = req.query;
-    const result = await statsService.getSessionStats(centreId ? parseInt(centreId) : null);
+    const result = await statsService.getSessionStats(centreFor(req));
     return success(res, 200, 'Statistiques des sessions', result);
   }),
 
@@ -42,8 +42,7 @@ const StatsController = {
    * Query params: centreId (optional)
    */
   getRdvStats: catchAsync(async (req, res, next) => {
-    const { centreId } = req.query;
-    const result = await statsService.getRdvStats(centreId ? parseInt(centreId) : null);
+    const result = await statsService.getRdvStats(centreFor(req));
     return success(res, 200, 'Statistiques des rendez-vous', result);
   }),
 
@@ -53,8 +52,7 @@ const StatsController = {
    * Query params: centreId (optional)
    */
   getStockStats: catchAsync(async (req, res, next) => {
-    const { centreId } = req.query;
-    const result = await statsService.getStockStats(centreId ? parseInt(centreId) : null);
+    const result = await statsService.getStockStats(centreFor(req));
     return success(res, 200, 'Statistiques du stock', result);
   }),
 
@@ -64,8 +62,7 @@ const StatsController = {
    * Query params: centreId (optional)
    */
   getAbsenteeismeStats: catchAsync(async (req, res, next) => {
-    const { centreId } = req.query;
-    const result = await statsService.getAbsenteeismeStats(centreId ? parseInt(centreId) : null);
+    const result = await statsService.getAbsenteeismeStats(centreFor(req));
     return success(res, 200, "Statistiques d'absenteisme", result);
   }),
 
@@ -75,8 +72,7 @@ const StatsController = {
    * Query params: centreId (optional)
    */
   getCroissanceStats: catchAsync(async (req, res, next) => {
-    const { centreId } = req.query;
-    const result = await statsService.getCroissanceStats(centreId ? parseInt(centreId) : null);
+    const result = await statsService.getCroissanceStats(centreFor(req));
     return success(res, 200, 'Statistiques de croissance', result);
   }),
 

@@ -27,13 +27,18 @@ class StatsService {
     }
 
     // Total parents
-    const parentRes = await pool.query('SELECT COUNT(*) AS total FROM parent');
+    const parentRes = centreId
+      ? await pool.query(
+          'SELECT COUNT(DISTINCT rdv.parent_id) AS total FROM rendez_vous rdv JOIN session s ON s.id = rdv.session_id WHERE s.centre_id = $1',
+          [centreId],
+        )
+      : await pool.query('SELECT COUNT(*) AS total FROM parent');
     const totalParents = parseInt(parentRes.rows[0]?.total) || 0;
 
     // Total centres
-    const centreRes = await pool.query(
-      'SELECT COUNT(*) AS total FROM centre WHERE est_actif = TRUE',
-    );
+    const centreRes = centreId
+      ? { rows: [{ total: 1 }] }
+      : await pool.query('SELECT COUNT(*) AS total FROM centre WHERE est_actif = TRUE');
     const totalCentres = parseInt(centreRes.rows[0]?.total) || 0;
 
     // Total vaccinations done
@@ -128,13 +133,22 @@ class StatsService {
     }
 
     // Habitual absents count
-    const habitualRes = await pool.query(
-      'SELECT COUNT(*) AS total FROM parent WHERE nb_absences_consecutives >= 2',
-    );
+    const habitualRes = centreId
+      ? await pool.query(
+          `SELECT COUNT(DISTINCT p.id) AS total FROM parent p
+           JOIN rendez_vous rdv ON rdv.parent_id = p.id
+           JOIN session s ON s.id = rdv.session_id
+           WHERE p.nb_absences_consecutives >= 2 AND s.centre_id = $1`,
+          [centreId],
+        )
+      : await pool.query(
+          'SELECT COUNT(*) AS total FROM parent WHERE nb_absences_consecutives >= 2',
+        );
     const absentsHabituels = parseInt(habitualRes.rows[0]?.total) || 0;
 
     // Delayed vaccines count
-    const delayedRes = await pool.query(`
+    const delayedRes = await pool.query(
+      `
       SELECT COUNT(*) AS total
       FROM bebe b
       JOIN LATERAL (
@@ -149,7 +163,10 @@ class StatsService {
           )
           AND CURRENT_DATE > (b.date_naissance + (v.age_cible_semaines * INTERVAL '1 week') + INTERVAL '7 days')
       ) v ON TRUE
-    `);
+      ${centreId ? 'WHERE EXISTS (SELECT 1 FROM rendez_vous rdv3 JOIN session s3 ON s3.id = rdv3.session_id WHERE rdv3.bebe_id = b.id AND s3.centre_id = $1)' : ''}
+    `,
+      centreId ? [centreId] : [],
+    );
     const retardsVaccinaux = parseInt(delayedRes.rows[0]?.total) || 0;
 
     return {
@@ -213,7 +230,8 @@ class StatsService {
     );
 
     // Coverage per centre
-    const centreRes = await pool.query(`
+    const centreRes = await pool.query(
+      `
       SELECT
         c.id AS centre_id,
         c.nom AS centre_nom,
@@ -225,26 +243,33 @@ class StatsService {
       LEFT JOIN rendez_vous rdv ON rdv.session_id = s.id
       LEFT JOIN vaccination vac ON vac.rendez_vous_id = rdv.id
       WHERE c.est_actif = TRUE
+      ${centreId ? 'AND c.id = $1' : ''}
       GROUP BY c.id, c.nom
       ORDER BY total_vaccinations DESC
-    `);
+    `,
+      params,
+    );
 
     // Global coverage rate
-    const globalRes = await pool.query(`
+    const globalRes = await pool.query(
+      `
       SELECT
-        COUNT(DISTINCT bebe_vacc.id) AS bebes_avec_au_moins_1_vaccin,
-        (SELECT COUNT(*) FROM bebe) AS total_bebes,
+        COUNT(DISTINCT bebe_vacc.id) FILTER (WHERE EXISTS (
+          SELECT 1 FROM vaccination vac2 JOIN rendez_vous rdv2 ON rdv2.id = vac2.rendez_vous_id
+          WHERE rdv2.bebe_id = bebe_vacc.id
+        )) AS bebes_avec_au_moins_1_vaccin,
+        COUNT(DISTINCT bebe_vacc.id) AS total_bebes,
         ROUND(
-          COUNT(DISTINCT bebe_vacc.id)::numeric
-          / NULLIF((SELECT COUNT(*) FROM bebe), 0) * 100, 1
+          COUNT(DISTINCT bebe_vacc.id) FILTER (WHERE EXISTS (
+            SELECT 1 FROM vaccination vac3 JOIN rendez_vous rdv3 ON rdv3.id = vac3.rendez_vous_id
+            WHERE rdv3.bebe_id = bebe_vacc.id
+          ))::numeric / NULLIF(COUNT(DISTINCT bebe_vacc.id), 0) * 100, 1
         ) AS taux_couverture_global
       FROM bebe bebe_vacc
-      WHERE EXISTS (
-        SELECT 1 FROM vaccination vac2
-        JOIN rendez_vous rdv2 ON rdv2.id = vac2.rendez_vous_id
-        WHERE rdv2.bebe_id = bebe_vacc.id
-      )
-    `);
+      ${centreId ? 'WHERE EXISTS (SELECT 1 FROM rendez_vous rdv4 JOIN session s4 ON s4.id = rdv4.session_id WHERE rdv4.bebe_id = bebe_vacc.id AND s4.centre_id = $1)' : ''}
+    `,
+      params,
+    );
 
     const global = globalRes.rows[0] || {};
 
@@ -594,10 +619,15 @@ class StatsService {
   async getCroissanceStats(centreId) {
     const params = centreId ? [parseInt(centreId)] : [];
     // Total growth measurements
-    const totalRes = await pool.query('SELECT COUNT(*) AS total FROM croissance');
+    const totalRes = await pool.query(
+      `SELECT COUNT(*) AS total FROM croissance cr
+       ${centreId ? 'WHERE EXISTS (SELECT 1 FROM rendez_vous rdv JOIN session s ON s.id = rdv.session_id WHERE rdv.bebe_id = cr.bebe_id AND s.centre_id = $1)' : ''}`,
+      params,
+    );
 
     // Average measurements by age group
-    const avgRes = await pool.query(`
+    const avgRes = await pool.query(
+      `
       SELECT
         CASE
           WHEN age_semaines <= 8 THEN '0-2 mois'
@@ -610,9 +640,12 @@ class StatsService {
         ROUND(AVG(poids)::numeric, 2) AS avg_poids,
         ROUND(AVG(taille)::numeric, 2) AS avg_taille
       FROM croissance
+      ${centreId ? 'WHERE EXISTS (SELECT 1 FROM rendez_vous rdv JOIN session s ON s.id = rdv.session_id WHERE rdv.bebe_id = croissance.bebe_id AND s.centre_id = $1)' : ''}
       GROUP BY tranche_age
       ORDER BY MIN(age_semaines)
-    `);
+    `,
+      params,
+    );
 
     // Recent measurements
     const recentRes = await pool.query(

@@ -157,7 +157,7 @@ describe('Day 17 - RDV Management, Vaccination & Statistics', () => {
         .set('Authorization', 'Bearer ' + parentToken)
         .send({ session_id: sessionId, bebe_id: bebeId1 });
 
-      expect(res.status).toBe(400);
+      expect(res.status).toBe(409);
       expect(res.body.message).toMatch(/deja|already|duplicate/i);
     });
 
@@ -334,7 +334,7 @@ describe('Day 17 - RDV Management, Vaccination & Statistics', () => {
         .set('Authorization', 'Bearer ' + nurseToken)
         .send({ poids: 5.3 });
 
-      expect(res.status).toBe(400);
+      expect(res.status).toBe(409);
     });
 
     test('should deny parent from recording vaccination', async () => {

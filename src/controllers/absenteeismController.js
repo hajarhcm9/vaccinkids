@@ -1,6 +1,7 @@
 const absenteeismService = require('../services/absenteeismService');
 const { success, notFound } = require('../utils/responseHandler');
 const catchAsync = require('../utils/catchAsync');
+const authorization = require('../services/resourceAuthorizationService');
 
 const AbsenteeismController = {
   /**
@@ -9,6 +10,7 @@ const AbsenteeismController = {
    */
   markAbsent: catchAsync(async (req, res, next) => {
     const { rdvId } = req.params;
+    await authorization.assertRendezVousAccess(req.user, rdvId);
     const result = await absenteeismService.markAbsentManual(parseInt(rdvId));
 
     if (result.error) {
@@ -39,6 +41,7 @@ const AbsenteeismController = {
    */
   processSessionNoShows: catchAsync(async (req, res, next) => {
     const { sessionId } = req.params;
+    await authorization.assertSessionAccess(req.user, sessionId);
     const { gracePeriodMinutes } = req.body;
 
     const result = await absenteeismService.processSessionNoShows(
@@ -64,10 +67,8 @@ const AbsenteeismController = {
    * GET /api/absenteisme/habitual-absents
    */
   getHabitualAbsents: catchAsync(async (req, res, next) => {
-    const { centreId } = req.query;
-    const absents = await absenteeismService.getHabitualAbsents(
-      centreId ? parseInt(centreId) : null,
-    );
+    const centreId = authorization.scopeCentre(req.user, req.query.centreId);
+    const absents = await absenteeismService.getHabitualAbsents(centreId);
     return success(res, 200, 'Liste des absents habituels', absents);
   }),
 
@@ -76,6 +77,7 @@ const AbsenteeismController = {
    */
   getParentAbsenceHistory: catchAsync(async (req, res, next) => {
     const { parentId } = req.params;
+    await authorization.assertParentAccess(req.user, parentId);
     const history = await absenteeismService.getParentAbsenceHistory(parseInt(parentId));
     return success(res, 200, 'Historique des absences', history);
   }),
@@ -85,6 +87,7 @@ const AbsenteeismController = {
    */
   getSessionAbsences: catchAsync(async (req, res, next) => {
     const { sessionId } = req.params;
+    await authorization.assertSessionAccess(req.user, sessionId);
     const absences = await absenteeismService.getSessionAbsences(parseInt(sessionId));
     return success(res, 200, 'Liste des absences pour cette session', absences);
   }),

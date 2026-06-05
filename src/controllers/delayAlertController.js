@@ -1,6 +1,7 @@
 const delayAlertService = require('../services/delayAlertService');
 const { success } = require('../utils/responseHandler');
 const catchAsync = require('../utils/catchAsync');
+const authorization = require('../services/resourceAuthorizationService');
 
 const DelayAlertController = {
   /**
@@ -8,8 +9,8 @@ const DelayAlertController = {
    * Get all delayed vaccines for a specific centre.
    */
   getDelayedVaccinesByCentre: catchAsync(async (req, res, next) => {
-    const { centreId } = req.params;
-    const result = await delayAlertService.getDelayedVaccinesByCentre(parseInt(centreId));
+    const centreId = authorization.scopeCentre(req.user, req.params.centreId);
+    const result = await delayAlertService.getDelayedVaccinesByCentre(centreId);
     return success(res, 200, 'Vaccins en retard pour ce centre', result);
   }),
 
@@ -19,6 +20,7 @@ const DelayAlertController = {
    */
   getDelayedVaccinesForBebe: catchAsync(async (req, res, next) => {
     const { bebeId } = req.params;
+    await authorization.assertBebeAccess(req.user, bebeId);
     const result = await delayAlertService.getDelayedVaccinesForBebe(parseInt(bebeId));
 
     if (result.length === 0) {

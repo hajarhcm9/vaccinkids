@@ -1,11 +1,13 @@
 const EmailService = require('../services/emailService');
 const { pool } = require('../config/database');
 const { success, notFound, error } = require('../utils/responseHandler');
+const authorization = require('../services/resourceAuthorizationService');
 
 var emailController = {
-  sendRdvConfirmation: async function (req, res) {
+  sendRdvConfirmation: async function (req, res, next) {
     try {
       var rdvId = req.params.rdvId;
+      await authorization.assertRendezVousAccess(req.user, rdvId);
       var result = await pool.query(
         'SELECT par.email, par.prenom as parent_prenom, par.nom as parent_nom, ' +
           'b.prenom as bebe_prenom, b.nom as bebe_nom, ' +
@@ -40,14 +42,16 @@ var emailController = {
       });
       return success(res, 200, 'Email de confirmation envoye', emailResult);
     } catch (err) {
+      if (err.statusCode) return next(err);
       console.error('Error sending RDV confirmation email:', err);
       return error(res, "Erreur lors de l'envoi de l'email");
     }
   },
 
-  sendRdvReminder: async function (req, res) {
+  sendRdvReminder: async function (req, res, next) {
     try {
       var rdvId = req.params.rdvId;
+      await authorization.assertRendezVousAccess(req.user, rdvId);
       var result = await pool.query(
         'SELECT par.email, par.prenom as parent_prenom, par.nom as parent_nom, ' +
           'b.prenom as bebe_prenom, b.nom as bebe_nom, ' +
@@ -82,14 +86,16 @@ var emailController = {
       });
       return success(res, 200, 'Email de rappel envoye', emailResult);
     } catch (err) {
+      if (err.statusCode) return next(err);
       console.error('Error sending RDV reminder email:', err);
       return error(res, "Erreur lors de l'envoi de l'email");
     }
   },
 
-  sendVaccinationCertificate: async function (req, res) {
+  sendVaccinationCertificate: async function (req, res, next) {
     try {
       var vaccinationId = req.params.vaccinationId;
+      await authorization.assertVaccinationAccess(req.user, vaccinationId);
       var result = await pool.query(
         'SELECT par.email, par.prenom as parent_prenom, par.nom as parent_nom, ' +
           'b.prenom as bebe_prenom, b.nom as bebe_nom, ' +
@@ -132,6 +138,7 @@ var emailController = {
       });
       return success(res, 200, "Email d'attestation envoye", emailResult);
     } catch (err) {
+      if (err.statusCode) return next(err);
       console.error('Error sending vaccination certificate email:', err);
       return error(res, "Erreur lors de l'envoi de l'email");
     }

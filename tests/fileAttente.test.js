@@ -151,7 +151,7 @@ describe("Day 21 - File d'attente digitale", () => {
       const res = await request(adminApp)
         .patch('/api/file-attente/' + secondEntryId + '/abandon')
         .set('Authorization', 'Bearer ' + parentToken);
-      expect(res.status).toBe(404);
+      expect(res.status).toBe(403);
     });
   });
 

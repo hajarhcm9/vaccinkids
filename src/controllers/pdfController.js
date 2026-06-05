@@ -1,11 +1,13 @@
 const PdfService = require('../services/pdfService');
 const { pool } = require('../config/database');
 const { notFound, error } = require('../utils/responseHandler');
+const authorization = require('../services/resourceAuthorizationService');
 
 var pdfController = {
-  downloadVaccinationCertificate: async function (req, res) {
+  downloadVaccinationCertificate: async function (req, res, next) {
     try {
       var vaccinationId = req.params.vaccinationId;
+      await authorization.assertVaccinationAccess(req.user, vaccinationId);
       var result = await pool.query(
         'SELECT v.id, v.poids, v.taille, v.date_heure as date_vaccination, ' +
           'b.prenom as bebe_prenom, b.nom as bebe_nom, b.date_naissance, ' +
@@ -43,14 +45,16 @@ var pdfController = {
       res.setHeader('Content-Length', pdfBuffer.length);
       return res.end(pdfBuffer);
     } catch (err) {
+      if (err.statusCode) return next(err);
       console.error('Error generating vaccination certificate PDF:', err);
       return error(res, 'Erreur lors de la generation du PDF');
     }
   },
 
-  downloadCarnet: async function (req, res) {
+  downloadCarnet: async function (req, res, next) {
     try {
       var bebeId = req.params.bebeId;
+      await authorization.assertBebeAccess(req.user, bebeId);
       var bebeResult = await pool.query(
         'SELECT b.id, b.prenom as bebe_prenom, b.nom as bebe_nom, b.date_naissance, b.sexe, b.code_qr, ' +
           'par.prenom as parent_prenom, par.nom as parent_nom, par.telephone as parent_telephone ' +
@@ -90,14 +94,16 @@ var pdfController = {
       res.setHeader('Content-Length', pdfBuffer.length);
       return res.end(pdfBuffer);
     } catch (err) {
+      if (err.statusCode) return next(err);
       console.error('Error generating carnet PDF:', err);
       return error(res, 'Erreur lors de la generation du carnet');
     }
   },
 
-  downloadRdvConfirmation: async function (req, res) {
+  downloadRdvConfirmation: async function (req, res, next) {
     try {
       var rdvId = req.params.rdvId;
+      await authorization.assertRendezVousAccess(req.user, rdvId);
       var result = await pool.query(
         'SELECT b.prenom as bebe_prenom, b.nom as bebe_nom, ' +
           'vac.nom as vaccin_nom, ' +
@@ -130,6 +136,7 @@ var pdfController = {
       res.setHeader('Content-Length', pdfBuffer.length);
       return res.end(pdfBuffer);
     } catch (err) {
+      if (err.statusCode) return next(err);
       console.error('Error generating RDV confirmation PDF:', err);
       return error(res, 'Erreur lors de la generation du PDF');
     }

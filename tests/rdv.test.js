@@ -83,7 +83,7 @@ describe('Rendez-vous Endpoints', () => {
         .post('/api/rendez-vous')
         .set('Authorization', 'Bearer ' + parentToken)
         .send({ session_id: sessionId, bebe_id: bebeId });
-      expect(res.status).toBe(400);
+      expect(res.status).toBe(409);
     });
 
     it('should reject booking by non-parent', async () => {

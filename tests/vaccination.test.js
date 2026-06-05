@@ -128,7 +128,7 @@ describe('Vaccination & Flacon Endpoints', () => {
         .post('/api/vaccinations/' + rdvId)
         .set('Authorization', 'Bearer ' + nurseToken)
         .send({ flacon_id: flaconId });
-      expect(res.status).toBe(400);
+      expect(res.status).toBe(409);
     });
 
     it('should deny parent from recording', async () => {

@@ -8,6 +8,33 @@ const methodToAction = {
   DELETE: 'DELETE',
 };
 
+const sensitiveReadPrefixes = [
+  '/api/admin',
+  '/api/absenteisme',
+  '/api/alertes-retard',
+  '/api/carnet',
+  '/api/exports',
+  '/api/file-attente',
+  '/api/pdf',
+  '/api/recherche',
+  '/api/rendez-vous',
+  '/api/stats',
+  '/api/stock',
+  '/api/vaccinations',
+];
+
+let auditQueue = Promise.resolve();
+
+const enqueueAudit = (entry) => {
+  auditQueue = auditQueue
+    .then(() => AuditLog.create(entry))
+    .catch((error) => {
+      if (process.env.NODE_ENV !== 'test') {
+        console.error('Audit logging failed:', error.message);
+      }
+    });
+};
+
 const tableFromPath = (path) => {
   const segment = path.split('/').filter(Boolean)[1];
   const map = {
@@ -23,7 +50,12 @@ const tableFromPath = (path) => {
 };
 
 const auditMiddleware = async (req, res, next) => {
-  const action = methodToAction[req.method];
+  const isSensitiveRead =
+    req.method === 'GET' &&
+    sensitiveReadPrefixes.some((prefix) => req.originalUrl.startsWith(prefix));
+  const action =
+    methodToAction[req.method] ||
+    (isSensitiveRead ? (req.originalUrl.startsWith('/api/exports') ? 'EXPORT' : 'READ') : null);
   if (!action || !req.originalUrl.startsWith('/api/')) {
     return next();
   }
@@ -62,9 +94,14 @@ const auditMiddleware = async (req, res, next) => {
   };
 
   res.on('finish', () => {
-    if (res.statusCode >= 400) return;
+    if (
+      res.statusCode >= 400 ||
+      ((action === 'READ' || action === 'EXPORT') && req.user?.role !== 'admin')
+    ) {
+      return;
+    }
 
-    const data = responseBody && responseBody.data;
+    const data = isSensitiveRead ? null : responseBody && responseBody.data;
     const record = Array.isArray(data) ? data[0] : data;
     const recordId =
       record && typeof record === 'object' && record.id
@@ -73,18 +110,18 @@ const auditMiddleware = async (req, res, next) => {
           ? parseInt(req.params.id)
           : 0;
 
-    AuditLog.create({
+    enqueueAudit({
       table_name: tableFromPath(req.originalUrl),
       record_id: recordId,
       action,
       old_values: oldRecord,
-      new_values: record && typeof record === 'object' ? record : null,
+      new_values: isSensitiveRead
+        ? { path: req.originalUrl.split('?')[0], query: req.query }
+        : record && typeof record === 'object'
+          ? record
+          : null,
       user_id: req.user ? req.user.id : null,
       user_role: req.user ? req.user.role : null,
-    }).catch((error) => {
-      if (process.env.NODE_ENV !== 'test') {
-        console.error('Audit logging failed:', error.message);
-      }
     });
   });
 

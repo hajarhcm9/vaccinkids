@@ -275,7 +275,7 @@ describe('Day 18 - Absenteeism Management & Delay Alerts', () => {
         .set('Authorization', 'Bearer ' + nurseToken)
         .send({ gracePeriodMinutes: 0 });
 
-      expect(res.status).toBe(400);
+      expect(res.status).toBe(404);
       expect(res.body.message).toMatch(/non trouvee|not found/i);
     });
 
