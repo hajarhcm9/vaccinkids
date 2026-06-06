@@ -1,6 +1,13 @@
 const express = require('express');
 const setupSecurity = require('./middleware/security');
-const { authLimiter, apiLimiter } = require('./middleware/rateLimiter');
+const {
+  apiLimiter,
+  otpLimiter,
+  loginLimiter,
+  refreshLimiter,
+  exportLimiter,
+  kioskLimiter,
+} = require('./middleware/rateLimiter');
 const swaggerUi = require('swagger-ui-express');
 const specOpenAPI = require('./config/swagger');
 const cors = require('cors');
@@ -13,6 +20,7 @@ const { pool } = require('./config/database');
  * Express Application Setup
  */
 const app = express();
+app.set('trust proxy', config.trustProxy);
 app.use(require('./middleware/requestContext'));
 
 // ============================================
@@ -84,6 +92,15 @@ app.get('/ready', async (req, res) => {
   }
 });
 
+app.get('/metrics', async (req, res) => {
+  if (!config.metrics.token || req.get('authorization') !== `Bearer ${config.metrics.token}`) {
+    return res.status(404).json({ status: 'error', message: 'Route not found' });
+  }
+  const { registry } = require('./services/metricsService');
+  res.setHeader('Content-Type', registry.contentType);
+  return res.send(await registry.metrics());
+});
+
 // ============================================
 // 8. ADMIN WEB INTERFACE
 // ============================================
@@ -93,9 +110,15 @@ app.use('/waiting-room', express.static(path.join(__dirname, '..', 'public', 'wa
 // ============================================
 // 9. API ROUTES
 // ============================================
-if (process.env.NODE_ENV !== 'test') app.use('/api/auth', authLimiter);
+if (process.env.NODE_ENV !== 'test') {
+  app.use('/api/auth/parent/send-otp', otpLimiter);
+  app.use('/api/auth/personnel/login', loginLimiter);
+  app.use('/api/auth/web-admin/login', loginLimiter);
+  app.use('/api/auth/refresh', refreshLimiter);
+  app.use('/api/auth/web-admin/refresh', refreshLimiter);
+}
 app.use('/api/auth', require('./routes/authRoutes'));
-if (process.env.NODE_ENV !== 'test') app.use('/api/kiosks/login', authLimiter);
+if (process.env.NODE_ENV !== 'test') app.use('/api/kiosks/login', loginLimiter);
 app.use('/api/kiosks', require('./routes/kioskRoutes'));
 app.use('/api/sessions', require('./routes/sessionRoutes'));
 app.use('/api/vaccins', require('./routes/vaccinRoutesFull'));
@@ -113,7 +136,9 @@ app.use('/api/stats', require('./routes/statsRoutes'));
 app.use('/api/recherche', require('./routes/rechercheRoutes'));
 app.use('/api/emails', require('./routes/emailRoutes'));
 app.use('/api/pdf', require('./routes/pdfRoutes'));
+if (process.env.NODE_ENV !== 'test') app.use('/api/exports', exportLimiter);
 app.use('/api/exports', require('./routes/exportRoutes'));
+if (process.env.NODE_ENV !== 'test') app.use('/api/file-attente/kiosk', kioskLimiter);
 app.use('/api/file-attente', require('./routes/fileAttenteRoutes'));
 app.use('/api/sync', require('./routes/syncRoutes'));
 

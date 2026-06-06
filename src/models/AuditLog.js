@@ -1,4 +1,7 @@
 const { query } = require('../config/database');
+const config = require('../config');
+const AuditSinkService = require('../services/auditSinkService');
+const metrics = require('../services/metricsService');
 
 const sensitiveFields = new Set([
   'code',
@@ -39,22 +42,36 @@ const AuditLog = {
       user_role,
       request_id,
     } = entry;
-    const result = await query(
-      `INSERT INTO audit_log
+    let result;
+    try {
+      result = await query(
+        `INSERT INTO audit_log
          (table_name, record_id, action, old_values, new_values, user_id, user_role, request_id)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
-      [
-        table_name,
-        record_id,
-        action,
-        redactSensitiveValues(old_values),
-        redactSensitiveValues(new_values),
-        user_id,
-        user_role,
-        request_id || null,
-      ],
-    );
-    return result.rows[0];
+        [
+          table_name,
+          record_id,
+          action,
+          redactSensitiveValues(old_values),
+          redactSensitiveValues(new_values),
+          user_id,
+          user_role,
+          request_id || null,
+        ],
+      );
+      metrics.recordAudit('database', 'success');
+    } catch (error) {
+      metrics.recordAudit('database', 'failure');
+      throw error;
+    }
+
+    const savedEntry = result.rows[0];
+    try {
+      await AuditSinkService.deliver(savedEntry);
+    } catch (error) {
+      if (config.audit.externalRequired) throw error;
+    }
+    return savedEntry;
   },
 
   async findByTable(tableName, limit = 100) {

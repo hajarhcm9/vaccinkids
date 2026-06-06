@@ -53,6 +53,10 @@ const AuthController = {
     const normalizedPhone = normalizePhone(telephone);
     const otpResult = await OtpService.generateOTP(normalizedPhone);
     const smsResult = await SmsService.sendOTP(normalizedPhone, otpResult.otp);
+    if (!smsResult.success) {
+      await OtpService.invalidate(otpResult.id);
+      return next(ApiError.serviceUnavailable('OTP delivery is temporarily unavailable'));
+    }
 
     const responseData = {
       telephone: normalizedPhone,
@@ -236,6 +240,8 @@ const AuthController = {
   webAdminRefresh: catchAsync(async (req, res, next) => {
     const refreshToken = parseCookies(req.headers.cookie)[WEB_REFRESH_COOKIE];
     if (!refreshToken) return next(ApiError.unauthorized('Web admin session expired'));
+    const refreshIdentity = TokenService.verifyRefreshToken(refreshToken);
+    req.user = { id: refreshIdentity.userId, role: refreshIdentity.role };
     const tokens = await TokenService.refreshAuthTokens(refreshToken);
     const decoded = TokenService.verifyAccessToken(tokens.accessToken);
     if (decoded.role !== 'admin') {
@@ -253,7 +259,11 @@ const AuthController = {
 
   webAdminLogout: catchAsync(async (req, res) => {
     const refreshToken = parseCookies(req.headers.cookie)[WEB_REFRESH_COOKIE];
-    if (refreshToken) await TokenService.revokeToken(refreshToken);
+    if (refreshToken) {
+      const refreshIdentity = TokenService.verifyRefreshToken(refreshToken);
+      req.user = { id: refreshIdentity.userId, role: refreshIdentity.role };
+      await TokenService.revokeToken(refreshToken);
+    }
     clearWebAdminCookies(res);
     return success(res, 200, 'Web admin logged out');
   }),
@@ -263,6 +273,8 @@ const AuthController = {
   refreshToken: catchAsync(async (req, res, next) => {
     const { refreshToken } = req.body;
     if (!refreshToken) return next(ApiError.badRequest('Refresh token is required'));
+    const refreshIdentity = TokenService.verifyRefreshToken(refreshToken);
+    req.user = { id: refreshIdentity.userId, role: refreshIdentity.role };
     const tokens = await TokenService.refreshAuthTokens(refreshToken);
     return success(res, 200, 'Tokens refreshed successfully', {
       tokens: {

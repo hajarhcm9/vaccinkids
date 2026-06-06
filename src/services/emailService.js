@@ -1,4 +1,6 @@
 const nodemailer = require('nodemailer');
+const { retryOperation } = require('../utils/resilientRequest');
+const metrics = require('./metricsService');
 
 class EmailService {
   constructor() {
@@ -21,6 +23,12 @@ class EmailService {
       return;
     }
 
+    if (!config.email.configured) {
+      this.transporter = null;
+      this.initialized = true;
+      return;
+    }
+
     this.transporter = nodemailer.createTransport({
       host: config.email.host,
       port: config.email.port,
@@ -29,6 +37,9 @@ class EmailService {
         user: config.email.user,
         pass: config.email.password,
       },
+      connectionTimeout: config.providers.timeoutMs,
+      greetingTimeout: config.providers.timeoutMs,
+      socketTimeout: config.providers.timeoutMs,
     });
 
     this.initialized = true;
@@ -48,6 +59,10 @@ class EmailService {
     }
 
     var config = require('../config');
+    if (!this.transporter) {
+      metrics.recordProvider('smtp', 'email', 'disabled');
+      throw new Error('Email provider is not configured');
+    }
 
     var mailOptions = {
       from: config.email.from || '"VacciniKids" <noreply@vaccinikids.ma>',
@@ -62,11 +77,16 @@ class EmailService {
     }
 
     try {
-      var info = await this.transporter.sendMail(mailOptions);
+      var info = await retryOperation(() => this.transporter.sendMail(mailOptions), {
+        retries: config.providers.retries,
+        backoffMs: config.providers.retryBackoffMs,
+      });
+      metrics.recordProvider('smtp', 'email', 'success');
       return { success: true, messageId: info.messageId };
     } catch (error) {
-      console.error('Email send error:', error.message);
-      throw new Error('Failed to send email: ' + error.message);
+      metrics.recordProvider('smtp', 'email', 'failure');
+      console.error(JSON.stringify({ level: 'error', event: 'email_delivery_failed' }));
+      throw new Error('Failed to send email');
     }
   }
 

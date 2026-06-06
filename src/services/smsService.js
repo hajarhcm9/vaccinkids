@@ -1,4 +1,6 @@
 const config = require('../config');
+const { resilientFetch } = require('../utils/resilientRequest');
+const metrics = require('./metricsService');
 
 function buildPayload(phone, message) {
   if (config.sms.provider === 'smspartner') {
@@ -44,22 +46,40 @@ async function parseResponseBody(response) {
 const SmsService = {
   async sendSMS(phone, message) {
     if (!config.sms.apiKey) {
-      if (!config.isTest) {
-        console.warn(`[SMS STUB] To: ${phone} | Message: ${message}`);
+      if (config.providers.allowStubs) {
+        metrics.recordProvider('stub', 'sms', 'success');
+        return { success: true, mode: 'stub' };
       }
-      return { success: true, mode: 'stub', message: 'SMS logged (stub mode)' };
+      metrics.recordProvider(config.sms.provider, 'sms', 'disabled');
+      return { success: false, mode: 'disabled', error: 'SMS provider is not configured' };
     }
 
     try {
-      const response = await globalThis.fetch(config.sms.apiUrl, {
-        method: 'POST',
-        headers: buildHeaders(),
-        body: JSON.stringify(buildPayload(phone, message)),
-      });
+      const response = await resilientFetch(
+        config.sms.apiUrl,
+        {
+          method: 'POST',
+          headers: buildHeaders(),
+          body: JSON.stringify(buildPayload(phone, message)),
+        },
+        {
+          timeoutMs: config.providers.timeoutMs,
+          retries: config.providers.retries,
+          backoffMs: config.providers.retryBackoffMs,
+        },
+      );
 
       const data = await parseResponseBody(response);
       if (!response.ok) {
-        console.error(`SMS API error: ${JSON.stringify(data)}`);
+        metrics.recordProvider(config.sms.provider, 'sms', 'failure');
+        console.error(
+          JSON.stringify({
+            level: 'error',
+            event: 'sms_delivery_failed',
+            provider: config.sms.provider,
+            status: response.status,
+          }),
+        );
         return {
           success: false,
           mode: 'api',
@@ -68,9 +88,18 @@ const SmsService = {
           error: data,
         };
       }
+      metrics.recordProvider(config.sms.provider, 'sms', 'success');
       return { success: true, mode: 'api', provider: config.sms.provider, data };
     } catch (error) {
-      console.error(`SMS send error: ${error.message}`);
+      metrics.recordProvider(config.sms.provider, 'sms', 'failure');
+      console.error(
+        JSON.stringify({
+          level: 'error',
+          event: 'sms_delivery_failed',
+          provider: config.sms.provider,
+          reason: error.name === 'TimeoutError' ? 'timeout' : 'network_error',
+        }),
+      );
       return {
         success: false,
         mode: 'api',

@@ -122,6 +122,10 @@ const OtpService = {
     const result = await query('DELETE FROM otp_codes WHERE expire_at < CURRENT_TIMESTAMP');
     return result.rowCount;
   },
+
+  async invalidate(id) {
+    await query('UPDATE otp_codes SET est_verifie = TRUE WHERE id = $1', [id]);
+  },
 };
 
 OtpService.hashOTP = hashOTP;

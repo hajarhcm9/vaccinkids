@@ -31,6 +31,47 @@ describe('SMS Service provider integration', () => {
     expect(globalThis.fetch).toBe(originalFetch);
   });
 
+  it('does not report success without a provider outside development and test', async () => {
+    const SmsService = loadService({
+      NODE_ENV: 'staging',
+      ALLOW_PROVIDER_STUBS: 'false',
+      SMS_API_KEY: '',
+    });
+
+    const result = await SmsService.sendSMS('+212600000099', 'Test message');
+
+    expect(result).toMatchObject({ success: false, mode: 'disabled' });
+  });
+
+  it('retries retryable provider failures with an idempotency key', async () => {
+    globalThis.fetch = jest
+      .fn()
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 503,
+        headers: { get: () => 'application/json' },
+        json: async () => ({ error: 'unavailable' }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        headers: { get: () => 'application/json' },
+        json: async () => ({ id: 'sms-retry' }),
+      });
+    const SmsService = loadService({
+      SMS_API_KEY: 'secret-key',
+      SMS_PROVIDER: 'generic',
+      PROVIDER_RETRIES: '1',
+      PROVIDER_RETRY_BACKOFF_MS: '1',
+    });
+
+    const result = await SmsService.sendSMS('+212600000099', 'Bonjour');
+
+    expect(result.success).toBe(true);
+    expect(globalThis.fetch).toHaveBeenCalledTimes(2);
+    expect(globalThis.fetch.mock.calls[0][1].headers['X-Idempotency-Key']).toBeDefined();
+  });
+
   it('sends a generic JSON payload with authorization when configured', async () => {
     globalThis.fetch = jest.fn().mockResolvedValue({
       ok: true,

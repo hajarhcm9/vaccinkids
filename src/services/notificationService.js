@@ -1,6 +1,7 @@
 const Notification = require('../models/Notification');
 const SmsService = require('./smsService');
 const FirebaseService = require('./firebaseService');
+const Parent = require('../models/Parent');
 const { pool } = require('../config/database');
 class NotificationService {
   async sendNotification(o) {
@@ -22,6 +23,7 @@ class NotificationService {
           },
         );
         sent = r.success === true;
+        if (r.permanent) await Parent.updateFcmToken(o.destinataire_id, null);
       } else if (o.canal === 'in_app') {
         sent = true;
       }

@@ -1,6 +1,7 @@
 const app = require('./app');
 const config = require('./config');
 const { pool, describeDbError } = require('./config/database');
+const { connectRedis, closeRedis } = require('./config/redis');
 
 const DB_RETRY_ATTEMPTS = parseInt(process.env.DB_RETRY_ATTEMPTS, 10) || 5;
 const DB_RETRY_DELAY_MS = parseInt(process.env.DB_RETRY_DELAY_MS, 10) || 2000;
@@ -33,8 +34,13 @@ async function verifyDatabaseConnection() {
  */
 async function startServer() {
   try {
+    if (config.isProd && (!config.audit.externalUrl || !config.audit.externalSecret)) {
+      throw new Error('AUDIT_EXTERNAL_URL and AUDIT_EXTERNAL_SECRET are required in production');
+    }
+
     // 1. Test database connection
     await verifyDatabaseConnection();
+    await connectRedis();
 
     // 2. Start Express server
     const PORT = config.port;
@@ -56,6 +62,8 @@ async function startServer() {
       });
       await pool.end();
       console.warn('✅ Database pool closed');
+      await closeRedis();
+      console.warn('✅ Redis connection closed');
       process.exit(0);
     };
 

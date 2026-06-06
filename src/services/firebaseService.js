@@ -1,5 +1,7 @@
 const crypto = require('crypto');
 const config = require('../config');
+const { resilientFetch } = require('../utils/resilientRequest');
+const metrics = require('./metricsService');
 
 const FCM_SCOPE = 'https://www.googleapis.com/auth/firebase.messaging';
 
@@ -68,14 +70,18 @@ async function getAccessToken() {
   }
 
   const assertion = createServiceAccountJwt();
-  const response = await globalThis.fetch(config.firebase.tokenUri, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-      assertion,
-    }).toString(),
-  });
+  const response = await resilientFetch(
+    config.firebase.tokenUri,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+        assertion,
+      }).toString(),
+    },
+    { timeoutMs: config.providers.timeoutMs, retries: config.providers.retries },
+  );
 
   const data = await parseResponse(response);
   if (!response.ok || !data?.access_token) {
@@ -94,15 +100,17 @@ const FirebaseService = {
     }
 
     if (!hasFirebaseCredentials()) {
-      if (!config.isTest) {
-        console.warn(`[FCM STUB] To: ${token} | Title: ${notification.title}`);
+      if (config.providers.allowStubs) {
+        metrics.recordProvider('stub', 'push', 'success');
+        return { success: true, mode: 'stub' };
       }
-      return { success: true, mode: 'stub', message: 'Push notification logged (stub mode)' };
+      metrics.recordProvider('firebase', 'push', 'disabled');
+      return { success: false, mode: 'disabled', error: 'Firebase provider is not configured' };
     }
 
     try {
       const accessToken = await getAccessToken();
-      const response = await globalThis.fetch(
+      const response = await resilientFetch(
         `https://fcm.googleapis.com/v1/projects/${config.firebase.projectId}/messages:send`,
         {
           method: 'POST',
@@ -118,17 +126,50 @@ const FirebaseService = {
             },
           }),
         },
+        {
+          timeoutMs: config.providers.timeoutMs,
+          retries: config.providers.retries,
+          backoffMs: config.providers.retryBackoffMs,
+        },
       );
 
       const responseData = await parseResponse(response);
       if (!response.ok) {
-        console.error(`Firebase push error: ${JSON.stringify(responseData)}`);
-        return { success: false, mode: 'api', status: response.status, error: responseData };
+        metrics.recordProvider('firebase', 'push', 'failure');
+        const providerCode = responseData?.error?.details?.find(
+          (detail) => detail.errorCode,
+        )?.errorCode;
+        console.error(
+          JSON.stringify({
+            level: 'error',
+            event: 'push_delivery_failed',
+            provider: 'firebase',
+            status: response.status,
+          }),
+        );
+        return {
+          success: false,
+          mode: 'api',
+          status: response.status,
+          error: responseData,
+          permanent:
+            providerCode === 'UNREGISTERED' ||
+            (providerCode === 'INVALID_ARGUMENT' && response.status === 400),
+        };
       }
 
+      metrics.recordProvider('firebase', 'push', 'success');
       return { success: true, mode: 'api', data: responseData };
     } catch (error) {
-      console.error(`Firebase push send error: ${error.message}`);
+      metrics.recordProvider('firebase', 'push', 'failure');
+      console.error(
+        JSON.stringify({
+          level: 'error',
+          event: 'push_delivery_failed',
+          provider: 'firebase',
+          reason: error.name === 'TimeoutError' ? 'timeout' : 'network_error',
+        }),
+      );
       return { success: false, mode: 'api', error: error.message };
     }
   },

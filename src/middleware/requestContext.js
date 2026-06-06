@@ -1,4 +1,5 @@
 const crypto = require('crypto');
+const metrics = require('../services/metricsService');
 
 const REQUEST_ID_PATTERN = /^[a-zA-Z0-9._-]{8,128}$/;
 
@@ -23,6 +24,7 @@ const requestContext = (req, res, next) => {
   res.on('finish', () => {
     if (process.env.NODE_ENV === 'test') return;
     const durationMs = Number(process.hrtime.bigint() - startedAt) / 1e6;
+    metrics.observeHttp(req, res, durationMs);
     console.warn(
       JSON.stringify({
         level: res.statusCode >= 500 ? 'error' : 'info',

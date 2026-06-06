@@ -3,6 +3,8 @@ var express = require('express');
 var router = express.Router();
 var authMiddleware = require('../middleware/authMiddleware');
 var exportController = require('../controllers/exportController');
+var exportSecurity = require('../middleware/exportSecurity');
+router.use(exportSecurity);
 router.use(authMiddleware.authenticate);
 var rbacMiddleware = require('../middleware/rbacMiddleware');
 router.get('/pdf', rbacMiddleware.authorize('admin'), exportController.exportPDF);

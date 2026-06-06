@@ -1,6 +1,7 @@
 const { pool } = require('../config/database');
 const PDFDocument = require('pdfkit');
 const ExcelJS = require('exceljs');
+const { sanitizeWorksheet } = require('../utils/spreadsheet');
 
 const MONTH_NAMES = [
   'Janvier',
@@ -206,6 +207,7 @@ const generateExcelExport = async function (centreId, startDate, endDate) {
     });
   }
 
+  sanitizeWorksheet(sheet);
   var raw = await workbook.xlsx.writeBuffer();
   var buf = Buffer.isBuffer(raw) ? raw : Buffer.from(raw);
   return buf;

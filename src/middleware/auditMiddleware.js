@@ -1,5 +1,4 @@
 const AuditLog = require('../models/AuditLog');
-const { pool } = require('../config/database');
 
 const methodToAction = {
   POST: 'INSERT',
@@ -23,21 +22,18 @@ const sensitiveReadPrefixes = [
   '/api/vaccinations',
 ];
 
-let auditQueue = Promise.resolve();
-
-const enqueueAudit = (entry) => {
-  auditQueue = auditQueue
-    .then(() => AuditLog.create(entry))
-    .catch((error) => {
-      if (process.env.NODE_ENV !== 'test') {
-        console.error('Audit logging failed:', error.message);
-      }
-    });
-};
+const criticalPrefixes = [
+  '/api/admin',
+  '/api/exports',
+  '/api/flacons',
+  '/api/stock',
+  '/api/vaccinations',
+];
 
 const tableFromPath = (path) => {
   const segment = path.split('/').filter(Boolean)[1];
   const map = {
+    auth: 'authentication',
     carnet: 'bebe',
     flacons: 'flacon',
     'rendez-vous': 'rendez_vous',
@@ -49,77 +45,94 @@ const tableFromPath = (path) => {
   return map[segment] || segment || 'unknown';
 };
 
-const auditMiddleware = async (req, res, next) => {
+function getAuditAction(req) {
   const isSensitiveRead =
     req.method === 'GET' &&
     sensitiveReadPrefixes.some((prefix) => req.originalUrl.startsWith(prefix));
   const action =
     methodToAction[req.method] ||
     (isSensitiveRead ? (req.originalUrl.startsWith('/api/exports') ? 'EXPORT' : 'READ') : null);
-  if (!action || !req.originalUrl.startsWith('/api/')) {
-    return next();
-  }
+  return { action, isSensitiveRead };
+}
 
-  // Capture old values for UPDATE/DELETE
-  let oldRecord = null;
-  if ((action === 'UPDATE' || action === 'DELETE') && req.params && req.params.id) {
-    try {
-      const tableName = tableFromPath(req.originalUrl);
-      const knownTables = new Set([
-        'bebe',
-        'flacon',
-        'rendez_vous',
-        'session',
-        'stock',
-        'vaccin',
-        'vaccination',
-      ]);
-      if (knownTables.has(tableName)) {
-        const result = await pool.query(`SELECT * FROM ${tableName} WHERE id = $1`, [
-          req.params.id,
-        ]);
-        if (result.rows.length > 0) oldRecord = result.rows[0];
-      }
-    } catch (e) {
-      // If we cannot fetch old values, just continue with null
-    }
-  }
+function auditEntry(req, responseBody, action) {
+  const responseUser = responseBody?.data?.user;
+  const responseRecord = responseBody?.data;
+  const responseId =
+    responseRecord && !Array.isArray(responseRecord) && typeof responseRecord === 'object'
+      ? responseRecord.id
+      : null;
+
+  return {
+    table_name: tableFromPath(req.originalUrl),
+    record_id: responseId || parseInt(req.params?.id, 10) || 0,
+    action,
+    old_values: null,
+    new_values: {
+      path: req.originalUrl.split('?')[0],
+      query: req.query,
+      result_id: responseId || null,
+      status: responseBody?.status || 'success',
+    },
+    user_id: req.user?.id || responseUser?.id || null,
+    user_role: req.user?.role || responseUser?.role || null,
+    request_id: req.requestId,
+  };
+}
+
+const auditMiddleware = (req, res, next) => {
+  const { action } = getAuditAction(req);
+  if (!action || !req.originalUrl.startsWith('/api/')) return next();
 
   const originalJson = res.json.bind(res);
-  let responseBody;
+  const originalSend = res.send.bind(res);
+  let auditStarted = false;
+  let sendingJson = false;
 
-  res.json = (body) => {
-    responseBody = body;
-    return originalJson(body);
+  const handleAuditFailure = (error, fallback) => {
+    const critical = criticalPrefixes.some((prefix) => req.originalUrl.startsWith(prefix));
+    console.error(
+      JSON.stringify({
+        level: 'error',
+        event: 'audit_write_failed',
+        requestId: req.requestId,
+        critical,
+        message: error.message,
+      }),
+    );
+    if (critical) {
+      res.status(503);
+      sendingJson = true;
+      return originalJson({
+        status: 'error',
+        message: 'Operation could not be safely audited',
+        requestId: req.requestId,
+      });
+    }
+    return fallback();
   };
 
-  res.on('finish', () => {
-    if (res.statusCode >= 400 || !req.user) return;
+  res.json = (body) => {
+    if (auditStarted || res.statusCode >= 400) return originalJson(body);
+    auditStarted = true;
 
-    const data = isSensitiveRead ? null : responseBody && responseBody.data;
-    const record = Array.isArray(data) ? data[0] : data;
-    const recordId =
-      record && typeof record === 'object' && record.id
-        ? record.id
-        : req.params && req.params.id
-          ? parseInt(req.params.id)
-          : 0;
+    AuditLog.create(auditEntry(req, body, action))
+      .then(() => {
+        sendingJson = true;
+        return originalJson(body);
+      })
+      .catch((error) => handleAuditFailure(error, () => originalJson(body)));
+    return res;
+  };
 
-    enqueueAudit({
-      table_name: tableFromPath(req.originalUrl),
-      record_id: recordId,
-      action,
-      old_values: oldRecord,
-      new_values: isSensitiveRead
-        ? { path: req.originalUrl.split('?')[0], query: req.query }
-        : record && typeof record === 'object'
-          ? record
-          : null,
-      user_id: req.user ? req.user.id : null,
-      user_role: req.user ? req.user.role : null,
-      request_id: req.requestId,
-    });
-  });
+  res.send = (body) => {
+    if (sendingJson || auditStarted || res.statusCode >= 400) return originalSend(body);
+    auditStarted = true;
+    AuditLog.create(auditEntry(req, null, action))
+      .then(() => originalSend(body))
+      .catch((error) => handleAuditFailure(error, () => originalSend(body)));
+    return res;
+  };
 
   return next();
 };

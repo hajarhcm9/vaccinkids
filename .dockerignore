@@ -1,0 +1,11 @@
+.git
+.github
+.env*
+node_modules
+coverage
+android
+app
+ios
+docs
+tests
+*.log

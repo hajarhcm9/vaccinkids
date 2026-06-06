@@ -1,6 +1,7 @@
 const PDFDocument = require('pdfkit');
 const ExcelJS = require('exceljs');
 const { pool } = require('../config/database');
+const { safeSpreadsheetValue, sanitizeWorksheet } = require('../utils/spreadsheet');
 
 function _bq(base, fl) {
   var p = [];
@@ -62,8 +63,14 @@ async function _xls(name, hdrs, cols, rows) {
     return { header: h, key: cols[i] };
   });
   rows.forEach(function (r) {
-    ws.addRow(r);
+    var safeRow = Object.fromEntries(
+      Object.entries(r).map(function (entry) {
+        return [entry[0], safeSpreadsheetValue(entry[1])];
+      }),
+    );
+    ws.addRow(safeRow);
   });
+  sanitizeWorksheet(ws);
   var buf = await wb.xlsx.writeBuffer();
   return Buffer.from(buf);
 }

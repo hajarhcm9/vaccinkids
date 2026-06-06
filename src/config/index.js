@@ -1,5 +1,19 @@
 require('dotenv').config({ quiet: true });
 
+function parsePositiveInt(value, fallback) {
+  const parsed = parseInt(value, 10);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+function parseTrustProxy(value) {
+  if (!value) return false;
+  if (/^\d+$/.test(value)) return parseInt(value, 10);
+  return value
+    .split(',')
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+}
+
 function requireEnv(key) {
   var value = process.env[key];
   if (!value) {
@@ -71,6 +85,16 @@ const config = {
     authScheme: process.env.SMS_AUTH_SCHEME || 'Bearer',
   },
 
+  providers: {
+    allowStubs:
+      process.env.ALLOW_PROVIDER_STUBS === 'true' ||
+      process.env.NODE_ENV === 'development' ||
+      process.env.NODE_ENV === 'test',
+    timeoutMs: parsePositiveInt(process.env.PROVIDER_TIMEOUT_MS, 5000),
+    retries: parsePositiveInt(process.env.PROVIDER_RETRIES, 2),
+    retryBackoffMs: parsePositiveInt(process.env.PROVIDER_RETRY_BACKOFF_MS, 250),
+  },
+
   // Email
   email: {
     host: process.env.EMAIL_HOST || 'smtp.ethereal.email',
@@ -79,6 +103,9 @@ const config = {
     user: process.env.EMAIL_USER || '',
     password: process.env.EMAIL_PASSWORD || '',
     from: process.env.EMAIL_FROM || '"VacciniKids" <noreply@vaccinikids.ma>',
+    configured: Boolean(
+      process.env.EMAIL_HOST && process.env.EMAIL_USER && process.env.EMAIL_PASSWORD,
+    ),
   },
   // Firebase
   firebase: {
@@ -95,8 +122,48 @@ const config = {
 
   // Rate Limiting
   rateLimit: {
-    windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS, 10) || 900000,
-    max: parseInt(process.env.RATE_LIMIT_MAX, 10) || 100,
+    redisUrl: process.env.RATE_LIMIT_REDIS_URL || process.env.REDIS_URL || '',
+    useSharedStore: process.env.NODE_ENV !== 'test' || process.env.RATE_LIMIT_TEST_REDIS === 'true',
+    requireSharedStore:
+      process.env.RATE_LIMIT_REQUIRE_REDIS === 'true' || process.env.NODE_ENV === 'production',
+    profiles: {
+      api: {
+        windowMs: parsePositiveInt(process.env.RATE_LIMIT_API_WINDOW_MS, 15 * 60 * 1000),
+        max: parsePositiveInt(process.env.RATE_LIMIT_API_MAX, 300),
+      },
+      otp: {
+        windowMs: parsePositiveInt(process.env.RATE_LIMIT_OTP_WINDOW_MS, 15 * 60 * 1000),
+        max: parsePositiveInt(process.env.RATE_LIMIT_OTP_MAX, 5),
+      },
+      login: {
+        windowMs: parsePositiveInt(process.env.RATE_LIMIT_LOGIN_WINDOW_MS, 15 * 60 * 1000),
+        max: parsePositiveInt(process.env.RATE_LIMIT_LOGIN_MAX, 10),
+      },
+      refresh: {
+        windowMs: parsePositiveInt(process.env.RATE_LIMIT_REFRESH_WINDOW_MS, 5 * 60 * 1000),
+        max: parsePositiveInt(process.env.RATE_LIMIT_REFRESH_MAX, 30),
+      },
+      exports: {
+        windowMs: parsePositiveInt(process.env.RATE_LIMIT_EXPORT_WINDOW_MS, 60 * 60 * 1000),
+        max: parsePositiveInt(process.env.RATE_LIMIT_EXPORT_MAX, 20),
+      },
+      kiosk: {
+        windowMs: parsePositiveInt(process.env.RATE_LIMIT_KIOSK_WINDOW_MS, 60 * 1000),
+        max: parsePositiveInt(process.env.RATE_LIMIT_KIOSK_MAX, 120),
+      },
+    },
+  },
+  trustProxy: parseTrustProxy(process.env.TRUST_PROXY),
+
+  audit: {
+    externalUrl: process.env.AUDIT_EXTERNAL_URL || '',
+    externalSecret: process.env.AUDIT_EXTERNAL_SECRET || '',
+    externalRequired:
+      process.env.AUDIT_EXTERNAL_REQUIRED === 'true' || process.env.NODE_ENV === 'production',
+  },
+
+  metrics: {
+    token: process.env.METRICS_BEARER_TOKEN || '',
   },
 
   swaggerEnabled: process.env.SWAGGER_ENABLED
