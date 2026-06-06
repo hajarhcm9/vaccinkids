@@ -35,6 +35,26 @@ npm run docker:test
 Le rôle `DB_USER` doit pouvoir créer et supprimer la base dédiée dont le nom finit par
 `_test`. Le script affiche l'hôte, le port, le rôle et une aide ciblée en cas d'échec.
 
+## Interfaces web
+
+Le web admin utilise un refresh cookie `HttpOnly`, `Secure` en production et
+`SameSite=Strict`. Le token d'accès reste uniquement en mémoire et chaque refresh/logout
+exige le jeton CSRF retourné lors du login.
+
+La waiting room utilise une identité kiosk dédiée et ne reçoit jamais de token personnel.
+Un administrateur crée, tourne ou révoque une identité via `/api/kiosks`. Le secret n'est
+retourné qu'à la création ou rotation. Chaque token kiosk expire après 15 minutes et ne
+peut lire que `/api/file-attente/kiosk` pour son centre lié.
+
+## Identité mobile
+
+- Parent Android/iOS : `ma.vaccinikids.parent`, produit affiché `VacciniKids`.
+- Staff/admin Android : application combinée `ma.vaccinikids.staff`, affichée
+  `VacciniKids Staff`.
+- Les releases Android exigent des keystores externes au dépôt.
+- La signature Apple et les profils de provisioning restent à injecter dans le pipeline
+  de distribution ; la CI compile le simulateur sans signature.
+
 La migration `013_harden_refresh_tokens.sql` déduplique et remplace les refresh tokens
 historiques en clair par leur hash SHA-256. Elle exige le droit de créer ou d'utiliser
 `pgcrypto`.

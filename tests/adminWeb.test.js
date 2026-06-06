@@ -22,7 +22,9 @@ describe('Phase 5 - Admin Web Interface', () => {
 
     expect(scriptRes.status).toBe(200);
     expect(scriptRes.headers['content-type']).toContain('javascript');
-    expect(scriptRes.text).toContain('/api/auth/personnel/login');
+    expect(scriptRes.text).toContain('/api/auth/web-admin/login');
+    expect(scriptRes.text).not.toContain('localStorage');
+    expect(scriptRes.text).not.toContain('refreshToken');
 
     expect(styleRes.status).toBe(200);
     expect(styleRes.headers['content-type']).toContain('text/css');

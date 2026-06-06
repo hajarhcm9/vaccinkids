@@ -95,6 +95,8 @@ app.use('/waiting-room', express.static(path.join(__dirname, '..', 'public', 'wa
 // ============================================
 if (process.env.NODE_ENV !== 'test') app.use('/api/auth', authLimiter);
 app.use('/api/auth', require('./routes/authRoutes'));
+if (process.env.NODE_ENV !== 'test') app.use('/api/kiosks/login', authLimiter);
+app.use('/api/kiosks', require('./routes/kioskRoutes'));
 app.use('/api/sessions', require('./routes/sessionRoutes'));
 app.use('/api/vaccins', require('./routes/vaccinRoutesFull'));
 app.use('/api/rendez-vous', require('./routes/rendezVousRoutes'));

@@ -5,6 +5,7 @@ const { authenticate } = require('../middleware/authMiddleware');
 const { validate, schemas } = require('../middleware/validationMiddleware');
 const { checkAccountLock } = require('../middleware/bruteForceProtection');
 const { passwordStrengthCheck } = require('../middleware/passwordStrengthMiddleware');
+const requireWebCsrf = require('../middleware/webCsrf');
 
 // PUBLIC
 router.post('/parent/send-otp', validate(schemas.sendOTP), AuthController.sendOTP);
@@ -16,6 +17,9 @@ router.post(
   AuthController.personnelLogin,
 );
 router.post('/refresh', AuthController.refreshToken);
+router.post('/web-admin/login', checkAccountLock, AuthController.webAdminLogin);
+router.post('/web-admin/refresh', requireWebCsrf, AuthController.webAdminRefresh);
+router.post('/web-admin/logout', requireWebCsrf, AuthController.webAdminLogout);
 
 // PROTECTED
 router.post(

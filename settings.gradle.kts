@@ -13,5 +13,5 @@ dependencyResolutionManagement {
         maven("https://jitpack.io") // <--- LIGNE AJOUTÉE POUR MPAndroidChart
     }
 }
-rootProject.name = "vaccinkid"
+rootProject.name = "VacciniKidsStaff"
 include(":app")

@@ -10,6 +10,7 @@ var controller = require('../controllers/fileAttenteController');
 
 router.use(authenticate);
 
+router.get('/kiosk', authorize('kiosk'), controller.getKioskQueue);
 router.post('/', authorize('parent'), controller.joinQueue);
 router.get('/centre/:centreId', authorize('admin', 'infirmier'), controller.getQueueByCentre);
 router.get('/session/:sessionId', authorize('admin', 'infirmier'), controller.getQueueBySession);

@@ -13,20 +13,17 @@
           <p class="eyebrow">VacciniKids</p>
           <h1>Affichage file d'attente</h1>
 
-          <label for="cin">CIN personnel</label>
-          <input id="cin" name="cin" autocomplete="username" value="INFIRM01" required />
+          <label for="code">Code kiosk</label>
+          <input id="code" name="code" autocomplete="username" required />
 
-          <label for="password">Mot de passe</label>
+          <label for="secret">Secret d'activation</label>
           <input
-            id="password"
-            name="password"
+            id="secret"
+            name="secret"
             type="password"
             autocomplete="current-password"
             required
           />
-
-          <label for="centreId">Centre ID</label>
-          <input id="centreId" name="centreId" inputmode="numeric" value="1" required />
 
           <button type="submit" id="connectButton">Lancer l'affichage</button>
           <p class="error" id="setupError" role="alert"></p>

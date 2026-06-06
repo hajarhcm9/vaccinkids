@@ -10,5 +10,7 @@ JAVA_HOME=$(/usr/libexec/java_home -v 17) \
 ```
 
 Installer et tester l'APK sur appareil physique, notamment login, scan QR, vaccination,
-stock et synchronisation hors ligne. Le package `com.example.vaccinkid` doit encore être
-remplacé avant publication.
+stock et synchronisation hors ligne. Le package de publication est
+`ma.vaccinikids.staff`. Les parcours infirmier et admin restent regroupés dans une seule
+application staff pour le pilote. La signature release doit être fournie par les variables
+`STAFF_ANDROID_RELEASE_*` et le keystore doit rester hors du dépôt.

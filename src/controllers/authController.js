@@ -11,6 +11,31 @@ const ApiError = require('../utils/ApiError');
 const catchAsync = require('../utils/catchAsync');
 const { isValidMoroccanPhone, normalizePhone, isValidCIN } = require('../utils/validator');
 const { success, created } = require('../utils/responseHandler');
+const { parseCookies, cookieOptions, createCsrfToken } = require('../utils/cookies');
+
+const WEB_REFRESH_COOKIE = 'vk_admin_refresh';
+const WEB_CSRF_COOKIE = 'vk_admin_csrf';
+const WEB_COOKIE_PATH = '/api/auth/web-admin';
+
+const setWebAdminCookies = (res, refreshToken) => {
+  const csrfToken = createCsrfToken();
+  res.cookie(
+    WEB_REFRESH_COOKIE,
+    refreshToken,
+    cookieOptions({ httpOnly: true, maxAge: 7 * 24 * 60 * 60 * 1000, path: WEB_COOKIE_PATH }),
+  );
+  res.cookie(
+    WEB_CSRF_COOKIE,
+    csrfToken,
+    cookieOptions({ maxAge: 7 * 24 * 60 * 60 * 1000, path: WEB_COOKIE_PATH }),
+  );
+  return csrfToken;
+};
+
+const clearWebAdminCookies = (res) => {
+  res.clearCookie(WEB_REFRESH_COOKIE, cookieOptions({ httpOnly: true, path: WEB_COOKIE_PATH }));
+  res.clearCookie(WEB_CSRF_COOKIE, cookieOptions({ path: WEB_COOKIE_PATH }));
+};
 
 const AuthController = {
   // ---- PARENT OTP AUTH ----
@@ -185,6 +210,52 @@ const AuthController = {
         expiresIn: tokens.accessTokenExpiry,
       },
     });
+  }),
+
+  webAdminLogin: catchAsync(async (req, res, next) => {
+    const { cin, mot_de_passe } = req.body;
+    if (!cin || !mot_de_passe) return next(ApiError.badRequest('CIN and password are required'));
+    const personnel = await Personnel.findByCIN(cin);
+    if (!personnel || !(await bcrypt.compare(mot_de_passe, personnel.mot_de_passe))) {
+      await handleFailedLogin(cin);
+      return next(ApiError.unauthorized('Invalid admin credentials'));
+    }
+    if (personnel.role !== 'admin' || !personnel.est_actif) {
+      return next(ApiError.forbidden('Active admin account required'));
+    }
+    await handleSuccessfulLogin(cin);
+    const tokens = await TokenService.generateAuthTokens({ id: personnel.id, role: 'admin' });
+    const csrfToken = setWebAdminCookies(res, tokens.refreshToken);
+    return success(res, 200, 'Web admin login successful', {
+      accessToken: tokens.accessToken,
+      expiresIn: tokens.accessTokenExpiry,
+      csrfToken,
+    });
+  }),
+
+  webAdminRefresh: catchAsync(async (req, res, next) => {
+    const refreshToken = parseCookies(req.headers.cookie)[WEB_REFRESH_COOKIE];
+    if (!refreshToken) return next(ApiError.unauthorized('Web admin session expired'));
+    const tokens = await TokenService.refreshAuthTokens(refreshToken);
+    const decoded = TokenService.verifyAccessToken(tokens.accessToken);
+    if (decoded.role !== 'admin') {
+      await TokenService.revokeToken(tokens.refreshToken);
+      clearWebAdminCookies(res);
+      return next(ApiError.forbidden('Admin session required'));
+    }
+    const csrfToken = setWebAdminCookies(res, tokens.refreshToken);
+    return success(res, 200, 'Web admin session refreshed', {
+      accessToken: tokens.accessToken,
+      expiresIn: tokens.accessTokenExpiry,
+      csrfToken,
+    });
+  }),
+
+  webAdminLogout: catchAsync(async (req, res) => {
+    const refreshToken = parseCookies(req.headers.cookie)[WEB_REFRESH_COOKIE];
+    if (refreshToken) await TokenService.revokeToken(refreshToken);
+    clearWebAdminCookies(res);
+    return success(res, 200, 'Web admin logged out');
   }),
 
   // ---- COMMON ----

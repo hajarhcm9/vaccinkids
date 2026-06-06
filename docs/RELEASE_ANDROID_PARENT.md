@@ -14,4 +14,4 @@ JAVA_HOME=$(/usr/libexec/java_home -v 17) ./android/gradlew -p android app:bundl
 ```
 
 Sauvegarder la clé hors Git dans au moins deux emplacements contrôlés. Les identifiants
-`com.projetetemp` et `ProjeteTemp` doivent encore être remplacés avant publication.
+L'identité de publication est `ma.vaccinikids.parent` et le nom affiché est `VacciniKids`.

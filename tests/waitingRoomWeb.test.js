@@ -22,7 +22,10 @@ describe('Phase 5 - Waiting Room Display', () => {
 
     expect(scriptRes.status).toBe(200);
     expect(scriptRes.headers['content-type']).toContain('javascript');
-    expect(scriptRes.text).toContain('/api/file-attente/centre/');
+    expect(scriptRes.text).toContain('/api/file-attente/kiosk');
+    expect(scriptRes.text).toContain('/api/kiosks/login');
+    expect(scriptRes.text).not.toContain('/api/auth/personnel/login');
+    expect(scriptRes.text).not.toContain('localStorage');
 
     expect(styleRes.status).toBe(200);
     expect(styleRes.headers['content-type']).toContain('text/css');

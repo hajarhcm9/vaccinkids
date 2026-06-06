@@ -4,12 +4,23 @@ plugins {
     id("org.jetbrains.kotlin.kapt")
 }
 
+val releaseStoreFile = providers.environmentVariable("STAFF_ANDROID_RELEASE_STORE_FILE").orNull
+val releaseStorePassword = providers.environmentVariable("STAFF_ANDROID_RELEASE_STORE_PASSWORD").orNull
+val releaseKeyAlias = providers.environmentVariable("STAFF_ANDROID_RELEASE_KEY_ALIAS").orNull
+val releaseKeyPassword = providers.environmentVariable("STAFF_ANDROID_RELEASE_KEY_PASSWORD").orNull
+val hasReleaseSigning = listOf(
+    releaseStoreFile,
+    releaseStorePassword,
+    releaseKeyAlias,
+    releaseKeyPassword
+).all { !it.isNullOrBlank() }
+
 android {
     namespace = "com.example.vaccinkid"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.example.vaccinkid"
+        applicationId = "ma.vaccinikids.staff"
         minSdk = 24
         versionCode = 1
         versionName = "1.0"
@@ -18,6 +29,17 @@ android {
         val debugApiUrl = providers.environmentVariable("STAFF_API_BASE_URL").orNull
             ?: "http://10.0.2.2:3000/api/"
         buildConfigField("String", "API_BASE_URL", "\"${debugApiUrl.trimEnd('/')}/\"")
+    }
+
+    signingConfigs {
+        if (hasReleaseSigning) {
+            create("release") {
+                storeFile = file(releaseStoreFile!!)
+                storePassword = releaseStorePassword
+                keyAlias = releaseKeyAlias
+                keyPassword = releaseKeyPassword
+            }
+        }
     }
 
     buildTypes {
@@ -29,6 +51,7 @@ android {
                 ?: "https://invalid.example/api/"
             buildConfigField("String", "API_BASE_URL", "\"${releaseApiUrl.trimEnd('/')}/\"")
             manifestPlaceholders["networkSecurityConfig"] = "@xml/network_security_config_release"
+            if (hasReleaseSigning) signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -53,6 +76,9 @@ gradle.taskGraph.whenReady {
         val releaseApiUrl = providers.environmentVariable("STAFF_API_BASE_URL").orNull
         require(releaseApiUrl?.startsWith("https://") == true) {
             "STAFF_API_BASE_URL must be set to an HTTPS URL for release builds"
+        }
+        require(hasReleaseSigning) {
+            "Staff release signing variables are required; debug signing is forbidden"
         }
     }
 }

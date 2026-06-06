@@ -1,9 +1,8 @@
 (function () {
-  const tokenKey = 'vaccinkids.admin.accessToken';
-  const refreshTokenKey = 'vaccinkids.admin.refreshToken';
   const state = {
-    accessToken: localStorage.getItem(tokenKey),
-    refreshToken: localStorage.getItem(refreshTokenKey),
+    accessToken: null,
+    csrfToken: null,
+    refreshPromise: null,
   };
 
   const loginView = document.getElementById('loginView');
@@ -46,9 +45,10 @@
       .replace(/'/g, '&#039;');
   }
 
-  async function api(path, options) {
+  async function request(path, options) {
     const response = await fetch(path, {
       ...options,
+      credentials: 'same-origin',
       headers: {
         Accept: 'application/json',
         'Content-Type': 'application/json',
@@ -63,6 +63,38 @@
     return payload;
   }
 
+  async function refreshSession() {
+    if (!state.csrfToken) throw new Error('Session admin expiree.');
+    if (!state.refreshPromise) {
+      state.refreshPromise = request('/api/auth/web-admin/refresh', {
+        method: 'POST',
+        headers: { 'X-CSRF-Token': state.csrfToken },
+      })
+        .then((payload) => {
+          const session = unwrap(payload) || {};
+          state.accessToken = session.accessToken;
+          state.csrfToken = session.csrfToken;
+          return state.accessToken;
+        })
+        .finally(() => {
+          state.refreshPromise = null;
+        });
+    }
+    return state.refreshPromise;
+  }
+
+  async function api(path, options, retry = true) {
+    try {
+      return await request(path, options);
+    } catch (error) {
+      if (retry && state.csrfToken && /401|token|auth|session/i.test(error.message)) {
+        await refreshSession();
+        return request(path, options);
+      }
+      throw error;
+    }
+  }
+
   function showDashboard() {
     loginView.classList.add('hidden');
     dashboardView.classList.remove('hidden');
@@ -73,18 +105,14 @@
     loginView.classList.remove('hidden');
   }
 
-  function saveTokens(tokens) {
-    state.accessToken = tokens.accessToken;
-    state.refreshToken = tokens.refreshToken;
-    localStorage.setItem(tokenKey, state.accessToken);
-    localStorage.setItem(refreshTokenKey, state.refreshToken || '');
+  function saveSession(session) {
+    state.accessToken = session.accessToken;
+    state.csrfToken = session.csrfToken;
   }
 
-  function clearTokens() {
+  function clearSession() {
     state.accessToken = null;
-    state.refreshToken = null;
-    localStorage.removeItem(tokenKey);
-    localStorage.removeItem(refreshTokenKey);
+    state.csrfToken = null;
   }
 
   function renderKpis(stats) {
@@ -215,7 +243,7 @@
     } catch (error) {
       setError(dashboardError, error.message);
       if (/401|403|token|auth/i.test(error.message)) {
-        clearTokens();
+        clearSession();
         showLogin();
       }
     } finally {
@@ -230,43 +258,43 @@
 
     try {
       const form = new FormData(loginForm);
-      const payload = await api('/api/auth/personnel/login', {
+      const payload = await request('/api/auth/web-admin/login', {
         method: 'POST',
         body: JSON.stringify({
           cin: form.get('cin'),
           mot_de_passe: form.get('password'),
         }),
       });
-      const auth = unwrap(payload) || {};
-      const tokens = auth.tokens || auth;
-      const user = auth.user || {};
-      if (!tokens.accessToken || user.role !== 'admin') {
-        throw new Error('Compte admin requis.');
-      }
-      saveTokens(tokens);
+      const session = unwrap(payload) || {};
+      if (!session.accessToken || !session.csrfToken) throw new Error('Compte admin requis.');
+      saveSession(session);
       showDashboard();
       await loadDashboard();
     } catch (error) {
-      clearTokens();
+      clearSession();
       setError(loginError, error.message);
     } finally {
       loginButton.disabled = false;
     }
   }
 
-  function handleLogout() {
-    clearTokens();
-    showLogin();
+  async function handleLogout() {
+    try {
+      if (state.csrfToken) {
+        await request('/api/auth/web-admin/logout', {
+          method: 'POST',
+          headers: { 'X-CSRF-Token': state.csrfToken },
+        });
+      }
+    } finally {
+      clearSession();
+      showLogin();
+    }
   }
 
   loginForm.addEventListener('submit', handleLogin);
   refreshButton.addEventListener('click', loadDashboard);
   logoutButton.addEventListener('click', handleLogout);
 
-  if (state.accessToken) {
-    showDashboard();
-    loadDashboard();
-  } else {
-    showLogin();
-  }
+  showLogin();
 })();

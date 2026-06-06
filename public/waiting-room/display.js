@@ -1,9 +1,6 @@
 (function () {
-  const tokenKey = 'vaccinkids.waitingRoom.accessToken';
-  const centreKey = 'vaccinkids.waitingRoom.centreId';
   const state = {
-    token: localStorage.getItem(tokenKey),
-    centreId: localStorage.getItem(centreKey),
+    token: null,
     timer: null,
   };
 
@@ -70,17 +67,13 @@
     displayView.classList.remove('hidden');
   }
 
-  function entryName(entry) {
-    return [entry.bebe_prenom, entry.bebe_nom].filter(Boolean).join(' ') || 'Patient';
-  }
-
   function renderQueue(entries) {
     const serving = entries.find((entry) => entry.statut === 'EN_COURS');
     const waiting = entries.filter((entry) => entry.statut === 'EN_ATTENTE');
     const done = entries.filter((entry) => entry.statut === 'TERMINE');
 
     currentNumber.textContent = serving ? String(serving.numero_attente).padStart(2, '0') : '--';
-    currentName.textContent = serving ? entryName(serving) : 'Aucun enfant appele';
+    currentName.textContent = serving ? 'Veuillez vous presenter' : 'Aucun numero appele';
 
     waitingCount.textContent = `${waiting.length} en attente`;
     totalCount.textContent = String(entries.length);
@@ -98,7 +91,7 @@
         (entry) => `
           <li>
             <strong>${escapeHtml(String(entry.numero_attente).padStart(2, '0'))}</strong>
-            <span>${escapeHtml(entryName(entry))}</span>
+            <span>En attente</span>
           </li>
         `,
       )
@@ -106,11 +99,11 @@
   }
 
   async function refreshQueue() {
-    if (!state.centreId) return;
+    if (!state.token) return;
     setError(displayError, '');
 
     try {
-      const payload = await api(`/api/file-attente/centre/${encodeURIComponent(state.centreId)}`);
+      const payload = await api('/api/file-attente/kiosk');
       const data = unwrap(payload) || {};
       renderQueue(Array.isArray(data.entries) ? data.entries : []);
       syncTime.textContent = `Mis a jour ${new Date().toLocaleTimeString('fr-FR', {
@@ -120,7 +113,6 @@
     } catch (error) {
       setError(displayError, error.message);
       if (/401|403|token|auth/i.test(error.message)) {
-        localStorage.removeItem(tokenKey);
         state.token = null;
         showSetup();
       }
@@ -141,29 +133,16 @@
 
     try {
       const form = new FormData(setupForm);
-      const centreId = String(form.get('centreId') || '').trim();
-      if (!/^\d+$/.test(centreId)) {
-        throw new Error('Centre ID invalide.');
-      }
-
-      const payload = await api('/api/auth/personnel/login', {
+      const payload = await api('/api/kiosks/login', {
         method: 'POST',
         body: JSON.stringify({
-          cin: form.get('cin'),
-          mot_de_passe: form.get('password'),
+          code: form.get('code'),
+          secret: form.get('secret'),
         }),
       });
       const auth = unwrap(payload) || {};
-      const tokens = auth.tokens || auth;
-      const user = auth.user || {};
-      if (!tokens.accessToken || !['admin', 'infirmier'].includes(user.role)) {
-        throw new Error('Compte admin ou infirmier requis.');
-      }
-
-      state.token = tokens.accessToken;
-      state.centreId = centreId;
-      localStorage.setItem(tokenKey, state.token);
-      localStorage.setItem(centreKey, state.centreId);
+      if (!auth.accessToken) throw new Error('Identite kiosk requise.');
+      state.token = auth.accessToken;
 
       startDisplay();
     } catch (error) {
@@ -182,7 +161,6 @@
   }
 
   function handleExit() {
-    localStorage.removeItem(tokenKey);
     state.token = null;
     showSetup();
   }
@@ -192,9 +170,5 @@
   setInterval(tickClock, 1000);
   tickClock();
 
-  if (state.token && state.centreId) {
-    startDisplay();
-  } else {
-    showSetup();
-  }
+  showSetup();
 })();

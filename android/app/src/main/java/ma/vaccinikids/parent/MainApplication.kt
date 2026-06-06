@@ -1,4 +1,4 @@
-package com.projetetemp
+package ma.vaccinikids.parent
 
 import android.app.Application
 import com.facebook.react.PackageList

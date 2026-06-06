@@ -11,6 +11,7 @@ const sensitiveFields = new Set([
   'privateKey',
   'accessToken',
   'refreshToken',
+  'secret',
   'token',
 ]);
 
