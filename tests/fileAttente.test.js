@@ -4,6 +4,7 @@ const { pool } = require('../src/config/database');
 afterAll(() => pool.end());
 
 describe("Day 21 - File d'attente digitale", () => {
+  const runId = Date.now().toString().slice(-6);
   let adminToken, nurseToken, parentToken, parentToken2;
   let adminApp;
   let centreId = 1;
@@ -38,7 +39,7 @@ describe("Day 21 - File d'attente digitale", () => {
       .send({
         centre_id: centreId,
         vaccin_id: 1,
-        date_session: '2030-06-01',
+        date_session: new Date().toISOString().slice(0, 10),
         heure_debut: '08:00',
         heure_fin: '12:00',
         max_inscriptions: 20,
@@ -49,7 +50,7 @@ describe("Day 21 - File d'attente digitale", () => {
     const bebeRes = await request(adminApp)
       .post('/api/carnet/bebe')
       .set('Authorization', 'Bearer ' + parentToken)
-      .send({ prenom: 'TestQueue', nom: 'Baby', date_naissance: '2024-01-15', sexe: 'M' });
+      .send({ prenom: 'TestQueue' + runId, nom: 'Baby', date_naissance: '2024-01-15', sexe: 'M' });
     bebeId = bebeRes.body.data?.bebe?.id || bebeRes.body.data?.id;
 
     // Book an appointment
@@ -68,7 +69,7 @@ describe("Day 21 - File d'attente digitale", () => {
     const bebeRes2 = await request(adminApp)
       .post('/api/carnet/bebe')
       .set('Authorization', 'Bearer ' + parentToken2)
-      .send({ prenom: 'OtherQueue', nom: 'Baby', date_naissance: '2024-02-15', sexe: 'F' });
+      .send({ prenom: 'OtherQueue' + runId, nom: 'Baby', date_naissance: '2024-02-15', sexe: 'F' });
     bebeId2 = bebeRes2.body.data?.bebe?.id || bebeRes2.body.data?.id;
 
     const rdvRes2 = await request(adminApp)
@@ -76,6 +77,18 @@ describe("Day 21 - File d'attente digitale", () => {
       .set('Authorization', 'Bearer ' + parentToken2)
       .send({ session_id: sessionId, bebe_id: bebeId2 });
     rdvId2 = rdvRes2.body.data?.rendez_vous?.id || rdvRes2.body.data?.id;
+
+    await request(adminApp)
+      .patch('/api/sessions/' + sessionId + '/confirm')
+      .set('Authorization', 'Bearer ' + adminToken);
+    await request(adminApp)
+      .patch('/api/rendez-vous/' + rdvId)
+      .set('Authorization', 'Bearer ' + nurseToken)
+      .send({ statut: 'CONFIRME' });
+    await request(adminApp)
+      .patch('/api/rendez-vous/' + rdvId2)
+      .set('Authorization', 'Bearer ' + nurseToken)
+      .send({ statut: 'CONFIRME' });
   });
 
   // ==========================================

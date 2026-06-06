@@ -24,13 +24,7 @@ const translations = {
     center: 'Centre Es-Salaam · Oujda',
     language: 'Langue',
     account: 'Mon compte',
-    children: 'Gérer mes enfants',
     notifications: 'Notifications',
-    personalInfo: 'Informations personnelles',
-    info: 'Informations',
-    terms: "Conditions d'utilisation",
-    privacy: 'Politique de confidentialité',
-    about: 'À propos de VacciniKids',
     logout: 'Se déconnecter',
     logoutTitle: 'Déconnexion',
     logoutMessage: 'Voulez-vous vraiment vous déconnecter ?',
@@ -41,13 +35,7 @@ const translations = {
     center: 'مركز السلام · وجدة',
     language: 'اللغة',
     account: 'حسابي',
-    children: 'إدارة أطفالي',
     notifications: 'الإشعارات',
-    personalInfo: 'المعلومات الشخصية',
-    info: 'معلومات',
-    terms: 'شروط الاستخدام',
-    privacy: 'سياسة الخصوصية',
-    about: 'حول VacciniKids',
     logout: 'تسجيل الخروج',
     logoutTitle: 'تسجيل الخروج',
     logoutMessage: 'هل تريد تسجيل الخروج فعلاً؟',
@@ -142,24 +130,11 @@ const ProfileScreen = ({ navigation, onLanguageChange }) => {
 
         <Text style={[styles.sectionTitle, isRTL && styles.textRTL]}>{t.account}</Text>
         <View style={styles.menuCard}>
-          <MenuRow icon="👶" label={t.children} onPress={() => {}} />
-          <View style={styles.menuDivider} />
           <MenuRow
             icon="🔔"
             label={t.notifications}
             onPress={() => navigation.navigate('Notifications')}
           />
-          <View style={styles.menuDivider} />
-          <MenuRow icon="📱" label={t.personalInfo} onPress={() => {}} />
-        </View>
-
-        <Text style={[styles.sectionTitle, isRTL && styles.textRTL]}>{t.info}</Text>
-        <View style={styles.menuCard}>
-          <MenuRow icon="📋" label={t.terms} onPress={() => {}} />
-          <View style={styles.menuDivider} />
-          <MenuRow icon="🔒" label={t.privacy} onPress={() => {}} />
-          <View style={styles.menuDivider} />
-          <MenuRow icon="ℹ️" label={t.about} onPress={() => {}} />
         </View>
 
         <View style={styles.menuCard}>

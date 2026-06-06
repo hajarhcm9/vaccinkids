@@ -26,13 +26,16 @@ const AppointmentsScreen = ({ navigation }) => {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState('');
 
   const loadData = useCallback(async () => {
     try {
+      setError('');
       const res = await sessionService.getMyBookings();
       setBookings(res.bookings);
     } catch (err) {
       console.error(err);
+      setError(err.message || 'Rendez-vous indisponibles.');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -139,6 +142,7 @@ const AppointmentsScreen = ({ navigation }) => {
           <Text style={styles.addBtnText}>+ Nouveau</Text>
         </TouchableOpacity>
       </View>
+      {!!error && <Text style={styles.errorBanner}>{error}</Text>}
 
       {sections.length === 0 ? (
         <View style={styles.emptyContainer}>
@@ -293,6 +297,12 @@ const styles = StyleSheet.create({
     color: colors.white,
     fontSize: typography.fontSizes.sm,
     fontWeight: typography.fontWeights.semibold,
+  },
+  errorBanner: {
+    color: colors.danger,
+    backgroundColor: colors.dangerLight,
+    padding: spacing.sm,
+    textAlign: 'center',
   },
 });
 

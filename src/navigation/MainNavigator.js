@@ -11,6 +11,7 @@ import HealthBookScreen from '../screens/main/HealthBookScreen';
 import ProfileScreen from '../screens/main/ProfileScreen';
 import NotificationsScreen from '../screens/main/NotificationsScreen';
 import QueueScreen from '../screens/main/QueueScreen';
+import AddBabyScreen from '../screens/auth/AddBabyScreen';
 
 import { preferencesService } from '../services/preferencesService';
 import { mobileNotificationService } from '../services/mobileNotificationService';
@@ -61,6 +62,7 @@ const HomeStack = () => (
     <Stack.Screen name="HomeMain" component={HomeScreen} />
     <Stack.Screen name="SessionDetail" component={SessionDetailScreen} />
     <Stack.Screen name="Queue" component={QueueScreen} />
+    <Stack.Screen name="AddBaby" component={AddBabyScreen} />
   </Stack.Navigator>
 );
 
@@ -132,7 +134,7 @@ const MainNavigator = () => {
         component={AppointmentsScreen}
         options={{
           tabBarLabel: t.appointments,
-          tabBarIcon: ({ focused }) => <TabIcon emoji="📅" focused={focused} badge={2} />,
+          tabBarIcon: ({ focused }) => <TabIcon emoji="📅" focused={focused} />,
         }}
       />
       <Tab.Screen

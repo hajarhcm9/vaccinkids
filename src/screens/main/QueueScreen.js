@@ -33,7 +33,10 @@ const QueueScreen = ({ navigation }) => {
       setQueue(queueStatus);
       setBookings(
         bookingResult.bookings.filter(
-          (booking) => ['confirmed', 'pending'].includes(booking.status) && booking.raw?.centre_id,
+          (booking) =>
+            booking.status === 'confirmed' &&
+            ['CONFIRMEE', 'EN_COURS'].includes(booking.session?.rawStatus) &&
+            booking.raw?.centre_id,
         ),
       );
     } catch (loadError) {
@@ -119,9 +122,6 @@ const QueueScreen = ({ navigation }) => {
             />
           }
         >
-          {queue?.isOffline && (
-            <Text style={styles.offline}>Mode hors ligne · dernière position</Text>
-          )}
           {!!error && <Text style={styles.error}>{error}</Text>}
 
           {activeEntry ? (
@@ -145,15 +145,13 @@ const QueueScreen = ({ navigation }) => {
                   <Text style={styles.metricLabel}>Attente estimée</Text>
                 </View>
               </View>
-              {!queue.isOffline && (
-                <TouchableOpacity
-                  style={styles.leaveButton}
-                  onPress={leaveQueue}
-                  disabled={actionLoading}
-                >
-                  <Text style={styles.leaveText}>Quitter la file</Text>
-                </TouchableOpacity>
-              )}
+              <TouchableOpacity
+                style={styles.leaveButton}
+                onPress={leaveQueue}
+                disabled={actionLoading}
+              >
+                <Text style={styles.leaveText}>Quitter la file</Text>
+              </TouchableOpacity>
             </View>
           ) : (
             <>
@@ -217,13 +215,6 @@ const styles = StyleSheet.create({
   headerSubtitle: { color: 'rgba(255,255,255,0.75)', fontSize: typography.fontSizes.xs },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   content: { padding: spacing.lg, paddingBottom: spacing.xxxl },
-  offline: {
-    color: colors.warning,
-    backgroundColor: colors.warningLight,
-    padding: spacing.sm,
-    textAlign: 'center',
-    marginBottom: spacing.md,
-  },
   error: {
     color: colors.danger,
     backgroundColor: colors.dangerLight,

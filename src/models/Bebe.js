@@ -29,6 +29,19 @@ const Bebe = {
     return result.rows;
   },
 
+  async findDuplicate(parentId, data) {
+    const result = await query(
+      `SELECT id FROM bebe
+       WHERE parent_id = $1
+         AND LOWER(prenom) = LOWER($2)
+         AND LOWER(nom) = LOWER($3)
+         AND date_naissance = $4
+       LIMIT 1`,
+      [parentId, data.prenom, data.nom, data.date_naissance],
+    );
+    return result.rows[0] || null;
+  },
+
   async update(id, data) {
     const fields = [];
     const values = [id];

@@ -29,9 +29,11 @@ const SessionsScreen = ({ navigation }) => {
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState('');
 
   const loadData = useCallback(async () => {
     try {
+      setError('');
       const [sessRes, bookRes] = await Promise.all([
         sessionService.getSessions(),
         sessionService.getMyBookings(),
@@ -41,6 +43,7 @@ const SessionsScreen = ({ navigation }) => {
       applyFilters(sessRes.sessions, filter, search);
     } catch (err) {
       console.error(err);
+      setError(err.message || 'Sessions indisponibles.');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -94,6 +97,7 @@ const SessionsScreen = ({ navigation }) => {
         <Text style={styles.headerTitle}>Sessions de vaccination</Text>
         <Text style={styles.headerSub}>{filtered.length} session(s) trouvée(s)</Text>
       </View>
+      {!!error && <Text style={styles.errorBanner}>{error}</Text>}
 
       <View style={styles.searchRow}>
         <View style={styles.searchBox}>
@@ -249,6 +253,12 @@ const styles = StyleSheet.create({
   emptySubtitle: {
     fontSize: typography.fontSizes.sm,
     color: colors.textSecondary,
+    textAlign: 'center',
+  },
+  errorBanner: {
+    color: colors.danger,
+    backgroundColor: colors.dangerLight,
+    padding: spacing.sm,
     textAlign: 'center',
   },
 });

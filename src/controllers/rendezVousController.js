@@ -94,6 +94,13 @@ const RendezVousController = {
     }
 
     const rdv = await authorization.assertRendezVousAccess(req.user, rdvId);
+    if (
+      req.user.role === 'parent' &&
+      (!['EN_ATTENTE', 'CONFIRME', 'EN_LISTE_ATTENTE'].includes(rdv.statut) ||
+        ['EN_COURS', 'TERMINEE', 'ANNULEE'].includes(rdv.session_statut))
+    ) {
+      return next(ApiError.badRequest('This appointment can no longer be cancelled'));
+    }
 
     // If confirming, assign queue number
     let updated;

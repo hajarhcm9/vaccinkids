@@ -7,6 +7,8 @@ const { success, created } = require('../utils/responseHandler');
 const CarnetController = {
   addBebe: catchAsync(async (req, res, next) => {
     const parentId = req.user.id;
+    const existing = await Bebe.findDuplicate(parentId, req.body);
+    if (existing) return next(ApiError.conflict('This baby already exists for this parent'));
     const bebe = await Bebe.create({ ...req.body, parent_id: parentId });
     return created(res, 'Baby added successfully', bebe);
   }),

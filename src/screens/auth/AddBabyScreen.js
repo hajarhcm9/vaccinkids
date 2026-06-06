@@ -9,7 +9,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Image,
 } from 'react-native';
 import { AppInput, AppButton, SegmentedControl } from '../../components/FormComponents';
 import DatePickerInput from '../../components/DatePickerInput';
@@ -32,9 +31,6 @@ const translations = {
     genderLabel: 'Sexe *',
     genderMale: 'Garçon',
     genderFemale: 'Fille',
-    photoLabel: 'Photo (optionnelle)',
-    photoBtn: 'Choisir une photo',
-    photoChange: 'Changer la photo',
     // Boutons
     nextBtn: 'Suivant',
     prevBtn: 'Retour',
@@ -75,9 +71,6 @@ const translations = {
     genderLabel: 'الجنس *',
     genderMale: 'ولد',
     genderFemale: 'بنت',
-    photoLabel: 'الصورة (اختيارية)',
-    photoBtn: 'اختر صورة',
-    photoChange: 'تغيير الصورة',
     nextBtn: 'التالي',
     prevBtn: 'رجوع',
     submitBtn: 'حفظ',
@@ -120,7 +113,6 @@ const AddBabyScreen = ({ navigation, route }) => {
     lastName: '',
     birthDate: '',
     gender: '',
-    photoUri: null,
   });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
@@ -181,8 +173,8 @@ const AddBabyScreen = ({ navigation, route }) => {
         lastName: form.lastName.trim(),
         birthDate: form.birthDate,
         gender: form.gender,
-        photoUri: form.photoUri,
       });
+      await babyService.getBabies();
 
       Alert.alert(t.successTitle, t.successMsg(form.firstName), [
         {
@@ -195,20 +187,6 @@ const AddBabyScreen = ({ navigation, route }) => {
     } finally {
       setLoading(false);
     }
-  };
-
-  // ─── Photo (placeholder — ImagePicker à intégrer) ───
-  const handlePickPhoto = () => {
-    // TODO: intégrer react-native-image-picker
-    // ImagePicker.launchImageLibrary({ mediaType: 'photo' }, (response) => {
-    //   if (!response.didCancel && response.assets?.[0]) {
-    //     setField('photoUri', response.assets[0].uri);
-    //   }
-    // });
-    Alert.alert(
-      'Photo',
-      'Intégration react-native-image-picker à ajouter.\n(npm install react-native-image-picker)',
-    );
   };
 
   // ─── Calcul de l'âge pour le résumé ───
@@ -370,40 +348,20 @@ const AddBabyScreen = ({ navigation, route }) => {
           </View>
         )}
 
-        {/* ── ÉTAPE 3 : Photo & Résumé ── */}
+        {/* ── ÉTAPE 3 : Résumé ── */}
         {step === 3 && (
           <View>
-            {/* Photo optionnelle */}
             <View style={styles.stepIcon}>
-              <Text style={styles.stepEmoji}>📷</Text>
+              <Text style={styles.stepEmoji}>✓</Text>
             </View>
             <Text style={[styles.stepTitle, isRTL && styles.rtl]}>
-              {language === 'fr' ? 'Photo & Confirmation' : 'الصورة والتأكيد'}
+              {language === 'fr' ? 'Confirmation' : 'التأكيد'}
             </Text>
             <Text style={[styles.stepSubtitle, isRTL && styles.rtl]}>
               {language === 'fr'
-                ? 'La photo est optionnelle. Vérifiez ensuite les informations.'
-                : 'الصورة اختيارية. تحقق من المعلومات بعد ذلك.'}
+                ? 'Vérifiez les informations avant enregistrement.'
+                : 'تحقق من المعلومات قبل الحفظ.'}
             </Text>
-
-            {/* Zone photo */}
-            <View style={styles.photoSection}>
-              <TouchableOpacity style={styles.photoBox} onPress={handlePickPhoto}>
-                {form.photoUri ? (
-                  <Image source={{ uri: form.photoUri }} style={styles.photoPreview} />
-                ) : (
-                  <View style={styles.photoPlaceholder}>
-                    <Text style={styles.photoPlaceholderIcon}>📷</Text>
-                    <Text style={styles.photoPlaceholderText}>{t.photoBtn}</Text>
-                  </View>
-                )}
-              </TouchableOpacity>
-              {form.photoUri && (
-                <TouchableOpacity onPress={handlePickPhoto}>
-                  <Text style={styles.changePhotoText}>{t.photoChange}</Text>
-                </TouchableOpacity>
-              )}
-            </View>
 
             {/* Résumé */}
             <View style={styles.summaryCard}>
@@ -415,15 +373,11 @@ const AddBabyScreen = ({ navigation, route }) => {
               </View>
 
               <View style={styles.summaryAvatar}>
-                {form.photoUri ? (
-                  <Image source={{ uri: form.photoUri }} style={styles.summaryAvatarImg} />
-                ) : (
-                  <View style={styles.summaryAvatarPlaceholder}>
-                    <Text style={styles.summaryAvatarEmoji}>
-                      {form.gender === 'male' ? '👦' : form.gender === 'female' ? '👧' : '👶'}
-                    </Text>
-                  </View>
-                )}
+                <View style={styles.summaryAvatarPlaceholder}>
+                  <Text style={styles.summaryAvatarEmoji}>
+                    {form.gender === 'male' ? '👦' : form.gender === 'female' ? '👧' : '👶'}
+                  </Text>
+                </View>
                 <View>
                   <Text style={styles.summaryName}>
                     {form.firstName} {form.lastName}
@@ -460,13 +414,6 @@ const AddBabyScreen = ({ navigation, route }) => {
             />
           )}
         </View>
-
-        {/* Passer la photo (étape 3 seulement) */}
-        {step === 3 && !form.photoUri && (
-          <TouchableOpacity style={styles.skipBtn} onPress={handleSubmit}>
-            <Text style={styles.skipText}>{t.skipBtn}</Text>
-          </TouchableOpacity>
-        )}
       </ScrollView>
     </KeyboardAvoidingView>
   );

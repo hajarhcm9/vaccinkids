@@ -28,8 +28,6 @@ const HealthBookScreen = ({ route }) => {
   const [babies, setBabies] = useState([]);
   const [selectedBabyId, setSelectedBabyId] = useState(requestedBabyId || null);
   const [record, setRecord] = useState(null);
-  const [lastSynced, setLastSynced] = useState(null);
-  const [isOffline, setIsOffline] = useState(false);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
@@ -54,8 +52,6 @@ const HealthBookScreen = ({ route }) => {
       setError('');
       const result = await healthBookService.getComplete(babyId);
       setRecord(result.record);
-      setLastSynced(result.lastSynced);
-      setIsOffline(result.isOffline);
     } catch (loadError) {
       setError(loadError.message);
       setRecord(null);
@@ -104,9 +100,6 @@ const HealthBookScreen = ({ route }) => {
       <StatusBar barStyle="light-content" backgroundColor={colors.primary} />
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Carnet de santé</Text>
-        <View style={[styles.syncBadge, isOffline && styles.syncBadgeOffline]}>
-          <Text style={styles.syncBadgeText}>{isOffline ? 'Hors ligne' : 'Synchronisé'}</Text>
-        </View>
       </View>
 
       <ScrollView
@@ -229,10 +222,6 @@ const HealthBookScreen = ({ route }) => {
                 <Text style={styles.emptyText}>Aucun rendez-vous à venir.</Text>
               )}
             </Section>
-
-            <Text style={styles.syncText}>
-              Dernière synchronisation : {lastSynced ? formatDate(lastSynced) : 'inconnue'}
-            </Text>
           </>
         )}
       </ScrollView>

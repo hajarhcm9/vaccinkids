@@ -14,7 +14,6 @@ import { colors, typography, spacing, borderRadius, shadows } from '../../theme'
 import { babyService } from '../../services/babyService';
 import { healthBookService } from '../../services/healthBookService';
 import { sessionService } from '../../services/sessionService';
-import FillBar from '../../components/FillBar';
 
 const getAge = (birthDate) => {
   const bd = new Date(birthDate);
@@ -29,16 +28,16 @@ const getAge = (birthDate) => {
 const HomeScreen = ({ navigation }) => {
   const [babies, setBabies] = useState([]);
   const [nextSession, setNextSession] = useState(null);
-  const [bookings, setBookings] = useState([]);
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState('');
 
   const loadData = useCallback(async () => {
     try {
-      const [babiesRes, sessionsRes, bookingsRes] = await Promise.all([
+      setError('');
+      const [babiesRes, bookingsRes] = await Promise.all([
         babyService.getBabies(),
-        sessionService.getSessions(),
         sessionService.getMyBookings(),
       ]);
       setBabies(babiesRes);
@@ -59,11 +58,14 @@ const HomeScreen = ({ navigation }) => {
         }),
       );
       setAlerts(delayedByBaby.flat());
-      const openSessions = sessionsRes.sessions.filter((s) => s.status === 'open');
-      setNextSession(openSessions[0] || null);
-      setBookings(bookingsRes.bookings);
+      const activeBookings = bookingsRes.bookings
+        .filter((booking) => ['confirmed', 'pending', 'waitlist'].includes(booking.status))
+        .filter((booking) => booking.session?.date)
+        .sort((a, b) => new Date(a.session.date) - new Date(b.session.date));
+      setNextSession(activeBookings[0]?.session || null);
     } catch (err) {
       console.error('HomeScreen load error:', err);
+      setError(err.message || 'Impossible de charger les données.');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -98,10 +100,9 @@ const HomeScreen = ({ navigation }) => {
         </View>
         <TouchableOpacity
           style={styles.notifBtn}
-          onPress={() => navigation.navigate('Appointments')}
+          onPress={() => navigation.navigate('Profile', { screen: 'Notifications' })}
         >
           <Text style={styles.notifIcon}>🔔</Text>
-          {bookings.length > 0 && <View style={styles.notifDot} />}
         </TouchableOpacity>
       </View>
 
@@ -113,6 +114,11 @@ const HomeScreen = ({ navigation }) => {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.primary]} />
         }
       >
+        {!!error && (
+          <View style={styles.emptyCard}>
+            <Text style={styles.emptyText}>{error}</Text>
+          </View>
+        )}
         {alerts.map((alert) => (
           <TouchableOpacity key={alert.id} style={styles.alertBanner}>
             <Text style={styles.alertIcon}>⚠️</Text>
@@ -123,7 +129,7 @@ const HomeScreen = ({ navigation }) => {
           </TouchableOpacity>
         ))}
 
-        <Text style={styles.sectionTitle}>Prochaine session</Text>
+        <Text style={styles.sectionTitle}>Prochain rendez-vous</Text>
         {nextSession ? (
           <TouchableOpacity
             style={styles.rdvCard}
@@ -143,16 +149,10 @@ const HomeScreen = ({ navigation }) => {
               </View>
               <Text style={styles.rdvArrow}>›</Text>
             </View>
-            <FillBar
-              booked={nextSession.bookedSlots}
-              total={nextSession.totalSlots}
-              showLabel
-              size="sm"
-            />
           </TouchableOpacity>
         ) : (
           <View style={styles.emptyCard}>
-            <Text style={styles.emptyText}>Aucune session disponible pour le moment.</Text>
+            <Text style={styles.emptyText}>Aucun rendez-vous à venir.</Text>
           </View>
         )}
 

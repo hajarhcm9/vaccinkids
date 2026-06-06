@@ -82,10 +82,12 @@ const SessionDetailScreen = ({ route, navigation }) => {
     try {
       const res = await sessionService.bookSession(sessionId, selectedBaby.id);
       setBooking(res.booking);
-      setFillData((prev) => ({ ...prev, bookedSlots: prev.bookedSlots + 1 }));
+      await loadSession();
       Alert.alert(
-        '✅ Réservation confirmée !',
-        `Place réservée pour ${selectedBaby.firstName} ${selectedBaby.lastName}.`,
+        res.booking.status === 'waitlist' ? "Liste d'attente" : 'Réservation enregistrée',
+        res.booking.status === 'waitlist'
+          ? `${selectedBaby.firstName} a été placé(e) en liste d'attente.`
+          : `Le serveur a enregistré la réservation pour ${selectedBaby.firstName}.`,
       );
     } catch (err) {
       Alert.alert('Erreur', err.message);
@@ -103,6 +105,7 @@ const SessionDetailScreen = ({ route, navigation }) => {
     try {
       const res = await sessionService.joinWaitlist(sessionId, selectedBaby.id);
       setBooking(res.booking);
+      await loadSession();
       Alert.alert(
         "⏳ Liste d'attente",
         `${selectedBaby.firstName} ${selectedBaby.lastName} a été ajouté à la liste d'attente.`,
@@ -124,14 +127,7 @@ const SessionDetailScreen = ({ route, navigation }) => {
           setActionLoading(true);
           try {
             await sessionService.cancelBooking(booking.id);
-            const occupiedPlace = booking.status !== 'waitlist';
-            setBooking(null);
-            if (occupiedPlace) {
-              setFillData((prev) => ({
-                ...prev,
-                bookedSlots: Math.max(0, prev.bookedSlots - 1),
-              }));
-            }
+            await loadSession();
             Alert.alert('Réservation annulée', 'Votre place a été libérée.');
           } catch (err) {
             Alert.alert('Erreur', err.message);

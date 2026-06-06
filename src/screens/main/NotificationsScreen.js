@@ -37,14 +37,12 @@ const NotificationsScreen = ({ navigation, onUnreadCountChange }) => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
-  const [isOffline, setIsOffline] = useState(false);
 
   const loadNotifications = useCallback(async () => {
     try {
       setError('');
       const result = await mobileNotificationService.getNotifications({ unreadOnly });
       setNotifications(result.notifications);
-      setIsOffline(result.isOffline);
       const unreadCount = result.notifications.filter(
         (notification) => !notification.isRead,
       ).length;
@@ -63,7 +61,7 @@ const NotificationsScreen = ({ navigation, onUnreadCountChange }) => {
   }, [loadNotifications]);
 
   const markAsRead = async (notification) => {
-    if (notification.isRead || isOffline) return;
+    if (notification.isRead) return;
     try {
       await mobileNotificationService.markAsRead(notification.id);
       setNotifications((current) =>
@@ -76,7 +74,6 @@ const NotificationsScreen = ({ navigation, onUnreadCountChange }) => {
   };
 
   const markAllAsRead = async () => {
-    if (isOffline) return;
     try {
       await mobileNotificationService.markAllAsRead();
       setNotifications((current) => current.map((item) => ({ ...item, isRead: true })));
@@ -122,7 +119,7 @@ const NotificationsScreen = ({ navigation, onUnreadCountChange }) => {
         <TouchableOpacity
           style={styles.readAllButton}
           onPress={markAllAsRead}
-          disabled={isOffline || notifications.every((item) => item.isRead)}
+          disabled={notifications.every((item) => item.isRead)}
         >
           <Text style={styles.readAllText}>Tout lire</Text>
         </TouchableOpacity>
@@ -143,9 +140,6 @@ const NotificationsScreen = ({ navigation, onUnreadCountChange }) => {
         </TouchableOpacity>
       </View>
 
-      {isOffline && (
-        <Text style={styles.offlineBanner}>Mode hors ligne · dernière copie locale</Text>
-      )}
       {!!error && <Text style={styles.errorBanner}>{error}</Text>}
 
       {loading ? (
@@ -232,13 +226,6 @@ const styles = StyleSheet.create({
   filterActive: { backgroundColor: colors.primaryLight },
   filterText: { color: colors.textSecondary, fontSize: typography.fontSizes.sm },
   filterTextActive: { color: colors.primary, fontWeight: typography.fontWeights.semibold },
-  offlineBanner: {
-    color: colors.warning,
-    backgroundColor: colors.warningLight,
-    padding: spacing.sm,
-    textAlign: 'center',
-    fontSize: typography.fontSizes.xs,
-  },
   errorBanner: {
     color: colors.danger,
     backgroundColor: colors.dangerLight,

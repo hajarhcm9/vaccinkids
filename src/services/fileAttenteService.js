@@ -15,17 +15,20 @@ async function joinQueue(rdvId, centreId, sessionId, parentId, bebeId) {
     await client.query('BEGIN');
 
     var appointmentResult = await client.query(
-      'SELECT rv.id, rv.session_id, rv.bebe_id, s.centre_id ' +
+      'SELECT rv.id, rv.session_id, rv.bebe_id, s.centre_id, s.date_session, s.statut AS session_statut ' +
         'FROM rendez_vous rv JOIN session s ON s.id = rv.session_id ' +
         'WHERE rv.id = $1 AND rv.parent_id = $2 AND rv.bebe_id = $3 ' +
-        "AND rv.statut IN ('EN_ATTENTE', 'CONFIRME', 'PRESENT') FOR UPDATE",
+        "AND rv.statut = 'CONFIRME' AND s.date_session = CURRENT_DATE FOR UPDATE",
       [rdvId, parentId, bebeId],
     );
     var appointment = appointmentResult.rows[0];
     if (!appointment) {
-      throw ApiError.forbidden(
-        'This appointment and child do not belong to the authenticated parent',
-      );
+      throw ApiError.forbidden('A confirmed appointment owned by this parent is required');
+    }
+    if (
+      !['CONFIRMEE', 'EN_COURS'].includes(appointment.session_statut)
+    ) {
+      throw ApiError.badRequest('Queue is only available during the active session day');
     }
 
     if (
