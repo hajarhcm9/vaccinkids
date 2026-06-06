@@ -53,7 +53,7 @@ const AuthController = {
       await client.query('BEGIN');
       const otpResult = await OtpService.verifyOTP(normalizedPhone, code, { client });
       if (!otpResult.valid) {
-        await client.query('ROLLBACK');
+        await client.query('COMMIT');
         transactionClosed = true;
         return next(ApiError.unauthorized(otpResult.reason));
       }
@@ -138,7 +138,7 @@ const AuthController = {
     const updated = await Parent.updateFcmToken(req.user.id, req.body.fcm_token);
     if (!updated) return next(ApiError.notFound('Parent not found'));
 
-  return success(res, 200, 'FCM token registered successfully', {
+    return success(res, 200, 'FCM token registered successfully', {
       parent_id: updated.id,
       push_enabled: Boolean(updated.fcm_token),
     });

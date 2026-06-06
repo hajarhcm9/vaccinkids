@@ -28,6 +28,7 @@ Operational documentation:
 7. `npm run migrate`
 8. `npm run seed:dev` to install the optional local test accounts
 9. `npm run dev` (nodemon)
+10. Dans un autre terminal, `npm run worker:reminders` si les rappels locaux sont nécessaires
 
 API at http://localhost:3000
 
@@ -61,6 +62,7 @@ administrator already exists. Remove the bootstrap variables immediately after u
 
 `npm test` recreates the dedicated `TEST_DB_NAME` database before running Jest. For
 safety, the database name must end with `_test`; the development database is never reset.
+`npm run docker:test` starts and waits for the Docker database before running the full suite.
 
 ## Authentication Flow
 

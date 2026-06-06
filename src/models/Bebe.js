@@ -1,9 +1,10 @@
 const { query } = require('../config/database');
+const { createQrCode } = require('../utils/qrCode');
 
 const Bebe = {
   async create(data) {
     const { parent_id, prenom, nom, date_naissance, sexe, photo_url } = data;
-    const code_qr = `VK-${Date.now()}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+    const code_qr = createQrCode();
     const result = await query(
       `INSERT INTO bebe (parent_id, prenom, nom, date_naissance, sexe, photo_url, code_qr)
        VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
@@ -20,6 +21,24 @@ const Bebe = {
   async findByQRCode(codeQr) {
     const result = await query('SELECT * FROM bebe WHERE code_qr = $1', [codeQr]);
     return result.rows[0];
+  },
+
+  async getEligibleAppointmentsAtCentre(bebeId, centreId) {
+    const result = await query(
+      `SELECT rdv.id, rdv.statut, s.id AS session_id, s.date_session, s.heure_debut,
+              s.heure_fin, v.nom AS vaccin_nom
+       FROM rendez_vous rdv
+       JOIN session s ON s.id = rdv.session_id
+       JOIN vaccin v ON v.id = s.vaccin_id
+       WHERE rdv.bebe_id = $1
+         AND s.centre_id = $2
+         AND s.date_session = CURRENT_DATE
+         AND s.statut IN ('CONFIRMEE', 'EN_COURS')
+         AND rdv.statut IN ('CONFIRME', 'PRESENT')
+       ORDER BY s.heure_debut`,
+      [bebeId, centreId],
+    );
+    return result.rows;
   },
 
   async findByParent(parentId) {

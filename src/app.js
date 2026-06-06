@@ -7,11 +7,13 @@ const cors = require('cors');
 const morgan = require('morgan');
 const config = require('./config');
 const path = require('path');
+const { pool } = require('./config/database');
 
 /**
  * Express Application Setup
  */
 const app = express();
+app.use(require('./middleware/requestContext'));
 
 // ============================================
 // 1. SECURITY MIDDLEWARE
@@ -24,7 +26,8 @@ setupSecurity(app);
 const corsOptions = {
   origin: config.cors.origin.split(','),
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-ID'],
+  exposedHeaders: ['X-Request-ID'],
   credentials: true,
   maxAge: 86400,
 };
@@ -70,6 +73,15 @@ app.get('/health', (req, res) => {
     timestamp: new Date().toISOString(),
     environment: config.nodeEnv,
   });
+});
+
+app.get('/ready', async (req, res) => {
+  try {
+    await pool.query('SELECT 1');
+    res.status(200).json({ status: 'success', message: 'VacciniKids API is ready' });
+  } catch (error) {
+    res.status(503).json({ status: 'error', message: 'Database is unavailable' });
+  }
 });
 
 // ============================================
@@ -129,6 +141,7 @@ app.use((err, req, res, next) => {
       JSON.stringify({
         level: 'error',
         event: 'request_failed',
+        requestId: req.requestId,
         method: req.method,
         path: req.originalUrl,
         statusCode,

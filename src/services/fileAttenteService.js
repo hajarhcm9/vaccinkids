@@ -25,9 +25,7 @@ async function joinQueue(rdvId, centreId, sessionId, parentId, bebeId) {
     if (!appointment) {
       throw ApiError.forbidden('A confirmed appointment owned by this parent is required');
     }
-    if (
-      !['CONFIRMEE', 'EN_COURS'].includes(appointment.session_statut)
-    ) {
+    if (!['CONFIRMEE', 'EN_COURS'].includes(appointment.session_statut)) {
       throw ApiError.badRequest('Queue is only available during the active session day');
     }
 

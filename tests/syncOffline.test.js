@@ -23,6 +23,9 @@ describe('Secure offline synchronization', () => {
   const adminCIN = 'SYNADM01';
   const nurseCIN = 'SYNNRS01';
   const otherCentreName = 'Sync Other Centre';
+  const phoneSuffix = Date.now().toString().slice(-8);
+  const parentPhone = `+2126${phoneSuffix}`;
+  const otherParentPhone = `+2127${phoneSuffix}`;
 
   const command = (overrides = {}) => ({
     client_operation_id: 'sync-' + Date.now() + '-' + Math.random().toString(36).slice(2),
@@ -86,7 +89,6 @@ describe('Secure offline synchronization', () => {
       .send({ cin: nurseCIN, mot_de_passe: 'SynNurse12!' });
     nurseToken = nurseLogin.body.data.tokens.accessToken;
 
-    const parentPhone = '+212600000099';
     await request(app).post('/api/auth/parent/send-otp').send({ telephone: parentPhone });
     const verifyRes = await request(app)
       .post('/api/auth/parent/verify-otp')
@@ -97,7 +99,7 @@ describe('Secure offline synchronization', () => {
     otherParentId = (
       await pool.query(
         'INSERT INTO parent (telephone, nom, prenom) VALUES ($1, $2, $3) RETURNING id',
-        ['+212600000098', 'Other', 'Parent'],
+        [otherParentPhone, 'Other', 'Parent'],
       )
     ).rows[0].id;
     ownBebeId = (

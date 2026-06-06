@@ -28,10 +28,20 @@ const redactSensitiveValues = (value) => {
 
 const AuditLog = {
   async create(entry) {
-    const { table_name, record_id, action, old_values, new_values, user_id, user_role } = entry;
+    const {
+      table_name,
+      record_id,
+      action,
+      old_values,
+      new_values,
+      user_id,
+      user_role,
+      request_id,
+    } = entry;
     const result = await query(
-      `INSERT INTO audit_log (table_name, record_id, action, old_values, new_values, user_id, user_role)
-       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+      `INSERT INTO audit_log
+         (table_name, record_id, action, old_values, new_values, user_id, user_role, request_id)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
       [
         table_name,
         record_id,
@@ -40,6 +50,7 @@ const AuditLog = {
         redactSensitiveValues(new_values),
         user_id,
         user_role,
+        request_id || null,
       ],
     );
     return result.rows[0];

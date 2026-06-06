@@ -242,14 +242,13 @@ describe('Day 17 - RDV Management, Vaccination & Statistics', () => {
       expect(res.body.data.statut).toBe('ABSENT');
     });
 
-    test('should allow parent to cancel their RDV', async () => {
+    test('should reject parent cancellation once the session is in progress', async () => {
       const res = await request(app)
         .patch('/api/rendez-vous/' + rdvId3)
         .set('Authorization', 'Bearer ' + parentToken)
         .send({ statut: 'ANNULE' });
 
-      expect(res.status).toBe(200);
-      expect(res.body.data.statut).toBe('ANNULE');
+      expect(res.status).toBe(400);
     });
 
     test('should deny parent from setting PRESENT status', async () => {
@@ -288,7 +287,7 @@ describe('Day 17 - RDV Management, Vaccination & Statistics', () => {
   // Vaccination Recording
   // ============================================================
   describe('Vaccination Recording', () => {
-    let vaccRdvId, vaccBebeId;
+    let vaccRdvId, vaccBebeId, vaccFlaconId;
 
     beforeAll(async () => {
       // Create a new bebe + RDV specifically for vaccination tests
@@ -303,6 +302,13 @@ describe('Day 17 - RDV Management, Vaccination & Statistics', () => {
         .set('Authorization', 'Bearer ' + parentToken)
         .send({ session_id: sessionId, bebe_id: vaccBebeId });
       vaccRdvId = rdvRes.body.data.id;
+      const flaconRes = await pool.query(
+        `INSERT INTO flacon
+           (vaccin_id, session_id, numero_lot, fabricant, date_ouverture)
+         VALUES ($1, $2, $3, $4, NOW()) RETURNING id`,
+        [vaccinId, sessionId, `LOT-D17-${TS}`, 'Test Manufacturer'],
+      );
+      vaccFlaconId = flaconRes.rows[0].id;
 
       // Mark as CONFIRME then PRESENT for vaccination
       await request(app)
@@ -320,7 +326,7 @@ describe('Day 17 - RDV Management, Vaccination & Statistics', () => {
       const res = await request(app)
         .post('/api/vaccinations/' + vaccRdvId)
         .set('Authorization', 'Bearer ' + nurseToken)
-        .send({ poids: 5.2, taille: 60 });
+        .send({ flacon_id: vaccFlaconId, poids: 5.2, taille: 60 });
 
       expect(res.status).toBe(201);
       expect(res.body.status).toBe('success');
@@ -332,7 +338,7 @@ describe('Day 17 - RDV Management, Vaccination & Statistics', () => {
       const res = await request(app)
         .post('/api/vaccinations/' + vaccRdvId)
         .set('Authorization', 'Bearer ' + nurseToken)
-        .send({ poids: 5.3 });
+        .send({ flacon_id: vaccFlaconId, poids: 5.3 });
 
       expect(res.status).toBe(409);
     });

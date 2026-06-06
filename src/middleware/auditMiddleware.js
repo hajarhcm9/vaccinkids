@@ -94,12 +94,7 @@ const auditMiddleware = async (req, res, next) => {
   };
 
   res.on('finish', () => {
-    if (
-      res.statusCode >= 400 ||
-      ((action === 'READ' || action === 'EXPORT') && req.user?.role !== 'admin')
-    ) {
-      return;
-    }
+    if (res.statusCode >= 400 || !req.user) return;
 
     const data = isSensitiveRead ? null : responseBody && responseBody.data;
     const record = Array.isArray(data) ? data[0] : data;
@@ -122,6 +117,7 @@ const auditMiddleware = async (req, res, next) => {
           : null,
       user_id: req.user ? req.user.id : null,
       user_role: req.user ? req.user.role : null,
+      request_id: req.requestId,
     });
   });
 

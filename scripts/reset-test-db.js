@@ -19,6 +19,9 @@ const connection = {
 };
 
 async function resetTestDatabase() {
+  console.warn(
+    `Resetting test database "${testDbName}" via ${connection.host}:${connection.port} as "${connection.user || '(missing DB_USER)'}"`,
+  );
   const maintenance = new Client({ ...connection, database: 'postgres' });
   await maintenance.connect();
   try {
@@ -50,6 +53,13 @@ async function resetTestDatabase() {
 }
 
 resetTestDatabase().catch((error) => {
-  console.error('Test database reset failed:', error.message);
+  console.error('Test database reset failed:', error.message, error.code ? `code=${error.code}` : '');
+  if (error.code === '42501') {
+    console.error(
+      `The PostgreSQL role "${connection.user}" needs CREATEDB permission, or TEST_DB_NAME must reference a database it can recreate.`,
+    );
+  } else if (error.code === 'ECONNREFUSED') {
+    console.error('Start PostgreSQL first with: npm run docker:up');
+  }
   process.exitCode = 1;
 });

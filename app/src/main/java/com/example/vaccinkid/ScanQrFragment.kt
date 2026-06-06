@@ -25,6 +25,7 @@ import com.journeyapps.barcodescanner.ScanOptions
 import kotlinx.coroutines.launch
 
 class ScanQrFragment : Fragment() {
+    private val secureQrPattern = Regex("^VK1\\.[a-f0-9]{64}$")
     private lateinit var btnScanner: Button
     private lateinit var btnSaisieManuelle: Button
 
@@ -91,8 +92,8 @@ class ScanQrFragment : Fragment() {
 
     private fun handleQRResult(content: String) {
         val code = extractQrCode(content)
-        if (code.isBlank()) {
-            Toast.makeText(requireContext(), "QR invalide", Toast.LENGTH_SHORT).show()
+        if (!secureQrPattern.matches(code)) {
+            Toast.makeText(requireContext(), "QR invalide ou expiré", Toast.LENGTH_SHORT).show()
             return
         }
 

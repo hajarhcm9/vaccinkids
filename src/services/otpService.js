@@ -56,7 +56,7 @@ const OtpService = {
          WHERE id = (
            SELECT id FROM otp_codes
            WHERE telephone = $1 AND est_verifie = FALSE
-           ORDER BY created_at DESC LIMIT 1
+           ORDER BY created_at DESC, id DESC LIMIT 1
            FOR UPDATE
          )
          RETURNING id`,
@@ -75,7 +75,7 @@ const OtpService = {
          AND est_verifie = FALSE
          AND expire_at > CURRENT_TIMESTAMP
          AND failed_attempts < $2
-       ORDER BY created_at DESC LIMIT 1
+       ORDER BY created_at DESC, id DESC LIMIT 1
        FOR UPDATE`,
       [telephone, config.otp.maxAttempts],
     );
@@ -113,9 +113,7 @@ const OtpService = {
       };
     }
 
-    await runQuery(client, 'UPDATE otp_codes SET est_verifie = TRUE WHERE id = $1', [
-      otpRecord.id,
-    ]);
+    await runQuery(client, 'UPDATE otp_codes SET est_verifie = TRUE WHERE id = $1', [otpRecord.id]);
 
     return { valid: true, otpId: otpRecord.id };
   },

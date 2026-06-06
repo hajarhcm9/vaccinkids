@@ -21,11 +21,16 @@ const StockController = {
 
   upsert: catchAsync(async (req, res) => {
     const { centre_id, vaccin_id, quantite_disponible, seuil_alerte } = req.body;
-    const stock = await Stock.createOrUpdate(centre_id, vaccin_id, {
-      quantite_disponible,
-      seuil_alerte,
-      motif: req.body.motif,
-    }, req.user.id);
+    const stock = await Stock.createOrUpdate(
+      centre_id,
+      vaccin_id,
+      {
+        quantite_disponible,
+        seuil_alerte,
+        motif: req.body.motif,
+      },
+      req.user.id,
+    );
     return created(res, 'Stock updated successfully', stock);
   }),
 

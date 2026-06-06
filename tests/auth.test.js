@@ -11,6 +11,13 @@ describe('Auth Endpoints', () => {
       const res = await request(app).get('/health');
       expect(res.status).toBe(200);
       expect(res.body.status).toBe('success');
+      expect(res.headers['x-request-id']).toBeDefined();
+    });
+
+    it('should report database readiness', async () => {
+      const res = await request(app).get('/ready');
+      expect(res.status).toBe(200);
+      expect(res.body.status).toBe('success');
     });
   });
 
@@ -27,7 +34,7 @@ describe('Auth Endpoints', () => {
         `SELECT code_hash
          FROM otp_codes
          WHERE telephone = $1
-         ORDER BY created_at DESC LIMIT 1`,
+         ORDER BY created_at DESC, id DESC LIMIT 1`,
         ['+212661234567'],
       );
       expect(otp.rows[0].code_hash).toHaveLength(64);
@@ -124,7 +131,7 @@ describe('Auth Endpoints', () => {
         `SELECT failed_attempts, est_verifie
          FROM otp_codes
          WHERE telephone = $1
-         ORDER BY created_at DESC LIMIT 1`,
+         ORDER BY created_at DESC, id DESC LIMIT 1`,
         ['+212677889903'],
       );
       expect(otp.rows[0]).toMatchObject({ failed_attempts: 5, est_verifie: true });

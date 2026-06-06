@@ -3,6 +3,7 @@ const Croissance = require('../models/Croissance');
 const ApiError = require('../utils/ApiError');
 const catchAsync = require('../utils/catchAsync');
 const { success, created } = require('../utils/responseHandler');
+const { isValidQrCode } = require('../utils/qrCode');
 
 const CarnetController = {
   addBebe: catchAsync(async (req, res, next) => {
@@ -54,11 +55,22 @@ const CarnetController = {
   }),
 
   getByQR: catchAsync(async (req, res, next) => {
+    if (!isValidQrCode(req.params.code)) {
+      return next(ApiError.badRequest('Invalid or obsolete QR code'));
+    }
     const bebe = await Bebe.findByQRCode(req.params.code);
     if (!bebe) return next(ApiError.notFound('Baby not found — invalid QR code'));
+    const eligibleAppointments =
+      req.user.role === 'infirmier'
+        ? await Bebe.getEligibleAppointmentsAtCentre(bebe.id, req.user.centre_id)
+        : [];
+    if (req.user.role === 'infirmier' && eligibleAppointments.length === 0) {
+      return next(ApiError.forbidden('No eligible appointment for this baby at your centre today'));
+    }
     const history = await Bebe.getVaccineHistory(bebe.id);
     return success(res, 200, 'Baby found via QR code', {
       bebe,
+      eligibleAppointments,
       lastVaccinations: history.slice(0, 5),
     });
   }),

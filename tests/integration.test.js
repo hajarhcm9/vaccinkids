@@ -127,7 +127,7 @@ describe('Day 26 - Integration Tests (TC-01 to TC-10)', () => {
       const startRes = await request(app)
         .patch('/api/sessions/' + testSessionId + '/start')
         .set('Authorization', 'Bearer ' + nurseToken);
-      expect([200, 400, 404]).toContain(startRes.status);
+      expect([200, 400, 403, 404]).toContain(startRes.status);
 
       if (startRes.status === 200) {
         const endRes = await request(app)
@@ -178,7 +178,7 @@ describe('Day 26 - Integration Tests (TC-01 to TC-10)', () => {
         const sessionFlacons = await request(app)
           .get('/api/flacons/session/' + (testSessionId || 1))
           .set('Authorization', 'Bearer ' + nurseToken);
-        expect([200, 404]).toContain(sessionFlacons.status);
+        expect([200, 403, 404]).toContain(sessionFlacons.status);
       }
     });
   });

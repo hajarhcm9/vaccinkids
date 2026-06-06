@@ -74,10 +74,14 @@ export const httpClient = {
     const refreshToken = await secureTokenService.getRefreshToken();
     try {
       if (refreshToken) {
-        await request('/auth/logout', {
-          method: 'POST',
-          body: JSON.stringify({ refreshToken }),
-        }, false);
+        await request(
+          '/auth/logout',
+          {
+            method: 'POST',
+            body: JSON.stringify({ refreshToken }),
+          },
+          false,
+        );
       }
     } finally {
       await secureTokenService.clearSession();
