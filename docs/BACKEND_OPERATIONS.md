@@ -74,3 +74,10 @@ Les métriques ne doivent contenir aucun téléphone, nom, token, OTP ou donnée
 
 Exécuter `node scripts/check-production-config.js` dans le pipeline de déploiement après
 injection des secrets, sans afficher leur valeur.
+
+Voir aussi :
+
+- `ENVIRONMENTS_AND_PROMOTION.md` pour la separation et la promotion ;
+- `BACKUP_RESTORE_RUNBOOK.md` pour la sauvegarde/restauration chiffree ;
+- `CAPACITY_AND_RESILIENCE_PLAN.md` pour la charge et la reprise ;
+- `INCIDENT_RESPONSE_PLAN.md` pour l'escalade et les exercices.

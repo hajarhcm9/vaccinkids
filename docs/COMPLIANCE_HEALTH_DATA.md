@@ -4,6 +4,13 @@ Ce dossier cadre les controles obligatoires avant un pilote reel manipulant des 
 sante. Il doit etre signe par le responsable produit et le responsable conformite avant
 toute ouverture hors environnement de staging.
 
+Documents operationnels associes :
+
+- `COMPLIANCE_REGISTER.md` pour les decisions, sous-traitants, droits et signatures ;
+- `DATA_RETENTION_POLICY.md` pour la retention et la purge ;
+- `THREAT_MODEL.md` pour la revue de menace et le pentest ;
+- `BACKUP_RESTORE_RUNBOOK.md` et `INCIDENT_RESPONSE_PLAN.md` pour les exercices.
+
 ## Perimetre et base legale
 
 - Donnees concernees : identite parent, identite bebe, rendez-vous, carnet vaccinal,

@@ -52,6 +52,7 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm run check:scripts
+      - run: npm run check:environment
       - run: npm run check:release-identity
       - run: npm run check:parent-mobile-security
       - run: npm audit --audit-level=high
