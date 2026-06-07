@@ -37,8 +37,7 @@ export const babyService = {
       const baby = fromApiBaby(data.data);
       return { success: true, baby };
     } catch (error) {
-      console.error('addBaby error:', error);
-      throw new Error("Impossible d'ajouter le bébé. Réessayez.");
+      throw new Error(error.message || "Impossible d'ajouter le bébé. Réessayez.");
     }
   },
 
@@ -47,13 +46,7 @@ export const babyService = {
    * @returns {Promise<Array>}
    */
   getBabies: async () => {
-    try {
-      const data = await httpClient.request('/carnet/bebes');
-      const babies = (data.data || []).map(fromApiBaby);
-      return babies;
-    } catch (error) {
-      console.error('getBabies error:', error);
-      throw error;
-    }
+    const data = await httpClient.request('/carnet/bebes');
+    return (data.data || []).map(fromApiBaby);
   },
 };

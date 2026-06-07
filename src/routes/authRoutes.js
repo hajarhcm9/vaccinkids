@@ -35,6 +35,7 @@ router.put(
   validate(schemas.updateFcmToken),
   AuthController.updateFcmToken,
 );
+router.delete('/parent/fcm-token', authenticate, AuthController.removeFcmToken);
 router.get('/me', authenticate, AuthController.getMe);
 router.post('/logout', authenticate, AuthController.logout);
 router.post('/logout-all', authenticate, AuthController.logoutAll);

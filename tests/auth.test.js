@@ -176,6 +176,22 @@ describe('Auth Endpoints', () => {
 
       expect(res.status).toBe(403);
     });
+
+    it('should allow a parent to remove the device token', async () => {
+      const phone = '0677889904';
+      const sendResponse = await request(app)
+        .post('/api/auth/parent/send-otp')
+        .send({ telephone: phone });
+      const verifyResponse = await request(app)
+        .post('/api/auth/parent/verify-otp')
+        .send({ telephone: phone, code: sendResponse.body.data.devOtp });
+      const response = await request(app)
+        .delete('/api/auth/parent/fcm-token')
+        .set('Authorization', 'Bearer ' + verifyResponse.body.data.tokens.accessToken);
+
+      expect(response.status).toBe(200);
+      expect(response.body.data.push_enabled).toBe(false);
+    });
   });
 
   describe('POST /api/auth/personnel/login', () => {

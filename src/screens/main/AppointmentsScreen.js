@@ -27,6 +27,7 @@ const AppointmentsScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
+  const [pendingActionId, setPendingActionId] = useState(null);
 
   const loadData = useCallback(async () => {
     try {
@@ -34,7 +35,6 @@ const AppointmentsScreen = ({ navigation }) => {
       const res = await sessionService.getMyBookings();
       setBookings(res.bookings);
     } catch (err) {
-      console.error(err);
       setError(err.message || 'Rendez-vous indisponibles.');
     } finally {
       setLoading(false);
@@ -65,11 +65,15 @@ const AppointmentsScreen = ({ navigation }) => {
         text: 'Annuler la réservation',
         style: 'destructive',
         onPress: async () => {
+          if (pendingActionId) return;
+          setPendingActionId(booking.id);
           try {
             await sessionService.cancelBooking(booking.id);
-            loadData();
+            await loadData();
           } catch (err) {
             Alert.alert('Erreur', err.message);
+          } finally {
+            setPendingActionId(null);
           }
         },
       },
@@ -116,7 +120,11 @@ const AppointmentsScreen = ({ navigation }) => {
             <Text style={[styles.badgeText, { color: cfg.text }]}>{cfg.label}</Text>
           </View>
           {['confirmed', 'pending', 'waitlist'].includes(item.status) && (
-            <TouchableOpacity style={styles.cancelBtn} onPress={() => handleCancel(item)}>
+            <TouchableOpacity
+              style={styles.cancelBtn}
+              onPress={() => handleCancel(item)}
+              disabled={pendingActionId === item.id}
+            >
               <Text style={styles.cancelBtnText}>Annuler</Text>
             </TouchableOpacity>
           )}

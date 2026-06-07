@@ -20,7 +20,12 @@ export const secureTokenService = {
   getSession: async () => {
     const credentials = await Keychain.getGenericPassword({ service: TOKEN_SERVICE });
     if (!credentials) return null;
-    return JSON.parse(credentials.password);
+    try {
+      return JSON.parse(credentials.password);
+    } catch {
+      await secureTokenService.clearSession();
+      return null;
+    }
   },
 
   getAccessToken: async () => {

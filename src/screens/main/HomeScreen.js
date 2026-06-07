@@ -64,7 +64,6 @@ const HomeScreen = ({ navigation }) => {
         .sort((a, b) => new Date(a.session.date) - new Date(b.session.date));
       setNextSession(activeBookings[0]?.session || null);
     } catch (err) {
-      console.error('HomeScreen load error:', err);
       setError(err.message || 'Impossible de charger les données.');
     } finally {
       setLoading(false);

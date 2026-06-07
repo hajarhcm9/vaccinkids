@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  AppState,
   Platform,
   RefreshControl,
   ScrollView,
@@ -11,6 +12,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import NetInfo from '@react-native-community/netinfo';
 import { colors, typography, spacing, borderRadius, shadows } from '../../theme';
 import { queueService } from '../../services/queueService';
 import { sessionService } from '../../services/sessionService';
@@ -22,6 +24,7 @@ const QueueScreen = ({ navigation }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState('');
+  const [isConnected, setIsConnected] = useState(true);
 
   const loadData = useCallback(async () => {
     try {
@@ -49,13 +52,24 @@ const QueueScreen = ({ navigation }) => {
 
   useEffect(() => {
     loadData();
-    const interval = setInterval(loadData, 15_000);
-    return () => clearInterval(interval);
-  }, [loadData]);
+    const networkSubscription = NetInfo.addEventListener((state) => {
+      const connected = state.isConnected === true && state.isInternetReachable !== false;
+      setIsConnected(connected);
+      if (connected) loadData();
+    });
+    const interval = setInterval(() => {
+      if (AppState.currentState === 'active' && isConnected) loadData();
+    }, 15_000);
+    return () => {
+      clearInterval(interval);
+      networkSubscription();
+    };
+  }, [isConnected, loadData]);
 
   const joinQueue = async (booking) => {
     setActionLoading(true);
     try {
+      if (!isConnected) throw new Error('Connexion requise pour rejoindre la file.');
       await queueService.join(booking);
       await loadData();
     } catch (joinError) {
@@ -123,6 +137,11 @@ const QueueScreen = ({ navigation }) => {
           }
         >
           {!!error && <Text style={styles.error}>{error}</Text>}
+          {!isConnected && (
+            <Text style={styles.error}>
+              Connexion requise. Les positions affichées ne sont pas actualisées.
+            </Text>
+          )}
 
           {activeEntry ? (
             <View style={[styles.ticket, isBeingServed && styles.ticketActive]}>
@@ -148,7 +167,7 @@ const QueueScreen = ({ navigation }) => {
               <TouchableOpacity
                 style={styles.leaveButton}
                 onPress={leaveQueue}
-                disabled={actionLoading}
+                disabled={actionLoading || !isConnected}
               >
                 <Text style={styles.leaveText}>Quitter la file</Text>
               </TouchableOpacity>
@@ -179,7 +198,7 @@ const QueueScreen = ({ navigation }) => {
                     <TouchableOpacity
                       style={styles.joinButton}
                       onPress={() => joinQueue(booking)}
-                      disabled={actionLoading}
+                      disabled={actionLoading || !isConnected}
                     >
                       <Text style={styles.joinText}>Rejoindre</Text>
                     </TouchableOpacity>

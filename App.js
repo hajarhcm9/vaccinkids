@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { NavigationContainer } from '@react-navigation/native';
+import { createNavigationContainerRef, NavigationContainer } from '@react-navigation/native';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import AuthNavigator from './src/navigation/AuthNavigator';
 import MainNavigator from './src/navigation/MainNavigator';
 import { colors } from './src/theme';
 import { AuthContext } from './src/context/AuthContext';
 import { httpClient } from './src/services/httpClient';
+import { pushRegistrationService } from './src/services/pushRegistrationService';
+import { notificationTarget } from './src/services/notificationNavigation';
+
+const navigationRef = createNavigationContainerRef();
 
 const App = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -15,12 +19,39 @@ const App = () => {
     checkAuthState();
   }, []);
 
+  useEffect(
+    () =>
+      httpClient.onSessionExpired(() => {
+        setIsAuthenticated(false);
+      }),
+    [],
+  );
+
+  useEffect(() => {
+    if (!isAuthenticated) return undefined;
+    let unsubscribe = () => {};
+    pushRegistrationService.initialize().then((cleanup) => {
+      unsubscribe = cleanup;
+    });
+    return () => unsubscribe();
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    if (!isAuthenticated) return undefined;
+    const openTarget = (message) => {
+      const target = notificationTarget(message?.data);
+      if (target && navigationRef.isReady()) navigationRef.navigate(target.screen, target.params);
+    };
+    const unsubscribe = pushRegistrationService.onNotificationOpened(openTarget);
+    pushRegistrationService.getInitialNotification().then(openTarget).catch(() => {});
+    return unsubscribe;
+  }, [isAuthenticated]);
+
   const checkAuthState = async () => {
     try {
       await httpClient.validateSession();
       setIsAuthenticated(true);
     } catch (error) {
-      console.error('Auth check error:', error);
       await httpClient.logout().catch(() => {});
       setIsAuthenticated(false);
     } finally {
@@ -31,8 +62,12 @@ const App = () => {
   const authContextValue = {
     signIn: () => setIsAuthenticated(true),
     signOut: async () => {
-      await httpClient.logout();
-      setIsAuthenticated(false);
+      try {
+        await pushRegistrationService.unregister();
+      } finally {
+        await httpClient.logout();
+        setIsAuthenticated(false);
+      }
     },
   };
 
@@ -46,7 +81,7 @@ const App = () => {
 
   return (
     <AuthContext.Provider value={authContextValue}>
-      <NavigationContainer>
+      <NavigationContainer ref={navigationRef}>
         {isAuthenticated ? <MainNavigator /> : <AuthNavigator />}
       </NavigationContainer>
     </AuthContext.Provider>

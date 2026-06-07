@@ -14,7 +14,6 @@ import {
 import OtpInput from '../../components/OtpInput';
 import { authService } from '../../services/authService';
 import { colors, typography, spacing, borderRadius, shadows } from '../../theme';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AuthContext } from '../../context/AuthContext';
 import { accountCacheService } from '../../services/accountCacheService';
 import { secureTokenService } from '../../services/secureTokenService';
@@ -94,13 +93,6 @@ const OtpVerificationScreen = ({ navigation, route }) => {
         refreshToken: result.refreshToken,
         user: result.user,
       });
-      const fcmToken = await AsyncStorage.getItem('fcmToken');
-      if (fcmToken) {
-        await authService.registerFcmToken(result.token, fcmToken).catch((error) => {
-          console.warn('FCM token registration failed:', error.message);
-        });
-      }
-
       // Navigation vers l'écran suivant
       if (result.user?.isNewUser) {
         navigation.replace('AddBaby'); // Nouvel utilisateur → ajout bébé
@@ -235,7 +227,7 @@ const OtpVerificationScreen = ({ navigation, route }) => {
           </View>
         </View>
 
-        <Text style={styles.footer}>Centre Es-Salaam · Province d'Oujda</Text>
+        <Text style={styles.footer}>Service parental VacciniKids</Text>
       </ScrollView>
     </KeyboardAvoidingView>
   );

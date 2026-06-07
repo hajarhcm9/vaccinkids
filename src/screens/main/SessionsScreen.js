@@ -42,7 +42,6 @@ const SessionsScreen = ({ navigation }) => {
       setBookings(bookRes.bookings);
       applyFilters(sessRes.sessions, filter, search);
     } catch (err) {
-      console.error(err);
       setError(err.message || 'Sessions indisponibles.');
     } finally {
       setLoading(false);

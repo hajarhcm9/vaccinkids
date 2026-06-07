@@ -21,7 +21,7 @@ const LANGUAGES = [
 const translations = {
   fr: {
     title: 'Mon Profil',
-    center: 'Centre Es-Salaam · Oujda',
+    center: 'Compte parent VacciniKids',
     language: 'Langue',
     account: 'Mon compte',
     notifications: 'Notifications',
@@ -32,7 +32,7 @@ const translations = {
   },
   ar: {
     title: 'ملفي الشخصي',
-    center: 'مركز السلام · وجدة',
+    center: 'حساب الوالد VacciniKids',
     language: 'اللغة',
     account: 'حسابي',
     notifications: 'الإشعارات',
@@ -141,7 +141,7 @@ const ProfileScreen = ({ navigation, onLanguageChange }) => {
           <MenuRow icon="🚪" label={t.logout} onPress={handleLogout} danger />
         </View>
 
-        <Text style={styles.version}>VacciniKids v1.0.0 · ISPITS Oujda PFE 2025</Text>
+        <Text style={styles.version}>VacciniKids v1.0.0</Text>
       </ScrollView>
     </View>
   );

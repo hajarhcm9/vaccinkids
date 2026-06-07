@@ -1,17 +1,8 @@
-import React, { useState } from 'react';
-import { View, TextInput, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import React from 'react';
+import { View, TextInput, Text, StyleSheet, Platform } from 'react-native';
 import { colors, typography, spacing, borderRadius } from '../theme';
 
-const COUNTRY_CODES = [
-  { code: '+212', flag: '🇲🇦', name: 'Maroc' },
-  { code: '+33', flag: '🇫🇷', name: 'France' },
-  { code: '+1', flag: '🇺🇸', name: 'USA' },
-];
-
 const PhoneInput = ({ value, onChangeText, onSubmitEditing, inputRef, isRTL }) => {
-  const [selectedCountry, setSelectedCountry] = useState(COUNTRY_CODES[0]);
-  const [showPicker, setShowPicker] = useState(false);
-
   const handlePhoneChange = (text) => {
     // Autoriser uniquement les chiffres
     const cleaned = text.replace(/[^0-9]/g, '');
@@ -23,16 +14,10 @@ const PhoneInput = ({ value, onChangeText, onSubmitEditing, inputRef, isRTL }) =
   return (
     <View>
       <View style={styles.container}>
-        {/* Sélecteur indicatif pays */}
-        <TouchableOpacity
-          style={styles.countryPicker}
-          onPress={() => setShowPicker(!showPicker)}
-          accessibilityLabel={`Indicatif pays: ${selectedCountry.name} ${selectedCountry.code}`}
-        >
-          <Text style={styles.flag}>{selectedCountry.flag}</Text>
-          <Text style={styles.countryCode}>{selectedCountry.code}</Text>
-          <Text style={styles.chevron}>▾</Text>
-        </TouchableOpacity>
+        <View style={styles.countryPicker} accessibilityLabel="Indicatif pays: Maroc +212">
+          <Text style={styles.flag}>🇲🇦</Text>
+          <Text style={styles.countryCode}>+212</Text>
+        </View>
 
         <View style={styles.divider} />
 
@@ -53,35 +38,8 @@ const PhoneInput = ({ value, onChangeText, onSubmitEditing, inputRef, isRTL }) =
         />
       </View>
 
-      {/* Dropdown indicatifs */}
-      {showPicker && (
-        <View style={styles.dropdown}>
-          {COUNTRY_CODES.map((country) => (
-            <TouchableOpacity
-              key={country.code}
-              style={[
-                styles.dropdownItem,
-                selectedCountry.code === country.code && styles.dropdownItemSelected,
-              ]}
-              onPress={() => {
-                setSelectedCountry(country);
-                setShowPicker(false);
-              }}
-            >
-              <Text style={styles.flag}>{country.flag}</Text>
-              <Text style={styles.dropdownItemName}>{country.name}</Text>
-              <Text style={styles.dropdownItemCode}>{country.code}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      )}
-
       {/* Numéro complet prévisualisé */}
-      {value.length > 0 && (
-        <Text style={styles.fullNumber}>
-          {selectedCountry.code} {value}
-        </Text>
-      )}
+      {value.length > 0 && <Text style={styles.fullNumber}>+212 {value}</Text>}
     </View>
   );
 };
@@ -111,11 +69,6 @@ const styles = StyleSheet.create({
     fontWeight: typography.fontWeights.medium,
     color: colors.textPrimary,
   },
-  chevron: {
-    fontSize: 12,
-    color: colors.textSecondary,
-    marginLeft: 2,
-  },
   divider: {
     width: 1,
     height: 24,
@@ -134,43 +87,6 @@ const styles = StyleSheet.create({
   inputRTL: {
     textAlign: 'right',
     writingDirection: 'rtl',
-  },
-  dropdown: {
-    position: 'absolute',
-    top: 60,
-    left: 0,
-    right: 0,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: borderRadius.md,
-    zIndex: 1000,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 5,
-  },
-  dropdownItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
-    gap: spacing.md,
-  },
-  dropdownItemSelected: {
-    backgroundColor: colors.primaryLight,
-  },
-  dropdownItemName: {
-    flex: 1,
-    fontSize: typography.fontSizes.md,
-    color: colors.textPrimary,
-  },
-  dropdownItemCode: {
-    fontSize: typography.fontSizes.sm,
-    color: colors.textSecondary,
-    fontWeight: typography.fontWeights.medium,
   },
   fullNumber: {
     marginTop: spacing.xs,

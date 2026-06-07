@@ -53,6 +53,7 @@ jobs:
       - run: npm run lint
       - run: npm run check:scripts
       - run: npm run check:release-identity
+      - run: npm run check:parent-mobile-security
       - run: npm audit --audit-level=high
       - run: npm test -- --runInBand
       - run: npm run test:rate-limit-redis

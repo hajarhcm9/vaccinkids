@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { colors, typography, spacing, borderRadius, shadows } from '../../theme';
 import { mobileNotificationService } from '../../services/mobileNotificationService';
+import { notificationTarget } from '../../services/notificationNavigation';
 
 const TYPE_CONFIG = {
   RAPPEL_RDV: { icon: '📅', color: colors.primary, background: colors.primaryLight },
@@ -61,13 +62,16 @@ const NotificationsScreen = ({ navigation, onUnreadCountChange }) => {
   }, [loadNotifications]);
 
   const markAsRead = async (notification) => {
-    if (notification.isRead) return;
     try {
-      await mobileNotificationService.markAsRead(notification.id);
-      setNotifications((current) =>
-        current.map((item) => (item.id === notification.id ? { ...item, isRead: true } : item)),
-      );
-      onUnreadCountChange?.(Math.max(0, notifications.filter((item) => !item.isRead).length - 1));
+      if (!notification.isRead) {
+        await mobileNotificationService.markAsRead(notification.id);
+        setNotifications((current) =>
+          current.map((item) => (item.id === notification.id ? { ...item, isRead: true } : item)),
+        );
+        onUnreadCountChange?.(Math.max(0, notifications.filter((item) => !item.isRead).length - 1));
+      }
+      const target = notificationTarget(notification);
+      if (target) navigation.navigate(target.screen, target.params);
     } catch (markError) {
       setError(markError.message);
     }
@@ -88,8 +92,10 @@ const NotificationsScreen = ({ navigation, onUnreadCountChange }) => {
     return (
       <TouchableOpacity
         style={[styles.notification, !item.isRead && styles.notificationUnread]}
-        activeOpacity={item.isRead ? 1 : 0.75}
+        activeOpacity={0.75}
         onPress={() => markAsRead(item)}
+        accessibilityRole="button"
+        accessibilityLabel={`${item.title}. ${item.message}`}
       >
         <View style={[styles.typeIcon, { backgroundColor: config.background }]}>
           <Text style={[styles.typeIconText, { color: config.color }]}>{config.icon}</Text>

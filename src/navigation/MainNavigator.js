@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Platform } from 'react-native';
+import { AppState, View, Text, StyleSheet, Platform } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
@@ -15,6 +15,7 @@ import AddBabyScreen from '../screens/auth/AddBabyScreen';
 
 import { preferencesService } from '../services/preferencesService';
 import { mobileNotificationService } from '../services/mobileNotificationService';
+import { pushRegistrationService } from '../services/pushRegistrationService';
 import { colors, typography, spacing, borderRadius } from '../theme';
 
 const Tab = createBottomTabNavigator();
@@ -98,7 +99,15 @@ const MainNavigator = () => {
     };
     loadUnreadCount();
     const interval = setInterval(loadUnreadCount, 60_000);
-    return () => clearInterval(interval);
+    const subscription = AppState.addEventListener('change', (state) => {
+      if (state === 'active') loadUnreadCount();
+    });
+    const unsubscribeForeground = pushRegistrationService.onForegroundMessage(loadUnreadCount);
+    return () => {
+      clearInterval(interval);
+      subscription.remove();
+      unsubscribeForeground();
+    };
   }, []);
 
   return (

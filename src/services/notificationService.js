@@ -28,7 +28,7 @@ class NotificationService {
         sent = true;
       }
     } catch (e) {
-      console.error('[NS] Dispatch:', e.message);
+      console.error(JSON.stringify({ level: 'error', event: 'notification_dispatch_failed' }));
     }
     if (sent) {
       await Notification.markAsSent(n.id);

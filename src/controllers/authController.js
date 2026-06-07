@@ -173,6 +173,13 @@ const AuthController = {
     });
   }),
 
+  removeFcmToken: catchAsync(async (req, res, next) => {
+    if (req.user.role !== 'parent')
+      return next(ApiError.forbidden('Only parents can remove FCM tokens'));
+    await Parent.updateFcmToken(req.user.id, null);
+    return success(res, 200, 'FCM token removed successfully', { push_enabled: false });
+  }),
+
   // ---- PERSONNEL LOGIN ----
 
   personnelLogin: catchAsync(async (req, res, next) => {

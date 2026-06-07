@@ -184,7 +184,7 @@ const LoginScreen = ({ navigation }) => {
         </View>
 
         {/* Footer */}
-        <Text style={styles.footer}>Centre Es-Salaam · Province d'Oujda</Text>
+        <Text style={styles.footer}>Service parental VacciniKids</Text>
       </ScrollView>
     </KeyboardAvoidingView>
   );
