@@ -10,8 +10,6 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
-import com.example.vaccinkid.data.AppDatabase
-import com.example.vaccinkid.data.CachedGrowthEntity
 import com.example.vaccinkid.model.CroissanceDto
 import com.example.vaccinkid.network.ApiClient
 import com.github.mikephil.charting.charts.LineChart
@@ -49,8 +47,12 @@ class GrowthChartFragment : Fragment() {
 
         titleView.text = "Courbes de croissance : ${bebeName.ifBlank { "Bébé #$bebeId" }}"
         setupChart()
-        loadGrowth()
         return view
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        loadGrowth()
     }
 
     private fun setupChart() {
@@ -77,37 +79,17 @@ class GrowthChartFragment : Fragment() {
                 val response = ApiClient.apiService.getCroissance(bebeId)
                 val data = response.data.orEmpty()
                 if (response.status == "success" && data.isNotEmpty()) {
-                    cacheGrowth(data)
                     renderChart(data)
                 } else {
                     showEmpty(response.message ?: "Aucune mesure enregistrée")
                 }
             } catch (e: Exception) {
-                val cached = loadCachedGrowth()
-                if (cached.isNotEmpty()) {
-                    Toast.makeText(requireContext(), "Mode hors ligne : mesures en cache", Toast.LENGTH_SHORT).show()
-                    renderChart(cached)
-                } else {
-                    showEmpty("Chargement impossible")
-                    Toast.makeText(requireContext(), e.message ?: "Erreur réseau", Toast.LENGTH_LONG).show()
-                }
+                showEmpty("Connexion requise")
+                Toast.makeText(requireContext(), e.message ?: "Erreur réseau", Toast.LENGTH_LONG).show()
             } finally {
                 progress.visibility = View.GONE
             }
         }
-    }
-
-    private suspend fun cacheGrowth(data: List<CroissanceDto>) {
-        val dao = AppDatabase.getInstance(requireContext()).cachedGrowthDao()
-        dao.deleteForBebe(bebeId)
-        dao.insertAll(data.map { CachedGrowthEntity.fromDto(it, bebeId) })
-    }
-
-    private suspend fun loadCachedGrowth(): List<CroissanceDto> {
-        return AppDatabase.getInstance(requireContext())
-            .cachedGrowthDao()
-            .findByBebe(bebeId)
-            .map { it.toDto() }
     }
 
     private fun renderChart(data: List<CroissanceDto>) {

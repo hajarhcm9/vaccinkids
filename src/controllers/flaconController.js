@@ -45,6 +45,17 @@ const FlaconController = {
     return success(res, 200, 'Waste recorded', updated);
   }),
 
+  close: catchAsync(async (req, res, next) => {
+    await authorization.assertFlaconAccess(req.user, req.params.id);
+    const updated = await Flacon.close(req.params.id);
+    if (!updated) {
+      return next(
+        ApiError.conflict('Vial can only be closed after every dose is used or declared wasted'),
+      );
+    }
+    return success(res, 200, 'Vial closed', updated);
+  }),
+
   forceClose: catchAsync(async (req, res, next) => {
     const { justification } = req.body;
     if (!justification)
@@ -54,6 +65,7 @@ const FlaconController = {
     if (!flacon) return next(ApiError.notFound('Vial not found'));
 
     const updated = await Flacon.forceClose(req.params.id, justification);
+    if (!updated) return next(ApiError.conflict('Vial is already closed'));
     return success(res, 200, 'Vial force closed', updated);
   }),
 };

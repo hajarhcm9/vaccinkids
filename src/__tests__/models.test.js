@@ -58,7 +58,10 @@ describe('Flacon model', () => {
       ouverture_forcee: true,
     });
     expect(query).toHaveBeenCalledWith(
-      'UPDATE flacon SET ouverture_forcee = TRUE, justification_forcee = $2 WHERE id = $1 RETURNING *',
+      `UPDATE flacon
+       SET ouverture_forcee = TRUE, justification_forcee = $2,
+           justification_fermeture = $2, date_fermeture = NOW(), updated_at = NOW()
+       WHERE id = $1 AND date_fermeture IS NULL RETURNING *`,
       [8, 'Cold chain break'],
     );
   });

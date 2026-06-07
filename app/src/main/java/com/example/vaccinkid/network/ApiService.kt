@@ -14,7 +14,7 @@ interface ApiService {
     suspend fun logout(@Body body: Map<String, String?>): ApiResponse<Any>
 
     @GET("auth/me")
-    suspend fun getMe(): ApiResponse<UserDto>
+    suspend fun getMe(): ApiResponse<UserEnvelopeDto>
 
     @GET("statistiques/dashboard")
     suspend fun getDashboardStats(): ApiResponse<DashboardStatsDto>
@@ -142,6 +142,9 @@ interface ApiService {
 
     @PATCH("flacons/{id}/waste")
     suspend fun recordWaste(@Path("id") id: Int): ApiResponse<FlaconDto>
+
+    @PATCH("flacons/{id}/close")
+    suspend fun closeFlacon(@Path("id") id: Int): ApiResponse<FlaconDto>
 
     @POST("vaccinations/{rdvId}")
     suspend fun createVaccination(

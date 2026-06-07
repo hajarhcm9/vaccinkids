@@ -104,8 +104,9 @@ async function getQueueBySession(sessionId) {
 
 async function callNext(centreId) {
   var result = await pool.query(
-    "UPDATE file_attente SET statut = 'EN_COURS', heure_debut_service = NOW() " +
-      "WHERE id = (SELECT id FROM file_attente WHERE centre_id = $1 AND statut = 'EN_ATTENTE' AND DATE(heure_arrivee) = CURRENT_DATE ORDER BY numero_attente ASC LIMIT 1) " +
+    "UPDATE file_attente SET statut = 'EN_COURS', heure_debut_service = NOW(), updated_at = NOW() " +
+      "WHERE id = (SELECT id FROM file_attente WHERE centre_id = $1 AND statut = 'EN_ATTENTE' AND DATE(heure_arrivee) = CURRENT_DATE ORDER BY numero_attente ASC LIMIT 1 FOR UPDATE SKIP LOCKED) " +
+      "AND statut = 'EN_ATTENTE' " +
       'RETURNING *',
     [centreId],
   );

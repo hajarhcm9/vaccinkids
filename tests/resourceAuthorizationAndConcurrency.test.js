@@ -4,6 +4,7 @@ const { pool } = require('../src/config/database');
 const TokenService = require('../src/services/tokenService');
 const bookingService = require('../src/services/bookingService');
 const clinicalWorkflow = require('../src/services/clinicalWorkflowService');
+const fileAttenteService = require('../src/services/fileAttenteService');
 
 describe('Resource authorization and clinical concurrency', () => {
   const ids = {};
@@ -61,6 +62,10 @@ describe('Resource authorization and clinical concurrency', () => {
       'DELETE FROM vaccination WHERE rendez_vous_id IN (SELECT id FROM rendez_vous WHERE parent_id IN ($1, $2))',
       [ids.parent1, ids.parent2],
     );
+    await pool.query('DELETE FROM file_attente WHERE parent_id IN ($1, $2)', [
+      ids.parent1,
+      ids.parent2,
+    ]);
     await pool.query("DELETE FROM flacon WHERE numero_lot = 'P0-LAST'");
     await pool.query('DELETE FROM rendez_vous WHERE parent_id IN ($1, $2)', [
       ids.parent1,
@@ -177,5 +182,20 @@ describe('Resource authorization and clinical concurrency', () => {
       vial.rows[0].id,
     ]);
     expect(finalVial.rows[0].doses_utilisees).toBe(1);
+  });
+
+  test('two concurrent nurses cannot call the same queue entry', async () => {
+    const entry = await pool.query(
+      `INSERT INTO file_attente
+       (numero_attente, rendez_vous_id, centre_id, session_id, parent_id, bebe_id, statut)
+       VALUES (9001, $1, $2, $3, $4, $5, 'EN_ATTENTE') RETURNING id`,
+      [ids.foreignRdv, ids.centre2, ids.foreignSession, ids.parent1, ids.bebe1],
+    );
+    const results = await Promise.all([
+      fileAttenteService.callNext(ids.centre2),
+      fileAttenteService.callNext(ids.centre2),
+    ]);
+    expect(results.filter(Boolean)).toHaveLength(1);
+    expect(results.filter(Boolean)[0].id).toBe(entry.rows[0].id);
   });
 });

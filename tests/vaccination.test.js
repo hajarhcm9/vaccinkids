@@ -127,7 +127,7 @@ describe('Vaccination & Flacon Endpoints', () => {
       const res = await request(app)
         .post('/api/vaccinations/' + rdvId)
         .set('Authorization', 'Bearer ' + nurseToken)
-        .send({ flacon_id: flaconId });
+        .send({ flacon_id: flaconId, poids: 3.8, taille: 50.0 });
       expect(res.status).toBe(409);
     });
 
@@ -169,6 +169,44 @@ describe('Vaccination & Flacon Endpoints', () => {
       expect(res.status).toBe(200);
       expect(res.body.data.length).toBeGreaterThanOrEqual(1);
       expect(res.body.data[0].doses_utilisees).toBeGreaterThanOrEqual(1);
+    });
+  });
+
+  describe('PATCH /api/flacons/:id/close', () => {
+    it('should close a vial only when no dose remains', async () => {
+      const vaccine = await pool.query(
+        "INSERT INTO vaccin (nom, doses_par_flacon, age_cible_semaines, maladies_ciblees) VALUES ('Close One Dose', 1, 0, 'Test') RETURNING id",
+      );
+      const session = await pool.query(
+        `INSERT INTO session
+         (centre_id, vaccin_id, date_session, heure_debut, heure_fin, statut, max_inscriptions)
+         VALUES (1, $1, CURRENT_DATE, '08:00', '12:00', 'EN_COURS', 5) RETURNING id`,
+        [vaccine.rows[0].id],
+      );
+      const vial = await request(app)
+        .post('/api/flacons')
+        .set('Authorization', 'Bearer ' + nurseToken)
+        .send({
+          vaccin_id: vaccine.rows[0].id,
+          session_id: session.rows[0].id,
+          numero_lot: 'CLOSE-ONE',
+          fabricant: 'Test',
+        });
+
+      const earlyClose = await request(app)
+        .patch('/api/flacons/' + vial.body.data.id + '/close')
+        .set('Authorization', 'Bearer ' + nurseToken);
+      expect(earlyClose.status).toBe(409);
+
+      await request(app)
+        .patch('/api/flacons/' + vial.body.data.id + '/waste')
+        .set('Authorization', 'Bearer ' + nurseToken);
+
+      const close = await request(app)
+        .patch('/api/flacons/' + vial.body.data.id + '/close')
+        .set('Authorization', 'Bearer ' + nurseToken);
+      expect(close.status).toBe(200);
+      expect(close.body.data.date_fermeture).toBeTruthy();
     });
   });
 });

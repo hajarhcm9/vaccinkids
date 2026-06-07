@@ -23,6 +23,7 @@ class QueueFragment : Fragment() {
     private lateinit var progress: ProgressBar
     private lateinit var message: TextView
     private lateinit var adapter: QueueAdapter
+    private var actionInFlight = false
 
     override fun onCreateView(
         inflater: android.view.LayoutInflater,
@@ -67,8 +68,12 @@ class QueueFragment : Fragment() {
             0,
             1f
         ))
-        loadQueue()
         return root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        loadQueue()
     }
 
     private fun loadQueue() {
@@ -95,6 +100,8 @@ class QueueFragment : Fragment() {
 
     private fun callNext() {
         val centreId = TokenManager.getCentreId() ?: return
+        if (actionInFlight) return
+        actionInFlight = true
         viewLifecycleOwner.lifecycleScope.launch {
             setLoading(true, "Appel du prochain patient...")
             try {
@@ -106,11 +113,15 @@ class QueueFragment : Fragment() {
                 loadQueue()
             } catch (e: Exception) {
                 setLoading(false, e.message ?: "Erreur reseau")
+            } finally {
+                actionInFlight = false
             }
         }
     }
 
     private fun complete(entry: QueueEntryDto) {
+        if (actionInFlight) return
+        actionInFlight = true
         viewLifecycleOwner.lifecycleScope.launch {
             setLoading(true, "Fin de service...")
             try {
@@ -120,6 +131,8 @@ class QueueFragment : Fragment() {
                 loadQueue()
             } catch (e: Exception) {
                 setLoading(false, e.message ?: "Erreur reseau")
+            } finally {
+                actionInFlight = false
             }
         }
     }

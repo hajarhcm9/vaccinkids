@@ -15,9 +15,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
-import com.example.vaccinkid.data.AppDatabase
-import com.example.vaccinkid.data.CachedBebeEntity
 import com.example.vaccinkid.model.BebeDto
+import com.example.vaccinkid.model.RendezVousDto
 import com.example.vaccinkid.network.ApiClient
 import com.journeyapps.barcodescanner.ScanContract
 import com.journeyapps.barcodescanner.ScanIntentResult
@@ -103,8 +102,7 @@ class ScanQrFragment : Fragment() {
                 val response = ApiClient.apiService.getBebeByQr(code)
                 val bebe = response.data?.bebe
                 if (response.status == "success" && bebe != null) {
-                    cacheBebe(bebe, code)
-                    showBabyFoundDialog(bebe, code)
+                    showBabyFoundDialog(bebe, response.data?.eligibleAppointments.orEmpty())
                 } else {
                     Toast.makeText(
                         requireContext(),
@@ -113,17 +111,11 @@ class ScanQrFragment : Fragment() {
                     ).show()
                 }
             } catch (e: Exception) {
-                val cachedBebe = findCachedBebe(code)
-                if (cachedBebe != null) {
-                    Toast.makeText(requireContext(), "Mode hors ligne : carnet en cache", Toast.LENGTH_SHORT).show()
-                    showBabyFoundDialog(cachedBebe, code)
-                } else {
-                    Toast.makeText(
-                        requireContext(),
-                        "Recherche impossible : ${e.message}",
-                        Toast.LENGTH_LONG
-                    ).show()
-                }
+                Toast.makeText(
+                    requireContext(),
+                    "Connexion requise. Recherche impossible : ${e.message}",
+                    Toast.LENGTH_LONG
+                ).show()
             } finally {
                 setLoading(false)
             }
@@ -169,45 +161,24 @@ class ScanQrFragment : Fragment() {
         }
     }
 
-    private fun showBabyFoundDialog(bebe: BebeDto, code: String) {
+    private fun showBabyFoundDialog(bebe: BebeDto, appointments: List<RendezVousDto>) {
         val fullName = listOfNotNull(bebe.prenom, bebe.nom)
             .joinToString(" ")
             .ifBlank { "Bébé #${bebe.id}" }
+        val eligible = appointments.joinToString("\n") {
+            "RDV #${it.id} - ${it.vaccinNom ?: "vaccination"} - ${it.statut ?: "statut inconnu"}"
+        }.ifBlank { "Aucun rendez-vous eligible" }
         val message = """
             Bébé : $fullName
-            Code : ${bebe.codeQr ?: code}
             Né(e) le : ${bebe.dateNaissance ?: "Non renseigné"}
+            $eligible
         """.trimIndent()
 
         AlertDialog.Builder(requireContext())
             .setTitle("Carnet trouvé")
             .setMessage(message)
-            .setNeutralButton("Courbes") { _, _ ->
-                navigateTo(GrowthChartFragment.newInstance(bebe.id, fullName))
-            }
             .setNegativeButton("Rescanner", null)
             .show()
-    }
-
-    private suspend fun cacheBebe(bebe: BebeDto, code: String) {
-        AppDatabase.getInstance(requireContext())
-            .cachedBebeDao()
-            .upsert(CachedBebeEntity.fromDto(bebe, code))
-    }
-
-    private suspend fun findCachedBebe(code: String): BebeDto? {
-        return AppDatabase.getInstance(requireContext())
-            .cachedBebeDao()
-            .findByQr(code)
-            ?.toDto()
-    }
-
-    private fun navigateTo(fragment: Fragment) {
-        (activity as? MainInfirmierActivity)?.naviguerVers(fragment)
-            ?: parentFragmentManager.beginTransaction()
-                .replace(R.id.fragmentContainer, fragment)
-                .addToBackStack(null)
-                .commit()
     }
 
     private fun setLoading(isLoading: Boolean) {

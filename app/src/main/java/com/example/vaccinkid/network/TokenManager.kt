@@ -15,9 +15,11 @@ object TokenManager {
     private const val KEY_CENTRE_ID = "centre_id"
 
     private lateinit var prefs: SharedPreferences
+    private lateinit var appContext: Context
 
     fun init(context: Context) {
         if (::prefs.isInitialized) return
+        appContext = context.applicationContext
         val masterKey = MasterKey.Builder(context)
             .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
             .build()
@@ -55,5 +57,9 @@ object TokenManager {
 
     fun clearTokens() {
         prefs.edit().clear().apply()
+        if (::appContext.isInitialized) {
+            appContext.getSharedPreferences("sync_prefs", Context.MODE_PRIVATE).edit().clear().apply()
+            appContext.deleteDatabase("vaccinkids_cache")
+        }
     }
 }

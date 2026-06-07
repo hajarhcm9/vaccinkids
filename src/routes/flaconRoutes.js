@@ -34,6 +34,8 @@ router.patch(
   FlaconController.recordWaste,
 );
 
+router.patch('/:id/close', authenticate, authorize('infirmier', 'admin'), FlaconController.close);
+
 router.patch(
   '/:id/force-close',
   authenticate,

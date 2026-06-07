@@ -33,7 +33,8 @@ class GestionFlaconsFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         adapter = FlaconAdapter(
-            onWaste = { flacon -> recordWaste(flacon) }
+            onWaste = { flacon -> recordWaste(flacon) },
+            onClose = { flacon -> closeFlacon(flacon) }
         )
 
         return LinearLayout(requireContext()).apply {
@@ -171,6 +172,27 @@ class GestionFlaconsFragment : Fragment() {
         }
     }
 
+    private fun closeFlacon(flacon: FlaconDto) {
+        if (loading) return
+        setLoading(true, "Fermeture du flacon...")
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                val response = ApiClient.apiService.closeFlacon(flacon.id)
+                if (response.status == "success" && response.data != null) {
+                    Toast.makeText(requireContext(), "Flacon ferme par le serveur", Toast.LENGTH_SHORT).show()
+                    setLoading(false)
+                    loadFlacons()
+                } else {
+                    messageView.text = response.message ?: "Fermeture refusee."
+                }
+            } catch (e: Exception) {
+                messageView.text = e.message ?: "Erreur reseau."
+            } finally {
+                setLoading(false)
+            }
+        }
+    }
+
     private fun setLoading(value: Boolean, message: String? = null) {
         loading = value
         openButton.isEnabled = !value && sessionId() > 0 && vaccinId() > 0
@@ -182,7 +204,8 @@ class GestionFlaconsFragment : Fragment() {
     private fun vaccinId(): Int = requireArguments().getInt(ARG_VACCIN_ID, 0)
 
     private class FlaconAdapter(
-        private val onWaste: (FlaconDto) -> Unit
+        private val onWaste: (FlaconDto) -> Unit,
+        private val onClose: (FlaconDto) -> Unit
     ) : RecyclerView.Adapter<FlaconAdapter.ViewHolder>() {
         private val items = mutableListOf<FlaconDto>()
 
@@ -198,7 +221,8 @@ class GestionFlaconsFragment : Fragment() {
                     orientation = LinearLayout.VERTICAL
                     setPadding(16)
                 },
-                onWaste
+                onWaste,
+                onClose
             )
         }
 
@@ -210,7 +234,8 @@ class GestionFlaconsFragment : Fragment() {
 
         class ViewHolder(
             private val root: LinearLayout,
-            private val onWaste: (FlaconDto) -> Unit
+            private val onWaste: (FlaconDto) -> Unit,
+            private val onClose: (FlaconDto) -> Unit
         ) : RecyclerView.ViewHolder(root) {
             fun bind(flacon: FlaconDto) {
                 root.removeAllViews()
@@ -219,12 +244,18 @@ class GestionFlaconsFragment : Fragment() {
                     textSize = 16f
                 })
                 root.addView(TextView(root.context).apply {
-                    text = "Utilisees ${flacon.dosesUtilisees ?: 0} / gaspillees ${flacon.dosesGaspillees ?: 0} / restantes ${flacon.remainingDosesLabel()}"
+                    val closed = if (flacon.dateFermeture == null) "ouvert" else "ferme"
+                    text = "Utilisees ${flacon.dosesUtilisees ?: 0} / gaspillees ${flacon.dosesGaspillees ?: 0} / restantes ${flacon.remainingDosesLabel()} / $closed"
                 })
                 root.addView(Button(root.context).apply {
                     text = "Declarer gaspillage"
-                    isEnabled = flacon.remainingDoses() > 0
+                    isEnabled = flacon.dateFermeture == null && (flacon.dosesRestantes ?: 0) > 0
                     setOnClickListener { onWaste(flacon) }
+                })
+                root.addView(Button(root.context).apply {
+                    text = "Fermer flacon"
+                    isEnabled = flacon.dateFermeture == null && (flacon.dosesRestantes ?: 0) == 0
+                    setOnClickListener { onClose(flacon) }
                 })
             }
         }
@@ -251,11 +282,6 @@ class GestionFlaconsFragment : Fragment() {
     }
 }
 
-private fun FlaconDto.remainingDoses(): Int {
-    val capacity = dosesParFlacon ?: return 0
-    return (capacity - (dosesUtilisees ?: 0) - (dosesGaspillees ?: 0)).coerceAtLeast(0)
-}
-
 private fun FlaconDto.remainingDosesLabel(): String {
-    return if (dosesParFlacon == null) "serveur indisponible" else remainingDoses().toString()
+    return dosesRestantes?.toString() ?: "serveur indisponible"
 }

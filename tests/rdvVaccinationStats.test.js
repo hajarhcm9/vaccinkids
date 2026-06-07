@@ -338,7 +338,7 @@ describe('Day 17 - RDV Management, Vaccination & Statistics', () => {
       const res = await request(app)
         .post('/api/vaccinations/' + vaccRdvId)
         .set('Authorization', 'Bearer ' + nurseToken)
-        .send({ flacon_id: vaccFlaconId, poids: 5.3 });
+        .send({ flacon_id: vaccFlaconId, poids: 5.3, taille: 60 });
 
       expect(res.status).toBe(409);
     });

@@ -96,7 +96,7 @@ class EnregistrementVaccinationFragment : Fragment() {
         viewModel.flacons.observe(viewLifecycleOwner) { result ->
             result.fold(
                 onSuccess = { loaded ->
-                    flacons = loaded.filter { it.remainingDoses() > 0 }
+                    flacons = loaded.filter { (it.dosesRestantes ?: 0) > 0 }
                     updateFlaconSpinner()
                     submitButton.isEnabled = flacons.isNotEmpty() && !submitted
                     messageView.text = if (flacons.isEmpty()) {
@@ -137,7 +137,7 @@ class EnregistrementVaccinationFragment : Fragment() {
     private fun updateFlaconSpinner() {
         val labels = flacons.map {
             val lot = it.numeroLot ?: "lot ${it.id}"
-            "$lot - restant ${it.remainingDoses()}"
+            "$lot - restant ${it.dosesRestantes ?: 0}"
         }
         flaconSpinner.adapter = ArrayAdapter(
             requireContext(),
@@ -182,11 +182,6 @@ class EnregistrementVaccinationFragment : Fragment() {
             inputType = android.text.InputType.TYPE_CLASS_NUMBER or
                 android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL
         }
-    }
-
-    private fun FlaconDto.remainingDoses(): Int {
-        val capacity = dosesParFlacon ?: return 0
-        return (capacity - (dosesUtilisees ?: 0) - (dosesGaspillees ?: 0)).coerceAtLeast(0)
     }
 
     companion object {

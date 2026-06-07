@@ -2,7 +2,15 @@ const { getClient } = require('../config/database');
 const ApiError = require('../utils/ApiError');
 const authorization = require('./resourceAuthorizationService');
 
-const recordVaccination = async ({ user, rdvId, flaconId, poids, taille, reactions }) => {
+const recordVaccination = async ({
+  user,
+  rdvId,
+  flaconId,
+  poids,
+  taille,
+  reactions,
+  requestId,
+}) => {
   const client = await getClient();
   try {
     await client.query('BEGIN');
@@ -37,6 +45,7 @@ const recordVaccination = async ({ user, rdvId, flaconId, poids, taille, reactio
     );
     const vial = vialResult.rows[0];
     if (!vial) throw ApiError.notFound('Vial not found');
+    if (vial.date_fermeture) throw ApiError.conflict('This vial is closed');
     if (Number(vial.session_id) !== Number(rdv.session_id)) {
       throw ApiError.badRequest('Vial does not belong to this session');
     }
@@ -61,6 +70,18 @@ const recordVaccination = async ({ user, rdvId, flaconId, poids, taille, reactio
       "UPDATE rendez_vous SET statut = 'PRESENT', updated_at = NOW() WHERE id = $1",
       [rdvId],
     );
+    await client.query(
+      `INSERT INTO audit_log
+       (table_name, record_id, action, new_values, user_id, user_role, request_id)
+       VALUES ('vaccination', $1, 'INSERT', $2, $3, $4, $5)`,
+      [
+        vaccination.rows[0].id,
+        { result: 'success', rendez_vous_id: Number(rdvId), flacon_id: Number(flaconId) },
+        user.id,
+        user.role,
+        requestId || null,
+      ],
+    );
     await client.query('COMMIT');
     return vaccination.rows[0];
   } catch (error) {
@@ -84,6 +105,7 @@ const recordWaste = async ({ user, flaconId, doses = 1 }) => {
     );
     const vial = vialResult.rows[0];
     if (!vial) throw ApiError.notFound('Vial not found');
+    if (vial.date_fermeture) throw ApiError.conflict('This vial is closed');
     if (user.role === 'infirmier') {
       if (!vial.centre_id) throw ApiError.forbidden('Unassigned vials are restricted to admins');
       authorization.assertCentreAccess(user, vial.centre_id);

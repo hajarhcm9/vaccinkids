@@ -83,6 +83,8 @@ describe('Secure QR carnet access', () => {
       .get('/api/carnet/qr/VK-OLD-CODE')
       .set('Authorization', `Bearer ${nurseToken}`);
     expect(response.status).toBe(400);
+    const audit = await findScanAudit('VK-OLD-CODE');
+    expect(audit.new_values).toMatchObject({ status: 'denied', reason: 'invalid_or_obsolete_qr' });
   });
 
   test('allows a nurse to scan an eligible appointment at their centre', async () => {
@@ -101,5 +103,10 @@ describe('Secure QR carnet access', () => {
       .get(`/api/carnet/qr/${outOfScopeQr}`)
       .set('Authorization', `Bearer ${nurseToken}`);
     expect(response.status).toBe(403);
+    const audit = await findScanAudit(outOfScopeQr);
+    expect(audit.new_values).toMatchObject({
+      status: 'denied',
+      reason: 'outside_centre_or_session_scope',
+    });
   });
 });

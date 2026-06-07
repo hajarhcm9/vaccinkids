@@ -2,20 +2,16 @@ const Bebe = require('../models/Bebe');
 const Croissance = require('../models/Croissance');
 const Vaccination = require('../models/Vaccination');
 const RendezVous = require('../models/RendezVous');
-const ApiError = require('../utils/ApiError');
 const catchAsync = require('../utils/catchAsync');
 const { success } = require('../utils/responseHandler');
+const authorization = require('../services/resourceAuthorizationService');
 
 const CarnetEnhancedController = {
   getComplete: catchAsync(async (req, res, next) => {
     const bebeId = req.params.id;
 
+    await authorization.assertBebeAccess(req.user, bebeId);
     const bebe = await Bebe.findById(bebeId);
-    if (!bebe) return next(ApiError.notFound('Baby not found'));
-
-    if (req.user.role === 'parent' && bebe.parent_id !== req.user.id) {
-      return next(ApiError.forbidden('Access denied'));
-    }
 
     const [vaccinations, croissance, delayedVaccines, upcomingRdvs] = await Promise.all([
       Vaccination.findByBebe(bebeId),

@@ -30,6 +30,7 @@ class RdvFragment : Fragment() {
     private lateinit var messageView: TextView
     private lateinit var adapter: StaffRdvAdapter
     private var sessions: List<SessionDto> = emptyList()
+    private var actionInFlight = false
     private val statuses = listOf("Tous", "EN_ATTENTE", "CONFIRME", "PRESENT", "ABSENT")
 
     override fun onCreateView(
@@ -111,8 +112,12 @@ class RdvFragment : Fragment() {
             override fun onNothingSelected(parent: android.widget.AdapterView<*>?) = Unit
         })
 
-        loadSessions()
         return root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        loadSessions()
     }
 
     private fun loadSessions() {
@@ -165,6 +170,18 @@ class RdvFragment : Fragment() {
     }
 
     private fun updateRdvStatus(rdv: RendezVousDto, statut: String) {
+        if (actionInFlight) return
+        val allowed = when (rdv.statut) {
+            "EN_ATTENTE" -> statut == "CONFIRME" || statut == "ABSENT"
+            "EN_LISTE_ATTENTE" -> statut == "CONFIRME"
+            "CONFIRME" -> statut == "PRESENT" || statut == "ABSENT"
+            else -> false
+        }
+        if (!allowed) {
+            messageView.text = "Transition ${rdv.statut ?: "inconnue"} -> $statut interdite."
+            return
+        }
+        actionInFlight = true
         viewLifecycleOwner.lifecycleScope.launch {
             setLoading(true, "Mise a jour $statut...")
             try {
@@ -177,6 +194,8 @@ class RdvFragment : Fragment() {
                 loadRdvForSelectedSession()
             } catch (e: Exception) {
                 setLoading(false, e.message ?: "Erreur reseau")
+            } finally {
+                actionInFlight = false
             }
         }
     }
@@ -315,11 +334,13 @@ private class StaffRdvAdapter(
             row.addView(Button(ctx).apply {
                 text = "Present"
                 textSize = 11f
+                isEnabled = rdv.statut == "CONFIRME"
                 setOnClickListener { onPresent(rdv) }
             }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
             row.addView(Button(ctx).apply {
                 text = "Absent"
                 textSize = 11f
+                isEnabled = rdv.statut == "CONFIRME" || rdv.statut == "EN_ATTENTE"
                 setOnClickListener { onAbsent(rdv) }
             }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
             row.addView(Button(ctx).apply {
@@ -331,6 +352,7 @@ private class StaffRdvAdapter(
             row.addView(Button(ctx).apply {
                 text = "Carnet"
                 textSize = 11f
+                isEnabled = rdv.statut == "CONFIRME" || rdv.statut == "PRESENT"
                 setOnClickListener { onGrowth(rdv) }
             }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
             root.addView(row)

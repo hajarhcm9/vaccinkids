@@ -16,6 +16,7 @@ import com.example.vaccinkid.model.StockDto
 import com.example.vaccinkid.model.UpdateStockRequest
 import com.example.vaccinkid.model.UpsertStockRequest
 import com.example.vaccinkid.network.ApiClient
+import com.example.vaccinkid.network.TokenManager
 import com.example.vaccinkid.viewmodel.StockViewModel
 import kotlinx.coroutines.launch
 
@@ -36,6 +37,8 @@ class GestionStocksActivity : AppCompatActivity() {
 
         findViewById<Button>(R.id.btnAjouterEntreeStock).apply {
             text = "Upsert stock"
+            visibility = if (TokenManager.getUserRole() == "admin") android.view.View.VISIBLE
+            else android.view.View.GONE
             setOnClickListener { showUpsertDialog() }
         }
 
@@ -52,8 +55,9 @@ class GestionStocksActivity : AppCompatActivity() {
     }
 
     private fun showUpsertDialog() {
+        if (TokenManager.getUserRole() != "admin") return
         val root = formRoot()
-        val centre = edit("Centre ID").also { it.setText("1") }
+        val centre = edit("Centre ID")
         val vaccin = edit("Vaccin ID")
         val quantite = edit("Quantite")
         val seuil = edit("Seuil alerte")
@@ -86,6 +90,7 @@ class GestionStocksActivity : AppCompatActivity() {
     }
 
     private fun showEditDialog(stock: StockDto) {
+        if (TokenManager.getUserRole() != "admin") return
         val root = formRoot()
         val quantite = edit("Quantite").also { it.setText((stock.quantiteDisponible ?: 0).toString()) }
         val seuil = edit("Seuil alerte").also { it.setText((stock.seuilAlerte ?: 0).toString()) }

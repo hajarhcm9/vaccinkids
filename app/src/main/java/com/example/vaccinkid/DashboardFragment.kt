@@ -30,6 +30,7 @@ class DashboardFragment : Fragment() {
     private lateinit var authViewModel: InfirmierAuthViewModel
     private lateinit var rdvCountView: TextView
     private lateinit var presentCountView: TextView
+    private lateinit var absentCountView: TextView
     private lateinit var waitingCountView: TextView
     private lateinit var alertView: TextView
     private lateinit var sessionsContainer: LinearLayout
@@ -82,6 +83,11 @@ class DashboardFragment : Fragment() {
         presentCountView = statBlock("Presents", statsRow)
         waitingCountView = statBlock("En attente", statsRow)
         root.addView(statsRow)
+        val absenceRow = LinearLayout(requireContext()).apply {
+            orientation = LinearLayout.HORIZONTAL
+        }
+        absentCountView = statBlock("Absents aujourd'hui", absenceRow)
+        root.addView(absenceRow)
 
         alertView = TextView(requireContext()).apply {
             text = "Alertes stock: chargement..."
@@ -94,6 +100,12 @@ class DashboardFragment : Fragment() {
         root.addView(Button(requireContext()).apply {
             text = "Rafraichir"
             setOnClickListener { refreshDashboard() }
+        })
+        root.addView(Button(requireContext()).apply {
+            text = "Notifications staff"
+            setOnClickListener {
+                (activity as? MainInfirmierActivity)?.naviguerVers(StaffNotificationsFragment())
+            }
         })
 
         val navRow = LinearLayout(requireContext()).apply {
@@ -143,7 +155,8 @@ class DashboardFragment : Fragment() {
             result.fold(
                 onSuccess = { stats ->
                     rdvCountView.text = (stats.rdvConfirmes ?: 0).toString()
-                    presentCountView.text = (stats.totalVaccinations ?: 0).toString()
+                    presentCountView.text = (stats.rdvPresents ?: 0).toString()
+                    absentCountView.text = (stats.rdvAbsents ?: 0).toString()
                     waitingCountView.text = (stats.rdvEnAttente ?: 0).toString()
                     val stockAlerts = stats.alertesStock ?: 0
                     alertView.text = if (stockAlerts > 0) {
@@ -155,6 +168,7 @@ class DashboardFragment : Fragment() {
                 onFailure = {
                     rdvCountView.text = "-"
                     presentCountView.text = "-"
+                    absentCountView.text = "-"
                     waitingCountView.text = "-"
                     alertView.text = it.message ?: "Statistiques indisponibles."
                 }
@@ -257,10 +271,11 @@ class DashboardFragment : Fragment() {
             .setTitle("Deconnexion")
             .setMessage("Voulez-vous vraiment vous deconnecter ?")
             .setPositiveButton("Oui") { _, _ ->
-                authViewModel.logout()
-                val intent = Intent(requireContext(), LoginInfirmierActivity::class.java)
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-                startActivity(intent)
+                authViewModel.logout {
+                    val intent = Intent(requireContext(), LoginInfirmierActivity::class.java)
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                    startActivity(intent)
+                }
             }
             .setNegativeButton("Annuler", null)
             .show()

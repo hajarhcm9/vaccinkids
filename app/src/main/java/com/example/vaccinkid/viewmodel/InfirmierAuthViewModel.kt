@@ -39,7 +39,7 @@ class InfirmierAuthViewModel : ViewModel() {
         }
     }
 
-    fun logout() {
+    fun logout(onComplete: (() -> Unit)? = null) {
         viewModelScope.launch {
             val refreshToken = TokenManager.getRefreshToken()
             try {
@@ -47,6 +47,7 @@ class InfirmierAuthViewModel : ViewModel() {
             } catch (_: Exception) {
             } finally {
                 TokenManager.clearTokens()
+                onComplete?.invoke()
             }
         }
     }

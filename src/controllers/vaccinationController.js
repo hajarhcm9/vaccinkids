@@ -15,6 +15,7 @@ const VaccinationController = {
       poids,
       taille,
       reactions,
+      requestId: req.requestId,
     });
 
     return created(res, 'Vaccination recorded successfully', vaccination);

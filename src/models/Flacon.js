@@ -17,7 +17,9 @@ const Flacon = {
 
   async findBySession(sessionId) {
     const result = await query(
-      `SELECT f.*, v.doses_par_flacon
+      `SELECT f.*, v.doses_par_flacon,
+              GREATEST(v.doses_par_flacon - f.doses_utilisees - f.doses_gaspillees, 0)::int
+                AS doses_restantes
        FROM flacon f JOIN vaccin v ON v.id = f.vaccin_id
        WHERE f.session_id = $1
        ORDER BY f.date_ouverture`,
@@ -36,7 +38,7 @@ const Flacon = {
 
   async findActiveBySession(sessionId) {
     const result = await query(
-      'SELECT * FROM flacon WHERE session_id = $1 AND doses_utilisees < (SELECT doses_par_flacon FROM vaccin WHERE vaccin.id = flacon.vaccin_id) ORDER BY date_ouverture LIMIT 1',
+      'SELECT * FROM flacon WHERE session_id = $1 AND date_fermeture IS NULL AND doses_utilisees + doses_gaspillees < (SELECT doses_par_flacon FROM vaccin WHERE vaccin.id = flacon.vaccin_id) ORDER BY date_ouverture LIMIT 1',
       [sessionId],
     );
     return result.rows[0];
@@ -76,8 +78,24 @@ const Flacon = {
 
   async forceClose(id, justification) {
     const result = await query(
-      'UPDATE flacon SET ouverture_forcee = TRUE, justification_forcee = $2 WHERE id = $1 RETURNING *',
+      `UPDATE flacon
+       SET ouverture_forcee = TRUE, justification_forcee = $2,
+           justification_fermeture = $2, date_fermeture = NOW(), updated_at = NOW()
+       WHERE id = $1 AND date_fermeture IS NULL RETURNING *`,
       [id, justification],
+    );
+    return result.rows[0];
+  },
+
+  async close(id) {
+    const result = await query(
+      `UPDATE flacon f
+       SET date_fermeture = NOW(), updated_at = NOW()
+       FROM vaccin v
+       WHERE f.id = $1 AND v.id = f.vaccin_id AND f.date_fermeture IS NULL
+         AND f.doses_utilisees + f.doses_gaspillees >= v.doses_par_flacon
+       RETURNING f.*`,
+      [id],
     );
     return result.rows[0];
   },

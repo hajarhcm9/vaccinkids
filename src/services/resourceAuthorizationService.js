@@ -65,7 +65,11 @@ const assertBebeAccess = async (user, bebeId, client) => {
   if (user.role === 'infirmier') {
     const centre = await dbFor(client).query(
       `SELECT 1 FROM rendez_vous rdv JOIN session s ON s.id = rdv.session_id
-       WHERE rdv.bebe_id = $1 AND s.centre_id = $2 LIMIT 1`,
+       WHERE rdv.bebe_id = $1 AND s.centre_id = $2
+         AND s.date_session = CURRENT_DATE
+         AND s.statut IN ('CONFIRMEE', 'EN_COURS')
+         AND rdv.statut IN ('CONFIRME', 'PRESENT')
+       LIMIT 1`,
       [bebeId, requireUserCentre(user)],
     );
     if (!centre.rows[0]) throw ApiError.forbidden('This baby has no record in your centre');

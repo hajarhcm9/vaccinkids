@@ -94,6 +94,17 @@ const RendezVousController = {
     }
 
     const rdv = await authorization.assertRendezVousAccess(req.user, rdvId);
+    const allowedTransitions = {
+      EN_ATTENTE: ['CONFIRME', 'ABSENT', 'ANNULE', 'EN_LISTE_ATTENTE'],
+      EN_LISTE_ATTENTE: ['CONFIRME', 'ANNULE'],
+      CONFIRME: ['PRESENT', 'ABSENT', 'ANNULE'],
+      PRESENT: [],
+      ABSENT: [],
+      ANNULE: [],
+    };
+    if (!(allowedTransitions[rdv.statut] || []).includes(statut)) {
+      return next(ApiError.badRequest(`Transition ${rdv.statut} -> ${statut} interdite`));
+    }
     if (
       req.user.role === 'parent' &&
       (!['EN_ATTENTE', 'CONFIRME', 'EN_LISTE_ATTENTE'].includes(rdv.statut) ||

@@ -168,8 +168,8 @@ const schemas = {
   },
   recordVaccination: {
     flacon_id: { type: 'integer', required: true },
-    poids: { type: 'number', min: 0 },
-    taille: { type: 'number', min: 0 },
+    poids: { type: 'number', required: true, min: 0.5, max: 100 },
+    taille: { type: 'number', required: true, min: 20, max: 220 },
     reactions: { type: 'string', maxLength: 1000 },
   },
   openFlacon: {

@@ -46,6 +46,8 @@ data class UserDto(
     val telephone: String? = null
 )
 
+data class UserEnvelopeDto(val user: UserDto? = null)
+
 data class DashboardStatsDto(
     @SerializedName("centres_actifs") val centresActifs: Int? = null,
     @SerializedName("total_personnel") val totalPersonnel: Int? = null,
@@ -54,6 +56,8 @@ data class DashboardStatsDto(
     @SerializedName("sessions_a_venir") val sessionsAVenir: Int? = null,
     @SerializedName("rdv_en_attente") val rdvEnAttente: Int? = null,
     @SerializedName("rdv_confirmes") val rdvConfirmes: Int? = null,
+    @SerializedName("rdv_presents") val rdvPresents: Int? = null,
+    @SerializedName("rdv_absents") val rdvAbsents: Int? = null,
     @SerializedName("total_vaccinations") val totalVaccinations: Int? = null,
     @SerializedName("alertes_stock") val alertesStock: Int? = null
 )
@@ -116,7 +120,9 @@ data class FlaconDto(
     @SerializedName("doses_utilisees") val dosesUtilisees: Int? = null,
     @SerializedName("doses_gaspillees") val dosesGaspillees: Int? = null,
     @SerializedName("doses_par_flacon") val dosesParFlacon: Int? = null,
-    @SerializedName("date_ouverture") val dateOuverture: String? = null
+    @SerializedName("doses_restantes") val dosesRestantes: Int? = null,
+    @SerializedName("date_ouverture") val dateOuverture: String? = null,
+    @SerializedName("date_fermeture") val dateFermeture: String? = null
 )
 
 data class CreateFlaconRequest(
@@ -188,6 +194,7 @@ data class VaccinationHistoryDto(
 
 data class QrCarnetDto(
     val bebe: BebeDto? = null,
+    val eligibleAppointments: List<RendezVousDto> = emptyList(),
     val lastVaccinations: List<VaccinationHistoryDto> = emptyList()
 )
 
