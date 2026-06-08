@@ -22,12 +22,12 @@ const TokenService = {
         tokenType: 'kiosk',
       },
       config.jwt.secret,
-      { expiresIn: '15m' },
+      { expiresIn: `${config.surfaces.kioskTokenMinutes}m` },
     );
   },
 
-  generateRefreshToken(payload) {
-    return jwt.sign(payload, config.jwt.refreshSecret, { expiresIn: config.jwt.refreshExpiresIn });
+  generateRefreshToken(payload, expiresIn = config.jwt.refreshExpiresIn) {
+    return jwt.sign(payload, config.jwt.refreshSecret, { expiresIn });
   },
 
   async generateAuthTokens(user, options = {}) {
@@ -43,10 +43,11 @@ const TokenService = {
       tokenType: 'refresh',
       familyId,
       jti: crypto.randomUUID(),
+      sessionType: options.sessionType || undefined,
     };
 
     const accessToken = this.generateAccessToken(accessPayload);
-    const refreshToken = this.generateRefreshToken(refreshPayload);
+    const refreshToken = this.generateRefreshToken(refreshPayload, options.refreshExpiresIn);
 
     const decoded = jwt.decode(accessToken);
     const refreshDecoded = jwt.decode(refreshToken);
@@ -151,7 +152,15 @@ const TokenService = {
 
       const tokens = await this.generateAuthTokens(
         { id: decoded.userId, role: decoded.role },
-        { familyId: storedToken.family_id, client },
+        {
+          familyId: storedToken.family_id,
+          client,
+          sessionType: decoded.sessionType,
+          refreshExpiresIn:
+            decoded.sessionType === 'web-admin'
+              ? `${config.surfaces.webAdminSessionDays}d`
+              : config.jwt.refreshExpiresIn,
+        },
       );
       await client.query(
         `UPDATE refresh_tokens

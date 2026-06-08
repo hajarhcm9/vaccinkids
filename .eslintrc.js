@@ -22,4 +22,10 @@ module.exports = {
     'no-underscore-dangle': 'off',
     'consistent-return': 'warn',
   },
+  overrides: [
+    {
+      files: ['public/**/*.js'],
+      env: { browser: true, node: false },
+    },
+  ],
 };

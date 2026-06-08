@@ -46,6 +46,11 @@ Un administrateur crée, tourne ou révoque une identité via `/api/kiosks`. Le 
 retourné qu'à la création ou rotation. Chaque token kiosk expire après 15 minutes et ne
 peut lire que `/api/file-attente/kiosk` pour son centre lié.
 
+Voir `WEB_KIOSK_SECURITY_RUNBOOK.md` pour l'activation, la recette et le remplacement
+d'une identite compromise. En production, `WEB_ADMIN_ENABLED` et
+`WAITING_ROOM_ENABLED` doivent etre definis explicitement ; leur valeur par defaut est
+desactivee.
+
 ## Identité mobile
 
 - Parent Android/iOS : `ma.vaccinikids.parent`, produit affiché `VacciniKids`.

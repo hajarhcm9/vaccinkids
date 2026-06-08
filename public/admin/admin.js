@@ -207,14 +207,6 @@
     return `${Math.floor(minutes / 60)} h ${minutes % 60} min`;
   }
 
-  function formatMemory(value) {
-    if (!value) return '-';
-    if (typeof value === 'string') return value;
-    const bytes = value.heapUsed || value.rss || value.used;
-    if (!bytes) return '-';
-    return `${Math.round(bytes / 1024 / 1024)} MB`;
-  }
-
   async function loadDashboard() {
     setError(dashboardError, '');
     refreshButton.disabled = true;

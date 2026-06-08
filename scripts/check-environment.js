@@ -19,6 +19,20 @@ if (!['development', 'test', 'staging', 'production'].includes(environment)) {
 }
 
 if (protectedEnvironments.has(environment)) {
+  for (const key of ['WEB_ADMIN_ENABLED', 'WAITING_ROOM_ENABLED']) {
+    if (!['true', 'false'].includes(process.env[key])) {
+      failures.push(`${key} must explicitly be true or false`);
+    }
+  }
+  const webSessionDays = Number.parseInt(process.env.WEB_ADMIN_SESSION_DAYS, 10);
+  const kioskTokenMinutes = Number.parseInt(process.env.KIOSK_TOKEN_MINUTES, 10);
+  if (!Number.isInteger(webSessionDays) || webSessionDays < 1 || webSessionDays > 7) {
+    failures.push('WEB_ADMIN_SESSION_DAYS must be between 1 and 7');
+  }
+  if (!Number.isInteger(kioskTokenMinutes) || kioskTokenMinutes < 1 || kioskTokenMinutes > 15) {
+    failures.push('KIOSK_TOKEN_MINUTES must be between 1 and 15');
+  }
+
   for (const key of urls) {
     const value = process.env[key];
     if (!value) failures.push(`${key} is required in ${environment}`);
@@ -29,7 +43,10 @@ if (protectedEnvironments.has(environment)) {
 
   for (const key of optionalClientUrls) {
     const value = process.env[key];
-    if (value && (!value.startsWith('https://') || localPattern.test(value) || demoPattern.test(value))) {
+    if (
+      value &&
+      (!value.startsWith('https://') || localPattern.test(value) || demoPattern.test(value))
+    ) {
       failures.push(`${key} must be a non-placeholder HTTPS URL`);
     }
   }
@@ -38,10 +55,9 @@ if (protectedEnvironments.has(environment)) {
   if (!process.env.AUDIT_EXTERNAL_URL?.startsWith('https://')) {
     failures.push('AUDIT_EXTERNAL_URL must use HTTPS');
   }
-  if (!process.env.REDIS_URL?.startsWith('rediss://')) failures.push('REDIS_URL must use TLS (rediss)');
-  if (
-    process.env.CORS_ORIGIN?.split(',').some((origin) => !origin.trim().startsWith('https://'))
-  ) {
+  if (!process.env.REDIS_URL?.startsWith('rediss://'))
+    failures.push('REDIS_URL must use TLS (rediss)');
+  if (process.env.CORS_ORIGIN?.split(',').some((origin) => !origin.trim().startsWith('https://'))) {
     failures.push('Every CORS_ORIGIN must use HTTPS');
   }
 

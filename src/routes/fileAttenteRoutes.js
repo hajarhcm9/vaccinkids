@@ -7,10 +7,12 @@ var authenticate = authMiddleware.authenticate;
 var rbacMiddleware = require('../middleware/rbacMiddleware');
 var authorize = rbacMiddleware.authorize;
 var controller = require('../controllers/fileAttenteController');
+var requireWaitingRoomSurface =
+  require('../middleware/surfaceAvailability').requireWaitingRoomSurface;
 
 router.use(authenticate);
 
-router.get('/kiosk', authorize('kiosk'), controller.getKioskQueue);
+router.get('/kiosk', requireWaitingRoomSurface, authorize('kiosk'), controller.getKioskQueue);
 router.post('/', authorize('parent'), controller.joinQueue);
 router.get('/centre/:centreId', authorize('admin', 'infirmier'), controller.getQueueByCentre);
 router.get('/session/:sessionId', authorize('admin', 'infirmier'), controller.getQueueBySession);

@@ -34,7 +34,7 @@ setupSecurity(app);
 const corsOptions = {
   origin: config.cors.origin.split(','),
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-ID'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-ID', 'X-CSRF-Token'],
   exposedHeaders: ['X-Request-ID'],
   credentials: true,
   maxAge: 86400,
@@ -104,8 +104,12 @@ app.get('/metrics', async (req, res) => {
 // ============================================
 // 8. ADMIN WEB INTERFACE
 // ============================================
-app.use('/admin', express.static(path.join(__dirname, '..', 'public', 'admin')));
-app.use('/waiting-room', express.static(path.join(__dirname, '..', 'public', 'waiting-room')));
+if (config.surfaces.webAdminEnabled) {
+  app.use('/admin', express.static(path.join(__dirname, '..', 'public', 'admin')));
+}
+if (config.surfaces.waitingRoomEnabled) {
+  app.use('/waiting-room', express.static(path.join(__dirname, '..', 'public', 'waiting-room')));
+}
 
 // ============================================
 // 9. API ROUTES

@@ -6,9 +6,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.vaccinkid.model.DashboardStatsDto
 import com.example.vaccinkid.network.ApiClient
+import com.example.vaccinkid.network.ApiService
 import kotlinx.coroutines.launch
 
-class DashboardViewModel : ViewModel() {
+class DashboardViewModel(
+    private val apiService: ApiService = ApiClient.apiService
+) : ViewModel() {
     private val _stats = MutableLiveData<Result<DashboardStatsDto>>()
     val stats: LiveData<Result<DashboardStatsDto>> = _stats
 
@@ -19,7 +22,7 @@ class DashboardViewModel : ViewModel() {
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                val response = ApiClient.apiService.getDashboardStats()
+                val response = apiService.getDashboardStats()
                 val data = response.data
                 _stats.value = if (response.status == "success" && data != null) {
                     Result.success(data)

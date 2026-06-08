@@ -166,6 +166,17 @@ const config = {
     token: process.env.METRICS_BEARER_TOKEN || '',
   },
 
+  surfaces: {
+    webAdminEnabled:
+      process.env.WEB_ADMIN_ENABLED === 'true' ||
+      (process.env.NODE_ENV !== 'production' && process.env.WEB_ADMIN_ENABLED !== 'false'),
+    waitingRoomEnabled:
+      process.env.WAITING_ROOM_ENABLED === 'true' ||
+      (process.env.NODE_ENV !== 'production' && process.env.WAITING_ROOM_ENABLED !== 'false'),
+    webAdminSessionDays: Math.min(parsePositiveInt(process.env.WEB_ADMIN_SESSION_DAYS, 7), 7),
+    kioskTokenMinutes: Math.min(parsePositiveInt(process.env.KIOSK_TOKEN_MINUTES, 15), 15),
+  },
+
   swaggerEnabled: process.env.SWAGGER_ENABLED
     ? process.env.SWAGGER_ENABLED === 'true'
     : process.env.NODE_ENV !== 'production',

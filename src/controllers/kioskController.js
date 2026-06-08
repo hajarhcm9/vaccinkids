@@ -4,6 +4,7 @@ const TokenService = require('../services/tokenService');
 const ApiError = require('../utils/ApiError');
 const catchAsync = require('../utils/catchAsync');
 const { success, created } = require('../utils/responseHandler');
+const config = require('../config');
 
 const KioskController = {
   login: catchAsync(async (req, res, next) => {
@@ -16,7 +17,7 @@ const KioskController = {
     const accessToken = TokenService.generateKioskToken(kiosk);
     return success(res, 200, 'Kiosk activated', {
       accessToken,
-      expiresInSeconds: 900,
+      expiresInSeconds: config.surfaces.kioskTokenMinutes * 60,
       centre: { id: kiosk.centre_id },
     });
   }),

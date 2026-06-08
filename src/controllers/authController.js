@@ -16,18 +16,19 @@ const { parseCookies, cookieOptions, createCsrfToken } = require('../utils/cooki
 const WEB_REFRESH_COOKIE = 'vk_admin_refresh';
 const WEB_CSRF_COOKIE = 'vk_admin_csrf';
 const WEB_COOKIE_PATH = '/api/auth/web-admin';
+const webSessionMaxAge = () => config.surfaces.webAdminSessionDays * 24 * 60 * 60 * 1000;
 
 const setWebAdminCookies = (res, refreshToken) => {
   const csrfToken = createCsrfToken();
   res.cookie(
     WEB_REFRESH_COOKIE,
     refreshToken,
-    cookieOptions({ httpOnly: true, maxAge: 7 * 24 * 60 * 60 * 1000, path: WEB_COOKIE_PATH }),
+    cookieOptions({ httpOnly: true, maxAge: webSessionMaxAge(), path: WEB_COOKIE_PATH }),
   );
   res.cookie(
     WEB_CSRF_COOKIE,
     csrfToken,
-    cookieOptions({ maxAge: 7 * 24 * 60 * 60 * 1000, path: WEB_COOKIE_PATH }),
+    cookieOptions({ maxAge: webSessionMaxAge(), path: WEB_COOKIE_PATH }),
   );
   return csrfToken;
 };
@@ -235,7 +236,10 @@ const AuthController = {
       return next(ApiError.forbidden('Active admin account required'));
     }
     await handleSuccessfulLogin(cin);
-    const tokens = await TokenService.generateAuthTokens({ id: personnel.id, role: 'admin' });
+    const tokens = await TokenService.generateAuthTokens(
+      { id: personnel.id, role: 'admin' },
+      { sessionType: 'web-admin', refreshExpiresIn: `${config.surfaces.webAdminSessionDays}d` },
+    );
     const csrfToken = setWebAdminCookies(res, tokens.refreshToken);
     return success(res, 200, 'Web admin login successful', {
       accessToken: tokens.accessToken,
@@ -249,13 +253,13 @@ const AuthController = {
     if (!refreshToken) return next(ApiError.unauthorized('Web admin session expired'));
     const refreshIdentity = TokenService.verifyRefreshToken(refreshToken);
     req.user = { id: refreshIdentity.userId, role: refreshIdentity.role };
-    const tokens = await TokenService.refreshAuthTokens(refreshToken);
-    const decoded = TokenService.verifyAccessToken(tokens.accessToken);
-    if (decoded.role !== 'admin') {
-      await TokenService.revokeToken(tokens.refreshToken);
+    const admin = await Personnel.findById(refreshIdentity.userId);
+    if (refreshIdentity.role !== 'admin' || !admin || !admin.est_actif || admin.role !== 'admin') {
+      await TokenService.revokeToken(refreshToken);
       clearWebAdminCookies(res);
-      return next(ApiError.forbidden('Admin session required'));
+      return next(ApiError.forbidden('Active admin session required'));
     }
+    const tokens = await TokenService.refreshAuthTokens(refreshToken);
     const csrfToken = setWebAdminCookies(res, tokens.refreshToken);
     return success(res, 200, 'Web admin session refreshed', {
       accessToken: tokens.accessToken,
@@ -266,11 +270,7 @@ const AuthController = {
 
   webAdminLogout: catchAsync(async (req, res) => {
     const refreshToken = parseCookies(req.headers.cookie)[WEB_REFRESH_COOKIE];
-    if (refreshToken) {
-      const refreshIdentity = TokenService.verifyRefreshToken(refreshToken);
-      req.user = { id: refreshIdentity.userId, role: refreshIdentity.role };
-      await TokenService.revokeToken(refreshToken);
-    }
+    if (refreshToken) await TokenService.revokeToken(refreshToken);
     clearWebAdminCookies(res);
     return success(res, 200, 'Web admin logged out');
   }),

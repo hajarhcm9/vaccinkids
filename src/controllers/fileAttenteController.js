@@ -76,7 +76,7 @@ var getStats = catchAsync(async function (req, res) {
 });
 
 var getKioskQueue = catchAsync(async function (req, res) {
-  var entries = await faService.getQueueByCentre(req.user.centre_id);
+  var entries = await faService.getKioskQueue(req.user.centre_id);
   success(res, 200, 'Kiosk queue', { entries: entries });
 });
 
