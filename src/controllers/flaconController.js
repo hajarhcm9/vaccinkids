@@ -23,7 +23,13 @@ const FlaconController = {
       }
     }
 
-    const flacon = await Flacon.create({ vaccin_id, session_id, numero_lot, fabricant });
+    const flacon = await Flacon.create({
+      vaccin_id,
+      session_id,
+      numero_lot,
+      fabricant,
+      user_id: req.user.id,
+    });
     return created(res, 'Vial opened successfully', flacon);
   }),
 

@@ -7,10 +7,15 @@ import androidx.lifecycle.viewModelScope
 import com.example.vaccinkid.model.LoginRequest
 import com.example.vaccinkid.model.UserDto
 import com.example.vaccinkid.network.ApiClient
+import com.example.vaccinkid.network.ApiService
+import com.example.vaccinkid.network.StaffSessionStore
 import com.example.vaccinkid.network.TokenManager
 import kotlinx.coroutines.launch
 
-class InfirmierAuthViewModel : ViewModel() {
+class InfirmierAuthViewModel(
+    private val apiService: ApiService = ApiClient.apiService,
+    private val sessionStore: StaffSessionStore = TokenManager
+) : ViewModel() {
     private val _loginResult = MutableLiveData<Result<UserDto>>()
     val loginResult: LiveData<Result<UserDto>> = _loginResult
 
@@ -21,12 +26,12 @@ class InfirmierAuthViewModel : ViewModel() {
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                val response = ApiClient.apiService.personnelLogin(LoginRequest(cin, password))
+                val response = apiService.personnelLogin(LoginRequest(cin, password))
                 val auth = response.data
                 val tokens = auth?.tokens
                 val user = auth?.user
                 if (response.status == "success" && tokens != null && user != null) {
-                    TokenManager.saveSession(tokens.accessToken, tokens.refreshToken, user)
+                    sessionStore.saveSession(tokens.accessToken, tokens.refreshToken, user)
                     _loginResult.value = Result.success(user)
                 } else {
                     _loginResult.value = Result.failure(Exception(response.message ?: "Connexion impossible"))
@@ -41,12 +46,12 @@ class InfirmierAuthViewModel : ViewModel() {
 
     fun logout(onComplete: (() -> Unit)? = null) {
         viewModelScope.launch {
-            val refreshToken = TokenManager.getRefreshToken()
+            val refreshToken = sessionStore.getRefreshToken()
             try {
-                ApiClient.apiService.logout(mapOf("refreshToken" to refreshToken))
+                apiService.logout(mapOf("refreshToken" to refreshToken))
             } catch (_: Exception) {
             } finally {
-                TokenManager.clearTokens()
+                sessionStore.clearTokens()
                 onComplete?.invoke()
             }
         }

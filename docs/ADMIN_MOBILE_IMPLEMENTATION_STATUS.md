@@ -19,9 +19,9 @@
 - desactivation centre refusee avec personnel ou sessions actives ;
 - ecrans sensibles non exportes par Android.
 
-## A approfondir cote code
+## Validation automatisee
 
-- tests ViewModel et instrumentation des parcours admin ;
-- tests de contrat Retrofit/DTO ;
-- presentation graphique avancee des statistiques, sans modifier leur source serveur.
-
+- contrats Retrofit/DTO critiques couverts ;
+- cycle admin vers clinique couvert par un E2E backend strict ;
+- stock, mouvement d'ouverture de flacon, vaccination et audit verifies apres ecriture ;
+- presentation statistique alimentee uniquement par l'API.

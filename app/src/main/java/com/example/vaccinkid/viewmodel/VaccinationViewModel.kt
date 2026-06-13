@@ -8,9 +8,12 @@ import com.example.vaccinkid.model.CreateVaccinationRequest
 import com.example.vaccinkid.model.FlaconDto
 import com.example.vaccinkid.model.VaccinationDto
 import com.example.vaccinkid.network.ApiClient
+import com.example.vaccinkid.network.ApiService
 import kotlinx.coroutines.launch
 
-class VaccinationViewModel : ViewModel() {
+class VaccinationViewModel(
+    private val apiService: ApiService = ApiClient.apiService
+) : ViewModel() {
     private val _flacons = MutableLiveData<Result<List<FlaconDto>>>()
     val flacons: LiveData<Result<List<FlaconDto>>> = _flacons
 
@@ -23,7 +26,7 @@ class VaccinationViewModel : ViewModel() {
     fun loadSessionFlacons(sessionId: Int) {
         viewModelScope.launch {
             try {
-                val response = ApiClient.apiService.getSessionFlacons(sessionId)
+                val response = apiService.getSessionFlacons(sessionId)
                 val data = response.data
                 _flacons.value = if (response.status == "success" && data != null) {
                     Result.success(data)
@@ -46,7 +49,7 @@ class VaccinationViewModel : ViewModel() {
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                val response = ApiClient.apiService.createVaccination(
+                val response = apiService.createVaccination(
                     rdvId,
                     CreateVaccinationRequest(flaconId, poids, taille, reactions)
                 )

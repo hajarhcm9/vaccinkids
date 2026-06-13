@@ -6,9 +6,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.vaccinkid.model.NotificationDto
 import com.example.vaccinkid.network.ApiClient
+import com.example.vaccinkid.network.ApiService
 import kotlinx.coroutines.launch
 
-class NotificationsViewModel : ViewModel() {
+class NotificationsViewModel(
+    private val apiService: ApiService = ApiClient.apiService
+) : ViewModel() {
     private val _notifications = MutableLiveData<Result<List<NotificationDto>>>()
     val notifications: LiveData<Result<List<NotificationDto>>> = _notifications
 
@@ -18,7 +21,7 @@ class NotificationsViewModel : ViewModel() {
     fun loadNotifications() {
         viewModelScope.launch {
             try {
-                val response = ApiClient.apiService.getNotifications()
+                val response = apiService.getNotifications()
                 val data = response.data
                 _notifications.value = if (response.status == "success" && data != null) {
                     Result.success(data)
@@ -34,7 +37,7 @@ class NotificationsViewModel : ViewModel() {
     fun loadUnreadCount() {
         viewModelScope.launch {
             try {
-                val response = ApiClient.apiService.getUnreadCount()
+                val response = apiService.getUnreadCount()
                 _unreadCount.value = if (response.status == "success" && response.data != null) {
                     Result.success(response.data.count)
                 } else {
@@ -49,7 +52,7 @@ class NotificationsViewModel : ViewModel() {
     fun markAsRead(id: Int) {
         viewModelScope.launch {
             try {
-                ApiClient.apiService.markNotificationRead(id)
+                apiService.markNotificationRead(id)
                 loadNotifications()
                 loadUnreadCount()
             } catch (_: Exception) {
@@ -60,7 +63,7 @@ class NotificationsViewModel : ViewModel() {
     fun markAllRead() {
         viewModelScope.launch {
             try {
-                ApiClient.apiService.markAllNotificationsRead()
+                apiService.markAllNotificationsRead()
                 loadNotifications()
                 loadUnreadCount()
             } catch (_: Exception) {

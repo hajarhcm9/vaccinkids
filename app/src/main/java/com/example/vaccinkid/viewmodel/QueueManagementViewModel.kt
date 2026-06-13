@@ -7,11 +7,14 @@ import androidx.lifecycle.viewModelScope
 import com.example.vaccinkid.model.QueueEntryDto
 import com.example.vaccinkid.model.QueueStatsDto
 import com.example.vaccinkid.network.ApiClient
+import com.example.vaccinkid.network.ApiService
 import com.example.vaccinkid.network.TokenManager
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-class QueueManagementViewModel : ViewModel() {
+class QueueManagementViewModel(
+    private val apiService: ApiService = ApiClient.apiService
+) : ViewModel() {
     private val _queue = MutableLiveData<Result<List<QueueEntryDto>>>()
     val queue: LiveData<Result<List<QueueEntryDto>>> = _queue
 
@@ -28,7 +31,7 @@ class QueueManagementViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 val id = centreId ?: throw IllegalArgumentException("Aucun centre affecte")
-                val queueResponse = ApiClient.apiService.getCentreQueue(id)
+                val queueResponse = apiService.getCentreQueue(id)
                 val queueList = queueResponse.data?.entries
                 _queue.value = if (queueResponse.status == "success" && queueList != null) {
                     Result.success(queueList)
@@ -36,7 +39,7 @@ class QueueManagementViewModel : ViewModel() {
                     Result.failure(Exception(queueResponse.message ?: "File indisponible"))
                 }
 
-                val statsResponse = ApiClient.apiService.getQueueStats(id)
+                val statsResponse = apiService.getQueueStats(id)
                 val stats = statsResponse.data
                 _queueStats.value = if (statsResponse.status == "success" && stats != null) {
                     Result.success(stats)
@@ -54,7 +57,7 @@ class QueueManagementViewModel : ViewModel() {
             _isLoading.value = true
             try {
                 val id = centreId ?: throw IllegalArgumentException("Aucun centre affecte")
-                val response = ApiClient.apiService.callNext(mapOf("centre_id" to id))
+                val response = apiService.callNext(mapOf("centre_id" to id))
                 val entry = response.data
                 _calledNext.value = if (response.status == "success" && entry != null) {
                     Result.success(entry)
@@ -73,7 +76,7 @@ class QueueManagementViewModel : ViewModel() {
     fun completeService(entryId: Int, centreId: Int? = TokenManager.getCentreId()) {
         viewModelScope.launch {
             try {
-                ApiClient.apiService.completeService(entryId)
+                apiService.completeService(entryId)
                 loadCentreQueue(centreId)
             } catch (_: Exception) {
             }

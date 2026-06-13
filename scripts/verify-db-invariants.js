@@ -28,6 +28,15 @@ async function verify() {
   );
   if (triggers.rows.length !== 2) throw new Error('Required invariant triggers are missing');
 
+  const stockMovementConstraint = await pool.query(
+    `SELECT pg_get_constraintdef(oid) AS definition
+     FROM pg_constraint
+     WHERE conname = 'stock_movement_type_check'`,
+  );
+  if (!stockMovementConstraint.rows[0]?.definition.includes('VIAL_OPEN')) {
+    throw new Error('Stock movement constraint does not include VIAL_OPEN');
+  }
+
   console.warn('Database migrations are repeatable and required invariants are present');
 }
 

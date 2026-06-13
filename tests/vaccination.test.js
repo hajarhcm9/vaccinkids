@@ -183,6 +183,11 @@ describe('Vaccination & Flacon Endpoints', () => {
          VALUES (1, $1, CURRENT_DATE, '08:00', '12:00', 'EN_COURS', 5) RETURNING id`,
         [vaccine.rows[0].id],
       );
+      await pool.query(
+        `INSERT INTO stock (centre_id, vaccin_id, quantite_disponible, seuil_alerte)
+         VALUES (1, $1, 1, 0)`,
+        [vaccine.rows[0].id],
+      );
       const vial = await request(app)
         .post('/api/flacons')
         .set('Authorization', 'Bearer ' + nurseToken)

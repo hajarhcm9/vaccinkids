@@ -21,12 +21,12 @@ Le code est considere termine lorsque :
 
 | Domaine | Etat code |
 | --- | --- |
-| Backend et securite applicative | Implemente, tests de regression a maintenir |
-| Mobile parent | Implemente cote application |
-| Mobile infirmier | Implemente pour le perimetre pilote |
-| Mobile admin | Implemente cote application, recette automatisee a approfondir |
-| Web admin et kiosk | Implemente cote application |
-| CI et controles release | Implemente cote depot |
+| Backend et securite applicative | Complet cote depot |
+| Mobile parent | Complet cote application |
+| Mobile infirmier | Complet pour le perimetre pilote |
+| Mobile admin | Complet cote application |
+| Web admin et kiosk | Complet cote application |
+| CI et controles release | Complet cote depot |
 
 ## Dernier lot admin
 
@@ -40,11 +40,26 @@ Le code est considere termine lorsque :
 - desactivation et reactivation des centres via API ;
 - blocage de la desactivation d'un centre avec personnel ou sessions actives.
 
-## Travail de code restant
+## Dernier lot de validation automatisee
 
-- augmenter la couverture des ViewModels et ecrans Android staff/admin ;
-- ajouter des tests de contrat mobiles pour les DTO et endpoints admin ;
-- renforcer les tests E2E automatises sans fournisseur externe ;
-- continuer l'audit des chaines, ressources et fichiers morts ;
-- corriger toute regression detectee par la validation complete.
+- ViewModels auth, file, vaccination, stock et notifications injectables et testes ;
+- contrats JSON et chemins Retrofit critiques testes ;
+- E2E strict admin, parent et infirmier sans fournisseur externe ;
+- preuve E2E de la persistance session, RDV, flacon, vaccination et audit ;
+- rejet automatise de la double vaccination ;
+- ouverture de flacon et decrement stock rendus atomiques ;
+- mouvement `VIAL_OPEN` obligatoire et controle par les invariants DB.
 
+## Statut
+
+Le perimetre implementable uniquement dans le depot est considere **100% code complete**.
+Les validations externes continuent de bloquer la production et restent suivies dans
+`EXTERNAL_VALIDATIONS_BACKLOG.md`.
+
+## Derniere validation
+
+- backend complet : 435 tests reussis, 1 ignore ;
+- performance : 59 tests reussis ;
+- Android staff : 20 tests unitaires, build et lint reussis ;
+- migration precedente vers derniere migration : reussie ;
+- invariants DB, scripts, lint et controle des fixtures runtime : reussis.

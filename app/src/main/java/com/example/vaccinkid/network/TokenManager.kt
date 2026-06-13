@@ -6,7 +6,7 @@ import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 import com.example.vaccinkid.model.UserDto
 
-object TokenManager {
+object TokenManager : StaffSessionStore {
     private const val PREFS_NAME = "vaccinkids_secure_prefs"
     private const val KEY_ACCESS_TOKEN = "access_token"
     private const val KEY_REFRESH_TOKEN = "refresh_token"
@@ -32,7 +32,7 @@ object TokenManager {
         )
     }
 
-    fun saveSession(accessToken: String, refreshToken: String, user: UserDto?) {
+    override fun saveSession(accessToken: String, refreshToken: String, user: UserDto?) {
         prefs.edit()
             .putString(KEY_ACCESS_TOKEN, accessToken)
             .putString(KEY_REFRESH_TOKEN, refreshToken)
@@ -50,12 +50,12 @@ object TokenManager {
     }
 
     fun getAccessToken(): String? = prefs.getString(KEY_ACCESS_TOKEN, null)
-    fun getRefreshToken(): String? = prefs.getString(KEY_REFRESH_TOKEN, null)
+    override fun getRefreshToken(): String? = prefs.getString(KEY_REFRESH_TOKEN, null)
     fun getUserRole(): String? = prefs.getString(KEY_USER_ROLE, null)
     fun getCentreId(): Int? = prefs.getInt(KEY_CENTRE_ID, 0).takeIf { it > 0 }
     fun isLoggedIn(): Boolean = getAccessToken() != null
 
-    fun clearTokens() {
+    override fun clearTokens() {
         prefs.edit().clear().apply()
         if (::appContext.isInitialized) {
             appContext.getSharedPreferences("sync_prefs", Context.MODE_PRIVATE).edit().clear().apply()

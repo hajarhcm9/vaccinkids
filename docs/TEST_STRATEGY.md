@@ -1,5 +1,15 @@
 # Strategie de tests
 
+## Couverture code-complete ajoutee
+
+- tests unitaires Android des ViewModels dashboard, authentification, file, vaccination,
+  stock et notifications ;
+- tests de contrat Android sur les noms JSON et routes Retrofit critiques ;
+- E2E backend strict couvrant admin, parent et infirmier jusqu'a la vaccination ;
+- verification atomique de l'ouverture flacon, du decrement stock et du mouvement
+  `VIAL_OPEN` ;
+- verification du rejet d'une double vaccination et de la presence de l'audit.
+
 ## Pyramide
 
 | Niveau | Objectif | Porte CI |

@@ -7,10 +7,13 @@ import androidx.lifecycle.viewModelScope
 import com.example.vaccinkid.model.StockDto
 import com.example.vaccinkid.model.UpdateStockRequest
 import com.example.vaccinkid.network.ApiClient
+import com.example.vaccinkid.network.ApiService
 import com.example.vaccinkid.network.TokenManager
 import kotlinx.coroutines.launch
 
-class StockViewModel : ViewModel() {
+class StockViewModel(
+    private val apiService: ApiService = ApiClient.apiService
+) : ViewModel() {
     private val _stock = MutableLiveData<Result<List<StockDto>>>()
     val stock: LiveData<Result<List<StockDto>>> = _stock
 
@@ -25,7 +28,7 @@ class StockViewModel : ViewModel() {
             _isLoading.value = true
             try {
                 val id = centreId ?: throw IllegalArgumentException("Aucun centre affecte")
-                val response = ApiClient.apiService.getStock(id)
+                val response = apiService.getStock(id)
                 val data = response.data
                 _stock.value = if (response.status == "success" && data != null) {
                     Result.success(data)
@@ -43,7 +46,7 @@ class StockViewModel : ViewModel() {
     fun updateStock(stockId: Int, quantite: Int?, seuilAlerte: Int?) {
         viewModelScope.launch {
             try {
-                val response = ApiClient.apiService.updateStock(
+                val response = apiService.updateStock(
                     stockId,
                     UpdateStockRequest(quantite, seuilAlerte)
                 )
@@ -53,7 +56,7 @@ class StockViewModel : ViewModel() {
                 } else {
                     Result.failure(Exception(response.message ?: "Mise a jour impossible"))
                 }
-                loadStock()
+                if (response.status == "success" && data != null) loadStock(data.centreId)
             } catch (e: Exception) {
                 _updateResult.value = Result.failure(e)
             }
