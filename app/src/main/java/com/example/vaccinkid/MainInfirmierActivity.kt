@@ -2,7 +2,6 @@ package com.example.vaccinkid
 
 import android.content.Intent
 import android.os.Bundle
-import android.view.WindowManager
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
@@ -17,10 +16,7 @@ class MainInfirmierActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        window.setFlags(
-            WindowManager.LayoutParams.FLAG_SECURE,
-            WindowManager.LayoutParams.FLAG_SECURE
-        )
+        protectSensitiveContent()
         setContentView(R.layout.activity_main_infirmier)
 
         bottomNav = findViewById(R.id.bottomNav)
@@ -28,25 +24,25 @@ class MainInfirmierActivity : AppCompatActivity() {
 
         // Fragment par défaut : Dashboard
         if (savedInstanceState == null) {
-            loadFragment(DashboardFragment())
+            selectRootFragment(DashboardFragment(), "dashboard")
         }
 
         bottomNav.setOnItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.nav_dashboard -> {
-                    loadFragment(DashboardFragment())
+                    selectRootFragment(DashboardFragment(), "dashboard")
                     true
                 }
                 R.id.nav_rdv -> {
-                    loadFragment(RdvFragment())
+                    selectRootFragment(RdvFragment(), "rdv")
                     true
                 }
                 R.id.nav_scan -> {
-                    loadFragment(ScanQrFragment())
+                    selectRootFragment(ScanQrFragment(), "scan")
                     true
                 }
                 R.id.nav_queue -> {
-                    loadFragment(QueueFragment())
+                    selectRootFragment(QueueFragment(), "queue")
                     true
                 }
                 else -> false
@@ -56,13 +52,20 @@ class MainInfirmierActivity : AppCompatActivity() {
 
     // ✅ Méthode publique pour naviguer depuis n'importe quel fragment
     fun naviguerVers(fragment: androidx.fragment.app.Fragment) {
-        loadFragment(fragment)
-    }
-
-    private fun loadFragment(fragment: androidx.fragment.app.Fragment) {
         supportFragmentManager.beginTransaction()
             .replace(R.id.fragmentContainer, fragment)
-            .addToBackStack(null)
+            .addToBackStack(fragment::class.java.simpleName)
+            .commit()
+    }
+
+    private fun selectRootFragment(fragment: androidx.fragment.app.Fragment, tag: String) {
+        if (supportFragmentManager.findFragmentByTag(tag)?.isVisible == true) return
+        supportFragmentManager.popBackStackImmediate(
+            null,
+            androidx.fragment.app.FragmentManager.POP_BACK_STACK_INCLUSIVE
+        )
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.fragmentContainer, fragment, tag)
             .commit()
     }
 

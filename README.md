@@ -16,6 +16,9 @@ Operational documentation:
 - [`docs/SECURITY.md`](docs/SECURITY.md)
 - [`docs/RELEASE_ANDROID_PARENT.md`](docs/RELEASE_ANDROID_PARENT.md)
 - [`docs/RELEASE_ANDROID_STAFF.md`](docs/RELEASE_ANDROID_STAFF.md)
+- [`docs/GUIDE_DEMARRAGE_CONTRIBUTEUR_STAFF.md`](docs/GUIDE_DEMARRAGE_CONTRIBUTEUR_STAFF.md)
+- [`docs/GUIDE_DEMARRAGE_CONTRIBUTEUR_PARENT.md`](docs/GUIDE_DEMARRAGE_CONTRIBUTEUR_PARENT.md)
+- [`docs/PLAN_FINALISATION_DEMONSTRATION.md`](docs/PLAN_FINALISATION_DEMONSTRATION.md)
 
 ## Quick Start
 
@@ -81,6 +84,29 @@ curl http://localhost:3000/api/sessions \\
 ```
 
 **Parent:** POST /api/auth/parent/send-otp {telephone} then verify-otp {telephone, code}
+
+## Current Finalization Status
+
+Completed and verified:
+
+- backend clinical transactions, RBAC and broad automated test coverage;
+- parent and staff/admin Android debug builds on a physical device;
+- staff/admin API-backed pilot workflows;
+- screenshot protection enabled in release and disabled only in debug for QA;
+- CI and Security workflows on GitHub.
+
+Recently fixed:
+
+- staff tab navigation no longer adds every root tab to the Android back stack;
+- parent and staff debug builds can now be captured during functional and visual testing.
+
+Still requiring final validation:
+
+- execute every `A TESTER` scenario from
+  [`docs/PLAN_FINALISATION_DEMONSTRATION.md`](docs/PLAN_FINALISATION_DEMONSTRATION.md);
+- add real mobile UI/E2E coverage;
+- finish staff/admin design consistency, accessibility and FR/AR review;
+- validate release builds, staging integrations and production operations.
 
 ## Bugs Fixed
 

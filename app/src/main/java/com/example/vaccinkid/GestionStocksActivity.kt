@@ -2,7 +2,6 @@ package com.example.vaccinkid
 
 import android.app.AlertDialog
 import android.os.Bundle
-import android.view.WindowManager
 import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
@@ -30,7 +29,7 @@ class GestionStocksActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
+        protectSensitiveContent()
         setContentView(R.layout.activity_gestion_stocks)
         viewModel = ViewModelProvider(this)[StockViewModel::class.java]
 

@@ -1,7 +1,6 @@
 package com.example.vaccinkid
 
 import android.os.Bundle
-import android.view.WindowManager
 import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
@@ -20,7 +19,7 @@ class StatsAdminActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
+        protectSensitiveContent()
         content = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(24)
