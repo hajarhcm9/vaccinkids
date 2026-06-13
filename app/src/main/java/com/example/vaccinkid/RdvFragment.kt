@@ -29,6 +29,10 @@ class RdvFragment : Fragment() {
     private lateinit var progress: ProgressBar
     private lateinit var messageView: TextView
     private lateinit var adapter: StaffRdvAdapter
+    private lateinit var queueButton: Button
+    private lateinit var vialsButton: Button
+    private lateinit var startButton: Button
+    private lateinit var endButton: Button
     private var sessions: List<SessionDto> = emptyList()
     private var actionInFlight = false
     private val statuses = listOf("Tous", "EN_ATTENTE", "CONFIRME", "PRESENT", "ABSENT")
@@ -67,19 +71,24 @@ class RdvFragment : Fragment() {
             setPadding(dp(16), dp(8), dp(16), dp(8))
         }
         actionRow.addView(button("Rafraichir") { loadSessions() }, weightWrap())
-        actionRow.addView(button("File") {
+        queueButton = button("File") {
             (activity as? MainInfirmierActivity)?.naviguerVers(QueueFragment())
-        }, weightWrap())
-        actionRow.addView(button("Flacons") { openFlacons() }, weightWrap())
+        }
+        vialsButton = button("Flacons") { openFlacons() }
+        actionRow.addView(queueButton, weightWrap())
+        actionRow.addView(vialsButton, weightWrap())
         root.addView(actionRow)
 
         val sessionRow = LinearLayout(requireContext()).apply {
             orientation = LinearLayout.HORIZONTAL
             setPadding(dp(16), 0, dp(16), dp(8))
         }
-        sessionRow.addView(button("Demarrer") { updateSession(start = true) }, weightWrap())
-        sessionRow.addView(button("Terminer") { updateSession(start = false) }, weightWrap())
+        startButton = button("Demarrer") { updateSession(start = true) }
+        endButton = button("Terminer") { updateSession(start = false) }
+        sessionRow.addView(startButton, weightWrap())
+        sessionRow.addView(endButton, weightWrap())
         root.addView(sessionRow)
+        updateSessionActions(null)
 
         root.addView(progress, matchWrap())
         root.addView(messageView, matchWrap())
@@ -135,15 +144,20 @@ class RdvFragment : Fragment() {
                 )
                 sessionSpinner.setOnItemSelectedListener(object : android.widget.AdapterView.OnItemSelectedListener {
                     override fun onItemSelected(parent: android.widget.AdapterView<*>?, view: View?, position: Int, id: Long) {
+                        updateSessionActions(selectedSession())
                         loadRdvForSelectedSession()
                     }
                     override fun onNothingSelected(parent: android.widget.AdapterView<*>?) = Unit
                 })
-                if (sessions.isEmpty()) adapter.submit(emptyList())
+                if (sessions.isEmpty()) {
+                    adapter.submit(emptyList())
+                    updateSessionActions(null)
+                }
                 setLoading(false, if (sessions.isEmpty()) "Aucune session aujourd'hui." else "")
             } catch (e: Exception) {
                 sessions = emptyList()
                 adapter.submit(emptyList())
+                updateSessionActions(null)
                 setLoading(false, e.message ?: "Erreur reseau")
             }
         }
@@ -239,6 +253,14 @@ class RdvFragment : Fragment() {
 
     private fun selectedSession(): SessionDto? = sessions.getOrNull(sessionSpinner.selectedItemPosition)
 
+    private fun updateSessionActions(session: SessionDto?) {
+        val status = session?.statut?.uppercase()
+        queueButton.visibility = if (session == null) View.GONE else View.VISIBLE
+        vialsButton.visibility = if (status in listOf("CONFIRMEE", "EN_COURS")) View.VISIBLE else View.GONE
+        startButton.visibility = if (status == "CONFIRMEE") View.VISIBLE else View.GONE
+        endButton.visibility = if (status == "EN_COURS") View.VISIBLE else View.GONE
+    }
+
     private fun setLoading(isLoading: Boolean, message: String) {
         progress.visibility = if (isLoading) View.VISIBLE else View.GONE
         messageView.text = message
@@ -331,31 +353,29 @@ private class StaffRdvAdapter(
                 orientation = LinearLayout.HORIZONTAL
                 gravity = Gravity.CENTER_VERTICAL
             }
-            row.addView(Button(ctx).apply {
-                text = "Present"
-                textSize = 11f
-                isEnabled = rdv.statut == "CONFIRME"
-                setOnClickListener { onPresent(rdv) }
-            }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
-            row.addView(Button(ctx).apply {
-                text = "Absent"
-                textSize = 11f
-                isEnabled = rdv.statut == "CONFIRME" || rdv.statut == "EN_ATTENTE"
-                setOnClickListener { onAbsent(rdv) }
-            }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
-            row.addView(Button(ctx).apply {
-                text = "Vacciner"
-                textSize = 11f
-                isEnabled = rdv.statut == "PRESENT" || rdv.statut == "CONFIRME"
-                setOnClickListener { onVaccinate(rdv) }
-            }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
-            row.addView(Button(ctx).apply {
-                text = "Carnet"
-                textSize = 11f
-                isEnabled = rdv.statut == "CONFIRME" || rdv.statut == "PRESENT"
-                setOnClickListener { onGrowth(rdv) }
-            }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
-            root.addView(row)
+            if (rdv.statut == "CONFIRME") {
+                row.addView(actionButton(ctx, "Present") { onPresent(rdv) })
+            }
+            if (rdv.statut == "CONFIRME" || rdv.statut == "EN_ATTENTE") {
+                row.addView(actionButton(ctx, "Absent") { onAbsent(rdv) })
+            }
+            if (rdv.statut == "PRESENT" || rdv.statut == "CONFIRME") {
+                row.addView(actionButton(ctx, "Vacciner") { onVaccinate(rdv) })
+                row.addView(actionButton(ctx, "Carnet") { onGrowth(rdv) })
+            }
+            if (row.childCount > 0) root.addView(row)
         }
+
+        private fun actionButton(ctx: android.content.Context, label: String, action: () -> Unit): Button =
+            Button(ctx).apply {
+                text = label
+                textSize = 11f
+                setOnClickListener { action() }
+                layoutParams = LinearLayout.LayoutParams(
+                    0,
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                    1f
+                )
+            }
     }
 }

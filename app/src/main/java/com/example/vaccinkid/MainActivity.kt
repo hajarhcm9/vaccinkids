@@ -29,6 +29,9 @@ class MainActivity : AppCompatActivity() {
         btnLogin        = findViewById(R.id.btnLoginInfirmier)
         tvEmailError    = findViewById(R.id.tvEmailErrorInfirmier)
         tvPasswordError = findViewById(R.id.tvPasswordErrorInfirmier)
+        findViewById<TextView>(R.id.tvLoginSpace).text = "ESPACE ADMIN"
+        findViewById<TextView>(R.id.tvLoginTitle).text = "Connexion Admin"
+        findViewById<TextView>(R.id.tvLoginAccessBadge).text = "Acces reserve aux administrateurs"
 
         btnLogin.setOnClickListener { handleLogin() }
         etEmail.setOnFocusChangeListener    { _, _ -> tvEmailError.visibility    = View.GONE }
@@ -42,18 +45,13 @@ class MainActivity : AppCompatActivity() {
         authViewModel.loginResult.observe(this) { result ->
             result.fold(
                 onSuccess = { user ->
-                    val destination = when (user.role.lowercase()) {
-                        "admin" -> AdminActivity::class.java
-                        "infirmier" -> MainInfirmierActivity::class.java
-                        else -> null
-                    }
-                    if (destination == null) {
+                    if (user.role.lowercase() != "admin") {
                         authViewModel.logout()
-                        tvEmailError.text = "Role non autorise pour cette application."
+                        tvEmailError.text = "Utilisez l'espace Infirmier pour ce compte."
                         tvEmailError.visibility = View.VISIBLE
                         return@fold
                     }
-                    val intent = Intent(this, destination)
+                    val intent = Intent(this, AdminActivity::class.java)
                     intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                     startActivity(intent)
                     finish()

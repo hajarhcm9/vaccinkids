@@ -180,6 +180,7 @@ private class AdminSessionAdapter(
     ) : RecyclerView.ViewHolder(root) {
         fun bind(item: SessionDto) {
             root.removeAllViews()
+            val status = item.statut?.uppercase()
             root.addView(TextView(root.context).apply {
                 text = "${item.dateSession?.take(10) ?: "-"} ${item.heureDebut?.take(5) ?: "-"} - ${item.vaccinNom ?: "Vaccin #${item.vaccinId}"}"
                 textSize = 16f
@@ -189,33 +190,36 @@ private class AdminSessionAdapter(
                 text = "${item.centreNom ?: "Centre #${item.centreId}"} | ${item.statut ?: "-"} | ${item.inscrits ?: 0}/${item.maxInscriptions ?: "?"}"
             })
             val row = LinearLayout(root.context).apply { orientation = LinearLayout.HORIZONTAL }
-            row.addView(Button(root.context).apply {
-                text = "Modifier"
-                setOnClickListener { onEdit(item) }
-            }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
-            row.addView(Button(root.context).apply {
-                text = "Confirmer"
-                isEnabled = item.statut == "EN_FORMATION" || item.statut == "PLANIFIEE"
-                setOnClickListener { onConfirm(item) }
-            }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
-            row.addView(Button(root.context).apply {
-                text = "Demarrer"
-                isEnabled = item.statut == "CONFIRMEE"
-                setOnClickListener { onStart(item) }
-            }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
-            root.addView(row)
+            if (status in listOf("EN_FORMATION", "PLANIFIEE", "CONFIRMEE")) {
+                row.addView(actionButton("Modifier") { onEdit(item) })
+            }
+            if (status in listOf("EN_FORMATION", "PLANIFIEE")) {
+                row.addView(actionButton("Confirmer") { onConfirm(item) })
+            }
+            if (status == "CONFIRMEE") {
+                row.addView(actionButton("Demarrer") { onStart(item) })
+            }
+            if (row.childCount > 0) root.addView(row)
+
             val finalRow = LinearLayout(root.context).apply { orientation = LinearLayout.HORIZONTAL }
-            finalRow.addView(Button(root.context).apply {
-                text = "Terminer"
-                isEnabled = item.statut == "EN_COURS"
-                setOnClickListener { onEnd(item) }
-            }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
-            finalRow.addView(Button(root.context).apply {
-                text = "Annuler"
-                isEnabled = item.statut !in listOf("ANNULEE", "TERMINEE", "EN_COURS")
-                setOnClickListener { onCancel(item) }
-            }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
-            root.addView(finalRow)
+            if (status == "EN_COURS") {
+                finalRow.addView(actionButton("Terminer") { onEnd(item) })
+            }
+            if (status in listOf("EN_FORMATION", "PLANIFIEE", "CONFIRMEE")) {
+                finalRow.addView(actionButton("Annuler") { onCancel(item) })
+            }
+            if (finalRow.childCount > 0) root.addView(finalRow)
         }
+
+        private fun actionButton(label: String, action: () -> Unit): Button =
+            Button(root.context).apply {
+                text = label
+                setOnClickListener { action() }
+                layoutParams = LinearLayout.LayoutParams(
+                    0,
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                    1f
+                )
+            }
     }
 }

@@ -43,18 +43,13 @@ class LoginInfirmierActivity : AppCompatActivity() {
         authViewModel.loginResult.observe(this) { result ->
             result.fold(
                 onSuccess = { user ->
-                    val destination = when (user.role.lowercase()) {
-                        "admin" -> AdminActivity::class.java
-                        "infirmier" -> MainInfirmierActivity::class.java
-                        else -> null
-                    }
-                    if (destination == null) {
+                    if (user.role.lowercase() != "infirmier") {
                         authViewModel.logout()
-                        tvEmailError.text = "Role non autorise pour cette application."
+                        tvEmailError.text = "Utilisez l'espace Admin pour ce compte."
                         tvEmailError.visibility = View.VISIBLE
                         return@fold
                     }
-                    val intent = Intent(this, destination)
+                    val intent = Intent(this, MainInfirmierActivity::class.java)
                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
                     startActivity(intent)
                     finish()

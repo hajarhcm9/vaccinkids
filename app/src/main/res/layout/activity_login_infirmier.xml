@@ -63,6 +63,7 @@
                     android:layout_marginTop="12dp" />
 
                 <TextView
+                    android:id="@+id/tvLoginSpace"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="ESPACE INFIRMIER"
@@ -92,6 +93,7 @@
                 android:padding="28dp">
 
                 <TextView
+                    android:id="@+id/tvLoginTitle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Connexion Infirmier"
@@ -239,6 +241,7 @@
                         android:layout_marginEnd="8dp" />
 
                     <TextView
+                        android:id="@+id/tvLoginAccessBadge"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Accès réservé au personnel soignant"
