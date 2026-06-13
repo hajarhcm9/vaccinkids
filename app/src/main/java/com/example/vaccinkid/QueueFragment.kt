@@ -23,6 +23,7 @@ class QueueFragment : Fragment() {
     private lateinit var progress: ProgressBar
     private lateinit var message: TextView
     private lateinit var adapter: QueueAdapter
+    private lateinit var callNextButton: Button
     private var actionInFlight = false
 
     override fun onCreateView(
@@ -47,7 +48,10 @@ class QueueFragment : Fragment() {
             setPadding(dp(16), 0, dp(16), dp(8))
         }
         row.addView(button("Rafraichir") { loadQueue() }, weightWrap())
-        row.addView(button("Appeler prochain") { callNext() }, weightWrap())
+        callNextButton = button("Appeler prochain") { callNext() }.apply {
+            visibility = View.GONE
+        }
+        row.addView(callNextButton, weightWrap())
         root.addView(row)
 
         progress = ProgressBar(requireContext()).apply { visibility = View.GONE }
@@ -81,6 +85,7 @@ class QueueFragment : Fragment() {
         if (centreId == null) {
             message.text = "Aucun centre affecte a ce compte."
             adapter.submit(emptyList())
+            callNextButton.visibility = View.GONE
             return
         }
         viewLifecycleOwner.lifecycleScope.launch {
@@ -90,9 +95,15 @@ class QueueFragment : Fragment() {
                 if (response.status != "success") throw Exception(response.message ?: "File indisponible")
                 val entries = response.data?.entries ?: emptyList()
                 adapter.submit(entries)
+                callNextButton.visibility = if (entries.any { it.statut == "EN_ATTENTE" }) {
+                    View.VISIBLE
+                } else {
+                    View.GONE
+                }
                 setLoading(false, "${entries.size} personne(s) dans la file")
             } catch (e: Exception) {
                 adapter.submit(emptyList())
+                callNextButton.visibility = View.GONE
                 setLoading(false, e.message ?: "Erreur reseau")
             }
         }
@@ -201,11 +212,12 @@ private class QueueAdapter(
                 text = "Statut : ${entry.statut ?: "INCONNU"} | Tel : ${entry.parentTelephone ?: "-"}"
                 textSize = 13f
             })
-            root.addView(Button(ctx).apply {
-                text = "Terminer service"
-                isEnabled = entry.statut == "EN_COURS"
-                setOnClickListener { onComplete(entry) }
-            })
+            if (entry.statut == "EN_COURS") {
+                root.addView(Button(ctx).apply {
+                    text = "Terminer service"
+                    setOnClickListener { onComplete(entry) }
+                })
+            }
         }
     }
 }
