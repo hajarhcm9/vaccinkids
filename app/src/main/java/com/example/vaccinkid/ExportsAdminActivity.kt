@@ -3,6 +3,7 @@ package com.example.vaccinkid
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.view.WindowManager
 import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
@@ -14,16 +15,13 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
 import androidx.lifecycle.lifecycleScope
 import com.example.vaccinkid.network.ApiClient
-import com.example.vaccinkid.network.TokenManager
 import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import okhttp3.OkHttpClient
 import okhttp3.Request
 
 class ExportsAdminActivity : AppCompatActivity() {
-    private val httpClient = OkHttpClient()
     private lateinit var typeSpinner: Spinner
     private lateinit var formatSpinner: Spinner
     private lateinit var centreInput: EditText
@@ -34,6 +32,7 @@ class ExportsAdminActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(32, 32, 32, 32)
@@ -83,15 +82,10 @@ class ExportsAdminActivity : AppCompatActivity() {
     }
 
     private fun downloadAndOpen(endpoint: String, fileName: String, mimeType: String) {
-        val token = TokenManager.getAccessToken()
-        if (token.isNullOrBlank()) {
-            Toast.makeText(this, "Session expiree. Reconnectez-vous.", Toast.LENGTH_LONG).show()
-            return
-        }
         lifecycleScope.launch {
             setLoading(true, "Telechargement en cours...")
             try {
-                val file = withContext(Dispatchers.IO) { downloadFile(endpoint, fileName, token) }
+                val file = withContext(Dispatchers.IO) { downloadFile(endpoint, fileName) }
                 setLoading(false, "Telecharge: ${file.name}")
                 openFile(file, mimeType)
             } catch (e: Exception) {
@@ -100,13 +94,12 @@ class ExportsAdminActivity : AppCompatActivity() {
         }
     }
 
-    private fun downloadFile(endpoint: String, fileName: String, token: String): File {
+    private fun downloadFile(endpoint: String, fileName: String): File {
         val request = Request.Builder()
             .url(ApiClient.BASE_URL + endpoint)
-            .header("Authorization", "Bearer $token")
             .header("Accept", "*/*")
             .build()
-        httpClient.newCall(request).execute().use { response ->
+        ApiClient.httpClient.newCall(request).execute().use { response ->
             if (!response.isSuccessful) throw IllegalStateException("HTTP ${response.code}")
             val body = response.body ?: throw IllegalStateException("Reponse vide")
             val exportDir = File(cacheDir, "exports").apply { mkdirs() }

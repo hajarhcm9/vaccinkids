@@ -28,6 +28,8 @@ class GestionSessionsFragment : Fragment() {
         adapter = AdminSessionAdapter(
             onEdit = { showForm(it) },
             onConfirm = { updateStatus(it, "confirm") },
+            onStart = { updateStatus(it, "start") },
+            onEnd = { updateStatus(it, "end") },
             onCancel = { updateStatus(it, "cancel") }
         )
         return LinearLayout(requireContext()).apply {
@@ -81,12 +83,12 @@ class GestionSessionsFragment : Fragment() {
             orientation = LinearLayout.VERTICAL
             setPadding(24)
         }
-        val centre = edit("Centre ID").also { it.setText(item?.centreId?.toString() ?: "1") }
-        val vaccin = edit("Vaccin ID").also { it.setText(item?.vaccinId?.toString() ?: "1") }
+        val centre = edit("Centre ID").also { it.setText(item?.centreId?.toString() ?: "") }
+        val vaccin = edit("Vaccin ID").also { it.setText(item?.vaccinId?.toString() ?: "") }
         val date = edit("Date YYYY-MM-DD").also { it.setText(item?.dateSession?.take(10) ?: "") }
         val debut = edit("Heure debut HH:MM").also { it.setText(item?.heureDebut?.take(5) ?: "") }
         val fin = edit("Heure fin HH:MM").also { it.setText(item?.heureFin?.take(5) ?: "") }
-        val capacite = edit("Capacite").also { it.setText(item?.maxInscriptions?.toString() ?: "10") }
+        val capacite = edit("Capacite").also { it.setText(item?.maxInscriptions?.toString() ?: "") }
         listOf(centre, vaccin, date, debut, fin, capacite).forEach { root.addView(it) }
 
         AlertDialog.Builder(requireContext())
@@ -130,8 +132,12 @@ class GestionSessionsFragment : Fragment() {
     private fun updateStatus(item: SessionDto, action: String) {
         viewLifecycleOwner.lifecycleScope.launch {
             try {
-                val response = if (action == "confirm") ApiClient.apiService.confirmSession(item.id)
-                else ApiClient.apiService.cancelSession(item.id)
+                val response = when (action) {
+                    "confirm" -> ApiClient.apiService.confirmSession(item.id)
+                    "start" -> ApiClient.apiService.startSession(item.id)
+                    "end" -> ApiClient.apiService.endSession(item.id)
+                    else -> ApiClient.apiService.cancelSession(item.id)
+                }
                 if (response.status != "success") throw Exception(response.message ?: "Action refusee")
                 loadSessions()
             } catch (e: Exception) {
@@ -146,6 +152,8 @@ class GestionSessionsFragment : Fragment() {
 private class AdminSessionAdapter(
     private val onEdit: (SessionDto) -> Unit,
     private val onConfirm: (SessionDto) -> Unit,
+    private val onStart: (SessionDto) -> Unit,
+    private val onEnd: (SessionDto) -> Unit,
     private val onCancel: (SessionDto) -> Unit
 ) : RecyclerView.Adapter<AdminSessionAdapter.ViewHolder>() {
     private var items: List<SessionDto> = emptyList()
@@ -157,7 +165,7 @@ private class AdminSessionAdapter(
         return ViewHolder(LinearLayout(parent.context).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(16)
-        }, onEdit, onConfirm, onCancel)
+        }, onEdit, onConfirm, onStart, onEnd, onCancel)
     }
     override fun getItemCount() = items.size
     override fun onBindViewHolder(holder: ViewHolder, position: Int) = holder.bind(items[position])
@@ -166,6 +174,8 @@ private class AdminSessionAdapter(
         private val root: LinearLayout,
         private val onEdit: (SessionDto) -> Unit,
         private val onConfirm: (SessionDto) -> Unit,
+        private val onStart: (SessionDto) -> Unit,
+        private val onEnd: (SessionDto) -> Unit,
         private val onCancel: (SessionDto) -> Unit
     ) : RecyclerView.ViewHolder(root) {
         fun bind(item: SessionDto) {
@@ -185,13 +195,27 @@ private class AdminSessionAdapter(
             }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
             row.addView(Button(root.context).apply {
                 text = "Confirmer"
+                isEnabled = item.statut == "EN_FORMATION" || item.statut == "PLANIFIEE"
                 setOnClickListener { onConfirm(item) }
             }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
             row.addView(Button(root.context).apply {
-                text = "Annuler"
-                setOnClickListener { onCancel(item) }
+                text = "Demarrer"
+                isEnabled = item.statut == "CONFIRMEE"
+                setOnClickListener { onStart(item) }
             }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
             root.addView(row)
+            val finalRow = LinearLayout(root.context).apply { orientation = LinearLayout.HORIZONTAL }
+            finalRow.addView(Button(root.context).apply {
+                text = "Terminer"
+                isEnabled = item.statut == "EN_COURS"
+                setOnClickListener { onEnd(item) }
+            }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+            finalRow.addView(Button(root.context).apply {
+                text = "Annuler"
+                isEnabled = item.statut !in listOf("ANNULEE", "TERMINEE", "EN_COURS")
+                setOnClickListener { onCancel(item) }
+            }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+            root.addView(finalRow)
         }
     }
 }

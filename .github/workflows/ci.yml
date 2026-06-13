@@ -55,6 +55,7 @@ jobs:
       - run: npm run check:environment
       - run: npm run check:release-identity
       - run: npm run check:parent-mobile-security
+      - run: npm run check:no-runtime-fixtures
       - run: npm audit --audit-level=high
       - run: npm test -- --runInBand
       - run: npm run db:test-upgrade

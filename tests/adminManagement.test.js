@@ -439,6 +439,29 @@ describe('Day 20 - Admin Management & Audit Log', () => {
       expect(res.status).toBe(400);
       expect(res.body.message).toContain('personnel');
     });
+
+    test('should deactivate and reactivate an unused centre', async () => {
+      const inserted = await pool.query(
+        `INSERT INTO centre (nom, adresse, telephone, est_actif)
+         VALUES ('Centre Reactivation Test', 'Adresse test', '+212500000001', TRUE)
+         RETURNING id`,
+      );
+      const centreId = inserted.rows[0].id;
+
+      const deactivate = await request(app)
+        .patch('/api/admin/centres/' + centreId + '/deactivate')
+        .set('Authorization', 'Bearer ' + adminToken);
+      expect(deactivate.status).toBe(200);
+      expect(deactivate.body.data.deactivated).toBe(true);
+
+      const reactivate = await request(app)
+        .patch('/api/admin/centres/' + centreId + '/reactivate')
+        .set('Authorization', 'Bearer ' + adminToken);
+      expect(reactivate.status).toBe(200);
+      expect(reactivate.body.data.reactivated).toBe(true);
+
+      await pool.query('DELETE FROM centre WHERE id = $1', [centreId]);
+    });
   });
 
   // ==========================================

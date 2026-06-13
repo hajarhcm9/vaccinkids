@@ -21,6 +21,9 @@ class AdminAuditLogFragment : Fragment() {
     private lateinit var messageView: TextView
     private lateinit var actionFilter: EditText
     private lateinit var tableFilter: EditText
+    private lateinit var userFilter: EditText
+    private lateinit var startFilter: EditText
+    private lateinit var endFilter: EditText
     private lateinit var adapter: AuditAdapter
     private var page = 1
 
@@ -36,14 +39,29 @@ class AdminAuditLogFragment : Fragment() {
             })
             actionFilter = EditText(requireContext()).apply { hint = "Action: READ, INSERT, UPDATE..." }
             tableFilter = EditText(requireContext()).apply { hint = "Table: personnel, centre..." }
+            userFilter = EditText(requireContext()).apply { hint = "Utilisateur ID optionnel" }
+            startFilter = EditText(requireContext()).apply { hint = "Date debut YYYY-MM-DD" }
+            endFilter = EditText(requireContext()).apply { hint = "Date fin YYYY-MM-DD" }
             addView(actionFilter)
             addView(tableFilter)
+            addView(userFilter)
+            addView(startFilter)
+            addView(endFilter)
             val row = LinearLayout(requireContext()).apply { orientation = LinearLayout.HORIZONTAL }
             row.addView(Button(requireContext()).apply {
                 text = "Filtrer"
                 setOnClickListener {
                     page = 1
                     loadAudit()
+                }
+            }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+            row.addView(Button(requireContext()).apply {
+                text = "Precedent"
+                setOnClickListener {
+                    if (page > 1) {
+                        page -= 1
+                        loadAudit()
+                    }
                 }
             }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
             row.addView(Button(requireContext()).apply {
@@ -75,7 +93,10 @@ class AdminAuditLogFragment : Fragment() {
                 val response = ApiClient.apiService.getAdminAuditLog(
                     page = page,
                     action = actionFilter.text.toString().trim().ifBlank { null },
-                    tableName = tableFilter.text.toString().trim().ifBlank { null }
+                    tableName = tableFilter.text.toString().trim().ifBlank { null },
+                    userId = userFilter.text.toString().trim().toIntOrNull(),
+                    startDate = startFilter.text.toString().trim().ifBlank { null },
+                    endDate = endFilter.text.toString().trim().ifBlank { null }
                 )
                 val data = response.data
                 if (response.status != "success" || data == null) throw Exception(response.message ?: "Audit indisponible")

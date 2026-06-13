@@ -52,6 +52,14 @@
             android:name=".ExportsAdminActivity"
             android:exported="false" />
 
+        <activity
+            android:name=".GestionStocksActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".StatsAdminActivity"
+            android:exported="false" />
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"

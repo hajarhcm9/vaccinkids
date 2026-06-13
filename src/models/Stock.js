@@ -1,25 +1,35 @@
-const { query } = require('../config/database');
+const { pool, query } = require('../config/database');
 
 const Stock = {
   async createOrUpdate(centre_id, vaccin_id, data, userId) {
     const { quantite_disponible, seuil_alerte } = data;
-    const before = await query('SELECT * FROM stock WHERE centre_id = $1 AND vaccin_id = $2', [
-      centre_id,
-      vaccin_id,
-    ]);
-    const previous = before.rows[0] || null;
-    const result = await query(
-      `INSERT INTO stock (centre_id, vaccin_id, quantite_disponible, seuil_alerte)
-       VALUES ($1, $2, $3, $4)
-       ON CONFLICT (centre_id, vaccin_id) DO UPDATE SET
-       quantite_disponible = EXCLUDED.quantite_disponible,
-       seuil_alerte = EXCLUDED.seuil_alerte,
-       updated_at = CURRENT_TIMESTAMP
-       RETURNING *`,
-      [centre_id, vaccin_id, quantite_disponible, seuil_alerte || 5],
-    );
-    await this.recordMovement(result.rows[0], previous, 'UPSERT', data.motif, userId);
-    return result.rows[0];
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      const before = await client.query(
+        'SELECT * FROM stock WHERE centre_id = $1 AND vaccin_id = $2 FOR UPDATE',
+        [centre_id, vaccin_id],
+      );
+      const previous = before.rows[0] || null;
+      const result = await client.query(
+        `INSERT INTO stock (centre_id, vaccin_id, quantite_disponible, seuil_alerte)
+         VALUES ($1, $2, $3, $4)
+         ON CONFLICT (centre_id, vaccin_id) DO UPDATE SET
+         quantite_disponible = EXCLUDED.quantite_disponible,
+         seuil_alerte = EXCLUDED.seuil_alerte,
+         updated_at = CURRENT_TIMESTAMP
+         RETURNING *`,
+        [centre_id, vaccin_id, quantite_disponible, seuil_alerte ?? 5],
+      );
+      await this.recordMovement(result.rows[0], previous, 'UPSERT', data.motif, userId, client);
+      await client.query('COMMIT');
+      return result.rows[0];
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
   },
 
   async findByCentre(centreId) {
@@ -49,40 +59,54 @@ const Stock = {
   },
 
   async update(id, data, userId) {
-    const before = await query('SELECT * FROM stock WHERE id = $1', [id]);
-    const previous = before.rows[0] || null;
-    const fields = [];
-    const values = [id];
-    let paramIndex = 2;
-    const allowedFields = ['quantite_disponible', 'seuil_alerte'];
-    for (const field of allowedFields) {
-      if (data[field] !== undefined) {
-        fields.push(`${field} = $${paramIndex}`);
-        values.push(data[field]);
-        paramIndex++;
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      const before = await client.query('SELECT * FROM stock WHERE id = $1 FOR UPDATE', [id]);
+      const previous = before.rows[0] || null;
+      const fields = [];
+      const values = [id];
+      let paramIndex = 2;
+      const allowedFields = ['quantite_disponible', 'seuil_alerte'];
+      for (const field of allowedFields) {
+        if (data[field] !== undefined) {
+          fields.push(`${field} = $${paramIndex}`);
+          values.push(data[field]);
+          paramIndex++;
+        }
       }
-    }
-    if (fields.length === 0) return null;
-    const result = await query(
-      `UPDATE stock SET ${fields.join(', ')}, updated_at = CURRENT_TIMESTAMP WHERE id = $1 RETURNING *`,
-      values,
-    );
-    if (result.rows[0]) {
-      const changedQuantity =
-        previous && previous.quantite_disponible !== result.rows[0].quantite_disponible;
-      await this.recordMovement(
-        result.rows[0],
-        previous,
-        changedQuantity ? 'ADJUSTMENT' : 'THRESHOLD',
-        data.motif,
-        userId,
+      if (fields.length === 0) {
+        await client.query('ROLLBACK');
+        return null;
+      }
+      const result = await client.query(
+        `UPDATE stock SET ${fields.join(', ')}, updated_at = CURRENT_TIMESTAMP WHERE id = $1 RETURNING *`,
+        values,
       );
+      if (result.rows[0]) {
+        const changedQuantity =
+          previous && previous.quantite_disponible !== result.rows[0].quantite_disponible;
+        await this.recordMovement(
+          result.rows[0],
+          previous,
+          changedQuantity ? 'ADJUSTMENT' : 'THRESHOLD',
+          data.motif,
+          userId,
+          client,
+        );
+      }
+      await client.query('COMMIT');
+      return result.rows[0];
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
     }
-    return result.rows[0];
   },
 
-  async recordMovement(current, previous, type, motif, userId) {
-    await query(
+  async recordMovement(current, previous, type, motif, userId, executor = { query }) {
+    await executor.query(
       `INSERT INTO stock_movement
        (stock_id, centre_id, vaccin_id, type, quantite_avant, quantite_apres, seuil_avant, seuil_apres, motif, user_id)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,

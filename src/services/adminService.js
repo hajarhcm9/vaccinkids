@@ -380,7 +380,8 @@ class AdminService {
     var dataSQL =
       'SELECT c.id, c.nom, c.adresse, c.telephone, c.gps_lat, c.gps_lng, c.est_actif, c.created_at, c.updated_at,' +
       ' (SELECT COUNT(*) FROM personnel p WHERE p.centre_id = c.id AND p.est_actif = TRUE) AS nb_personnel,' +
-      ' (SELECT COUNT(*) FROM session s WHERE s.centre_id = c.id) AS nb_sessions' +
+      ' (SELECT COUNT(*) FROM session s WHERE s.centre_id = c.id) AS nb_sessions,' +
+      ' (SELECT COUNT(*) FROM stock st WHERE st.centre_id = c.id AND st.quantite_disponible <= st.seuil_alerte) AS alertes_stock' +
       ' FROM centre c' +
       whereClause +
       ' ORDER BY c.nom ASC' +
@@ -486,6 +487,14 @@ class AdminService {
       };
     }
 
+    var activeSessionsRes = await pool.query(
+      "SELECT COUNT(*) AS total FROM session WHERE centre_id = $1 AND statut IN ('EN_FORMATION', 'PLANIFIEE', 'CONFIRMEE', 'EN_COURS')",
+      [id],
+    );
+    if (parseInt(activeSessionsRes.rows[0].total) > 0) {
+      return { error: 'Impossible de desactiver un centre avec des sessions actives' };
+    }
+
     await pool.query('UPDATE centre SET est_actif = FALSE WHERE id = $1', [id]);
 
     try {
@@ -506,6 +515,36 @@ class AdminService {
     }
 
     return { deactivated: true, id: id };
+  }
+
+  async reactivateCentre(id, adminId) {
+    var existing = await pool.query('SELECT id, est_actif FROM centre WHERE id = $1', [id]);
+    if (existing.rows.length === 0) {
+      return { error: 'Centre non trouve' };
+    }
+    if (existing.rows[0].est_actif) {
+      return { error: 'Centre deja actif' };
+    }
+
+    await pool.query('UPDATE centre SET est_actif = TRUE WHERE id = $1', [id]);
+    try {
+      await pool.query(
+        'INSERT INTO audit_log (table_name, record_id, action, old_values, new_values, user_id, user_role) VALUES ($1, $2, $3, $4, $5, $6)',
+        [
+          'centre',
+          id,
+          'UPDATE',
+          JSON.stringify({ est_actif: false }),
+          JSON.stringify({ est_actif: true }),
+          adminId,
+          'admin',
+        ],
+      );
+    } catch (e) {
+      /* non-blocking */
+    }
+
+    return { reactivated: true, id: id };
   }
 
   // ==========================================

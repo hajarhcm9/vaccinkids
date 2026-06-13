@@ -9,7 +9,7 @@ import java.util.concurrent.TimeUnit
 object ApiClient {
     const val BASE_URL = BuildConfig.API_BASE_URL
 
-    private val okHttpClient = OkHttpClient.Builder()
+    val httpClient: OkHttpClient = OkHttpClient.Builder()
         .addInterceptor(AuthInterceptor())
         .authenticator(TokenAuthenticator())
         .connectTimeout(30, TimeUnit.SECONDS)
@@ -20,7 +20,7 @@ object ApiClient {
     val instance: Retrofit by lazy {
         Retrofit.Builder()
             .baseUrl(BASE_URL)
-            .client(okHttpClient)
+            .client(httpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
     }

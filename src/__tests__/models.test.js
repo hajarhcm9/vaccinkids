@@ -29,6 +29,19 @@ describe('Session model', () => {
       [2, 3, '2026-04-29'],
     );
   });
+
+  test('transition updates only from explicitly allowed statuses', async () => {
+    query.mockResolvedValueOnce({ rows: [{ id: 4, statut: 'CONFIRMEE' }] });
+
+    await expect(
+      Session.transition(4, 'CONFIRMEE', ['EN_FORMATION', 'PLANIFIEE']),
+    ).resolves.toEqual({ id: 4, statut: 'CONFIRMEE' });
+    expect(query).toHaveBeenCalledWith(expect.stringContaining('statut = ANY($3::varchar[])'), [
+      4,
+      'CONFIRMEE',
+      ['EN_FORMATION', 'PLANIFIEE'],
+    ]);
+  });
 });
 
 describe('Flacon model', () => {

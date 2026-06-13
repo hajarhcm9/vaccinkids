@@ -26,7 +26,7 @@ class GestionCentresFragment : Fragment() {
     private lateinit var adapter: CentreAdapter
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        adapter = CentreAdapter(onEdit = { showForm(it) }, onDeactivate = { deactivateCentre(it) })
+        adapter = CentreAdapter(onEdit = { showForm(it) }, onToggle = { toggleCentre(it) })
         return LinearLayout(requireContext()).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(20)
@@ -128,20 +128,20 @@ class GestionCentresFragment : Fragment() {
         }
     }
 
-    private fun deactivateCentre(item: AdminCentreDto) {
-        if (item.estActif != true) {
-            messageView.text = "Reactivation centre non exposee par l'API actuelle."
-            return
-        }
+    private fun toggleCentre(item: AdminCentreDto) {
         AlertDialog.Builder(requireContext())
-            .setTitle("Desactiver le centre")
+            .setTitle(if (item.estActif == true) "Desactiver le centre" else "Reactiver le centre")
             .setMessage("${item.nom ?: "Centre"} - sessions: ${item.nbSessions ?: 0}")
             .setNegativeButton("Annuler", null)
             .setPositiveButton("Confirmer") { _, _ ->
                 viewLifecycleOwner.lifecycleScope.launch {
                     try {
-                        val response = ApiClient.apiService.deactivateAdminCentre(item.id)
-                        if (response.status != "success") throw Exception(response.message ?: "Desactivation refusee")
+                        val response = if (item.estActif == true) {
+                            ApiClient.apiService.deactivateAdminCentre(item.id)
+                        } else {
+                            ApiClient.apiService.reactivateAdminCentre(item.id)
+                        }
+                        if (response.status != "success") throw Exception(response.message ?: "Action refusee")
                         loadCentres()
                     } catch (e: Exception) {
                         messageView.text = e.message ?: "Erreur reseau"
@@ -156,7 +156,7 @@ class GestionCentresFragment : Fragment() {
 
 private class CentreAdapter(
     private val onEdit: (AdminCentreDto) -> Unit,
-    private val onDeactivate: (AdminCentreDto) -> Unit
+    private val onToggle: (AdminCentreDto) -> Unit
 ) : RecyclerView.Adapter<CentreAdapter.ViewHolder>() {
     private var items: List<AdminCentreDto> = emptyList()
     fun submit(next: List<AdminCentreDto>) {
@@ -167,7 +167,7 @@ private class CentreAdapter(
         return ViewHolder(LinearLayout(parent.context).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(16)
-        }, onEdit, onDeactivate)
+        }, onEdit, onToggle)
     }
     override fun getItemCount() = items.size
     override fun onBindViewHolder(holder: ViewHolder, position: Int) = holder.bind(items[position])
@@ -175,7 +175,7 @@ private class CentreAdapter(
     class ViewHolder(
         private val root: LinearLayout,
         private val onEdit: (AdminCentreDto) -> Unit,
-        private val onDeactivate: (AdminCentreDto) -> Unit
+        private val onToggle: (AdminCentreDto) -> Unit
     ) : RecyclerView.ViewHolder(root) {
         fun bind(item: AdminCentreDto) {
             root.removeAllViews()
@@ -196,9 +196,8 @@ private class CentreAdapter(
                 setOnClickListener { onEdit(item) }
             }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
             row.addView(Button(root.context).apply {
-                text = "Desactiver"
-                isEnabled = item.estActif == true
-                setOnClickListener { onDeactivate(item) }
+                text = if (item.estActif == true) "Desactiver" else "Reactiver"
+                setOnClickListener { onToggle(item) }
             }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
             root.addView(row)
         }

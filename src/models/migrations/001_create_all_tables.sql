@@ -275,26 +275,6 @@ CREATE INDEX idx_sync_queue_user_status ON sync_queue(user_id, user_role, status
 CREATE INDEX idx_sync_queue_entity ON sync_queue(entity_type, entity_id);
 
 -- ============================================
--- SEED DATA
--- ============================================
-INSERT INTO centre (nom, adresse, telephone, gps_lat, gps_lng, est_actif)
-VALUES ('Centre de Santé Es-Salaam', 'Province d''Oujda, Maroc', '+212536000000', 34.6814000, -1.9086000, TRUE)
-ON CONFLICT DO NOTHING;
-
-INSERT INTO vaccin (nom, doses_par_flacon, age_cible_semaines, maladies_ciblees, est_actif) VALUES
-  ('BCG', 10, 0, 'Tuberculose', TRUE),
-  ('Hépatite B', 1, 0, 'Hépatite B', TRUE),
-  ('Pentavalent', 1, 8, 'Diphtérie, Tétanos, Coqueluche, Hépatite B, Hib', TRUE),
-  ('Polio (VPI)', 1, 8, 'Poliomyélite', TRUE),
-  ('Pneumocoque', 1, 8, 'Infections pneumococciques', TRUE),
-  ('Rotavirus', 1, 8, 'Gastroentérite à rotavirus', TRUE),
-  ('ROR', 1, 52, 'Rougeole, Oreillons, Rubéole', TRUE),
-  ('Méningocoque', 1, 52, 'Méningite à méningocoque', TRUE),
-  ('DTC', 1, 78, 'Diphtérie, Tétanos, Coqueluche (rappel)', TRUE),
-  ('Polio (rappel)', 1, 78, 'Poliomyélite (rappel)', TRUE)
-ON CONFLICT DO NOTHING;
-
--- ============================================
 -- FUNCTIONS & TRIGGERS
 -- ============================================
 CREATE OR REPLACE FUNCTION update_updated_at()

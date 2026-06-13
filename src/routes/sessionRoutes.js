@@ -17,7 +17,13 @@ router.post(
   validate(schemas.createSession),
   SessionController.create,
 );
-router.patch('/:id', authenticate, authorize('admin'), SessionController.update);
+router.patch(
+  '/:id',
+  authenticate,
+  authorize('admin'),
+  validate(schemas.updateSession),
+  SessionController.update,
+);
 router.patch('/:id/confirm', authenticate, authorize('admin'), SessionController.confirmSession);
 router.patch(
   '/:id/start',

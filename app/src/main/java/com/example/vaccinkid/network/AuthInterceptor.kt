@@ -9,8 +9,10 @@ class AuthInterceptor : Interceptor {
         val originalRequest = chain.request()
         val method = originalRequest.method.uppercase()
         val builder = originalRequest.newBuilder()
-            .header("Accept", "application/json")
             .header("X-Request-ID", "staff-${UUID.randomUUID()}")
+        if (originalRequest.header("Accept").isNullOrBlank()) {
+            builder.header("Accept", "application/json")
+        }
 
         if (method in listOf("POST", "PUT", "PATCH", "DELETE")) {
             builder.header(

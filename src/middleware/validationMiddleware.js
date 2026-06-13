@@ -127,6 +127,26 @@ const schemas = {
     },
     max_inscriptions: { type: 'integer', required: true, min: 1, max: 100 },
   },
+  updateSession: {
+    centre_id: { type: 'integer' },
+    vaccin_id: { type: 'integer' },
+    date_session: {
+      type: 'string',
+      pattern: /^\d{4}-\d{2}-\d{2}$/,
+      patternMessage: 'Date must be YYYY-MM-DD',
+    },
+    heure_debut: {
+      type: 'string',
+      pattern: /^\d{2}:\d{2}$/,
+      patternMessage: 'Time must be HH:MM',
+    },
+    heure_fin: {
+      type: 'string',
+      pattern: /^\d{2}:\d{2}$/,
+      patternMessage: 'Time must be HH:MM',
+    },
+    max_inscriptions: { type: 'integer', min: 1, max: 100 },
+  },
   addBebe: {
     prenom: { type: 'string', required: true, minLength: 2, maxLength: 100 },
     nom: { type: 'string', required: true, minLength: 2, maxLength: 100 },

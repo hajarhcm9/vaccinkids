@@ -25,6 +25,12 @@ interface ApiService {
     @GET("stats/dashboard")
     suspend fun getStatsDashboard(@Query("centreId") centreId: Int? = null): ApiResponse<Map<String, Any?>>
 
+    @GET("stats/couverture-vaccinale")
+    suspend fun getStatsCouverture(@Query("centreId") centreId: Int? = null): ApiResponse<Map<String, Any?>>
+
+    @GET("stats/sessions")
+    suspend fun getStatsSessions(@Query("centreId") centreId: Int? = null): ApiResponse<Map<String, Any?>>
+
     @GET("stats/rendez-vous")
     suspend fun getStatsRendezVous(@Query("centreId") centreId: Int? = null): ApiResponse<Map<String, Any?>>
 
@@ -33,6 +39,9 @@ interface ApiService {
 
     @GET("stats/absenteisme")
     suspend fun getStatsAbsenteisme(@Query("centreId") centreId: Int? = null): ApiResponse<Map<String, Any?>>
+
+    @GET("stats/comparaison-centres")
+    suspend fun getStatsComparaisonCentres(): ApiResponse<Map<String, Any?>>
 
     @GET("sessions/today")
     suspend fun getTodaySessions(): ApiResponse<List<SessionDto>>
@@ -114,12 +123,18 @@ interface ApiService {
     @PATCH("admin/centres/{id}/deactivate")
     suspend fun deactivateAdminCentre(@Path("id") id: Int): ApiResponse<Map<String, Any?>>
 
+    @PATCH("admin/centres/{id}/reactivate")
+    suspend fun reactivateAdminCentre(@Path("id") id: Int): ApiResponse<Map<String, Any?>>
+
     @GET("admin/audit-log")
     suspend fun getAdminAuditLog(
         @Query("page") page: Int = 1,
         @Query("limit") limit: Int = 50,
         @Query("action") action: String? = null,
-        @Query("table_name") tableName: String? = null
+        @Query("table_name") tableName: String? = null,
+        @Query("user_id") userId: Int? = null,
+        @Query("date_debut") startDate: String? = null,
+        @Query("date_fin") endDate: String? = null
     ): ApiResponse<AdminAuditLogListDto>
 
     @GET("vaccins")

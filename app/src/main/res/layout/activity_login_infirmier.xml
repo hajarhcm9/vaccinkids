@@ -128,7 +128,7 @@
                     android:id="@+id/etEmailInfirmier"
                     android:layout_width="match_parent"
                     android:layout_height="50dp"
-                    android:hint="ADMIN01"
+                    android:hint="Votre CIN"
                     android:inputType="textCapCharacters"
                     android:background="@drawable/input_orange_bg"
                     android:paddingHorizontal="16dp"

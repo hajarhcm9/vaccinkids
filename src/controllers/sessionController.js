@@ -51,28 +51,36 @@ const SessionController = {
 
   startSession: catchAsync(async (req, res, next) => {
     await authorization.assertSessionAccess(req.user, req.params.id);
-    const session = await Session.update(req.params.id, { statut: 'EN_COURS' });
-    if (!session) return next(ApiError.notFound('Session not found'));
+    const session = await Session.transition(req.params.id, 'EN_COURS', ['CONFIRMEE']);
+    if (!session) return next(ApiError.conflict('Session must be CONFIRMEE before starting'));
     return success(res, 200, 'Session started', session);
   }),
 
   confirmSession: catchAsync(async (req, res, next) => {
-    const session = await Session.update(req.params.id, { statut: 'CONFIRMEE' });
-    if (!session) return next(ApiError.notFound('Session not found'));
+    const session = await Session.transition(req.params.id, 'CONFIRMEE', [
+      'EN_FORMATION',
+      'PLANIFIEE',
+    ]);
+    if (!session)
+      return next(ApiError.conflict('Session cannot be confirmed from its current status'));
     return success(res, 200, 'Session confirmed', session);
   }),
 
   endSession: catchAsync(async (req, res, next) => {
     await authorization.assertSessionAccess(req.user, req.params.id);
-    await RendezVous.markAbsentBySession(req.params.id);
-    const session = await Session.update(req.params.id, { statut: 'TERMINEE' });
-    if (!session) return next(ApiError.notFound('Session not found'));
+    const session = await Session.endAndMarkAbsent(req.params.id);
+    if (!session) return next(ApiError.conflict('Session must be EN_COURS before ending'));
     return success(res, 200, 'Session ended', session);
   }),
 
   cancelSession: catchAsync(async (req, res, next) => {
-    const session = await Session.update(req.params.id, { statut: 'ANNULEE' });
-    if (!session) return next(ApiError.notFound('Session not found'));
+    const session = await Session.transition(req.params.id, 'ANNULEE', [
+      'EN_FORMATION',
+      'PLANIFIEE',
+      'CONFIRMEE',
+    ]);
+    if (!session)
+      return next(ApiError.conflict('Session cannot be cancelled from its current status'));
     return success(res, 200, 'Session cancelled', session);
   }),
 

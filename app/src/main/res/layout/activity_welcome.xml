@@ -37,7 +37,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
         android:layout_marginBottom="40dp"
-        android:text="Centre de Santé Essalam — Oujda"
+        android:text="Application personnel et administration"
         android:textColor="#666666"
         android:textSize="13sp" />
 

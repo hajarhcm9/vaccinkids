@@ -28,6 +28,7 @@ router.get('/centres', AdminController.getCentres);
 router.get('/centres/:id', AdminController.getCentreById);
 router.patch('/centres/:id', AdminController.updateCentre);
 router.patch('/centres/:id/deactivate', AdminController.deactivateCentre);
+router.patch('/centres/:id/reactivate', AdminController.reactivateCentre);
 
 // ==========================================
 // AUDIT LOG

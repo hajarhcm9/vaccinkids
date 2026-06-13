@@ -2,6 +2,7 @@ package com.example.vaccinkid
 
 import android.app.AlertDialog
 import android.os.Bundle
+import android.view.WindowManager
 import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
@@ -13,6 +14,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.vaccinkid.model.StockDto
+import com.example.vaccinkid.model.StockMovementDto
 import com.example.vaccinkid.model.UpdateStockRequest
 import com.example.vaccinkid.model.UpsertStockRequest
 import com.example.vaccinkid.network.ApiClient
@@ -23,16 +25,30 @@ import kotlinx.coroutines.launch
 class GestionStocksActivity : AppCompatActivity() {
     private lateinit var viewModel: StockViewModel
     private lateinit var adapter: StockAdapter
+    private lateinit var movementAdapter: StockMovementAdapter
+    private lateinit var centreInput: EditText
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
         setContentView(R.layout.activity_gestion_stocks)
         viewModel = ViewModelProvider(this)[StockViewModel::class.java]
 
         adapter = StockAdapter(onEdit = { showEditDialog(it) })
+        movementAdapter = StockMovementAdapter()
         findViewById<RecyclerView>(R.id.recyclerViewStocks).apply {
             layoutManager = LinearLayoutManager(this@GestionStocksActivity)
             adapter = this@GestionStocksActivity.adapter
+        }
+        findViewById<RecyclerView>(R.id.recyclerViewStockMovements).apply {
+            layoutManager = LinearLayoutManager(this@GestionStocksActivity)
+            adapter = movementAdapter
+        }
+        centreInput = findViewById<EditText>(R.id.inputCentreStock).apply {
+            setText(TokenManager.getCentreId()?.toString() ?: "")
+        }
+        findViewById<Button>(R.id.btnChargerStock).setOnClickListener {
+            loadForSelectedCentre()
         }
 
         findViewById<Button>(R.id.btnAjouterEntreeStock).apply {
@@ -51,13 +67,41 @@ class GestionStocksActivity : AppCompatActivity() {
                 }
             )
         }
-        viewModel.loadStock()
+        loadForSelectedCentre()
+    }
+
+    private fun selectedCentreId(): Int? = centreInput.text.toString().trim().toIntOrNull()
+
+    private fun loadForSelectedCentre() {
+        val centreId = selectedCentreId()
+        if (centreId == null) {
+            Toast.makeText(this, "Centre ID obligatoire", Toast.LENGTH_LONG).show()
+            return
+        }
+        viewModel.loadStock(centreId)
+        if (TokenManager.getUserRole() == "admin") loadMovements(centreId)
+    }
+
+    private fun loadMovements(centreId: Int) {
+        lifecycleScope.launch {
+            try {
+                val response = ApiClient.apiService.getStockMovements(centreId = centreId)
+                val data = response.data
+                if (response.status != "success" || data == null) {
+                    throw Exception(response.message ?: "Historique indisponible")
+                }
+                movementAdapter.submitList(data)
+            } catch (e: Exception) {
+                movementAdapter.submitList(emptyList())
+                Toast.makeText(this@GestionStocksActivity, e.message ?: "Historique indisponible", Toast.LENGTH_LONG).show()
+            }
+        }
     }
 
     private fun showUpsertDialog() {
         if (TokenManager.getUserRole() != "admin") return
         val root = formRoot()
-        val centre = edit("Centre ID")
+        val centre = edit("Centre ID").also { it.setText(selectedCentreId()?.toString() ?: "") }
         val vaccin = edit("Vaccin ID")
         val quantite = edit("Quantite")
         val seuil = edit("Seuil alerte")
@@ -80,7 +124,8 @@ class GestionStocksActivity : AppCompatActivity() {
                             )
                         )
                         if (response.status != "success") throw Exception(response.message ?: "Stock refuse")
-                        viewModel.loadStock(centre.text.toString().toInt())
+                        centreInput.setText(centre.text.toString())
+                        loadForSelectedCentre()
                     } catch (e: Exception) {
                         Toast.makeText(this@GestionStocksActivity, e.message ?: "Erreur", Toast.LENGTH_LONG).show()
                     }
@@ -112,7 +157,10 @@ class GestionStocksActivity : AppCompatActivity() {
                             )
                         )
                         if (response.status != "success") throw Exception(response.message ?: "Stock refuse")
-                        viewModel.loadStock(stock.centreId)
+                        stock.centreId?.let {
+                            centreInput.setText(it.toString())
+                            loadForSelectedCentre()
+                        }
                     } catch (e: Exception) {
                         Toast.makeText(this@GestionStocksActivity, e.message ?: "Erreur", Toast.LENGTH_LONG).show()
                     }
@@ -129,6 +177,41 @@ class GestionStocksActivity : AppCompatActivity() {
     }
 
     private fun edit(hintText: String): EditText = EditText(this).apply { hint = hintText }
+}
+
+class StockMovementAdapter : RecyclerView.Adapter<StockMovementAdapter.ViewHolder>() {
+    private var items: List<StockMovementDto> = emptyList()
+
+    class ViewHolder(val root: LinearLayout) : RecyclerView.ViewHolder(root)
+
+    override fun onCreateViewHolder(parent: android.view.ViewGroup, viewType: Int): ViewHolder {
+        return ViewHolder(LinearLayout(parent.context).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(12, 12, 12, 12)
+        })
+    }
+
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        val item = items[position]
+        holder.root.removeAllViews()
+        holder.root.addView(TextView(holder.root.context).apply {
+            text = "${item.type ?: "MOUVEMENT"} - ${item.vaccinNom ?: "Vaccin #${item.vaccinId ?: "-"}"}"
+            setTypeface(typeface, android.graphics.Typeface.BOLD)
+        })
+        holder.root.addView(TextView(holder.root.context).apply {
+            text = "${item.quantiteAvant ?: "-"} -> ${item.quantiteApres ?: "-"} | seuil ${item.seuilAvant ?: "-"} -> ${item.seuilApres ?: "-"}"
+        })
+        holder.root.addView(TextView(holder.root.context).apply {
+            text = listOfNotNull(item.motif, item.createdAt).joinToString(" | ").ifBlank { "-" }
+        })
+    }
+
+    override fun getItemCount() = items.size
+
+    fun submitList(next: List<StockMovementDto>) {
+        items = next
+        notifyDataSetChanged()
+    }
 }
 
 class StockAdapter(

@@ -1,4 +1,4 @@
-const { query } = require('../config/database');
+const { pool, query } = require('../config/database');
 
 const SESSION_SELECT =
   'SELECT s.*, c.nom AS centre_nom, c.adresse AS centre_adresse, ' +
@@ -95,7 +95,6 @@ const Session = {
       'heure_debut',
       'heure_fin',
       'max_inscriptions',
-      'statut',
     ];
     for (const field of allowedFields) {
       if (data[field] !== undefined) {
@@ -110,6 +109,48 @@ const Session = {
       values,
     );
     return result.rows[0];
+  },
+
+  async transition(id, nextStatus, allowedCurrentStatuses) {
+    const result = await query(
+      `UPDATE session
+       SET statut = $2
+       WHERE id = $1 AND statut = ANY($3::varchar[])
+       RETURNING *`,
+      [id, nextStatus, allowedCurrentStatuses],
+    );
+    return result.rows[0];
+  },
+
+  async endAndMarkAbsent(id) {
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      const result = await client.query(
+        `UPDATE session
+         SET statut = 'TERMINEE'
+         WHERE id = $1 AND statut = 'EN_COURS'
+         RETURNING *`,
+        [id],
+      );
+      if (!result.rows[0]) {
+        await client.query('ROLLBACK');
+        return null;
+      }
+      await client.query(
+        `UPDATE rendez_vous
+         SET statut = 'ABSENT'
+         WHERE session_id = $1 AND statut IN ('CONFIRME', 'EN_ATTENTE')`,
+        [id],
+      );
+      await client.query('COMMIT');
+      return result.rows[0];
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
   },
 };
 

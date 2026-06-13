@@ -90,6 +90,23 @@ describe('Day 10 - Health Records & Stock', () => {
         .send({ centre_id: 1, vaccin_id: 1, quantite_disponible: 99 });
       expect(res.status).toBe(403);
     });
+
+    it('should expose the audited stock movement only to admin', async () => {
+      const adminRes = await request(app)
+        .get('/api/stock/movements?centre_id=1')
+        .set('Authorization', 'Bearer ' + adminToken);
+      expect(adminRes.status).toBe(200);
+      expect(
+        adminRes.body.data.some(
+          (movement) => movement.vaccin_id === 1 && movement.quantite_apres === 42,
+        ),
+      ).toBe(true);
+
+      const nurseRes = await request(app)
+        .get('/api/stock/movements?centre_id=1')
+        .set('Authorization', 'Bearer ' + nurseToken);
+      expect(nurseRes.status).toBe(403);
+    });
   });
 
   describe('Vaccine CRUD', () => {

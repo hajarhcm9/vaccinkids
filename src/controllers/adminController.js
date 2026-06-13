@@ -159,6 +159,16 @@ const AdminController = {
     return success(res, 200, 'Centre desactive', result);
   }),
 
+  reactivateCentre: catchAsync(async (req, res, next) => {
+    const result = await adminService.reactivateCentre(parseInt(req.params.id), req.user.id);
+
+    if (result.error) {
+      return res.status(400).json({ status: 'error', message: result.error });
+    }
+
+    return success(res, 200, 'Centre reactive', result);
+  }),
+
   // ==========================================
   // AUDIT LOG
   // ==========================================
