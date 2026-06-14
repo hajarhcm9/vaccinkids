@@ -213,7 +213,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Centre Es-Salaam · Oujda"
+                        android:text="Connexion sécurisée au serveur VacciniKids"
                         android:textSize="11sp"
                         android:textColor="#D0A070"
                         android:paddingHorizontal="12dp" />

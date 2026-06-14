@@ -18,7 +18,7 @@
         android:id="@+id/bottomNav"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/staff_surface"
+        android:background="@drawable/bg_bottom_nav"
         app:itemIconTint="@drawable/bottom_nav_color"
         app:itemTextColor="@drawable/bottom_nav_color"
         app:menu="@menu/bottom_nav_menu"

@@ -1,47 +1,77 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    style="@style/Widget.Vaccinkid.Card"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    app:cardCornerRadius="8dp"
-    app:cardElevation="1dp"
-    app:cardBackgroundColor="#FFFFFF"
-    android:layout_marginBottom="8dp">
+    android:layout_marginBottom="10dp"
+    app:cardCornerRadius="16dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp">
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="14dp">
 
         <TextView
-            android:id="@+id/tvNomVaccinStock"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Pentavalent"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:textColor="@color/staff_ink"/>
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="@drawable/bg_circle_teal"
+            android:gravity="center"
+            android:text="V"
+            android:textColor="@color/white"
+            android:textSize="19sp"
+            android:textStyle="bold" />
 
-        <TextView
-            android:id="@+id/tvQuantiteStock"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="Restant : 5 flacons"
-            android:textSize="14sp"
-            android:textColor="@color/staff_primary"
-            android:layout_marginTop="4dp"/>
+            android:layout_marginStart="12dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tvNomVaccinStock"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="@style/TextAppearance.Vaccinkid.Title"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvQuantiteStock"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="3dp"
+                android:textColor="@color/brand_teal"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+
+            <ProgressBar
+                android:id="@+id/progressStock"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="match_parent"
+                android:layout_height="4dp"
+                android:layout_marginTop="8dp"
+                android:max="100"
+                android:progress="50"
+                android:progressTint="@color/brand_teal"
+                android:progressBackgroundTint="@color/outline" />
+        </LinearLayout>
 
         <TextView
             android:id="@+id/tvAlerteStock"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="⚠️ Stock Bas !"
-            android:textSize="14sp"
+            android:layout_marginStart="10dp"
+            android:background="@drawable/bg_badge_error"
+            android:paddingHorizontal="10dp"
+            android:paddingVertical="5dp"
+            android:text="Bas"
+            android:textColor="@color/error_dark"
+            android:textSize="11sp"
             android:textStyle="bold"
-            android:textColor="#F44336"
-            android:visibility="visible"
-            android:layout_marginTop="4dp"/>
-
+            android:visibility="gone" />
     </LinearLayout>
-</androidx.cardview.widget.CardView>
+</com.google.android.material.card.MaterialCardView>

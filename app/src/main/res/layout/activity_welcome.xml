@@ -87,7 +87,8 @@
                 android:layout_height="48dp"
                 android:backgroundTint="@color/staff_primary"
                 android:text="Accéder"
-                android:textColor="#FFFFFF" />
+                android:textColor="#FFFFFF"
+                app:cornerRadius="8dp" />
         </LinearLayout>
     </androidx.cardview.widget.CardView>
 
@@ -136,7 +137,8 @@
                 android:layout_height="48dp"
                 android:backgroundTint="@color/staff_secondary"
                 android:text="Accéder"
-                android:textColor="#FFFFFF" />
+                android:textColor="#FFFFFF"
+                app:cornerRadius="8dp" />
         </LinearLayout>
     </androidx.cardview.widget.CardView>
 

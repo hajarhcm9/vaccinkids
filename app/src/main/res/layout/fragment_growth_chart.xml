@@ -1,40 +1,98 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/staff_background"
+    android:background="@color/bg_primary"
     android:orientation="vertical"
-    android:padding="16dp">
+    android:padding="20dp">
 
     <TextView
         android:id="@+id/tvGrowthTitle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="12dp"
-        android:textColor="@color/staff_ink"
-        android:textSize="18sp"
-        android:textStyle="bold" />
+        android:textAppearance="@style/TextAppearance.Vaccinkid.Headline" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:text="Suivi de croissance clinique"
+        android:textAppearance="@style/TextAppearance.Vaccinkid.Body" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_badge_warning"
+            android:paddingHorizontal="12dp"
+            android:paddingVertical="6dp"
+            android:text="Poids (kg)"
+            android:textColor="@color/warning_dark"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/bg_badge_info"
+            android:paddingHorizontal="12dp"
+            android:paddingVertical="6dp"
+            android:text="Taille (cm)"
+            android:textColor="@color/info_dark"
+            android:textStyle="bold" />
+    </LinearLayout>
 
     <ProgressBar
         android:id="@+id/progressGrowth"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
+        android:layout_marginTop="12dp"
+        android:indeterminateTint="@color/brand_teal"
         android:visibility="gone" />
 
     <TextView
         android:id="@+id/tvGrowthEmpty"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:background="@drawable/bg_card_rounded"
         android:gravity="center"
-        android:padding="24dp"
-        android:textColor="@color/staff_muted"
-        android:textSize="15sp"
+        android:padding="28dp"
+        android:textAppearance="@style/TextAppearance.Vaccinkid.Body"
         android:visibility="gone" />
 
-    <com.github.mikephil.charting.charts.LineChart
-        android:id="@+id/lineChartGrowth"
+    <com.google.android.material.card.MaterialCardView
+        style="@style/Widget.Vaccinkid.Card"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1" />
+        android:layout_marginTop="16dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:padding="14dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Courbes de croissance"
+                android:textAppearance="@style/TextAppearance.Vaccinkid.Title" />
+
+            <com.github.mikephil.charting.charts.LineChart
+                android:id="@+id/lineChartGrowth"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_marginTop="8dp"
+                android:layout_weight="1" />
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
 </LinearLayout>

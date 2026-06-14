@@ -1,6 +1,7 @@
 package com.example.vaccinkid
 
 import android.content.Intent
+import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -71,6 +72,8 @@ class DashboardFragment : Fragment() {
         }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
         header.addView(ImageButton(requireContext()).apply {
             setImageResource(android.R.drawable.ic_lock_power_off)
+            setColorFilter(StaffUi.PRIMARY_DARK)
+            setBackgroundColor(Color.TRANSPARENT)
             setOnClickListener { confirmLogout() }
         })
         root.addView(header)
@@ -166,6 +169,7 @@ class DashboardFragment : Fragment() {
                     } else {
                         "Alertes stock: aucune alerte declaree"
                     }
+                    renderAlertState(stockAlerts > 0)
                 },
                 onFailure = {
                     rdvCountView.text = "-"
@@ -209,6 +213,7 @@ class DashboardFragment : Fragment() {
                 }
                 if (response.status == "success" && alerts.isNotEmpty()) {
                     alertView.text = "Alertes stock: ${alerts.joinToString { it.vaccinNom ?: it.nom ?: "vaccin" }}"
+                    renderAlertState(true)
                 }
             } catch (_: Exception) {
                 if (alertView.text.isBlank()) alertView.text = "Alertes stock: erreur reseau"
@@ -265,6 +270,15 @@ class DashboardFragment : Fragment() {
             })
         }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
         return valueView
+    }
+
+    private fun renderAlertState(hasAlert: Boolean) {
+        alertView.setTextColor(if (hasAlert) StaffUi.DANGER else StaffUi.SUCCESS_DARK)
+        alertView.background = StaffUi.rounded(
+            if (hasAlert) StaffUi.SOFT_CORAL else StaffUi.SOFT_TEAL,
+            if (hasAlert) StaffUi.SOFT_CORAL else StaffUi.SOFT_TEAL,
+            7
+        )
     }
 
     private fun navButton(text: String, itemId: Int): Button {
