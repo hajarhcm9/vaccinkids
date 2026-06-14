@@ -33,7 +33,14 @@ class StaffNotificationsFragment : Fragment() {
         }
         root.addView(TextView(requireContext()).apply {
             text = "Notifications staff"
-            textSize = 22f
+            textSize = 24f
+            setTextColor(StaffUi.INK)
+            setTypeface(typeface, android.graphics.Typeface.BOLD)
+        })
+        root.addView(TextView(requireContext()).apply {
+            text = "Alertes et informations liees a votre activite"
+            StaffUi.styleSubtitle(this)
+            setPadding(0, 0, 0, 10)
         })
         val actions = LinearLayout(requireContext()).apply { orientation = LinearLayout.HORIZONTAL }
         actions.addView(button("Rafraichir") { loadNotifications() }, weight())
@@ -73,7 +80,14 @@ class StaffNotificationsFragment : Fragment() {
                 adapter.submit(notifications)
                 val unreadCount = notifications.count { it.estLue != true }
                 markAllReadButton.visibility = if (unreadCount > 0) View.VISIBLE else View.GONE
-                setLoading(false, "$unreadCount non lue(s)")
+                setLoading(
+                    false,
+                    if (notifications.isEmpty()) {
+                        "Aucune notification. Les nouvelles alertes apparaitront ici."
+                    } else {
+                        "$unreadCount non lue(s)"
+                    }
+                )
             } catch (error: Exception) {
                 adapter.submit(emptyList())
                 markAllReadButton.visibility = View.GONE
@@ -154,13 +168,16 @@ private class StaffNotificationAdapter(
             root.addView(TextView(root.context).apply {
                 text = notification.titre ?: "Notification"
                 textSize = 16f
+                setTextColor(StaffUi.INK)
                 setTypeface(typeface, android.graphics.Typeface.BOLD)
             })
             root.addView(TextView(root.context).apply {
                 text = notification.message ?: ""
+                setTextColor(StaffUi.MUTED)
             })
             root.addView(TextView(root.context).apply {
-                text = if (notification.estLue == true) "Lue" else "Non lue - toucher pour marquer lue"
+                text = if (notification.estLue == true) "Lue" else "Non lue"
+                StaffUi.statusPill(this, if (notification.estLue == true) "ACTIF" else "EN_ATTENTE")
             })
             root.setOnClickListener(if (notification.estLue == true) null else View.OnClickListener {
                 onRead(notification)

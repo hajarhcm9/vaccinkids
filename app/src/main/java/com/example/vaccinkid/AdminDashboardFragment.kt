@@ -45,7 +45,7 @@ class AdminDashboardFragment : Fragment() {
             setPadding(dp(18), dp(18), dp(10), dp(18))
             background = GradientDrawable(
                 GradientDrawable.Orientation.TL_BR,
-                intArrayOf(StaffUi.ROSE, StaffUi.CORAL)
+                intArrayOf(StaffUi.LAVENDER, StaffUi.PRIMARY)
             ).apply { cornerRadius = dp(8).toFloat() }
         }
         header.addView(LinearLayout(requireContext()).apply {
@@ -86,16 +86,16 @@ class AdminDashboardFragment : Fragment() {
 
         root.addView(sectionTitle("Gestion et supervision"))
         root.addView(actionRow(
-            navButton("Personnel", GestionPersonnelFragment(), "accent-rose"),
-            navButton("Centres", GestionCentresFragment(), "accent-blue")
+            navButton("Personnel", GestionPersonnelFragment(), "accent-primary"),
+            navButton("Centres", GestionCentresFragment(), "accent-tertiary")
         ))
         root.addView(actionRow(
-            navButton("Vaccins", GestionVaccinsFragment(), "accent-coral"),
-            navButton("Sessions", GestionSessionsFragment(), "accent-amber")
+            navButton("Vaccins", GestionVaccinsFragment(), "accent-primary"),
+            navButton("Sessions", GestionSessionsFragment(), "accent-primary")
         ))
         root.addView(actionRow(
-            actionButton("Stock", "accent-blue") { startActivity(Intent(requireContext(), GestionStocksActivity::class.java)) },
-            actionButton("Statistiques", "accent-rose") { startActivity(Intent(requireContext(), StatsAdminActivity::class.java)) }
+            actionButton("Stock", "accent-secondary") { startActivity(Intent(requireContext(), GestionStocksActivity::class.java)) },
+            actionButton("Statistiques", "accent-tertiary") { startActivity(Intent(requireContext(), StatsAdminActivity::class.java)) }
         ))
         root.addView(actionRow(
             actionButton("Exports", "accent-coral") { startActivity(Intent(requireContext(), ExportsAdminActivity::class.java)) },
@@ -134,14 +134,14 @@ class AdminDashboardFragment : Fragment() {
     private fun renderStats(stats: DashboardStatsDto) {
         kpiContainer.removeAllViews()
         val values = listOf(
-            Triple("Centres actifs", stats.centresActifs, StaffUi.BLUE),
-            Triple("Personnel", stats.totalPersonnel, StaffUi.ROSE),
+            Triple("Centres actifs", stats.centresActifs, StaffUi.LAVENDER),
+            Triple("Personnel", stats.totalPersonnel, StaffUi.PRIMARY),
             Triple("Parents", stats.totalParents, StaffUi.PRIMARY),
             Triple("Bebes", stats.totalBebes, StaffUi.CORAL),
             Triple("Sessions a venir", stats.sessionsAVenir, StaffUi.BLUE),
             Triple("RDV confirmes", stats.rdvConfirmes, StaffUi.PRIMARY),
             Triple("RDV en attente", stats.rdvEnAttente, 0xFFD97706.toInt()),
-            Triple("Vaccinations", stats.totalVaccinations, StaffUi.ROSE),
+            Triple("Vaccinations", stats.totalVaccinations, StaffUi.LAVENDER),
             Triple("Alertes stock", stats.alertesStock, StaffUi.DANGER)
         )
         values.chunked(3).forEach { rowValues ->

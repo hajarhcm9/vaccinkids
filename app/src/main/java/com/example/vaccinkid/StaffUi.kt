@@ -23,6 +23,8 @@ object StaffUi {
     const val CORAL = 0xFFE85D5D.toInt()
     const val ROSE = 0xFFBE185D.toInt()
     const val BLUE = 0xFF0EA5E9.toInt()
+    const val LAVENDER = 0xFF7B5EA7.toInt()
+    const val SOFT_LAVENDER = 0xFFF0E5FF.toInt()
     const val AMBER = 0xFFF2B84B.toInt()
     const val INK = 0xFF17332F.toInt()
     const val MUTED = 0xFF637773.toInt()
@@ -84,6 +86,9 @@ object StaffUi {
             "accent-rose" -> ROSE
             "accent-blue" -> BLUE
             "accent-amber" -> 0xFFD97706.toInt()
+            "accent-primary" -> PRIMARY
+            "accent-secondary" -> 0xFFC05555.toInt()
+            "accent-tertiary" -> LAVENDER
             else -> null
         }
         val background = when {

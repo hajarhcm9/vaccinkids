@@ -21,6 +21,19 @@
     <color name="brand_rose">#BE185D</color>
     <color name="brand_rose_light">#EC4899</color>
     <color name="brand_blue">#0EA5E9</color>
+    <color name="brand_lavender">#7B5EA7</color>
+    <color name="brand_lavender_light">#F0E5FF</color>
+    <color name="brand_lavender_dark">#2D0F52</color>
+
+    <color name="primary_medical">#0D9373</color>
+    <color name="primary_container">#C8F5E8</color>
+    <color name="on_primary_container">#002117</color>
+    <color name="secondary_warm">#C05555</color>
+    <color name="secondary_container">#FFE8E6</color>
+    <color name="on_secondary_container">#3B0F0F</color>
+    <color name="tertiary_admin">#7B5EA7</color>
+    <color name="tertiary_container">#F0E5FF</color>
+    <color name="on_tertiary_container">#2D0F52</color>
 
     <color name="bg_primary">#F8FAFC</color>
     <color name="bg_secondary">#F1F5F9</color>
@@ -49,6 +62,10 @@
     <color name="waiting_dark">#3730A3</color>
 
     <color name="outline">#E2E8F0</color>
+    <color name="surface_variant">#E1E3DE</color>
+    <color name="on_surface_variant">#414942</color>
+    <color name="outline_strong">#727970</color>
+    <color name="outline_variant">#C2C9BD</color>
     <color name="teal_input">#F0FDFA</color>
     <color name="teal_input_border">#99F6E4</color>
     <color name="scan_zone">#E0F2FE</color>

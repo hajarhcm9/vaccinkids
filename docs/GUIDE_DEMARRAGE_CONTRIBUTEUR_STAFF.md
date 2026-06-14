@@ -162,9 +162,9 @@ ouvrir l'application :
 
 ```bash
 JAVA_HOME=$(/usr/libexec/java_home -v 17) \
-./gradlew :app:assembleDebug
+./gradlew :app:assembleDebugEmulator
 
-adb install -r app/build/outputs/apk/debug/app-debug.apk
+adb install -r app/build/outputs/apk/debugEmulator/app-debugEmulator.apk
 adb shell monkey -p ma.vaccinikids.staff -c android.intent.category.LAUNCHER 1
 ```
 
@@ -201,20 +201,20 @@ Construire l'APK avec cette adresse, en conservant `/api` :
 ```bash
 STAFF_API_BASE_URL=http://192.168.1.4:3000/api \
 JAVA_HOME=$(/usr/libexec/java_home -v 17) \
-./gradlew :app:assembleDebug
+./gradlew :app:assembleDebugDevice
 ```
 
 Installer et ouvrir :
 
 ```bash
-adb install -r app/build/outputs/apk/debug/app-debug.apk
+adb install -r app/build/outputs/apk/debugDevice/app-debugDevice.apk
 adb shell monkey -p ma.vaccinikids.staff -c android.intent.category.LAUNCHER 1
 ```
 
 Si le terminal n'est pas positionné à la racine du dépôt, utiliser le chemin absolu :
 
 ```bash
-adb install -r /chemin/vers/vaccinkids/app/build/outputs/apk/debug/app-debug.apk
+adb install -r /chemin/vers/vaccinkids/app/build/outputs/apk/debugDevice/app-debugDevice.apk
 ```
 
 L'adresse IP Wi-Fi peut changer après un redémarrage ou un changement de réseau. Dans ce
@@ -244,9 +244,9 @@ Reconstruire et réinstaller l'application staff sur téléphone physique :
 IP_MAC=$(ipconfig getifaddr en0)
 STAFF_API_BASE_URL="http://$IP_MAC:3000/api" \
 JAVA_HOME=$(/usr/libexec/java_home -v 17) \
-./gradlew :app:assembleDebug
+./gradlew :app:assembleDebugDevice
 
-adb install -r app/build/outputs/apk/debug/app-debug.apk
+adb install -r app/build/outputs/apk/debugDevice/app-debugDevice.apk
 adb shell monkey -p ma.vaccinikids.staff -c android.intent.category.LAUNCHER 1
 ```
 
@@ -352,4 +352,3 @@ git push -u origin prenom/ma-fonctionnalite
 
 Créer ensuite une Pull Request vers `main` et attendre la réussite des workflows GitHub
 `CI` et `Security`.
-

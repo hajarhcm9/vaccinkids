@@ -2,7 +2,7 @@
 
 **Date observee :** 14 juin 2026  
 **Application concernee :** Android staff/admin/infirmier  
-**Statut :** A corriger durablement
+**Statut :** Corrige dans le code, recette appareil a maintenir
 
 ## Symptome
 
@@ -54,15 +54,37 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 Verifier egalement que le backend ecoute sur le reseau local et que le telephone
 peut joindre le Mac.
 
-## Correction durable a faire
+## Correction durable implementee
 
-- Ajouter des variantes explicites `debugEmulator` et `debugDevice`, ou une
-  configuration d'environnement versionnee sans secret.
-- Afficher l'URL API active dans un ecran diagnostic disponible uniquement en debug.
-- Faire echouer la commande de build appareil si `STAFF_API_BASE_URL` est absente.
-- Ajouter une commande projet unique, par exemple `npm run staff:device`.
-- Reduire le timeout de connexion debug et afficher une erreur indiquant l'URL cible.
-- Ajouter ce scenario a la recette contributeur et a la CI de build debug.
+- Variantes explicites `debugEmulator` et `debugDevice`.
+- `debugDevice` echoue immediatement si `STAFF_API_BASE_URL` est absente.
+- Ecran diagnostic disponible par appui long sur l'acces Infirmier dans un build debug.
+- L'ecran diagnostic affiche la variante et l'URL API actives.
+
+## Commandes valides
+
+Emulateur :
+
+```bash
+JAVA_HOME=$(/usr/libexec/java_home -v 17) ./gradlew :app:assembleDebugEmulator
+```
+
+Telephone physique :
+
+```bash
+STAFF_API_BASE_URL="http://$(ipconfig getifaddr en0):3000/api" \
+JAVA_HOME=$(/usr/libexec/java_home -v 17) \
+./gradlew :app:assembleDebugDevice
+
+adb install -r app/build/outputs/apk/debugDevice/app-debugDevice.apk
+```
+
+## Actions restantes
+
+- Ajouter une commande projet courte, par exemple `npm run staff:device`.
+- Afficher l'URL cible dans les erreurs reseau debug.
+- Ajouter les variantes a la CI Android.
+- Maintenir ce scenario dans la recette contributeur.
 
 ## Critere de cloture
 

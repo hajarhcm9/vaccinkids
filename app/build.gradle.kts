@@ -25,10 +25,8 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        val debugApiUrl = providers.environmentVariable("STAFF_API_BASE_URL").orNull
-            ?: "http://10.0.2.2:3000/api/"
-        buildConfigField("String", "API_BASE_URL", "\"${debugApiUrl.trimEnd('/')}/\"")
     }
+
 
     signingConfigs {
         if (hasReleaseSigning) {
@@ -44,7 +42,35 @@ android {
     buildTypes {
         debug {
             manifestPlaceholders["networkSecurityConfig"] = "@xml/network_security_config"
+            val emulatorApiUrl = "http://10.0.2.2:3000/api/"
+            buildConfigField("String", "API_BASE_URL", "\"${emulatorApiUrl.trimEnd('/')}/\"")
         }
+
+        create("debugEmulator") {
+            initWith(getByName("debug"))
+            matchingFallbacks += listOf("debug")
+            manifestPlaceholders["networkSecurityConfig"] = "@xml/network_security_config"
+
+            val emulatorApiUrl = "http://10.0.2.2:3000/api/"
+            buildConfigField("String", "API_BASE_URL", "\"${emulatorApiUrl.trimEnd('/')}/\"")
+        }
+
+        create("debugDevice") {
+            initWith(getByName("debug"))
+            matchingFallbacks += listOf("debug")
+            manifestPlaceholders["networkSecurityConfig"] = "@xml/network_security_config"
+
+            val deviceApiUrl = providers.environmentVariable("STAFF_API_BASE_URL").orNull
+            val buildsDeviceVariant = gradle.startParameter.taskNames.any {
+                it.contains("debugDevice", ignoreCase = true)
+            }
+            require(!buildsDeviceVariant || !deviceApiUrl.isNullOrBlank()) {
+                "STAFF_API_BASE_URL must be set for debugDevice builds (physical device). Example: STAFF_API_BASE_URL=http://<MAC_IP>:3000/api"
+            }
+            val configuredUrl = deviceApiUrl ?: "http://invalid.local/api/"
+            buildConfigField("String", "API_BASE_URL", "\"${configuredUrl.trimEnd('/')}/\"")
+        }
+
         release {
             val releaseApiUrl = providers.environmentVariable("STAFF_API_BASE_URL").orNull
                 ?: "https://invalid.example/api/"
@@ -58,6 +84,7 @@ android {
             )
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
