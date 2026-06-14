@@ -124,13 +124,13 @@ class ScanQrFragment : Fragment() {
 
     private fun showManualInputDialog() {
         val editText = EditText(requireContext()).apply {
-            hint = "Entrez le numéro du carnet"
+            hint = "Entrez le code QR sécurisé"
             setPadding(48, 32, 48, 16)
         }
 
         AlertDialog.Builder(requireContext())
             .setTitle("Saisie manuelle")
-            .setMessage("Entrez l'identifiant du carnet de vaccination :")
+            .setMessage("Entrez le code sécurisé affiché dans le carnet parent :")
             .setView(editText)
             .setPositiveButton("Valider") { _, _ ->
                 val input = editText.text.toString().trim()

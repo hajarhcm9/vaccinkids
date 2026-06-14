@@ -19,6 +19,7 @@ class StaffNotificationsFragment : Fragment() {
     private lateinit var progress: ProgressBar
     private lateinit var message: TextView
     private lateinit var adapter: StaffNotificationAdapter
+    private lateinit var markAllReadButton: Button
     private var loading = false
 
     override fun onCreateView(
@@ -36,7 +37,10 @@ class StaffNotificationsFragment : Fragment() {
         })
         val actions = LinearLayout(requireContext()).apply { orientation = LinearLayout.HORIZONTAL }
         actions.addView(button("Rafraichir") { loadNotifications() }, weight())
-        actions.addView(button("Tout marquer lu") { markAllRead() }, weight())
+        markAllReadButton = button("Tout marquer lu") { markAllRead() }.apply {
+            visibility = View.GONE
+        }
+        actions.addView(markAllReadButton, weight())
         root.addView(actions)
         progress = ProgressBar(requireContext()).apply { visibility = View.GONE }
         message = TextView(requireContext()).apply { setPadding(0, 8, 0, 8) }
@@ -66,9 +70,12 @@ class StaffNotificationsFragment : Fragment() {
                 }
                 val notifications = response.data.orEmpty()
                 adapter.submit(notifications)
-                setLoading(false, "${notifications.count { it.estLue != true }} non lue(s)")
+                val unreadCount = notifications.count { it.estLue != true }
+                markAllReadButton.visibility = if (unreadCount > 0) View.VISIBLE else View.GONE
+                setLoading(false, "$unreadCount non lue(s)")
             } catch (error: Exception) {
                 adapter.submit(emptyList())
+                markAllReadButton.visibility = View.GONE
                 setLoading(false, error.message ?: "Connexion requise")
             }
         }
@@ -153,7 +160,9 @@ private class StaffNotificationAdapter(
             root.addView(TextView(root.context).apply {
                 text = if (notification.estLue == true) "Lue" else "Non lue - toucher pour marquer lue"
             })
-            root.setOnClickListener { onRead(notification) }
+            root.setOnClickListener(if (notification.estLue == true) null else View.OnClickListener {
+                onRead(notification)
+            })
         }
     }
 }
