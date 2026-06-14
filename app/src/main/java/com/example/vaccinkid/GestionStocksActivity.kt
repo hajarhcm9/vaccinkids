@@ -225,6 +225,7 @@ class StockAdapter(
         val tvNom: TextView = view.findViewById(R.id.tvNomVaccinStock)
         val tvQte: TextView = view.findViewById(R.id.tvQuantiteStock)
         val tvAlerte: TextView = view.findViewById(R.id.tvAlerteStock)
+        val progress: android.widget.ProgressBar = view.findViewById(R.id.progressStock)
     }
 
     override fun onCreateViewHolder(parent: android.view.ViewGroup, viewType: Int): StockViewHolder {
@@ -239,6 +240,11 @@ class StockAdapter(
         holder.tvNom.text = stock.vaccinNom ?: stock.nom ?: "Vaccin #${stock.vaccinId ?: stock.id}"
         holder.tvQte.text = "Restant : $quantite flacons | seuil $seuil"
         holder.tvAlerte.visibility = if (seuil > 0 && quantite <= seuil) android.view.View.VISIBLE else android.view.View.GONE
+        holder.progress.progress = when {
+            seuil <= 0 -> 100
+            quantite <= 0 -> 0
+            else -> ((quantite.toFloat() / (seuil * 3).coerceAtLeast(1)) * 100).toInt().coerceIn(5, 100)
+        }
         holder.itemView.setOnClickListener { onEdit(stock) }
     }
 

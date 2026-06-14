@@ -11,4 +11,45 @@
     <color name="staff_ink">#17332F</color>
     <color name="staff_muted">#637773</color>
     <color name="staff_border">#D8E4E1</color>
+
+    <color name="brand_teal">#0F766E</color>
+    <color name="brand_teal_light">#14B8A6</color>
+    <color name="brand_teal_dark">#0D5F59</color>
+    <color name="brand_coral">#F97316</color>
+    <color name="brand_coral_light">#FB923C</color>
+    <color name="brand_coral_dark">#EA580C</color>
+    <color name="brand_rose">#BE185D</color>
+    <color name="brand_rose_light">#EC4899</color>
+    <color name="brand_blue">#0EA5E9</color>
+
+    <color name="bg_primary">#F8FAFC</color>
+    <color name="bg_secondary">#F1F5F9</color>
+    <color name="bg_card">#FFFFFF</color>
+    <color name="bg_overlay">#80000000</color>
+
+    <color name="text_primary">#0F172A</color>
+    <color name="text_secondary">#475569</color>
+    <color name="text_tertiary">#94A3B8</color>
+    <color name="text_on_primary">#FFFFFF</color>
+    <color name="text_link">#0EA5E9</color>
+
+    <color name="success">#10B981</color>
+    <color name="success_light">#D1FAE5</color>
+    <color name="success_dark">#065F46</color>
+    <color name="warning">#F59E0B</color>
+    <color name="warning_light">#FEF3C7</color>
+    <color name="warning_dark">#92400E</color>
+    <color name="error">#EF4444</color>
+    <color name="error_light">#FEE2E2</color>
+    <color name="error_dark">#991B1B</color>
+    <color name="info">#3B82F6</color>
+    <color name="info_light">#DBEAFE</color>
+    <color name="info_dark">#1D4ED8</color>
+    <color name="waiting_light">#E0E7FF</color>
+    <color name="waiting_dark">#3730A3</color>
+
+    <color name="outline">#E2E8F0</color>
+    <color name="teal_input">#F0FDFA</color>
+    <color name="teal_input_border">#99F6E4</color>
+    <color name="scan_zone">#E0F2FE</color>
 </resources>

@@ -14,48 +14,45 @@
         android:orientation="vertical"
         android:padding="12dp">
 
+        <!-- Nom lot + statut -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical">
 
-            <LinearLayout
+            <TextView
+                android:id="@+id/tvNomLot"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:orientation="vertical">
-
-                <TextView
-                    android:id="@+id/tvNomPatient"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Youssef Benali"
-                    android:textStyle="bold"
-                    android:textSize="15sp"
-                    android:textColor="#212121" />
-
-                <TextView
-                    android:id="@+id/tvParentTel"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:text="Parent: Fatima | 06XX... | RDV#12"
-                    android:textSize="12sp"
-                    android:textColor="#757575" />
-
-            </LinearLayout>
+                android:text="Lot L001 - Sanofi"
+                android:textStyle="bold"
+                android:textSize="15sp"
+                android:textColor="#212121" />
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/chipStatut"
                 style="@style/Widget.MaterialComponents.Chip.Choice"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="EN_ATTENTE"
-                app:chipBackgroundColor="#FFF3CD" />
+                android:text="OUVERT"
+                android:textColor="@android:color/white"
+                app:chipBackgroundColor="#4CAF50" />
 
         </LinearLayout>
 
+        <!-- Métriques -->
+        <TextView
+            android:id="@+id/tvMetriques"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:text="Utilisées: 4 | Gaspillées: 0 | Restantes: 6"
+            android:textSize="13sp"
+            android:textColor="#757575" />
+
+        <!-- Boutons -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -63,36 +60,28 @@
             android:layout_marginTop="8dp">
 
             <Button
-                android:id="@+id/btnPresent"
+                android:id="@+id/btnDeclarerGaspillage"
                 style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:layout_marginEnd="4dp"
-                android:text="Présent"
-                android:textColor="#4CAF50"
-                app:strokeColor="#4CAF50" />
+                android:text="Déclarer gaspillage"
+                android:textSize="11sp"
+                android:textColor="#FF9800"
+                app:strokeColor="#FF9800" />
 
             <Button
-                android:id="@+id/btnAbsent"
+                android:id="@+id/btnFermerFlacon"
                 style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:layout_marginHorizontal="4dp"
-                android:text="Absent"
+                android:layout_marginStart="4dp"
+                android:text="Fermer flacon"
+                android:textSize="11sp"
                 android:textColor="#F44336"
                 app:strokeColor="#F44336" />
-
-            <Button
-                android:id="@+id/btnVacciner"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginStart="4dp"
-                android:text="Vacciner"
-                android:textColor="@android:color/white"
-                android:backgroundTint="#4CAF50" />
 
         </LinearLayout>
 

@@ -104,6 +104,8 @@ Still requiring final validation:
 
 - execute every `A TESTER` scenario from
   [`docs/PLAN_FINALISATION_DEMONSTRATION.md`](docs/PLAN_FINALISATION_DEMONSTRATION.md);
+- apply the durable fix described in
+  [`docs/PROBLEME_URL_API_APPAREIL_PHYSIQUE.md`](docs/PROBLEME_URL_API_APPAREIL_PHYSIQUE.md);
 - add real mobile UI/E2E coverage;
 - finish staff/admin design consistency, accessibility and FR/AR review;
 - validate release builds, staging integrations and production operations.

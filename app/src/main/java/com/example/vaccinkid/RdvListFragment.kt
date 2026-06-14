@@ -5,7 +5,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
-import androidx.cardview.widget.CardView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -43,6 +42,7 @@ class RdvListFragment : Fragment() {
 
         val type = arguments?.getInt(ARG_TYPE) ?: 0
         val recycler = view.findViewById<RecyclerView>(R.id.recyclerRdv)
+        val empty = view.findViewById<View>(R.id.emptyRdv)
         recycler.layoutManager = LinearLayoutManager(requireContext())
         recycler.adapter = RdvAdapter(listOf(RdvItem("", "Chargement...", "", "", "")))
 
@@ -56,10 +56,12 @@ class RdvListFragment : Fragment() {
                 } else {
                     listOf(RdvItem("", response.message ?: "Rendez-vous indisponibles", "", "", ""))
                 }
-                recycler.adapter = RdvAdapter(items.ifEmpty {
-                    listOf(RdvItem("", "Aucun rendez-vous retourne par le serveur", "", "", ""))
-                })
+                empty.visibility = if (items.isEmpty()) View.VISIBLE else View.GONE
+                recycler.visibility = if (items.isEmpty()) View.GONE else View.VISIBLE
+                recycler.adapter = RdvAdapter(items)
             } catch (error: Exception) {
+                empty.visibility = View.GONE
+                recycler.visibility = View.VISIBLE
                 recycler.adapter = RdvAdapter(
                     listOf(RdvItem("", error.message ?: "Erreur reseau", "", "", ""))
                 )
@@ -108,12 +110,13 @@ class RdvAdapter(private val items: List<RdvItem>) :
         holder.tvStatut.text = item.statut
 
         // Couleur statut
-        val color = when (item.statut) {
-            "CONFIRMÉ"   -> 0xFF0F6E56.toInt()
-            "ABSENT"     -> 0xFFE02060.toInt()
-            else         -> 0xFFC8550A.toInt()
+        val (color, background) = when (item.statut) {
+            "CONFIRME", "CONFIRMÉ", "PRESENT" -> R.color.success_dark to R.drawable.bg_badge_success
+            "ABSENT", "ANNULE" -> R.color.error_dark to R.drawable.bg_badge_error
+            else -> R.color.warning_dark to R.drawable.bg_badge_warning
         }
-        holder.tvStatut.setTextColor(color)
+        holder.tvStatut.setTextColor(androidx.core.content.ContextCompat.getColor(holder.itemView.context, color))
+        holder.tvStatut.setBackgroundResource(background)
     }
 
     override fun getItemCount() = items.size

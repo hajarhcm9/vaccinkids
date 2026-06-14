@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">VacciniKids Staff</string>
+    <string name="rdv">Rendez-vous</string>
+    <string name="file">File attenteli</string>
+    <string name="scan">Scanner QR</string>
+    <string name="icone_cadenas">Cadenas</string>
+    <string name="logo_seringue">Seringue</string>
+    <string name="edit">Modifier</string>
 </resources>

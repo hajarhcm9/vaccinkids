@@ -37,21 +37,30 @@ class GestionPersonnelFragment : Fragment() {
             setPadding(20)
             addView(TextView(requireContext()).apply {
                 text = "Gestion personnel"
-                textSize = 22f
+                textSize = 24f
+                setTextColor(StaffUi.INK)
                 setTypeface(typeface, android.graphics.Typeface.BOLD)
+            })
+            addView(TextView(requireContext()).apply {
+                text = "Comptes, roles et affectations aux centres"
+                StaffUi.styleSubtitle(this)
+                setPadding(0, 0, 0, 8)
             })
             totalView = TextView(requireContext())
             addView(totalView)
             messageView = TextView(requireContext()).apply { setPadding(0, 8, 0, 8) }
             addView(messageView)
-            addView(Button(requireContext()).apply {
+            val actions = LinearLayout(requireContext()).apply { orientation = LinearLayout.HORIZONTAL }
+            actions.addView(Button(requireContext()).apply {
                 text = "Ajouter personnel"
+                tag = "accent-rose"
                 setOnClickListener { showForm(null) }
-            })
-            addView(Button(requireContext()).apply {
+            }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+            actions.addView(Button(requireContext()).apply {
                 text = "Rafraichir"
                 setOnClickListener { loadPersonnel() }
-            })
+            }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+            addView(actions)
             addView(RecyclerView(requireContext()).apply {
                 layoutManager = LinearLayoutManager(requireContext())
                 adapter = this@GestionPersonnelFragment.adapter
@@ -194,12 +203,18 @@ private class PersonnelAdapter(
             root.removeAllViews()
             StaffUi.styleCard(root, if (item.estActif == true) StaffUi.PRIMARY else StaffUi.BORDER)
             root.addView(TextView(root.context).apply {
-                text = "${item.prenom ?: ""} ${item.nom ?: ""} - ${item.role ?: "-"}"
+                text = "${item.prenom ?: ""} ${item.nom ?: ""}"
                 textSize = 16f
+                setTextColor(StaffUi.INK)
                 setTypeface(typeface, android.graphics.Typeface.BOLD)
             })
             root.addView(TextView(root.context).apply {
-                text = "CIN ${item.cin ?: "-"} | Centre ${item.centreNom ?: item.centreId ?: "-"} | ${if (item.estActif == true) "Actif" else "Inactif"}"
+                text = "${item.role ?: "-"} | ${if (item.estActif == true) "Actif" else "Inactif"}"
+                StaffUi.statusPill(this, if (item.estActif == true) "ACTIF" else "INACTIF")
+            })
+            root.addView(TextView(root.context).apply {
+                text = "CIN ${item.cin ?: "-"} | Centre ${item.centreNom ?: item.centreId ?: "-"}"
+                setTextColor(StaffUi.MUTED)
             })
             val row = LinearLayout(root.context).apply { orientation = LinearLayout.HORIZONTAL }
             row.addView(Button(root.context).apply {

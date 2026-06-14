@@ -1,66 +1,135 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="@color/staff_background"
-    android:padding="24dp">
+    android:background="#1A1A2E"
+    tools:context=".ScanQrFragment">
 
-    <!-- Zone de scan (visuel) -->
-    <androidx.cardview.widget.CardView
-        android:layout_width="match_parent"
+    <!-- Prévisualisation caméra -->
+    <androidx.camera.view.PreviewView
+        android:id="@+id/previewView"
+        android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        android:layout_marginTop="32dp"
-        android:layout_marginBottom="32dp"
-        app:cardCornerRadius="8dp"
-        app:cardElevation="1dp">
+        android:background="@android:color/black"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHeight_percent="0.6" />
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:gravity="center"
-            android:orientation="vertical">
-
-            <!-- Icône QR -->
-            <ImageView
-                android:layout_width="80dp"
-                android:layout_height="80dp"
-                android:src="@android:drawable/ic_menu_camera"
-                app:tint="@color/staff_primary" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:text="Pointez la caméra vers le QR code"
-                android:textAlignment="center"
-                android:textColor="@color/staff_muted"
-                android:textSize="16sp" />
-
-        </LinearLayout>
-    </androidx.cardview.widget.CardView>
+    <!-- Cadre de scan superposé -->
+    <View
+        android:id="@+id/scanFrameOverlay"
+        android:layout_width="220dp"
+        android:layout_height="220dp"
+        android:background="@drawable/bg_scan_frame_orange"
+        android:visibility="visible"
+        app:layout_constraintTop_toTopOf="@id/previewView"
+        app:layout_constraintBottom_toBottomOf="@id/previewView"
+        app:layout_constraintStart_toStartOf="@id/previewView"
+        app:layout_constraintEnd_toEndOf="@id/previewView" />
 
     <!-- Bouton SCANNER -->
     <Button
         android:id="@+id/btnScanner"
-        android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:backgroundTint="@color/staff_primary"
+        android:layout_width="0dp"
+        android:layout_height="48dp"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginTop="16dp"
         android:text="SCANNER"
-        android:textColor="#FFFFFF"
-        android:textStyle="bold" />
+        android:textAllCaps="true"
+        android:textColor="@android:color/white"
+        android:backgroundTint="#FF6B35"
+        app:layout_constraintTop_toBottomOf="@id/previewView"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- Bouton Saisie manuelle -->
-    <Button
-        android:id="@+id/btnSaisieManuelle"
-        android:layout_width="match_parent"
-        android:layout_height="56dp"
+    <!-- Séparateur -->
+    <TextView
+        android:id="@+id/tvOu"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_marginTop="12dp"
-        android:backgroundTint="@android:color/transparent"
-        android:text="Saisie manuelle"
-        android:textColor="@color/staff_primary"
-        style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
+        android:text="— OU —"
+        android:textColor="#888888"
+        app:layout_constraintTop_toBottomOf="@id/btnScanner"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
-</LinearLayout>
+    <!-- Saisie manuelle -->
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/tilSaisieManuelle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginTop="12dp"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        android:hint="Saisie manuelle"
+        app:boxStrokeColor="#FF6B35"
+        app:hintTextColor="#FF6B35"
+        android:textColorHint="#AAAAAA"
+        app:layout_constraintTop_toBottomOf="@id/tvOu"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/etSaisieManuelle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/white"
+            android:inputType="text" />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <!-- Résultat scan -->
+    <androidx.cardview.widget.CardView
+        android:id="@+id/cardResultat"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginTop="16dp"
+        app:cardCornerRadius="8dp"
+        app:cardElevation="2dp"
+        android:visibility="visible"
+        app:layout_constraintTop_toBottomOf="@id/tilSaisieManuelle"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="12dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Résultat du scan"
+                android:textStyle="bold"
+                android:textSize="13sp"
+                android:textColor="#212121" />
+
+            <TextView
+                android:id="@+id/tvResultatBebe"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="Bébé: Youssef Benali"
+                android:textSize="13sp"
+                android:textColor="#212121" />
+
+            <TextView
+                android:id="@+id/tvResultatRdv"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="RDV éligible: DTCoq - 15 Jan"
+                android:textSize="13sp"
+                android:textColor="#212121" />
+
+        </LinearLayout>
+
+    </androidx.cardview.widget.CardView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

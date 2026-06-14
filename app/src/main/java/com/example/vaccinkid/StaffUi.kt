@@ -21,6 +21,8 @@ object StaffUi {
     const val PRIMARY = 0xFF087F73.toInt()
     const val PRIMARY_DARK = 0xFF075E57.toInt()
     const val CORAL = 0xFFE85D5D.toInt()
+    const val ROSE = 0xFFBE185D.toInt()
+    const val BLUE = 0xFF0EA5E9.toInt()
     const val AMBER = 0xFFF2B84B.toInt()
     const val INK = 0xFF17332F.toInt()
     const val MUTED = 0xFF637773.toInt()
@@ -28,6 +30,7 @@ object StaffUi {
     const val DANGER = 0xFFB93838.toInt()
     const val SOFT_TEAL = 0xFFE3F3F0.toInt()
     const val SOFT_CORAL = 0xFFFFE9E5.toInt()
+    const val SUCCESS_DARK = 0xFF065F46.toInt()
 
     fun decorateScreen(root: View) {
         root.setBackgroundColor(BACKGROUND)
@@ -49,7 +52,7 @@ object StaffUi {
             is TextView -> {
                 val scaledDensity = view.resources.displayMetrics.density *
                     view.resources.configuration.fontScale
-                if (view.textSize / scaledDensity >= 20f) {
+                if (view.textSize / scaledDensity >= 20f && view.tag != "keep-color") {
                     styleTitle(view)
                 } else if (view.currentTextColor == Color.BLACK || view.currentTextColor == Color.DKGRAY) {
                     view.setTextColor(INK)
@@ -76,9 +79,17 @@ object StaffUi {
         val label = button.text.toString().lowercase()
         val destructive = listOf("annuler", "desactiver", "fermer", "gaspillage").any(label::contains)
         val quiet = listOf("rafraichir", "precedent", "suivant", "filtrer", "carnet").any(label::contains)
+        val taggedAccent = when (button.tag) {
+            "accent-coral" -> CORAL
+            "accent-rose" -> ROSE
+            "accent-blue" -> BLUE
+            "accent-amber" -> 0xFFD97706.toInt()
+            else -> null
+        }
         val background = when {
             destructive -> SOFT_CORAL
             quiet && !emphasis -> SURFACE
+            taggedAccent != null -> taggedAccent
             else -> PRIMARY
         }
         button.backgroundTintList = ColorStateList.valueOf(background)

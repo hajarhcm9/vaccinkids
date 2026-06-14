@@ -1,143 +1,87 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/staff_background"
-    android:gravity="center"
-    android:orientation="vertical"
-    android:padding="32dp">
+    android:background="@android:color/white"
+    tools:context=".WelcomeActivity">
 
-    <!-- Logo -->
-    <FrameLayout
-        android:layout_width="90dp"
-        android:layout_height="90dp"
-        android:layout_gravity="center"
-        android:layout_marginBottom="12dp"
-        android:background="@drawable/bg_circle_staff_primary">
+    <LinearLayout
+        android:id="@+id/llCenterContent"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center_horizontal"
+        android:padding="32dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/llButtons">
+
+        <ImageView
+            android:id="@+id/ivLogo"
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:layout_marginTop="80dp"
+            android:src="@drawable/ic_syringe"
+            android:contentDescription="@string/logo_seringue" />
 
         <TextView
+            android:id="@+id/tvTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:text="💉"
-            android:textSize="40sp" />
-    </FrameLayout>
+            android:layout_marginTop="16dp"
+            android:text="VacciniKids"
+            android:textSize="28sp"
+            android:textStyle="bold"
+            android:textColor="#212121" />
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="VacciniKids"
-        android:textColor="@color/staff_primary_dark"
-        android:textSize="28sp"
-        android:textStyle="bold" />
+        <TextView
+            android:id="@+id/tvSubtitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="Gestion de vaccination"
+            android:textSize="14sp"
+            android:textColor="#888888" />
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
-        android:layout_marginBottom="40dp"
-        android:text="Application personnel et administration"
-        android:textColor="@color/staff_muted"
-        android:textSize="13sp" />
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="32dp" />
 
-    <!-- Card Infirmier -->
-    <androidx.cardview.widget.CardView
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/llButtons"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
-        app:cardBackgroundColor="#FFFFFF"
-        app:cardCornerRadius="8dp"
-        app:cardElevation="1dp">
+        android:orientation="vertical"
+        android:padding="24dp"
+        app:layout_constraintBottom_toBottomOf="parent">
 
-        <LinearLayout
+        <Button
+            android:id="@+id/btnInfirmier"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:orientation="vertical"
-            android:padding="20dp">
+            android:layout_height="56dp"
+            android:text="🏥 Accès Infirmier"
+            android:textAllCaps="false"
+            android:textColor="@android:color/white"
+            android:backgroundTint="#FF6B35"
+            app:cornerRadius="24dp" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp"
-                android:text="👩‍⚕️"
-                android:textSize="36sp" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="4dp"
-                android:text="Espace Infirmier"
-                android:textColor="@color/staff_ink"
-                android:textSize="17sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                android:text="Scan QR, RDV, Vaccinations"
-                android:textColor="@color/staff_muted"
-                android:textSize="12sp" />
-
-            <Button
-                android:id="@+id/btnAccesInfirmier"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:backgroundTint="@color/staff_primary"
-                android:text="Accéder"
-                android:textColor="#FFFFFF" />
-        </LinearLayout>
-    </androidx.cardview.widget.CardView>
-
-    <!-- Card Admin -->
-    <androidx.cardview.widget.CardView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:cardBackgroundColor="#FFFFFF"
-        app:cardCornerRadius="8dp"
-        app:cardElevation="1dp">
-
-        <LinearLayout
+        <Button
+            android:id="@+id/btnAdmin"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:orientation="vertical"
-            android:padding="20dp">
+            android:layout_height="56dp"
+            android:layout_marginTop="12dp"
+            android:text="🔐 Accès Admin"
+            android:textAllCaps="false"
+            android:textColor="@android:color/white"
+            android:backgroundTint="#2196F3"
+            app:cornerRadius="24dp" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp"
-                android:text="👑"
-                android:textSize="36sp" />
+    </LinearLayout>
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="4dp"
-                android:text="Espace Admin"
-                android:textColor="@color/staff_ink"
-                android:textSize="17sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                android:text="Personnel, Centres, Vaccins"
-                android:textColor="@color/staff_muted"
-                android:textSize="12sp" />
-
-            <Button
-                android:id="@+id/btnAccesAdmin"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:backgroundTint="@color/staff_secondary"
-                android:text="Accéder"
-                android:textColor="#FFFFFF" />
-        </LinearLayout>
-    </androidx.cardview.widget.CardView>
-
-</LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>
