@@ -19,6 +19,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.vaccinkid.model.AdminPersonnelDto
 import com.example.vaccinkid.model.AdminPersonnelRequest
+import com.example.vaccinkid.model.AdminCentreDto
 import com.example.vaccinkid.network.ApiClient
 import kotlinx.coroutines.launch
 
@@ -26,6 +27,7 @@ class GestionPersonnelFragment : Fragment() {
     private lateinit var messageView: TextView
     private lateinit var totalView: TextView
     private lateinit var adapter: PersonnelAdapter
+    private var centres: List<AdminCentreDto> = emptyList()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         adapter = PersonnelAdapter(
@@ -72,6 +74,7 @@ class GestionPersonnelFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         StaffUi.decorateScreen(view)
         loadPersonnel()
+        loadCentres()
     }
 
     private fun loadPersonnel() {
@@ -92,6 +95,12 @@ class GestionPersonnelFragment : Fragment() {
     }
 
     private fun showForm(item: AdminPersonnelDto?) {
+        val availableCentres = centres.filter { it.estActif != false || it.id == item?.centreId }
+        if (availableCentres.isEmpty()) {
+            messageView.text = "Aucun centre actif disponible."
+            loadCentres()
+            return
+        }
         val root = LinearLayout(requireContext()).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(24)
@@ -99,13 +108,20 @@ class GestionPersonnelFragment : Fragment() {
         val cin = edit("CIN").also { it.setText(item?.cin ?: "") }
         val nom = edit("Nom").also { it.setText(item?.nom ?: "") }
         val prenom = edit("Prenom").also { it.setText(item?.prenom ?: "") }
-        val centreId = edit("Centre ID").also { it.setText(item?.centreId?.toString() ?: "1") }
+        val centre = Spinner(requireContext()).apply {
+            adapter = ArrayAdapter(
+                requireContext(),
+                android.R.layout.simple_spinner_dropdown_item,
+                availableCentres.map { it.nom ?: "Centre #${it.id}" }
+            )
+            setSelection(availableCentres.indexOfFirst { it.id == item?.centreId }.coerceAtLeast(0))
+        }
         val password = edit("Mot de passe ${if (item == null) "" else "(laisser vide si inchange)"}")
         val role = Spinner(requireContext()).apply {
             adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, listOf("infirmier", "admin"))
             setSelection(if (item?.role == "admin") 1 else 0)
         }
-        listOf(cin, nom, prenom, centreId, role, password).forEach { root.addView(it) }
+        listOf(cin, nom, prenom, centre, role, password).forEach { root.addView(it) }
 
         AlertDialog.Builder(requireContext())
             .setTitle(if (item == null) "Ajouter personnel" else "Modifier personnel")
@@ -117,7 +133,7 @@ class GestionPersonnelFragment : Fragment() {
                     nom = nom.text.toString().trim(),
                     prenom = prenom.text.toString().trim(),
                     role = role.selectedItem.toString(),
-                    centreId = centreId.text.toString().trim().toIntOrNull(),
+                    centreId = availableCentres.getOrNull(centre.selectedItemPosition)?.id,
                     motDePasse = password.text.toString().trim().ifBlank { null }
                 )
                 savePersonnel(item?.id, request)
@@ -174,6 +190,18 @@ class GestionPersonnelFragment : Fragment() {
     }
 
     private fun edit(hintText: String): EditText = EditText(requireContext()).apply { hint = hintText }
+
+    private fun loadCentres() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                val response = ApiClient.apiService.getAdminCentres(limit = 100)
+                if (response.status != "success") throw Exception(response.message ?: "Centres indisponibles")
+                centres = response.data?.centres.orEmpty()
+            } catch (e: Exception) {
+                messageView.text = e.message ?: "Impossible de charger les centres."
+            }
+        }
+    }
 }
 
 private class PersonnelAdapter(

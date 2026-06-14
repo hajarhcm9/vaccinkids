@@ -53,16 +53,12 @@
                 android:orientation="vertical"
                 android:padding="14dp">
 
-                <EditText
+                <Spinner
                     android:id="@+id/inputCentreStock"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:background="@drawable/bg_input_teal"
-                    android:hint="Identifiant du centre"
-                    android:inputType="number"
-                    android:padding="14dp"
-                    android:textColor="@color/text_primary"
-                    android:textColorHint="@color/text_tertiary" />
+                    android:padding="14dp" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
