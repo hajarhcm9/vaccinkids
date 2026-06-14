@@ -9,6 +9,7 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.setPadding
 import androidx.lifecycle.lifecycleScope
+import com.example.vaccinkid.model.ApiResponse
 import com.example.vaccinkid.network.ApiClient
 import kotlinx.coroutines.launch
 
@@ -50,12 +51,12 @@ class StatsAdminActivity : AppCompatActivity() {
         lifecycleScope.launch {
             try {
                 val centreId = centreInput.text.toString().trim().toIntOrNull()
-                val dashboard = ApiClient.apiService.getStatsDashboard(centreId).data ?: emptyMap()
-                val coverage = ApiClient.apiService.getStatsCouverture(centreId).data ?: emptyMap()
-                val sessions = ApiClient.apiService.getStatsSessions(centreId).data ?: emptyMap()
-                val rdv = ApiClient.apiService.getStatsRendezVous(centreId).data ?: emptyMap()
-                val stock = ApiClient.apiService.getStatsStock(centreId).data ?: emptyMap()
-                val absences = ApiClient.apiService.getStatsAbsenteisme(centreId).data ?: emptyMap()
+                val dashboard = requireStats(ApiClient.apiService.getStatsDashboard(centreId), "Dashboard")
+                val coverage = requireStats(ApiClient.apiService.getStatsCouverture(centreId), "Couverture")
+                val sessions = requireStats(ApiClient.apiService.getStatsSessions(centreId), "Sessions")
+                val rdv = requireStats(ApiClient.apiService.getStatsRendezVous(centreId), "Rendez-vous")
+                val stock = requireStats(ApiClient.apiService.getStatsStock(centreId), "Stock")
+                val absences = requireStats(ApiClient.apiService.getStatsAbsenteisme(centreId), "Absenteisme")
                 section("Dashboard", dashboard)
                 section("Couverture vaccinale", coverage)
                 section("Sessions", sessions)
@@ -67,6 +68,13 @@ class StatsAdminActivity : AppCompatActivity() {
                 messageView.text = e.message ?: "Statistiques indisponibles"
             }
         }
+    }
+
+    private fun requireStats(response: ApiResponse<Map<String, Any?>>, label: String): Map<String, Any?> {
+        if (response.status != "success" || response.data == null) {
+            throw IllegalStateException(response.message ?: "$label indisponible")
+        }
+        return response.data
     }
 
     private fun section(title: String, data: Map<String, Any?>) {

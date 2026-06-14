@@ -25,6 +25,8 @@ class AdminAuditLogFragment : Fragment() {
     private lateinit var startFilter: EditText
     private lateinit var endFilter: EditText
     private lateinit var adapter: AuditAdapter
+    private lateinit var previousButton: Button
+    private lateinit var nextButton: Button
     private var page = 1
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -55,22 +57,26 @@ class AdminAuditLogFragment : Fragment() {
                     loadAudit()
                 }
             }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
-            row.addView(Button(requireContext()).apply {
+            previousButton = Button(requireContext()).apply {
                 text = "Precedent"
+                visibility = View.GONE
                 setOnClickListener {
                     if (page > 1) {
                         page -= 1
                         loadAudit()
                     }
                 }
-            }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
-            row.addView(Button(requireContext()).apply {
+            }
+            nextButton = Button(requireContext()).apply {
                 text = "Suivant"
+                visibility = View.GONE
                 setOnClickListener {
                     page += 1
                     loadAudit()
                 }
-            }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+            }
+            row.addView(previousButton, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+            row.addView(nextButton, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
             addView(row)
             messageView = TextView(requireContext()).apply { setPadding(0, 8, 0, 8) }
             addView(messageView)
@@ -102,9 +108,13 @@ class AdminAuditLogFragment : Fragment() {
                 if (response.status != "success" || data == null) throw Exception(response.message ?: "Audit indisponible")
                 adapter.submit(data.entries)
                 messageView.text = "Page ${data.page}/${data.totalPages} - ${data.total} entree(s)"
+                previousButton.visibility = if (data.page > 1) View.VISIBLE else View.GONE
+                nextButton.visibility = if (data.page < data.totalPages) View.VISIBLE else View.GONE
             } catch (e: Exception) {
                 adapter.submit(emptyList())
                 messageView.text = e.message ?: "Erreur reseau"
+                previousButton.visibility = if (page > 1) View.VISIBLE else View.GONE
+                nextButton.visibility = View.GONE
             }
         }
     }

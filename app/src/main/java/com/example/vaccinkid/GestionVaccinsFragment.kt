@@ -178,11 +178,12 @@ private class VaccinAdapter(
                 text = "Modifier"
                 setOnClickListener { onEdit(item) }
             }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
-            row.addView(Button(root.context).apply {
-                text = "Desactiver"
-                isEnabled = item.estActif != false
-                setOnClickListener { onDeactivate(item) }
-            }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+            if (item.estActif != false) {
+                row.addView(Button(root.context).apply {
+                    text = "Desactiver"
+                    setOnClickListener { onDeactivate(item) }
+                }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+            }
             root.addView(row)
         }
     }
