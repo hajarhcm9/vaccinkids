@@ -16,12 +16,13 @@
         android:layout_marginBottom="12dp"
         android:background="@drawable/bg_circle_staff_primary">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+        <ImageView
+            android:layout_width="44dp"
+            android:layout_height="44dp"
             android:layout_gravity="center"
-            android:text="💉"
-            android:textSize="40sp" />
+            android:contentDescription="VacciniKids"
+            android:src="@drawable/ic_syringe"
+            app:tint="@color/white" />
     </FrameLayout>
 
     <TextView
@@ -57,12 +58,14 @@
             android:orientation="vertical"
             android:padding="20dp">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+            <ImageView
+                android:layout_width="52dp"
+                android:layout_height="52dp"
                 android:layout_marginBottom="8dp"
-                android:text="👩‍⚕️"
-                android:textSize="36sp" />
+                android:background="@drawable/bg_circle_teal"
+                android:contentDescription="Espace Infirmier"
+                android:padding="13dp"
+                android:src="@drawable/ic_medical_staff" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -107,12 +110,14 @@
             android:orientation="vertical"
             android:padding="20dp">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+            <ImageView
+                android:layout_width="52dp"
+                android:layout_height="52dp"
                 android:layout_marginBottom="8dp"
-                android:text="👑"
-                android:textSize="36sp" />
+                android:background="@drawable/bg_circle_coral"
+                android:contentDescription="Espace Admin"
+                android:padding="13dp"
+                android:src="@drawable/ic_admin_panel" />
 
             <TextView
                 android:layout_width="wrap_content"
