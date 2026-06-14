@@ -1,8 +1,16 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
     <style name="Base.Theme.Vaccinkid" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+        <item name="colorPrimary">@color/staff_primary</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorSecondary">@color/staff_secondary</item>
+        <item name="colorTertiary">@color/staff_tertiary</item>
+        <item name="android:colorAccent">@color/staff_primary</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:statusBarColor">@color/staff_primary_dark</item>
+        <item name="android:navigationBarColor">@color/staff_surface</item>
+        <item name="android:windowBackground">@color/staff_background</item>
+        <item name="android:fontFamily">sans</item>
     </style>
 
     <style name="Theme.Vaccinkid" parent="Base.Theme.Vaccinkid" />

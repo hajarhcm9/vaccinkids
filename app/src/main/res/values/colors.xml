@@ -2,4 +2,13 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="staff_primary">#087F73</color>
+    <color name="staff_primary_dark">#075E57</color>
+    <color name="staff_secondary">#E85D5D</color>
+    <color name="staff_tertiary">#F2B84B</color>
+    <color name="staff_background">#F4F7F6</color>
+    <color name="staff_surface">#FFFFFF</color>
+    <color name="staff_ink">#17332F</color>
+    <color name="staff_muted">#637773</color>
+    <color name="staff_border">#D8E4E1</color>
 </resources>

@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#FFF5E6">
+    android:background="@color/staff_background">
 
     <!-- Container Fragments -->
     <FrameLayout
@@ -18,7 +18,7 @@
         android:id="@+id/bottomNav"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="#FFFFFF"
+        android:background="@color/staff_surface"
         app:itemIconTint="@drawable/bottom_nav_color"
         app:itemTextColor="@drawable/bottom_nav_color"
         app:menu="@menu/bottom_nav_menu"

@@ -33,13 +33,13 @@ class QueueFragment : Fragment() {
     ): View {
         val root = LinearLayout(requireContext()).apply {
             orientation = LinearLayout.VERTICAL
-            setBackgroundColor(0xFFFFF5E6.toInt())
+            setBackgroundColor(StaffUi.BACKGROUND)
         }
         root.addView(TextView(requireContext()).apply {
             text = "File d'attente du centre"
             textSize = 22f
             setTypeface(typeface, android.graphics.Typeface.BOLD)
-            setTextColor(0xFF7A2040.toInt())
+            setTextColor(StaffUi.INK)
             setPadding(dp(16), dp(16), dp(16), dp(8))
         })
 
@@ -77,6 +77,7 @@ class QueueFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        StaffUi.decorateScreen(view)
         loadQueue()
     }
 
@@ -200,6 +201,7 @@ private class QueueAdapter(
     class ViewHolder(private val root: LinearLayout) : RecyclerView.ViewHolder(root) {
         fun bind(entry: QueueEntryDto, onComplete: (QueueEntryDto) -> Unit) {
             root.removeAllViews()
+            StaffUi.styleCard(root)
             val ctx = root.context
             val name = listOfNotNull(entry.bebePrenom, entry.bebeNom).joinToString(" ")
                 .ifBlank { "Bebe #${entry.bebeId ?: "-"}" }
@@ -218,6 +220,7 @@ private class QueueAdapter(
                     setOnClickListener { onComplete(entry) }
                 })
             }
+            StaffUi.decorateTree(root)
         }
     }
 }

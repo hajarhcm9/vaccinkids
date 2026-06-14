@@ -59,6 +59,7 @@ class GestionSessionsFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        StaffUi.decorateScreen(view)
         loadSessions()
     }
 
@@ -180,6 +181,7 @@ private class AdminSessionAdapter(
     ) : RecyclerView.ViewHolder(root) {
         fun bind(item: SessionDto) {
             root.removeAllViews()
+            StaffUi.styleCard(root)
             val status = item.statut?.uppercase()
             root.addView(TextView(root.context).apply {
                 text = "${item.dateSession?.take(10) ?: "-"} ${item.heureDebut?.take(5) ?: "-"} - ${item.vaccinNom ?: "Vaccin #${item.vaccinId}"}"
@@ -209,12 +211,14 @@ private class AdminSessionAdapter(
                 finalRow.addView(actionButton("Annuler") { onCancel(item) })
             }
             if (finalRow.childCount > 0) root.addView(finalRow)
+            StaffUi.decorateTree(root)
         }
 
         private fun actionButton(label: String, action: () -> Unit): Button =
             Button(root.context).apply {
                 text = label
                 setOnClickListener { action() }
+                StaffUi.styleButton(this)
                 layoutParams = LinearLayout.LayoutParams(
                     0,
                     ViewGroup.LayoutParams.WRAP_CONTENT,

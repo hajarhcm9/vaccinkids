@@ -89,6 +89,7 @@ class AdminAuditLogFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        StaffUi.decorateScreen(view)
         loadAudit()
     }
 
@@ -138,6 +139,7 @@ private class AuditAdapter : RecyclerView.Adapter<AuditAdapter.ViewHolder>() {
     class ViewHolder(private val root: LinearLayout) : RecyclerView.ViewHolder(root) {
         fun bind(item: AdminAuditLogDto) {
             root.removeAllViews()
+            StaffUi.styleCard(root)
             root.addView(TextView(root.context).apply {
                 text = "${item.action ?: "-"} ${item.tableName ?: "-"} #${item.recordId ?: 0}"
                 textSize = 15f
@@ -146,6 +148,7 @@ private class AuditAdapter : RecyclerView.Adapter<AuditAdapter.ViewHolder>() {
             root.addView(TextView(root.context).apply {
                 text = "User ${item.userRole ?: "-"}:${item.userId ?: "-"} | ${item.timestamp ?: "-"}"
             })
+            StaffUi.decorateTree(root)
         }
     }
 }

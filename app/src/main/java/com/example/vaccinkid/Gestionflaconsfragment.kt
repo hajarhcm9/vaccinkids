@@ -90,6 +90,7 @@ class GestionFlaconsFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        StaffUi.decorateScreen(view)
         if (sessionId() <= 0 || vaccinId() <= 0) {
             openButton.isEnabled = false
             messageView.text = "Ouverture possible uniquement depuis une session serveur."
@@ -239,6 +240,7 @@ class GestionFlaconsFragment : Fragment() {
         ) : RecyclerView.ViewHolder(root) {
             fun bind(flacon: FlaconDto) {
                 root.removeAllViews()
+                StaffUi.styleCard(root, if (flacon.dateFermeture == null) StaffUi.PRIMARY else StaffUi.BORDER)
                 root.addView(TextView(root.context).apply {
                     text = "Lot ${flacon.numeroLot ?: flacon.id} - ${flacon.fabricant ?: "fabricant inconnu"}"
                     textSize = 16f
@@ -257,6 +259,7 @@ class GestionFlaconsFragment : Fragment() {
                     isEnabled = flacon.dateFermeture == null && (flacon.dosesRestantes ?: 0) == 0
                     setOnClickListener { onClose(flacon) }
                 })
+                StaffUi.decorateTree(root)
             }
         }
     }

@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:padding="16dp"
-    android:background="#FFF8F0">
+    android:background="@color/staff_background">
 
     <TextView
         android:layout_width="wrap_content"
@@ -13,7 +13,7 @@
         android:text="Gestion des stocks"
         android:textSize="22sp"
         android:textStyle="bold"
-        android:textColor="#222222"
+        android:textColor="@color/staff_ink"
         android:layout_marginBottom="16dp"/>
 
     <EditText
@@ -34,7 +34,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Enregistrer une entree"
-        android:backgroundTint="#4CAF50"
+        android:backgroundTint="@color/staff_primary"
         android:textColor="#FFFFFF"
         android:layout_marginBottom="16dp"/>
 

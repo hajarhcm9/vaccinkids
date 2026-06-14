@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#FFF3E0"
+    android:background="@color/staff_background"
     android:padding="24dp">
 
     <!-- Zone de scan (visuel) -->
@@ -14,8 +14,8 @@
         android:layout_weight="1"
         android:layout_marginTop="32dp"
         android:layout_marginBottom="32dp"
-        app:cardCornerRadius="16dp"
-        app:cardElevation="4dp">
+        app:cardCornerRadius="8dp"
+        app:cardElevation="1dp">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -28,7 +28,7 @@
                 android:layout_width="80dp"
                 android:layout_height="80dp"
                 android:src="@android:drawable/ic_menu_camera"
-                app:tint="#F5A623" />
+                app:tint="@color/staff_primary" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -36,7 +36,7 @@
                 android:layout_marginTop="16dp"
                 android:text="Pointez la caméra vers le QR code"
                 android:textAlignment="center"
-                android:textColor="#999999"
+                android:textColor="@color/staff_muted"
                 android:textSize="16sp" />
 
         </LinearLayout>
@@ -47,7 +47,7 @@
         android:id="@+id/btnScanner"
         android:layout_width="match_parent"
         android:layout_height="56dp"
-        android:backgroundTint="#F5A623"
+        android:backgroundTint="@color/staff_primary"
         android:text="SCANNER"
         android:textColor="#FFFFFF"
         android:textStyle="bold" />
@@ -60,7 +60,7 @@
         android:layout_marginTop="12dp"
         android:backgroundTint="@android:color/transparent"
         android:text="Saisie manuelle"
-        android:textColor="#F5A623"
+        android:textColor="@color/staff_primary"
         style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
 
 </LinearLayout>

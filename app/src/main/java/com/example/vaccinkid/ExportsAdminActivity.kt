@@ -57,6 +57,7 @@ class ExportsAdminActivity : AppCompatActivity() {
             setOnClickListener { exportSelected() }
         }
         listOf(typeSpinner, formatSpinner, centreInput, startInput, endInput, exportButton, statusView).forEach { root.addView(it) }
+        StaffUi.decorateScreen(root)
     }
 
     private fun exportSelected() {

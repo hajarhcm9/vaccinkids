@@ -4,13 +4,13 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#FFF5E6">
+    android:background="@color/staff_background">
 
     <!-- Header -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="#D4537E"
+        android:background="@color/staff_primary"
         android:orientation="vertical"
         android:padding="20dp">
 
@@ -38,9 +38,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="#FFFFFF"
-        app:tabSelectedTextColor="#D4537E"
-        app:tabTextColor="#B0A090"
-        app:tabIndicatorColor="#D4537E"
+        app:tabSelectedTextColor="@color/staff_primary"
+        app:tabTextColor="@color/staff_muted"
+        app:tabIndicatorColor="@color/staff_secondary"
         app:tabIndicatorHeight="3dp"
         app:tabRippleColor="#20D4537E" />
 

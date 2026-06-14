@@ -42,6 +42,7 @@ class StatsAdminActivity : AppCompatActivity() {
             text = "Rafraichir"
             setOnClickListener { loadStats() }
         })
+        StaffUi.decorateScreen(content)
         loadStats()
     }
 
@@ -63,6 +64,7 @@ class StatsAdminActivity : AppCompatActivity() {
                 section("RDV", rdv)
                 section("Stock", stock)
                 section("Absences", absences)
+                StaffUi.decorateTree(content)
                 messageView.text = ""
             } catch (e: Exception) {
                 messageView.text = e.message ?: "Statistiques indisponibles"

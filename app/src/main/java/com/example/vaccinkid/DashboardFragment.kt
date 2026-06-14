@@ -42,7 +42,7 @@ class DashboardFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         val scroll = ScrollView(requireContext()).apply {
-            setBackgroundColor(0xFFFFF5E6.toInt())
+            setBackgroundColor(StaffUi.BACKGROUND)
         }
         val root = LinearLayout(requireContext()).apply {
             orientation = LinearLayout.VERTICAL
@@ -58,7 +58,7 @@ class DashboardFragment : Fragment() {
             addView(TextView(requireContext()).apply {
                 text = "Dashboard infirmier"
                 textSize = 24f
-                setTextColor(0xFF7A2040.toInt())
+                setTextColor(StaffUi.INK)
                 setTypeface(typeface, android.graphics.Typeface.BOLD)
             })
             addView(TextView(requireContext()).apply {
@@ -66,7 +66,7 @@ class DashboardFragment : Fragment() {
                     .format(Date())
                     .replaceFirstChar { it.uppercase() }
                 textSize = 14f
-                setTextColor(0xFF8D5B39.toInt())
+                setTextColor(StaffUi.MUTED)
             })
         }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
         header.addView(ImageButton(requireContext()).apply {
@@ -92,8 +92,9 @@ class DashboardFragment : Fragment() {
         alertView = TextView(requireContext()).apply {
             text = "Alertes stock: chargement..."
             textSize = 15f
-            setTextColor(0xFF9A3412.toInt())
-            setPadding(0, 8, 0, 8)
+            setTextColor(StaffUi.DANGER)
+            setPadding(14, 12, 14, 12)
+            background = StaffUi.rounded(StaffUi.SOFT_CORAL, StaffUi.SOFT_CORAL, 7)
         }
         root.addView(alertView)
 
@@ -123,7 +124,7 @@ class DashboardFragment : Fragment() {
         root.addView(TextView(requireContext()).apply {
             text = "Sessions du jour"
             textSize = 18f
-            setTextColor(0xFF7A2040.toInt())
+            setTextColor(StaffUi.INK)
             setTypeface(typeface, android.graphics.Typeface.BOLD)
             setPadding(0, 12, 0, 8)
         })
@@ -144,6 +145,7 @@ class DashboardFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        StaffUi.decorateScreen(view)
         dashboardViewModel = ViewModelProvider(this)[DashboardViewModel::class.java]
         authViewModel = ViewModelProvider(this)[InfirmierAuthViewModel::class.java]
         observeStats()
@@ -219,16 +221,27 @@ class DashboardFragment : Fragment() {
         if (sessions.isEmpty()) {
             sessionsContainer.addView(TextView(requireContext()).apply {
                 text = "Aucune session affectee aujourd'hui."
-                setTextColor(0xFF6B4E3D.toInt())
+                setTextColor(StaffUi.MUTED)
+                setPadding(14)
+                background = StaffUi.rounded(StaffUi.SURFACE, StaffUi.BORDER, 7)
             })
             return
         }
         sessions.forEach { session ->
-            sessionsContainer.addView(TextView(requireContext()).apply {
-                text = session.label()
-                textSize = 15f
-                setTextColor(0xFF3F2D24.toInt())
-                setPadding(0, 8, 0, 4)
+            sessionsContainer.addView(LinearLayout(requireContext()).apply {
+                orientation = LinearLayout.VERTICAL
+                StaffUi.styleCard(this, StaffUi.PRIMARY)
+                addView(TextView(requireContext()).apply {
+                    text = session.vaccinNom ?: "Vaccin #${session.vaccinId ?: "?"}"
+                    textSize = 16f
+                    setTextColor(StaffUi.INK)
+                    setTypeface(typeface, android.graphics.Typeface.BOLD)
+                })
+                addView(TextView(requireContext()).apply {
+                    text = session.label()
+                    textSize = 13f
+                    setTextColor(StaffUi.MUTED)
+                })
             })
         }
     }
@@ -237,17 +250,18 @@ class DashboardFragment : Fragment() {
         val valueView = TextView(requireContext()).apply {
             text = "..."
             textSize = 24f
-            setTextColor(0xFFD4537E.toInt())
+            setTextColor(StaffUi.PRIMARY)
             setTypeface(typeface, android.graphics.Typeface.BOLD)
         }
         row.addView(LinearLayout(requireContext()).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(8)
+            StaffUi.styleCard(this)
             addView(valueView)
             addView(TextView(requireContext()).apply {
                 text = label
                 textSize = 12f
-                setTextColor(0xFF6B4E3D.toInt())
+                setTextColor(StaffUi.MUTED)
             })
         }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
         return valueView

@@ -32,7 +32,7 @@ class AdminDashboardFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        val scroll = ScrollView(requireContext()).apply { setBackgroundColor(0xFFFFF8F0.toInt()) }
+        val scroll = ScrollView(requireContext()).apply { setBackgroundColor(StaffUi.BACKGROUND) }
         val root = LinearLayout(requireContext()).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(20)
@@ -49,13 +49,13 @@ class AdminDashboardFragment : Fragment() {
             addView(TextView(requireContext()).apply {
                 text = "Administration"
                 textSize = 26f
-                setTextColor(0xFF7A2040.toInt())
+                setTextColor(StaffUi.INK)
                 setTypeface(typeface, android.graphics.Typeface.BOLD)
             })
             addView(TextView(requireContext()).apply {
                 text = "Pilotage VacciniKids"
                 textSize = 14f
-                setTextColor(0xFF6B4E3D.toInt())
+                setTextColor(StaffUi.MUTED)
             })
         }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
         header.addView(ImageButton(requireContext()).apply {
@@ -68,7 +68,7 @@ class AdminDashboardFragment : Fragment() {
 
         messageView = TextView(requireContext()).apply {
             setPadding(0, 4, 0, 8)
-            setTextColor(0xFFC8550A.toInt())
+            setTextColor(StaffUi.CORAL)
         }
         root.addView(messageView)
 
@@ -80,7 +80,7 @@ class AdminDashboardFragment : Fragment() {
         root.addView(TextView(requireContext()).apply {
             text = "Gestion"
             textSize = 18f
-            setTextColor(0xFF7A2040.toInt())
+            setTextColor(StaffUi.INK)
             setTypeface(typeface, android.graphics.Typeface.BOLD)
             setPadding(0, 18, 0, 6)
         })
@@ -107,6 +107,7 @@ class AdminDashboardFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        StaffUi.decorateScreen(view)
         authViewModel = ViewModelProvider(this)[InfirmierAuthViewModel::class.java]
         loadDashboard()
     }
@@ -162,20 +163,20 @@ class AdminDashboardFragment : Fragment() {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(10))
             background = GradientDrawable().apply {
-                setColor(if (label == "Alertes stock" && value > 0) 0xFFFFE5D5.toInt() else 0xFFFFFFFF.toInt())
+                setColor(if (label == "Alertes stock" && value > 0) StaffUi.SOFT_CORAL else StaffUi.SURFACE)
                 cornerRadius = dp(6).toFloat()
-                setStroke(dp(1), 0xFFE6C9B3.toInt())
+                setStroke(dp(1), StaffUi.BORDER)
             }
             addView(TextView(requireContext()).apply {
                 text = value.toString()
                 textSize = 22f
-                setTextColor(if (label == "Alertes stock" && value > 0) 0xFFC2410C.toInt() else 0xFF7A2040.toInt())
+                setTextColor(if (label == "Alertes stock" && value > 0) StaffUi.DANGER else StaffUi.PRIMARY_DARK)
                 setTypeface(typeface, android.graphics.Typeface.BOLD)
             })
             addView(TextView(requireContext()).apply {
                 text = label
                 textSize = 11f
-                setTextColor(0xFF5C4033.toInt())
+                setTextColor(StaffUi.MUTED)
             })
         }
 

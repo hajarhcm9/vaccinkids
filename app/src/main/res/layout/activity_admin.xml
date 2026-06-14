@@ -3,4 +3,4 @@
     android:id="@+id/fragmentContainerAdmin"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FFF8F0" />
+    android:background="@color/staff_background" />

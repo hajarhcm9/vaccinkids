@@ -44,13 +44,13 @@ class RdvFragment : Fragment() {
     ): View {
         val root = LinearLayout(requireContext()).apply {
             orientation = LinearLayout.VERTICAL
-            setBackgroundColor(0xFFFFF5E6.toInt())
+            setBackgroundColor(StaffUi.BACKGROUND)
         }
 
         root.addView(TextView(requireContext()).apply {
             text = "RDV par session"
             textSize = 22f
-            setTextColor(0xFF7A2040.toInt())
+            setTextColor(StaffUi.INK)
             setPadding(dp(16), dp(16), dp(16), dp(6))
             setTypeface(typeface, android.graphics.Typeface.BOLD)
         })
@@ -126,6 +126,7 @@ class RdvFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        StaffUi.decorateScreen(view)
         loadSessions()
     }
 
@@ -332,6 +333,7 @@ private class StaffRdvAdapter(
             onGrowth: (RendezVousDto) -> Unit
         ) {
             root.removeAllViews()
+            StaffUi.styleCard(root)
             val ctx = root.context
             val name = listOfNotNull(rdv.bebePrenom, rdv.bebeNom).joinToString(" ").ifBlank { "Bebe #${rdv.bebeId}" }
             val parent = listOfNotNull(rdv.parentPrenom, rdv.parentNom).joinToString(" ")
@@ -364,6 +366,7 @@ private class StaffRdvAdapter(
                 row.addView(actionButton(ctx, "Carnet") { onGrowth(rdv) })
             }
             if (row.childCount > 0) root.addView(row)
+            StaffUi.decorateTree(root)
         }
 
         private fun actionButton(ctx: android.content.Context, label: String, action: () -> Unit): Button =
@@ -371,6 +374,7 @@ private class StaffRdvAdapter(
                 text = label
                 textSize = 11f
                 setOnClickListener { action() }
+                StaffUi.styleButton(this)
                 layoutParams = LinearLayout.LayoutParams(
                     0,
                     ViewGroup.LayoutParams.WRAP_CONTENT,

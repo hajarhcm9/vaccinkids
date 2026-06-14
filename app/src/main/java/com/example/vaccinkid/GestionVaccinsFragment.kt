@@ -53,6 +53,7 @@ class GestionVaccinsFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        StaffUi.decorateScreen(view)
         loadVaccins()
     }
 
@@ -164,6 +165,7 @@ private class VaccinAdapter(
     ) : RecyclerView.ViewHolder(root) {
         fun bind(item: VaccinDto) {
             root.removeAllViews()
+            StaffUi.styleCard(root, if (item.estActif == false) StaffUi.BORDER else StaffUi.PRIMARY)
             root.addView(TextView(root.context).apply {
                 text = "${item.nom ?: "Vaccin #${item.id}"} - ${if (item.estActif == false) "Inactif" else "Actif"}"
                 textSize = 16f
@@ -185,6 +187,7 @@ private class VaccinAdapter(
                 }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
             }
             root.addView(row)
+            StaffUi.decorateTree(root)
         }
     }
 }

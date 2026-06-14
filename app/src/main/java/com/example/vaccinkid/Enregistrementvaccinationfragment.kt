@@ -80,6 +80,7 @@ class EnregistrementVaccinationFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        StaffUi.decorateScreen(view)
         observeViewModel()
         val sessionId = requireArguments().getInt(ARG_SESSION_ID, 0)
         val rdvId = requireArguments().getInt(ARG_RDV_ID, 0)

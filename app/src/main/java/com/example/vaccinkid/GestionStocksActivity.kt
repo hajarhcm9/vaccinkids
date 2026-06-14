@@ -56,6 +56,7 @@ class GestionStocksActivity : AppCompatActivity() {
             else android.view.View.GONE
             setOnClickListener { showUpsertDialog() }
         }
+        StaffUi.decorateScreen(findViewById(android.R.id.content))
 
         viewModel.stock.observe(this) { result ->
             result.fold(
@@ -193,6 +194,7 @@ class StockMovementAdapter : RecyclerView.Adapter<StockMovementAdapter.ViewHolde
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val item = items[position]
         holder.root.removeAllViews()
+        StaffUi.styleCard(holder.root)
         holder.root.addView(TextView(holder.root.context).apply {
             text = "${item.type ?: "MOUVEMENT"} - ${item.vaccinNom ?: "Vaccin #${item.vaccinId ?: "-"}"}"
             setTypeface(typeface, android.graphics.Typeface.BOLD)
@@ -203,6 +205,7 @@ class StockMovementAdapter : RecyclerView.Adapter<StockMovementAdapter.ViewHolde
         holder.root.addView(TextView(holder.root.context).apply {
             text = listOfNotNull(item.motif, item.createdAt).joinToString(" | ").ifBlank { "-" }
         })
+        StaffUi.decorateTree(holder.root)
     }
 
     override fun getItemCount() = items.size

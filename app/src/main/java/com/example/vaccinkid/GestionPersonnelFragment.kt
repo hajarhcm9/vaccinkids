@@ -61,6 +61,7 @@ class GestionPersonnelFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        StaffUi.decorateScreen(view)
         loadPersonnel()
     }
 
@@ -191,6 +192,7 @@ private class PersonnelAdapter(
     ) : RecyclerView.ViewHolder(root) {
         fun bind(item: AdminPersonnelDto) {
             root.removeAllViews()
+            StaffUi.styleCard(root, if (item.estActif == true) StaffUi.PRIMARY else StaffUi.BORDER)
             root.addView(TextView(root.context).apply {
                 text = "${item.prenom ?: ""} ${item.nom ?: ""} - ${item.role ?: "-"}"
                 textSize = 16f
@@ -209,6 +211,7 @@ private class PersonnelAdapter(
                 setOnClickListener { onToggle(item) }
             }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
             root.addView(row)
+            StaffUi.decorateTree(root)
         }
     }
 }

@@ -56,6 +56,7 @@ class StaffNotificationsFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: android.os.Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        StaffUi.decorateScreen(view)
         loadNotifications()
     }
 
@@ -149,6 +150,7 @@ private class StaffNotificationAdapter(
     inner class ViewHolder(private val root: LinearLayout) : RecyclerView.ViewHolder(root) {
         fun bind(notification: NotificationDto) {
             root.removeAllViews()
+            StaffUi.styleCard(root, if (notification.estLue == true) null else StaffUi.CORAL)
             root.addView(TextView(root.context).apply {
                 text = notification.titre ?: "Notification"
                 textSize = 16f
@@ -163,6 +165,7 @@ private class StaffNotificationAdapter(
             root.setOnClickListener(if (notification.estLue == true) null else View.OnClickListener {
                 onRead(notification)
             })
+            StaffUi.decorateTree(root)
         }
     }
 }

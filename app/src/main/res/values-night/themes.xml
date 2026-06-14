@@ -1,7 +1,10 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
     <style name="Base.Theme.Vaccinkid" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your dark theme here. -->
-        <!-- <item name="colorPrimary">@color/my_dark_primary</item> -->
+        <item name="colorPrimary">@color/staff_primary</item>
+        <item name="colorSecondary">@color/staff_secondary</item>
+        <item name="android:statusBarColor">@color/staff_primary_dark</item>
+        <item name="android:navigationBarColor">@color/staff_surface</item>
+        <item name="android:windowBackground">@color/staff_background</item>
     </style>
 </resources>
