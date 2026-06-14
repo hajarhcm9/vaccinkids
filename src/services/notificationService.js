@@ -53,12 +53,26 @@ class NotificationService {
     return rows[0] || null;
   }
   _ds(si) {
-    return si
-      ? new Date(si.date_session + 'T' + si.heure_debut).toLocaleString('fr-FR', {
-          dateStyle: 'long',
-          timeStyle: 'short',
-        })
-      : 'votre prochaine session';
+    if (!si?.date_session) return 'votre prochaine session';
+
+    const rawDate = si.date_session;
+    const dateParts =
+      rawDate instanceof Date && !Number.isNaN(rawDate.getTime())
+        ? [rawDate.getFullYear(), rawDate.getMonth() + 1, rawDate.getDate()]
+        : String(rawDate).slice(0, 10).split('-').map(Number);
+    const timeParts = String(si.heure_debut || '00:00')
+      .slice(0, 8)
+      .split(':')
+      .map(Number);
+    const [year, month, day] = dateParts;
+    const [hour = 0, minute = 0, second = 0] = timeParts;
+    const sessionDate = new Date(year, month - 1, day, hour, minute, second);
+
+    if (Number.isNaN(sessionDate.getTime())) return 'votre prochaine session';
+    return sessionDate.toLocaleString('fr-FR', {
+      dateStyle: 'long',
+      timeStyle: 'short',
+    });
   }
   async sendRappelRdv(rv) {
     const phone = await this._gp(rv.parent_id);

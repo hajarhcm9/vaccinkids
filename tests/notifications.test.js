@@ -246,6 +246,22 @@ describe('Notification System (Day 11)', () => {
 
   // ─── 6. Notification model direct tests ───────────────────────────────
   describe('Notification Model', () => {
+    it('should format PostgreSQL session dates without producing Invalid Date', () => {
+      const notificationService = require('../src/services/notificationService');
+      const fromDate = notificationService._ds({
+        date_session: new Date(2026, 5, 14),
+        heure_debut: '09:30:00',
+      });
+      const fromString = notificationService._ds({
+        date_session: '2026-06-14',
+        heure_debut: '09:30:00',
+      });
+
+      expect(fromDate).not.toContain('Invalid Date');
+      expect(fromString).not.toContain('Invalid Date');
+      expect(notificationService._ds({ date_session: 'invalid' })).toBe('votre prochaine session');
+    });
+
     it('should create and retrieve a notification', async () => {
       const notif = await Notification.create({
         destinataire_id: parentId,
