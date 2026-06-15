@@ -45,6 +45,10 @@ class MainInfirmierActivity : AppCompatActivity() {
                     selectRootFragment(QueueFragment(), "queue")
                     true
                 }
+                R.id.nav_more -> {
+                    selectRootFragment(StaffMoreFragment(), "more")
+                    true
+                }
                 else -> false
             }
         }

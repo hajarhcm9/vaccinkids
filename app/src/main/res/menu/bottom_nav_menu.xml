@@ -4,7 +4,7 @@
     <item
         android:id="@+id/nav_dashboard"
         android:icon="@drawable/ic_dashboard"
-        android:title="Dashboard" />
+        android:title="Accueil" />
 
     <item
         android:id="@+id/nav_rdv"
@@ -14,11 +14,15 @@
     <item
         android:id="@+id/nav_scan"
         android:icon="@drawable/ic_scan"
-        android:title="Scan QR" />
+        android:title="Scan" />
 
     <item
         android:id="@+id/nav_queue"
         android:icon="@drawable/ic_queue_people"
-        android:title="File" />
+        android:title="Attente" />
 
+    <item
+        android:id="@+id/nav_more"
+        android:icon="@drawable/ic_more_horizontal"
+        android:title="Plus" />
 </menu>

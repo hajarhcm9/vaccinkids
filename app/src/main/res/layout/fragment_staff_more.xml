@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg_primary"
+    android:clipToPadding="false"
+    android:paddingBottom="24dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingHorizontal="20dp"
+        android:paddingTop="18dp">
+
+        <TextView
+            style="@style/TextAppearance.Vaccinkid.Headline"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Plus" />
+
+        <com.google.android.material.card.MaterialCardView
+            style="@style/Widget.Vaccinkid.Card.Outlined"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <FrameLayout
+                    android:layout_width="90dp"
+                    android:layout_height="120dp"
+                    android:background="@color/brand_teal">
+
+                    <ImageView
+                        android:layout_width="42dp"
+                        android:layout_height="42dp"
+                        android:layout_gravity="center"
+                        android:contentDescription="Profil personnel"
+                        android:src="@drawable/ic_medical_staff"
+                        app:tint="@color/white" />
+                </FrameLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:id="@+id/moreUserName"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Chargement du profil..."
+                        android:textColor="@color/text_primary"
+                        android:textSize="17sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/moreUserRole"
+                        style="@style/TextAppearance.Vaccinkid.Caption"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="3dp"
+                        android:textColor="@color/brand_teal" />
+
+                    <TextView
+                        android:id="@+id/moreUserCentre"
+                        style="@style/TextAppearance.Vaccinkid.Caption"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="3dp" />
+                </LinearLayout>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <TextView
+            style="@style/TextAppearance.Vaccinkid.Title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="Outils" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/moreNotifications"
+            style="@style/Widget.Vaccinkid.Button.Outlined"
+            android:layout_width="match_parent"
+            android:layout_height="54dp"
+            android:layout_marginTop="12dp"
+            android:gravity="start|center_vertical"
+            android:text="Notifications"
+            app:icon="@drawable/ic_notifications"
+            app:iconTint="@color/brand_teal" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/moreStock"
+            style="@style/Widget.Vaccinkid.Button.Outlined"
+            android:layout_width="match_parent"
+            android:layout_height="54dp"
+            android:layout_marginTop="8dp"
+            android:gravity="start|center_vertical"
+            android:text="Stocks de vaccins"
+            app:icon="@drawable/ic_syringe"
+            app:iconTint="@color/brand_teal" />
+
+        <TextView
+            android:id="@+id/moreMessage"
+            style="@style/TextAppearance.Vaccinkid.Body"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:textColor="@color/error" />
+
+        <TextView
+            style="@style/TextAppearance.Vaccinkid.Caption"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="28dp"
+            android:gravity="center"
+            android:text="VaccinKids STAFF v1.0" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/moreLogout"
+            style="@style/Widget.Vaccinkid.Button.Danger"
+            android:layout_width="match_parent"
+            android:layout_height="54dp"
+            android:layout_marginTop="14dp"
+            android:text="Se déconnecter"
+            app:icon="@drawable/ic_logout"
+            app:iconTint="@color/white" />
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>

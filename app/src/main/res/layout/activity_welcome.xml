@@ -1,87 +1,143 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@android:color/white"
-    tools:context=".WelcomeActivity">
+    android:background="@color/bg_primary">
+
+    <View
+        android:id="@+id/welcomeAccent"
+        android:layout_width="220dp"
+        android:layout_height="220dp"
+        android:layout_marginTop="-72dp"
+        android:layout_marginEnd="-72dp"
+        android:background="@drawable/bg_circle_teal"
+        android:alpha="0.12"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <LinearLayout
-        android:id="@+id/llCenterContent"
-        android:layout_width="0dp"
+        android:id="@+id/welcomeBrand"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:gravity="center_horizontal"
-        android:padding="32dp"
-        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginTop="36dp"
+        android:gravity="center"
+        android:orientation="horizontal"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/llButtons">
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <FrameLayout
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:background="@drawable/bg_circle_staff_primary">
+
+            <ImageView
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:layout_gravity="center"
+                android:contentDescription="VaccinKids"
+                android:src="@drawable/ic_syringe"
+                app:tint="@color/white" />
+        </FrameLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="VaccinKids"
+                android:textColor="@color/text_primary"
+                android:textSize="27sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:letterSpacing="0.28"
+                android:text="STAFF"
+                android:textColor="@color/brand_teal"
+                android:textSize="10sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <FrameLayout
+        android:id="@+id/welcomeIllustration"
+        android:layout_width="220dp"
+        android:layout_height="220dp"
+        android:background="@drawable/bg_circle_teal"
+        app:layout_constraintBottom_toTopOf="@id/welcomeTitle"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/welcomeBrand">
 
         <ImageView
-            android:id="@+id/ivLogo"
-            android:layout_width="120dp"
-            android:layout_height="120dp"
-            android:layout_marginTop="80dp"
-            android:src="@drawable/ic_syringe"
-            android:contentDescription="@string/logo_seringue" />
+            android:layout_width="96dp"
+            android:layout_height="96dp"
+            android:layout_gravity="center"
+            android:contentDescription="Gestion des vaccinations"
+            android:src="@drawable/ic_medical_staff"
+            app:tint="@color/white" />
+    </FrameLayout>
 
-        <TextView
-            android:id="@+id/tvTitle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="VacciniKids"
-            android:textSize="28sp"
-            android:textStyle="bold"
-            android:textColor="#212121" />
+    <TextView
+        android:id="@+id/welcomeTitle"
+        style="@style/TextAppearance.Vaccinkid.Headline"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Bienvenue !"
+        app:layout_constraintBottom_toTopOf="@id/welcomeSubtitle"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
 
-        <TextView
-            android:id="@+id/tvSubtitle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:text="Gestion de vaccination"
-            android:textSize="14sp"
-            android:textColor="#888888" />
-
-        <Space
-            android:layout_width="match_parent"
-            android:layout_height="32dp" />
-
-    </LinearLayout>
+    <TextView
+        android:id="@+id/welcomeSubtitle"
+        style="@style/TextAppearance.Vaccinkid.Body"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="42dp"
+        android:layout_marginTop="8dp"
+        android:gravity="center"
+        android:text="Prenez soin de chaque enfant et gérez les vaccinations en toute sécurité."
+        android:textSize="15sp"
+        app:layout_constraintBottom_toTopOf="@id/welcomeActions"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/welcomeTitle" />
 
     <LinearLayout
-        android:id="@+id/llButtons"
-        android:layout_width="match_parent"
+        android:id="@+id/welcomeActions"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginHorizontal="24dp"
+        android:layout_marginBottom="24dp"
         android:orientation="vertical"
-        android:padding="24dp"
-        app:layout_constraintBottom_toBottomOf="parent">
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btnInfirmier"
+            style="@style/Widget.Vaccinkid.Button"
             android:layout_width="match_parent"
             android:layout_height="56dp"
-            android:text="Accès infirmier"
-            android:textAllCaps="false"
-            android:textColor="@android:color/white"
-            android:backgroundTint="#FF6B35"
-            app:cornerRadius="24dp" />
+            android:text="Continuer comme infirmier"
+            app:icon="@drawable/ic_medical_staff"
+            app:iconTint="@color/white" />
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btnAdmin"
+            style="@style/Widget.Vaccinkid.Button.Outlined"
             android:layout_width="match_parent"
             android:layout_height="56dp"
-            android:layout_marginTop="12dp"
-            android:text="Accès admin"
-            android:textAllCaps="false"
-            android:textColor="@android:color/white"
-            android:backgroundTint="#2196F3"
-            app:cornerRadius="24dp" />
-
+            android:layout_marginTop="10dp"
+            android:text="Continuer comme admin"
+            app:icon="@drawable/ic_admin_panel"
+            app:iconTint="@color/brand_teal" />
     </LinearLayout>
-
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -41,11 +41,12 @@ Un ecran modernise doit :
 
 | Lot | Ecran | Objectif | Statut |
 | --- | --- | --- | --- |
-| UI-01 | Dashboard infirmier | KPI, alerte stock, actions rapides, sessions, pull-to-refresh | Implemente, recette appareil requise |
-| UI-02 | RDV infirmier | Recherche, filtres comptes, statuts, actions contextuelles | Implemente, recette appareil requise |
-| UI-02b | Scan QR | Viseur sombre, camera reelle, validation serveur | Implemente, recette appareil requise |
+| UI-01 | Dashboard infirmier | KPI, alerte stock, actions rapides, sessions, pull-to-refresh | Partiel par rapport aux specs, recette requise |
+| UI-02 | RDV infirmier | Recherche, filtres comptes, statuts, actions contextuelles | Avance, recette appareil requise |
+| UI-02b | Scan QR | Viseur sombre, camera reelle, validation serveur | Partiel par rapport aux specs, recette requise |
 | UI-03 | Vaccination | Formulaire Material, validation inline, confirmation serveur | A faire |
-| UI-04 | File d'attente | Separation en cours/en attente, appel et reprise | A faire |
+| UI-04 | File d'attente | Separation en cours/en attente, appel et reprise | Implemente, recette appareil requise |
+| UI-04b | Plus et navigation | Navigation 5 onglets, profil API, outils, logout | Implemente, recette appareil requise |
 | UI-05 | Flacons et stock | Etats serveur lisibles, formulaires roles adaptes | A faire |
 | UI-06 | Dashboard admin | KPI, alertes et raccourcis supervision | A faire |
 | UI-07 | CRUD admin | Listes recherchees/paginees et formulaires Material | A faire |

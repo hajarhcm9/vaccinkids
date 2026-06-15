@@ -1,135 +1,104 @@
 package com.example.vaccinkid
 
 import android.os.Bundle
-import android.graphics.drawable.GradientDrawable
+import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
-import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
-import androidx.core.view.setPadding
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.example.vaccinkid.model.QueueEntryDto
 import com.example.vaccinkid.network.ApiClient
 import com.example.vaccinkid.network.TokenManager
+import com.google.android.material.button.MaterialButton
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.launch
 
-class QueueFragment : Fragment() {
+class QueueFragment : Fragment(R.layout.fragment_queue) {
+    private lateinit var refreshView: SwipeRefreshLayout
+    private lateinit var waitingTab: MaterialButton
+    private lateinit var calledTab: MaterialButton
+    private lateinit var callNextButton: MaterialButton
     private lateinit var progress: ProgressBar
     private lateinit var message: TextView
     private lateinit var adapter: QueueAdapter
-    private lateinit var callNextButton: Button
+
+    private var entries: List<QueueEntryDto> = emptyList()
+    private var selectedTab = TAB_WAITING
     private var actionInFlight = false
-
-    override fun onCreateView(
-        inflater: android.view.LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        val root = LinearLayout(requireContext()).apply {
-            orientation = LinearLayout.VERTICAL
-            setBackgroundColor(StaffUi.BACKGROUND)
-        }
-        root.addView(LinearLayout(requireContext()).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(dp(20), dp(22), dp(20), dp(18))
-            background = GradientDrawable(
-                GradientDrawable.Orientation.TL_BR,
-                intArrayOf(StaffUi.PRIMARY_DARK, StaffUi.BLUE)
-            )
-            addView(TextView(requireContext()).apply {
-                text = "File d'attente"
-                textSize = 24f
-                tag = "keep-color"
-                setTypeface(typeface, android.graphics.Typeface.BOLD)
-                setTextColor(android.graphics.Color.WHITE)
-            })
-            addView(TextView(requireContext()).apply {
-                text = "Patients du centre affecte"
-                textSize = 14f
-                setTextColor(0xFFD1FAE5.toInt())
-            })
-        })
-
-        val row = LinearLayout(requireContext()).apply {
-            orientation = LinearLayout.HORIZONTAL
-            setPadding(dp(16), dp(14), dp(16), dp(8))
-        }
-        row.addView(button("Rafraichir") { loadQueue() }, weightWrap())
-        callNextButton = button("Appeler prochain") { callNext() }.apply {
-            tag = "accent-primary"
-            visibility = View.GONE
-        }
-        row.addView(callNextButton, weightWrap())
-        root.addView(row)
-
-        progress = ProgressBar(requireContext()).apply { visibility = View.GONE }
-        message = TextView(requireContext()).apply {
-            setTextColor(0xFFC8550A.toInt())
-            setPadding(dp(16), dp(4), dp(16), dp(8))
-        }
-        root.addView(progress, matchWrap())
-        root.addView(message, matchWrap())
-
-        val recycler = RecyclerView(requireContext()).apply {
-            layoutManager = LinearLayoutManager(requireContext())
-        }
-        adapter = QueueAdapter { complete(it) }
-        recycler.adapter = adapter
-        root.addView(recycler, LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            0,
-            1f
-        ))
-        return root
-    }
+    private var queueError: String? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        StaffUi.decorateScreen(view)
+        refreshView = view.findViewById(R.id.queueRefresh)
+        waitingTab = view.findViewById(R.id.queueWaitingTab)
+        calledTab = view.findViewById(R.id.queueCalledTab)
+        callNextButton = view.findViewById(R.id.queueCallNext)
+        progress = view.findViewById(R.id.queueProgress)
+        message = view.findViewById(R.id.queueMessage)
+
+        adapter = QueueAdapter(::complete)
+        view.findViewById<RecyclerView>(R.id.queueList).apply {
+            layoutManager = LinearLayoutManager(requireContext())
+            adapter = this@QueueFragment.adapter
+        }
+
+        refreshView.setColorSchemeResources(R.color.staff_primary, R.color.brand_coral, R.color.brand_blue)
+        refreshView.setOnRefreshListener(::loadQueue)
+        waitingTab.setOnClickListener { selectTab(TAB_WAITING) }
+        calledTab.setOnClickListener { selectTab(TAB_CALLED) }
+        callNextButton.setOnClickListener { callNext() }
+        selectTab(TAB_WAITING)
         loadQueue()
+    }
+
+    private fun selectTab(tab: String) {
+        selectedTab = tab
+        waitingTab.isChecked = tab == TAB_WAITING
+        calledTab.isChecked = tab == TAB_CALLED
+        renderEntries()
     }
 
     private fun loadQueue() {
         val centreId = TokenManager.getCentreId()
         if (centreId == null) {
-            message.text = "Aucun centre affecte a ce compte."
-            adapter.submit(emptyList())
-            callNextButton.visibility = View.GONE
+            entries = emptyList()
+            queueError = "Aucun centre affecté à ce compte."
+            renderEntries()
             return
         }
         viewLifecycleOwner.lifecycleScope.launch {
-            setLoading(true, "Chargement file...")
+            setLoading(true, "Chargement de la file...")
             try {
                 val response = ApiClient.apiService.getCentreQueue(centreId)
                 if (response.status != "success") throw Exception(response.message ?: "File indisponible")
-                val entries = response.data?.entries ?: emptyList()
-                adapter.submit(entries.sortedBy { if (it.statut == "EN_COURS") 0 else 1 })
-                val waiting = entries.count { it.statut == "EN_ATTENTE" }
-                val active = entries.count { it.statut == "EN_COURS" }
-                callNextButton.visibility = if (entries.any { it.statut == "EN_ATTENTE" }) {
-                    View.VISIBLE
-                } else {
-                    View.GONE
-                }
-                setLoading(
-                    false,
-                    if (entries.isEmpty()) {
-                        "La file est vide. Aucun patient n'attend pour le moment."
-                    } else {
-                        "$waiting en attente | $active en cours"
-                    }
-                )
-            } catch (e: Exception) {
-                adapter.submit(emptyList())
-                callNextButton.visibility = View.GONE
-                setLoading(false, e.message ?: "Erreur reseau")
+                entries = response.data?.entries.orEmpty()
+                queueError = null
+            } catch (error: Exception) {
+                entries = emptyList()
+                queueError = error.message ?: "Erreur réseau"
+            } finally {
+                setLoading(false)
+                renderEntries()
             }
+        }
+    }
+
+    private fun renderEntries() {
+        val waiting = entries.filter { it.statut == "EN_ATTENTE" }.sortedBy { it.position ?: Int.MAX_VALUE }
+        val called = entries.filter { it.statut == "EN_COURS" }.sortedBy { it.position ?: Int.MAX_VALUE }
+        waitingTab.text = "En attente ${waiting.size}"
+        calledTab.text = "Appelés ${called.size}"
+        val visible = if (selectedTab == TAB_WAITING) waiting else called
+        adapter.submit(visible)
+        callNextButton.visibility = if (selectedTab == TAB_WAITING) View.VISIBLE else View.GONE
+        callNextButton.isEnabled = waiting.isNotEmpty() && !actionInFlight
+        if (!refreshView.isRefreshing) {
+            message.text = queueError ?: if (visible.isEmpty()) "File vide" else ""
         }
     }
 
@@ -137,6 +106,7 @@ class QueueFragment : Fragment() {
         val centreId = TokenManager.getCentreId() ?: return
         if (actionInFlight) return
         actionInFlight = true
+        callNextButton.isEnabled = false
         viewLifecycleOwner.lifecycleScope.launch {
             setLoading(true, "Appel du prochain patient...")
             try {
@@ -144,12 +114,14 @@ class QueueFragment : Fragment() {
                 if (response.status != "success" || response.data == null) {
                     throw Exception(response.message ?: "Personne en attente")
                 }
-                Snackbar.make(requireView(), "Patient appele et confirme par le serveur", Snackbar.LENGTH_SHORT).show()
+                Snackbar.make(requireView(), "Patient appelé et confirmé par le serveur", Snackbar.LENGTH_SHORT).show()
                 loadQueue()
-            } catch (e: Exception) {
-                setLoading(false, e.message ?: "Erreur reseau")
+            } catch (error: Exception) {
+                message.text = error.message ?: "Erreur réseau"
             } finally {
                 actionInFlight = false
+                setLoading(false)
+                renderEntries()
             }
         }
     }
@@ -162,39 +134,27 @@ class QueueFragment : Fragment() {
             try {
                 val response = ApiClient.apiService.completeService(entry.id)
                 if (response.status != "success") throw Exception(response.message ?: "Action impossible")
-                Snackbar.make(requireView(), "Service termine et confirme par le serveur", Snackbar.LENGTH_SHORT).show()
+                Snackbar.make(requireView(), "Service terminé et confirmé par le serveur", Snackbar.LENGTH_SHORT).show()
                 loadQueue()
-            } catch (e: Exception) {
-                setLoading(false, e.message ?: "Erreur reseau")
+            } catch (error: Exception) {
+                message.text = error.message ?: "Erreur réseau"
             } finally {
                 actionInFlight = false
+                setLoading(false)
             }
         }
     }
 
-    private fun setLoading(isLoading: Boolean, text: String) {
-        progress.visibility = if (isLoading) View.VISIBLE else View.GONE
-        message.text = text
+    private fun setLoading(loading: Boolean, text: String? = null) {
+        refreshView.isRefreshing = loading
+        progress.visibility = if (loading) View.VISIBLE else View.GONE
+        text?.let { message.text = it }
     }
 
-    private fun button(text: String, onClick: () -> Unit): Button =
-        Button(requireContext()).apply {
-            this.text = text
-            setOnClickListener { onClick() }
-        }
-
-    private fun weightWrap() = LinearLayout.LayoutParams(
-        0,
-        ViewGroup.LayoutParams.WRAP_CONTENT,
-        1f
-    ).apply { marginEnd = dp(6) }
-
-    private fun matchWrap() = LinearLayout.LayoutParams(
-        ViewGroup.LayoutParams.MATCH_PARENT,
-        ViewGroup.LayoutParams.WRAP_CONTENT
-    )
-
-    private fun dp(value: Int) = (value * resources.displayMetrics.density).toInt()
+    companion object {
+        private const val TAB_WAITING = "waiting"
+        private const val TAB_CALLED = "called"
+    }
 }
 
 private class QueueAdapter(
@@ -207,13 +167,8 @@ private class QueueAdapter(
         notifyDataSetChanged()
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        return ViewHolder(LinearLayout(parent.context).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(24)
-            setBackgroundColor(0xFFFFFFFF.toInt())
-        })
-    }
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder =
+        ViewHolder(LayoutInflater.from(parent.context).inflate(R.layout.item_queue_patient, parent, false))
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         holder.bind(items[position], onComplete)
@@ -221,45 +176,28 @@ private class QueueAdapter(
 
     override fun getItemCount() = items.size
 
-    class ViewHolder(private val root: LinearLayout) : RecyclerView.ViewHolder(root) {
+    class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        private val positionView: TextView = view.findViewById(R.id.queueItemPosition)
+        private val nameView: TextView = view.findViewById(R.id.queueItemName)
+        private val phoneView: TextView = view.findViewById(R.id.queueItemPhone)
+        private val statusView: TextView = view.findViewById(R.id.queueItemStatus)
+        private val completeButton: MaterialButton = view.findViewById(R.id.queueItemComplete)
+
         fun bind(entry: QueueEntryDto, onComplete: (QueueEntryDto) -> Unit) {
-            root.removeAllViews()
-            StaffUi.styleCard(
-                root,
-                if (entry.statut == "EN_COURS") StaffUi.PRIMARY else StaffUi.BORDER
+            positionView.text = (entry.numeroAttente ?: entry.position ?: "-").toString()
+            nameView.text = listOfNotNull(entry.bebePrenom, entry.bebeNom).joinToString(" ")
+                .ifBlank { "Bébé #${entry.bebeId ?: "-"}" }
+            phoneView.text = entry.parentTelephone ?: "Téléphone indisponible"
+            val called = entry.statut == "EN_COURS"
+            statusView.text = if (called) "Appelé" else "En attente"
+            statusView.setTextColor(itemView.context.getColor(if (called) R.color.info_dark else R.color.warning_dark))
+            statusView.background = StaffUi.rounded(
+                itemView.context.getColor(if (called) R.color.info_light else R.color.warning_light),
+                itemView.context.getColor(if (called) R.color.info_light else R.color.warning_light),
+                20
             )
-            val ctx = root.context
-            val name = listOfNotNull(entry.bebePrenom, entry.bebeNom).joinToString(" ")
-                .ifBlank { "Bebe #${entry.bebeId ?: "-"}" }
-            root.addView(TextView(ctx).apply {
-                text = "#${entry.numeroAttente ?: entry.position ?: "-"}"
-                textSize = 28f
-                tag = "keep-color"
-                setTextColor(if (entry.statut == "EN_COURS") StaffUi.PRIMARY else StaffUi.LAVENDER)
-                setTypeface(typeface, android.graphics.Typeface.BOLD)
-            })
-            root.addView(TextView(ctx).apply {
-                text = name
-                textSize = 17f
-                setTextColor(StaffUi.INK)
-                setTypeface(typeface, android.graphics.Typeface.BOLD)
-            })
-            root.addView(TextView(ctx).apply {
-                text = entry.statut ?: "INCONNU"
-                StaffUi.statusPill(this, entry.statut)
-            })
-            root.addView(TextView(ctx).apply {
-                text = "Telephone : ${entry.parentTelephone ?: "-"}"
-                textSize = 13f
-                setTextColor(StaffUi.MUTED)
-            })
-            if (entry.statut == "EN_COURS") {
-                root.addView(Button(ctx).apply {
-                    text = "Terminer service"
-                    setOnClickListener { onComplete(entry) }
-                })
-            }
-            StaffUi.decorateTree(root)
+            completeButton.visibility = if (called) View.VISIBLE else View.GONE
+            completeButton.setOnClickListener { onComplete(entry) }
         }
     }
 }
