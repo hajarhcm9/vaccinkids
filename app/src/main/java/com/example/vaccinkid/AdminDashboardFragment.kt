@@ -35,71 +35,70 @@ class AdminDashboardFragment : Fragment() {
         val scroll = ScrollView(requireContext()).apply { setBackgroundColor(StaffUi.BACKGROUND) }
         val root = LinearLayout(requireContext()).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(dp(16))
+            setPadding(20)
         }
         scroll.addView(root)
 
         val header = LinearLayout(requireContext()).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = android.view.Gravity.CENTER_VERTICAL
-            setPadding(dp(18), dp(18), dp(10), dp(18))
-            background = GradientDrawable(
-                GradientDrawable.Orientation.TL_BR,
-                intArrayOf(StaffUi.LAVENDER, StaffUi.PRIMARY)
-            ).apply { cornerRadius = dp(8).toFloat() }
+            setPadding(0, 4, 0, 12)
         }
         header.addView(LinearLayout(requireContext()).apply {
             orientation = LinearLayout.VERTICAL
             addView(TextView(requireContext()).apply {
                 text = "Administration"
-                textSize = 25f
-                tag = "keep-color"
-                setTextColor(Color.WHITE)
+                textSize = 26f
+                setTextColor(StaffUi.INK)
                 setTypeface(typeface, android.graphics.Typeface.BOLD)
             })
             addView(TextView(requireContext()).apply {
-                text = "Pilotage du reseau VacciniKids"
+                text = "Pilotage VacciniKids"
                 textSize = 14f
-                setTextColor(0xFFFFE4E6.toInt())
+                setTextColor(StaffUi.MUTED)
             })
         }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
         header.addView(ImageButton(requireContext()).apply {
             contentDescription = "Deconnexion"
             setImageResource(android.R.drawable.ic_lock_power_off)
             setBackgroundColor(Color.TRANSPARENT)
-            imageTintList = android.content.res.ColorStateList.valueOf(Color.WHITE)
             setOnClickListener { confirmLogout() }
         }, LinearLayout.LayoutParams(dp(48), dp(48)))
         root.addView(header)
 
         messageView = TextView(requireContext()).apply {
-            setPadding(0, dp(10), 0, dp(4))
+            setPadding(0, 4, 0, 8)
             setTextColor(StaffUi.CORAL)
         }
         root.addView(messageView)
 
-        root.addView(sectionTitle("Vue d'ensemble"))
         kpiContainer = LinearLayout(requireContext()).apply {
             orientation = LinearLayout.VERTICAL
         }
         root.addView(kpiContainer)
 
-        root.addView(sectionTitle("Gestion et supervision"))
+        root.addView(TextView(requireContext()).apply {
+            text = "Gestion"
+            textSize = 18f
+            setTextColor(StaffUi.INK)
+            setTypeface(typeface, android.graphics.Typeface.BOLD)
+            setPadding(0, 18, 0, 6)
+        })
         root.addView(actionRow(
-            navButton("Personnel", GestionPersonnelFragment(), "accent-primary"),
-            navButton("Centres", GestionCentresFragment(), "accent-tertiary")
+            navButton("Personnel", GestionPersonnelFragment()),
+            navButton("Centres", GestionCentresFragment())
         ))
         root.addView(actionRow(
-            navButton("Vaccins", GestionVaccinsFragment(), "accent-primary"),
-            navButton("Sessions", GestionSessionsFragment(), "accent-primary")
+            navButton("Vaccins", GestionVaccinsFragment()),
+            navButton("Sessions", GestionSessionsFragment())
         ))
         root.addView(actionRow(
-            actionButton("Stock", "accent-secondary") { startActivity(Intent(requireContext(), GestionStocksActivity::class.java)) },
-            actionButton("Statistiques", "accent-tertiary") { startActivity(Intent(requireContext(), StatsAdminActivity::class.java)) }
+            actionButton("Stock") { startActivity(Intent(requireContext(), GestionStocksActivity::class.java)) },
+            actionButton("Statistiques") { startActivity(Intent(requireContext(), StatsAdminActivity::class.java)) }
         ))
         root.addView(actionRow(
-            actionButton("Exports", "accent-coral") { startActivity(Intent(requireContext(), ExportsAdminActivity::class.java)) },
-            actionButton("Audit log", "accent-amber") { (activity as? AdminActivity)?.naviguerVers(AdminAuditLogFragment()) }
+            actionButton("Exports") { startActivity(Intent(requireContext(), ExportsAdminActivity::class.java)) },
+            actionButton("Audit log") { (activity as? AdminActivity)?.naviguerVers(AdminAuditLogFragment()) }
         ))
         root.addView(actionButton("Rafraichir les indicateurs") { loadDashboard() })
 
@@ -134,23 +133,23 @@ class AdminDashboardFragment : Fragment() {
     private fun renderStats(stats: DashboardStatsDto) {
         kpiContainer.removeAllViews()
         val values = listOf(
-            Triple("Centres actifs", stats.centresActifs, StaffUi.LAVENDER),
-            Triple("Personnel", stats.totalPersonnel, StaffUi.PRIMARY),
-            Triple("Parents", stats.totalParents, StaffUi.PRIMARY),
-            Triple("Bebes", stats.totalBebes, StaffUi.CORAL),
-            Triple("Sessions a venir", stats.sessionsAVenir, StaffUi.BLUE),
-            Triple("RDV confirmes", stats.rdvConfirmes, StaffUi.PRIMARY),
-            Triple("RDV en attente", stats.rdvEnAttente, 0xFFD97706.toInt()),
-            Triple("Vaccinations", stats.totalVaccinations, StaffUi.LAVENDER),
-            Triple("Alertes stock", stats.alertesStock, StaffUi.DANGER)
+            "Centres actifs" to stats.centresActifs,
+            "Personnel" to stats.totalPersonnel,
+            "Parents" to stats.totalParents,
+            "Bebes" to stats.totalBebes,
+            "Sessions a venir" to stats.sessionsAVenir,
+            "RDV confirmes" to stats.rdvConfirmes,
+            "RDV en attente" to stats.rdvEnAttente,
+            "Vaccinations" to stats.totalVaccinations,
+            "Alertes stock" to stats.alertesStock
         )
         values.chunked(3).forEach { rowValues ->
             val row = LinearLayout(requireContext()).apply {
                 orientation = LinearLayout.HORIZONTAL
                 setPadding(0, 0, 0, dp(8))
             }
-            rowValues.forEach { (label, value, accent) ->
-                row.addView(kpiBlock(label, value ?: 0, accent), weighted())
+            rowValues.forEach { (label, value) ->
+                row.addView(kpiBlock(label, value ?: 0), weighted())
             }
             repeat(3 - rowValues.size) {
                 row.addView(View(requireContext()), weighted())
@@ -159,20 +158,19 @@ class AdminDashboardFragment : Fragment() {
         }
     }
 
-    private fun kpiBlock(label: String, value: Int, accent: Int): View =
+    private fun kpiBlock(label: String, value: Int): View =
         LinearLayout(requireContext()).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(10))
             background = GradientDrawable().apply {
                 setColor(if (label == "Alertes stock" && value > 0) StaffUi.SOFT_CORAL else StaffUi.SURFACE)
-                cornerRadius = dp(8).toFloat()
-                setStroke(dp(2), accent)
+                cornerRadius = dp(6).toFloat()
+                setStroke(dp(1), StaffUi.BORDER)
             }
             addView(TextView(requireContext()).apply {
                 text = value.toString()
                 textSize = 22f
-                tag = "keep-color"
-                setTextColor(accent)
+                setTextColor(if (label == "Alertes stock" && value > 0) StaffUi.DANGER else StaffUi.PRIMARY_DARK)
                 setTypeface(typeface, android.graphics.Typeface.BOLD)
             })
             addView(TextView(requireContext()).apply {
@@ -189,25 +187,15 @@ class AdminDashboardFragment : Fragment() {
             addView(second, weighted())
         }
 
-    private fun actionButton(label: String, accentTag: String? = null, action: () -> Unit): Button =
+    private fun actionButton(label: String, action: () -> Unit): Button =
         Button(requireContext()).apply {
             text = label
-            tag = accentTag
             setOnClickListener { action() }
         }
 
-    private fun navButton(label: String, fragment: Fragment, accentTag: String): Button {
-        return actionButton(label, accentTag) { (activity as? AdminActivity)?.naviguerVers(fragment) }
+    private fun navButton(label: String, fragment: Fragment): Button {
+        return actionButton(label) { (activity as? AdminActivity)?.naviguerVers(fragment) }
     }
-
-    private fun sectionTitle(label: String): TextView =
-        TextView(requireContext()).apply {
-            text = label
-            textSize = 18f
-            setTextColor(StaffUi.INK)
-            setTypeface(typeface, android.graphics.Typeface.BOLD)
-            setPadding(0, dp(20), 0, dp(8))
-        }
 
     private fun confirmLogout() {
         AlertDialog.Builder(requireContext())

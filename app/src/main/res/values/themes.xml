@@ -1,28 +1,15 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
     <style name="Base.Theme.Vaccinkid" parent="Theme.Material3.DayNight.NoActionBar">
-        <item name="colorPrimary">@color/primary_medical</item>
+        <item name="colorPrimary">@color/staff_primary</item>
         <item name="colorOnPrimary">@color/white</item>
-        <item name="colorPrimaryContainer">@color/primary_container</item>
-        <item name="colorOnPrimaryContainer">@color/on_primary_container</item>
-        <item name="colorSecondary">@color/secondary_warm</item>
-        <item name="colorOnSecondary">@color/white</item>
-        <item name="colorSecondaryContainer">@color/secondary_container</item>
-        <item name="colorOnSecondaryContainer">@color/on_secondary_container</item>
-        <item name="colorTertiary">@color/tertiary_admin</item>
-        <item name="colorOnTertiary">@color/white</item>
-        <item name="colorTertiaryContainer">@color/tertiary_container</item>
-        <item name="colorOnTertiaryContainer">@color/on_tertiary_container</item>
+        <item name="colorPrimaryContainer">@color/brand_teal_light</item>
+        <item name="colorSecondary">@color/staff_secondary</item>
+        <item name="colorTertiary">@color/brand_rose</item>
         <item name="colorSurface">@color/bg_card</item>
         <item name="colorOnSurface">@color/text_primary</item>
-        <item name="colorSurfaceVariant">@color/surface_variant</item>
-        <item name="colorOnSurfaceVariant">@color/on_surface_variant</item>
-        <item name="colorOutline">@color/outline_strong</item>
         <item name="colorError">@color/error</item>
-        <item name="colorOnError">@color/white</item>
-        <item name="colorErrorContainer">@color/error_light</item>
-        <item name="colorOnErrorContainer">@color/error_dark</item>
-        <item name="android:colorAccent">@color/primary_medical</item>
+        <item name="android:colorAccent">@color/staff_primary</item>
         <item name="android:windowLightStatusBar">false</item>
         <item name="android:statusBarColor">@color/staff_primary_dark</item>
         <item name="android:navigationBarColor">@color/staff_surface</item>
