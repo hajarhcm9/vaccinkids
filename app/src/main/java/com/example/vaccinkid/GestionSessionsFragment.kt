@@ -8,6 +8,8 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
+import android.widget.ArrayAdapter
+import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
 import androidx.core.view.setPadding
@@ -15,14 +17,18 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.vaccinkid.model.AdminCentreDto
 import com.example.vaccinkid.model.SessionDto
 import com.example.vaccinkid.model.SessionRequest
+import com.example.vaccinkid.model.VaccinDto
 import com.example.vaccinkid.network.ApiClient
 import kotlinx.coroutines.launch
 
 class GestionSessionsFragment : Fragment() {
     private lateinit var messageView: TextView
     private lateinit var adapter: AdminSessionAdapter
+    private var centres: List<AdminCentreDto> = emptyList()
+    private var vaccins: List<VaccinDto> = emptyList()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         adapter = AdminSessionAdapter(
@@ -61,6 +67,7 @@ class GestionSessionsFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         StaffUi.decorateScreen(view)
         loadSessions()
+        loadReferences()
     }
 
     private fun loadSessions() {
@@ -80,12 +87,29 @@ class GestionSessionsFragment : Fragment() {
     }
 
     private fun showForm(item: SessionDto?) {
+        if (centres.isEmpty() || vaccins.isEmpty()) {
+            messageView.text = "Chargement des centres et vaccins requis..."
+            loadReferences()
+            return
+        }
         val root = LinearLayout(requireContext()).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(24)
         }
-        val centre = edit("Centre ID").also { it.setText(item?.centreId?.toString() ?: "") }
-        val vaccin = edit("Vaccin ID").also { it.setText(item?.vaccinId?.toString() ?: "") }
+        val availableCentres = centres.filter { it.estActif != false || it.id == item?.centreId }
+        val availableVaccins = vaccins.filter { it.estActif != false || it.id == item?.vaccinId }
+        val centre = selector(
+            availableCentres.map {
+                "${it.nom ?: "Centre #${it.id}"}${if (it.estActif == false) " (inactif)" else ""}"
+            },
+            availableCentres.indexOfFirst { it.id == item?.centreId }
+        )
+        val vaccin = selector(
+            availableVaccins.map {
+                "${it.nom ?: "Vaccin #${it.id}"}${if (it.estActif == false) " (inactif)" else ""}"
+            },
+            availableVaccins.indexOfFirst { it.id == item?.vaccinId }
+        )
         val date = edit("Date YYYY-MM-DD").also { it.setText(item?.dateSession?.take(10) ?: "") }
         val debut = edit("Heure debut HH:MM").also { it.setText(item?.heureDebut?.take(5) ?: "") }
         val fin = edit("Heure fin HH:MM").also { it.setText(item?.heureFin?.take(5) ?: "") }
@@ -98,8 +122,8 @@ class GestionSessionsFragment : Fragment() {
             .setNegativeButton("Annuler", null)
             .setPositiveButton("Valider") { _, _ ->
                 val request = SessionRequest(
-                    centreId = centre.text.toString().trim().toIntOrNull(),
-                    vaccinId = vaccin.text.toString().trim().toIntOrNull(),
+                    centreId = availableCentres.getOrNull(centre.selectedItemPosition)?.id,
+                    vaccinId = availableVaccins.getOrNull(vaccin.selectedItemPosition)?.id,
                     dateSession = date.text.toString().trim(),
                     heureDebut = debut.text.toString().trim(),
                     heureFin = fin.text.toString().trim(),
@@ -148,6 +172,35 @@ class GestionSessionsFragment : Fragment() {
     }
 
     private fun edit(hintText: String): EditText = EditText(requireContext()).apply { hint = hintText }
+
+    private fun selector(labels: List<String>, selectedIndex: Int): Spinner =
+        Spinner(requireContext()).apply {
+            adapter = ArrayAdapter(
+                requireContext(),
+                android.R.layout.simple_spinner_dropdown_item,
+                labels
+            )
+            setSelection(selectedIndex.coerceAtLeast(0))
+        }
+
+    private fun loadReferences() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                val centreResponse = ApiClient.apiService.getAdminCentres(limit = 100)
+                val vaccinResponse = ApiClient.apiService.getVaccins(all = true)
+                if (centreResponse.status != "success" || vaccinResponse.status != "success") {
+                    throw Exception("References indisponibles")
+                }
+                centres = centreResponse.data?.centres.orEmpty()
+                vaccins = vaccinResponse.data.orEmpty()
+                if (centres.isEmpty() || vaccins.isEmpty()) {
+                    messageView.text = "Un centre actif et un vaccin actif sont requis."
+                }
+            } catch (e: Exception) {
+                messageView.text = e.message ?: "Impossible de charger les centres et vaccins."
+            }
+        }
+    }
 }
 
 private class AdminSessionAdapter(

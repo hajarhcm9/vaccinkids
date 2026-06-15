@@ -18,7 +18,7 @@
 
     <item
         android:id="@+id/nav_queue"
-        android:icon="@android:drawable/ic_menu_sort_by_size"
+        android:icon="@drawable/ic_queue_people"
         android:title="File" />
 
 </menu>

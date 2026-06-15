@@ -5,6 +5,8 @@ import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
+import android.widget.ArrayAdapter
+import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -12,10 +14,12 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.vaccinkid.model.AdminCentreDto
 import com.example.vaccinkid.model.StockDto
 import com.example.vaccinkid.model.StockMovementDto
 import com.example.vaccinkid.model.UpdateStockRequest
 import com.example.vaccinkid.model.UpsertStockRequest
+import com.example.vaccinkid.model.VaccinDto
 import com.example.vaccinkid.network.ApiClient
 import com.example.vaccinkid.network.TokenManager
 import com.example.vaccinkid.viewmodel.StockViewModel
@@ -25,7 +29,9 @@ class GestionStocksActivity : AppCompatActivity() {
     private lateinit var viewModel: StockViewModel
     private lateinit var adapter: StockAdapter
     private lateinit var movementAdapter: StockMovementAdapter
-    private lateinit var centreInput: EditText
+    private lateinit var centreInput: Spinner
+    private var centres: List<AdminCentreDto> = emptyList()
+    private var vaccins: List<VaccinDto> = emptyList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,9 +49,7 @@ class GestionStocksActivity : AppCompatActivity() {
             layoutManager = LinearLayoutManager(this@GestionStocksActivity)
             adapter = movementAdapter
         }
-        centreInput = findViewById<EditText>(R.id.inputCentreStock).apply {
-            setText(TokenManager.getCentreId()?.toString() ?: "")
-        }
+        centreInput = findViewById(R.id.inputCentreStock)
         findViewById<Button>(R.id.btnChargerStock).setOnClickListener {
             loadForSelectedCentre()
         }
@@ -67,15 +71,15 @@ class GestionStocksActivity : AppCompatActivity() {
                 }
             )
         }
-        loadForSelectedCentre()
+        loadReferences()
     }
 
-    private fun selectedCentreId(): Int? = centreInput.text.toString().trim().toIntOrNull()
+    private fun selectedCentreId(): Int? = centres.getOrNull(centreInput.selectedItemPosition)?.id
 
     private fun loadForSelectedCentre() {
         val centreId = selectedCentreId()
         if (centreId == null) {
-            Toast.makeText(this, "Centre ID obligatoire", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, "Selectionnez un centre", Toast.LENGTH_LONG).show()
             return
         }
         viewModel.loadStock(centreId)
@@ -100,9 +104,13 @@ class GestionStocksActivity : AppCompatActivity() {
 
     private fun showUpsertDialog() {
         if (TokenManager.getUserRole() != "admin") return
+        if (centres.isEmpty() || vaccins.isEmpty()) {
+            Toast.makeText(this, "Centres et vaccins indisponibles", Toast.LENGTH_LONG).show()
+            return
+        }
         val root = formRoot()
-        val centre = edit("Centre ID").also { it.setText(selectedCentreId()?.toString() ?: "") }
-        val vaccin = edit("Vaccin ID")
+        val centre = selector(centres.map { it.nom ?: "Centre #${it.id}" }, centreInput.selectedItemPosition)
+        val vaccin = selector(vaccins.map { it.nom ?: "Vaccin #${it.id}" })
         val quantite = edit("Quantite")
         val seuil = edit("Seuil alerte")
         val motif = edit("Motif")
@@ -116,15 +124,15 @@ class GestionStocksActivity : AppCompatActivity() {
                     try {
                         val response = ApiClient.apiService.upsertStock(
                             UpsertStockRequest(
-                                centre.text.toString().toInt(),
-                                vaccin.text.toString().toInt(),
+                                centres[centre.selectedItemPosition].id,
+                                vaccins[vaccin.selectedItemPosition].id,
                                 quantite.text.toString().toInt(),
                                 seuil.text.toString().toIntOrNull(),
                                 motif.text.toString().ifBlank { null }
                             )
                         )
                         if (response.status != "success") throw Exception(response.message ?: "Stock refuse")
-                        centreInput.setText(centre.text.toString())
+                        centreInput.setSelection(centre.selectedItemPosition)
                         loadForSelectedCentre()
                     } catch (e: Exception) {
                         Toast.makeText(this@GestionStocksActivity, e.message ?: "Erreur", Toast.LENGTH_LONG).show()
@@ -158,7 +166,7 @@ class GestionStocksActivity : AppCompatActivity() {
                         )
                         if (response.status != "success") throw Exception(response.message ?: "Stock refuse")
                         stock.centreId?.let {
-                            centreInput.setText(it.toString())
+                            centreInput.setSelection(centres.indexOfFirst { centre -> centre.id == it }.coerceAtLeast(0))
                             loadForSelectedCentre()
                         }
                     } catch (e: Exception) {
@@ -177,6 +185,52 @@ class GestionStocksActivity : AppCompatActivity() {
     }
 
     private fun edit(hintText: String): EditText = EditText(this).apply { hint = hintText }
+
+    private fun selector(labels: List<String>, selectedIndex: Int = 0): Spinner =
+        Spinner(this).apply {
+            adapter = ArrayAdapter(
+                this@GestionStocksActivity,
+                android.R.layout.simple_spinner_dropdown_item,
+                labels
+            )
+            setSelection(selectedIndex.coerceAtLeast(0))
+        }
+
+    private fun loadReferences() {
+        lifecycleScope.launch {
+            try {
+                if (TokenManager.getUserRole() != "admin") {
+                    val assignedCentre = TokenManager.getCentreId()
+                        ?: throw Exception("Aucun centre affecte")
+                    centres = listOf(AdminCentreDto(id = assignedCentre, nom = "Centre affecte"))
+                    centreInput.adapter = ArrayAdapter(
+                        this@GestionStocksActivity,
+                        android.R.layout.simple_spinner_dropdown_item,
+                        listOf("Centre affecte")
+                    )
+                    loadForSelectedCentre()
+                    return@launch
+                }
+                val centreResponse = ApiClient.apiService.getAdminCentres(limit = 100)
+                val vaccinResponse = ApiClient.apiService.getVaccins(all = true)
+                if (centreResponse.status != "success" || vaccinResponse.status != "success") {
+                    throw Exception("References indisponibles")
+                }
+                centres = centreResponse.data?.centres.orEmpty().filter { it.estActif != false }
+                vaccins = vaccinResponse.data.orEmpty().filter { it.estActif != false }
+                centreInput.adapter = ArrayAdapter(
+                    this@GestionStocksActivity,
+                    android.R.layout.simple_spinner_dropdown_item,
+                    centres.map { it.nom ?: "Centre #${it.id}" }
+                )
+                val assignedCentre = TokenManager.getCentreId()
+                centreInput.setSelection(centres.indexOfFirst { it.id == assignedCentre }.coerceAtLeast(0))
+                loadForSelectedCentre()
+            } catch (e: Exception) {
+                Toast.makeText(this@GestionStocksActivity, e.message ?: "References indisponibles", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
 }
 
 class StockMovementAdapter : RecyclerView.Adapter<StockMovementAdapter.ViewHolder>() {

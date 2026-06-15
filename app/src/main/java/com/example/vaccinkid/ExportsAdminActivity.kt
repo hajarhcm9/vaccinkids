@@ -14,6 +14,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
 import androidx.lifecycle.lifecycleScope
 import com.example.vaccinkid.network.ApiClient
+import com.example.vaccinkid.model.AdminCentreDto
 import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -23,7 +24,8 @@ import okhttp3.Request
 class ExportsAdminActivity : AppCompatActivity() {
     private lateinit var typeSpinner: Spinner
     private lateinit var formatSpinner: Spinner
-    private lateinit var centreInput: EditText
+    private lateinit var centreInput: Spinner
+    private var centres: List<AdminCentreDto> = emptyList()
     private lateinit var startInput: EditText
     private lateinit var endInput: EditText
     private lateinit var statusView: TextView
@@ -48,7 +50,7 @@ class ExportsAdminActivity : AppCompatActivity() {
         formatSpinner = Spinner(this).apply {
             adapter = ArrayAdapter(this@ExportsAdminActivity, android.R.layout.simple_spinner_dropdown_item, listOf("pdf", "excel"))
         }
-        centreInput = edit("Centre ID optionnel")
+        centreInput = Spinner(this)
         startInput = edit("Date debut YYYY-MM-DD")
         endInput = edit("Date fin YYYY-MM-DD")
         statusView = TextView(this)
@@ -58,6 +60,7 @@ class ExportsAdminActivity : AppCompatActivity() {
         }
         listOf(typeSpinner, formatSpinner, centreInput, startInput, endInput, exportButton, statusView).forEach { root.addView(it) }
         StaffUi.decorateScreen(root)
+        loadCentres()
     }
 
     private fun exportSelected() {
@@ -75,7 +78,7 @@ class ExportsAdminActivity : AppCompatActivity() {
 
     private fun queryString(): String {
         val params = mutableListOf<String>()
-        centreInput.text.toString().trim().ifBlank { null }?.let { params.add("centre_id=$it") }
+        centres.getOrNull(centreInput.selectedItemPosition - 1)?.id?.let { params.add("centre_id=$it") }
         startInput.text.toString().trim().ifBlank { null }?.let { params.add("date_debut=$it") }
         endInput.text.toString().trim().ifBlank { null }?.let { params.add("date_fin=$it") }
         return if (params.isEmpty()) "" else params.joinToString("&", prefix = "?")
@@ -128,4 +131,21 @@ class ExportsAdminActivity : AppCompatActivity() {
     }
 
     private fun edit(hintText: String): EditText = EditText(this).apply { hint = hintText }
+
+    private fun loadCentres() {
+        lifecycleScope.launch {
+            try {
+                val response = ApiClient.apiService.getAdminCentres(limit = 100)
+                if (response.status != "success") throw Exception(response.message ?: "Centres indisponibles")
+                centres = response.data?.centres.orEmpty()
+                centreInput.adapter = ArrayAdapter(
+                    this@ExportsAdminActivity,
+                    android.R.layout.simple_spinner_dropdown_item,
+                    listOf("Tous les centres") + centres.map { it.nom ?: "Centre #${it.id}" }
+                )
+            } catch (e: Exception) {
+                statusView.text = e.message ?: "Centres indisponibles"
+            }
+        }
+    }
 }

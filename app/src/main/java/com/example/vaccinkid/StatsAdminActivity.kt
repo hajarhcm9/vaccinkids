@@ -5,18 +5,22 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.ScrollView
+import android.widget.ArrayAdapter
+import android.widget.Spinner
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.setPadding
 import androidx.lifecycle.lifecycleScope
 import com.example.vaccinkid.model.ApiResponse
+import com.example.vaccinkid.model.AdminCentreDto
 import com.example.vaccinkid.network.ApiClient
 import kotlinx.coroutines.launch
 
 class StatsAdminActivity : AppCompatActivity() {
     private lateinit var content: LinearLayout
     private lateinit var messageView: TextView
-    private lateinit var centreInput: EditText
+    private lateinit var centreInput: Spinner
+    private var centres: List<AdminCentreDto> = emptyList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,17 +37,14 @@ class StatsAdminActivity : AppCompatActivity() {
         })
         messageView = TextView(this).apply { setPadding(0, 8, 0, 8) }
         content.addView(messageView)
-        centreInput = EditText(this).apply {
-            hint = "Centre ID optionnel"
-            inputType = android.text.InputType.TYPE_CLASS_NUMBER
-        }
+        centreInput = Spinner(this)
         content.addView(centreInput)
         content.addView(Button(this).apply {
             text = "Rafraichir"
             setOnClickListener { loadStats() }
         })
         StaffUi.decorateScreen(content)
-        loadStats()
+        loadCentres()
     }
 
     private fun loadStats() {
@@ -51,7 +52,7 @@ class StatsAdminActivity : AppCompatActivity() {
         while (content.childCount > 4) content.removeViewAt(4)
         lifecycleScope.launch {
             try {
-                val centreId = centreInput.text.toString().trim().toIntOrNull()
+                val centreId = centres.getOrNull(centreInput.selectedItemPosition - 1)?.id
                 val dashboard = requireStats(ApiClient.apiService.getStatsDashboard(centreId), "Dashboard")
                 val coverage = requireStats(ApiClient.apiService.getStatsCouverture(centreId), "Couverture")
                 val sessions = requireStats(ApiClient.apiService.getStatsSessions(centreId), "Sessions")
@@ -105,6 +106,24 @@ class StatsAdminActivity : AppCompatActivity() {
             is Map<*, *> -> value.entries.take(12).joinToString(" | ") { "${it.key}=${formatValue(it.value)}" }
             null -> "-"
             else -> value.toString()
+        }
+    }
+
+    private fun loadCentres() {
+        lifecycleScope.launch {
+            try {
+                val response = ApiClient.apiService.getAdminCentres(limit = 100)
+                if (response.status != "success") throw Exception(response.message ?: "Centres indisponibles")
+                centres = response.data?.centres.orEmpty()
+                centreInput.adapter = ArrayAdapter(
+                    this@StatsAdminActivity,
+                    android.R.layout.simple_spinner_dropdown_item,
+                    listOf("Tous les centres") + centres.map { it.nom ?: "Centre #${it.id}" }
+                )
+                loadStats()
+            } catch (e: Exception) {
+                messageView.text = e.message ?: "Centres indisponibles"
+            }
         }
     }
 }

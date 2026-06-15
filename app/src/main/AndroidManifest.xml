@@ -26,6 +26,11 @@
             </intent-filter>
         </activity>
 
+        <!-- Diagnostic debug, non exporte -->
+        <activity
+            android:name=".ApiDiagnosticsActivity"
+            android:exported="false" />
+
         <!-- Login Infirmier -->
         <activity
             android:name=".LoginInfirmierActivity"

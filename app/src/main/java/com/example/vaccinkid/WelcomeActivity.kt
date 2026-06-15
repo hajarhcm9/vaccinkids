@@ -18,5 +18,13 @@ class WelcomeActivity : AppCompatActivity() {
         findViewById<Button>(R.id.btnAccesAdmin).setOnClickListener {
             startActivity(Intent(this, MainActivity::class.java))
         }
+
+        // Acces rapide au diagnostic uniquement en debug.
+        if (BuildConfig.DEBUG) {
+            findViewById<Button>(R.id.btnAccesInfirmier).setOnLongClickListener {
+                startActivity(Intent(this, ApiDiagnosticsActivity::class.java))
+                true
+            }
+        }
     }
 }
