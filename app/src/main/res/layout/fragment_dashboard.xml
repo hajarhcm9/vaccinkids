@@ -1,27 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.core.widget.NestedScrollView
-    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F5F5F5"
-    tools:context=".DashboardFragment">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
 
-        <!-- En-tête orange -->
         <LinearLayout
-            android:id="@+id/llHeader"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:background="#FF6B35"
-            android:padding="16dp">
 
             <LinearLayout
                 android:layout_width="0dp"
@@ -30,369 +19,102 @@
                 android:orientation="vertical">
 
                 <TextView
-                    android:id="@+id/tvHeaderTitle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Dashboard Infirmier"
-                    android:textColor="@android:color/white"
-                    android:textStyle="bold"
-                    android:textSize="16sp" />
 
                 <TextView
-                    android:id="@+id/tvHeaderDate"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="15 janvier 2026"
-                    android:textColor="#FFEBE0"
-                    android:textSize="12sp" />
-
             </LinearLayout>
 
-            <ImageView
-                android:id="@+id/ivEdit"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:src="@drawable/ic_edit"
-                android:tint="@android:color/white"
-                android:contentDescription="@string/edit" />
 
         </LinearLayout>
 
-        <!-- Compteurs -->
-        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:padding="12dp">
 
-            <androidx.cardview.widget.CardView
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_margin="4dp"
-                app:cardCornerRadius="8dp"
-                app:cardElevation="2dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:gravity="center"
-                    android:padding="12dp">
-
-                    <TextView
-                        android:id="@+id/tvConfirmesCount"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="12"
-                        android:textSize="22sp"
-                        android:textStyle="bold"
-                        android:textColor="#FF6B35" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="RDV confirmés"
-                        android:textSize="11sp"
-                        android:textColor="#757575" />
 
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
                 </LinearLayout>
 
-            </androidx.cardview.widget.CardView>
-
-            <androidx.cardview.widget.CardView
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_margin="4dp"
-                app:cardCornerRadius="8dp"
-                app:cardElevation="2dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:gravity="center"
-                    android:padding="12dp">
-
-                    <TextView
-                        android:id="@+id/tvPresentsCount"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="5"
-                        android:textSize="22sp"
-                        android:textStyle="bold"
-                        android:textColor="#4CAF50" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Présents"
-                        android:textSize="11sp"
-                        android:textColor="#757575" />
 
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
                 </LinearLayout>
 
-            </androidx.cardview.widget.CardView>
-
-            <androidx.cardview.widget.CardView
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_margin="4dp"
-                app:cardCornerRadius="8dp"
-                app:cardElevation="2dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:gravity="center"
-                    android:padding="12dp">
-
-                    <TextView
-                        android:id="@+id/tvEnAttenteCount"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="3"
-                        android:textSize="22sp"
-                        android:textStyle="bold"
-                        android:textColor="#FFC107" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="En attente"
-                        android:textSize="11sp"
-                        android:textColor="#757575" />
 
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
                 </LinearLayout>
 
-            </androidx.cardview.widget.CardView>
 
-        </LinearLayout>
-
-        <!-- Alertes -->
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:paddingStart="12dp"
-            android:paddingEnd="12dp"
-            android:paddingBottom="8dp">
 
             <TextView
-                android:id="@+id/chipAbsents"
-                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginEnd="4dp"
-                android:background="@drawable/bg_chip_amber"
-                android:text="2 absents"
-                android:textStyle="bold"
-                android:textColor="#212121"
-                android:textSize="12sp"
-                android:padding="10dp"
-                android:gravity="center" />
 
             <TextView
-                android:id="@+id/chipStockBas"
-                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginStart="4dp"
-                android:background="@drawable/bg_chip_amber"
-                android:text="⚠ Stock bas: DTCoq"
-                android:textStyle="bold"
-                android:textColor="#212121"
-                android:textSize="12sp"
-                android:padding="10dp"
-                android:gravity="center" />
-
         </LinearLayout>
 
-        <!-- Boutons rafraîchir / notifications -->
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+
+                android:layout_height="wrap_content"
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:paddingStart="12dp"
-            android:paddingEnd="12dp"
-            android:paddingBottom="8dp">
 
-            <Button
-                android:id="@+id/btnRafraichir"
-                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:layout_marginEnd="4dp"
-                android:text="🔄 Rafraîchir"
-                android:textColor="#FF6B35"
-                app:strokeColor="#FF6B35" />
 
-            <Button
-                android:id="@+id/btnNotifications"
-                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:layout_marginStart="4dp"
-                android:text="🔔 Notifications"
-                android:textColor="#2196F3"
-                app:strokeColor="#2196F3" />
-
-        </LinearLayout>
-
-        <!-- Raccourcis -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:paddingStart="12dp"
-            android:paddingEnd="12dp"
-            android:paddingBottom="12dp">
-
-            <LinearLayout
-                android:id="@+id/btnShortcutRdv"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:gravity="center"
-                android:padding="8dp"
-                android:background="?attr/selectableItemBackground"
-                android:clickable="true"
-                android:focusable="true">
-
-                <ImageView
-                    android:layout_width="28dp"
-                    android:layout_height="28dp"
-                    android:src="@drawable/ic_rdv"
-                    android:contentDescription="@string/rdv" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="RDV"
-                    android:textSize="12sp"
-                    android:textColor="#757575" />
-
             </LinearLayout>
 
-            <LinearLayout
-                android:id="@+id/btnShortcutFile"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:gravity="center"
-                android:padding="8dp"
-                android:background="?attr/selectableItemBackground"
-                android:clickable="true"
-                android:focusable="true">
 
-                <ImageView
-                    android:layout_width="28dp"
-                    android:layout_height="28dp"
-                    android:src="@drawable/ic_queue"
-                    android:contentDescription="@string/file" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="File"
-                    android:textSize="12sp"
-                    android:textColor="#757575" />
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/btnShortcutScan"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:gravity="center"
-                android:padding="8dp"
-                android:background="?attr/selectableItemBackground"
-                android:clickable="true"
-                android:focusable="true">
-
-                <ImageView
-                    android:layout_width="28dp"
-                    android:layout_height="28dp"
-                    android:src="@drawable/ic_scan"
-                    android:contentDescription="@string/scan" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Scan"
-                    android:textSize="12sp"
-                    android:textColor="#757575" />
-
-            </LinearLayout>
-
-        </LinearLayout>
-
-        <!-- Sessions du jour -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
-            android:layout_marginBottom="4dp"
-            android:text="Sessions du jour"
-            android:textStyle="bold"
-            android:textSize="14sp"
-            android:textColor="#212121" />
-
-        <androidx.cardview.widget.CardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_margin="12dp"
-            app:cardCornerRadius="8dp"
-            app:cardElevation="2dp"
-            app:cardBackgroundColor="#FFF3E0">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="12dp">
 
                 <TextView
-                    android:id="@+id/tvSessionCentre"
-                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="DTCoq - Centre Rabat"
-                    android:textStyle="bold"
-                    android:textSize="14sp"
-                    android:textColor="#212121" />
-
-                <TextView
-                    android:id="@+id/tvSessionHoraires"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:text="09:00-12:00 | 12/20"
-                    android:textSize="12sp"
-                    android:textColor="#757575" />
-
-                <ProgressBar
-                    android:id="@+id/progressSession"
-                    style="?android:attr/progressBarStyleHorizontal"
-                    android:layout_width="match_parent"
-                    android:layout_height="6dp"
-                    android:layout_marginTop="8dp"
-                    android:max="20"
-                    android:progress="12"
-                    android:progressTint="#FF6B35" />
-
             </LinearLayout>
-
-        </androidx.cardview.widget.CardView>
-
-    </LinearLayout>
-
 </androidx.core.widget.NestedScrollView>
