@@ -43,6 +43,7 @@ Un ecran modernise doit :
 | --- | --- | --- | --- |
 | UI-01 | Dashboard infirmier | KPI, alerte stock, actions rapides, sessions, pull-to-refresh | Implemente, recette appareil requise |
 | UI-02 | RDV infirmier | Recherche, filtres comptes, statuts, actions contextuelles | Implemente, recette appareil requise |
+| UI-02b | Scan QR | Viseur sombre, camera reelle, validation serveur | Implemente, recette appareil requise |
 | UI-03 | Vaccination | Formulaire Material, validation inline, confirmation serveur | A faire |
 | UI-04 | File d'attente | Separation en cours/en attente, appel et reprise | A faire |
 | UI-05 | Flacons et stock | Etats serveur lisibles, formulaires roles adaptes | A faire |
@@ -86,6 +87,13 @@ Ameliorations :
 - actions session, file et flacons conservees ;
 - pull-to-refresh, chargement, erreur et etat vide ;
 - test UI de la hierarchie essentielle.
+
+## Scan QR
+
+La composition sombre de `08_Screen_Scan.xml` est appliquee sans reprendre son scan
+simule ni son enfant fictif. L'ecran ouvre toujours le scanner reel, refuse localement les
+formats non securises, puis laisse l'API autoriser ou refuser l'acces au carnet. La saisie
+manuelle securisee reste disponible pour la recette et les cas d'accessibilite.
 
 ## Preuves requises avant fermeture UI-01
 

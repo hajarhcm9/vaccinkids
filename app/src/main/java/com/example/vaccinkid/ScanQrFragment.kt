@@ -184,6 +184,6 @@ class ScanQrFragment : Fragment() {
     private fun setLoading(isLoading: Boolean) {
         btnScanner.isEnabled = !isLoading
         btnSaisieManuelle.isEnabled = !isLoading
-        btnScanner.text = if (isLoading) "RECHERCHE..." else "SCANNER"
+        btnScanner.text = if (isLoading) "Recherche du carnet..." else "Ouvrir la caméra"
     }
 }

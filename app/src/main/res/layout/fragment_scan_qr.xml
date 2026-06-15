@@ -3,91 +3,77 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/bg_primary"
-    android:orientation="vertical">
+    android:background="@drawable/bg_gradient_dark"
+    android:gravity="center_horizontal"
+    android:orientation="vertical"
+    android:paddingHorizontal="24dp"
+    android:paddingTop="24dp"
+    android:paddingBottom="20dp">
 
-    <LinearLayout
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Scan QR Code"
+        android:textColor="@color/white"
+        android:textSize="24sp"
+        android:textStyle="bold" />
+
+    <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/bg_header_gradient"
-        android:orientation="vertical"
-        android:paddingHorizontal="24dp"
-        android:paddingTop="24dp"
-        android:paddingBottom="28dp">
+        android:layout_marginTop="6dp"
+        android:gravity="center"
+        android:text="Scannez le QR sécurisé du carnet de santé"
+        android:textColor="#BFFFFFFF"
+        android:textSize="14sp" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Scanner un carnet"
-            android:textAppearance="@style/TextAppearance.Vaccinkid.OnPrimary"
-            android:textSize="24sp" />
+    <FrameLayout
+        android:id="@+id/scanViewfinder"
+        android:layout_width="260dp"
+        android:layout_height="260dp"
+        android:layout_marginTop="38dp"
+        android:background="@drawable/bg_scan_viewfinder"
+        android:contentDescription="Zone de cadrage du QR code">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:text="Identifiez le bébé et ses rendez-vous éligibles"
-            android:textColor="#CCFFFFFF"
-            android:textSize="13sp" />
-    </LinearLayout>
+        <ImageView
+            android:layout_width="104dp"
+            android:layout_height="104dp"
+            android:layout_gravity="center"
+            android:contentDescription="QR sécurisé"
+            android:src="@drawable/ic_scan"
+            app:tint="@color/white" />
+    </FrameLayout>
 
-    <com.google.android.material.card.MaterialCardView
-        style="@style/Widget.Vaccinkid.Card"
+    <TextView
         android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="22dp"
+        android:gravity="center"
+        android:text="Alignez le code dans le cadre. L'accès au carnet sera validé par le serveur."
+        android:textColor="#99FFFFFF"
+        android:textSize="12sp" />
+
+    <Space
+        android:layout_width="1dp"
         android:layout_height="0dp"
-        android:layout_marginHorizontal="20dp"
-        android:layout_marginTop="18dp"
-        android:layout_marginBottom="18dp"
-        android:layout_weight="1"
-        app:cardCornerRadius="24dp"
-        app:cardElevation="4dp">
+        android:layout_weight="1" />
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:gravity="center"
-            android:orientation="vertical"
-            android:padding="20dp">
-
-            <FrameLayout
-                android:layout_width="220dp"
-                android:layout_height="220dp"
-                android:background="@drawable/bg_scan_zone">
-
-                <ImageView
-                    android:layout_width="72dp"
-                    android:layout_height="72dp"
-                    android:layout_gravity="center"
-                    android:contentDescription="Scanner QR"
-                    android:src="@android:drawable/ic_menu_camera"
-                    app:tint="@color/brand_teal" />
-            </FrameLayout>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
-                android:gravity="center"
-                android:text="Cadrez le QR code sécurisé du carnet parent"
-                android:textAppearance="@style/TextAppearance.Vaccinkid.Body" />
-        </LinearLayout>
-    </com.google.android.material.card.MaterialCardView>
-
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/btnScanner"
         style="@style/Widget.Vaccinkid.Button"
         android:layout_width="match_parent"
         android:layout_height="54dp"
-        android:layout_marginHorizontal="24dp"
-        android:text="Scanner le QR code" />
+        android:text="Ouvrir la caméra"
+        app:icon="@drawable/ic_scan"
+        app:iconTint="@color/white" />
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/btnSaisieManuelle"
-        style="@style/Widget.Vaccinkid.Button.Outlined"
+        style="@style/Widget.Material3.Button.OutlinedButton"
         android:layout_width="match_parent"
         android:layout_height="54dp"
-        android:layout_marginHorizontal="24dp"
         android:layout_marginTop="10dp"
-        android:layout_marginBottom="20dp"
-        android:text="Saisie manuelle sécurisée" />
+        android:text="Saisir un code sécurisé"
+        android:textColor="@color/white"
+        app:strokeColor="#80FFFFFF" />
 </LinearLayout>
