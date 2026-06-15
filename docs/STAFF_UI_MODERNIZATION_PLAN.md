@@ -13,6 +13,17 @@ systemes UI et augmenterait le risque sans ameliorer la logique metier.
 Les DTO, ViewModels, services API, controles RBAC et commandes cliniques sont conserves.
 Chaque ecran est remplace progressivement seulement apres ajout de preuves de test.
 
+## Reference visuelle officielle
+
+Les specifications XML fournies dans `VaccinKids-XML` sont la source visuelle de cette
+modernisation : design system, composants partages, navigation et composition des ecrans
+Dashboard, RDV, Scan, Attente, Plus et Vaccination.
+
+Elles restent des specifications de design. Les nombres, patients, rendez-vous, lots,
+notifications et interactions simulees qu'elles contiennent ne doivent jamais etre copies
+dans l'application runtime. Toutes les donnees visibles et toutes les confirmations
+cliniques doivent continuer a venir du backend.
+
 ## Regles de migration
 
 Un ecran modernise doit :
@@ -31,7 +42,7 @@ Un ecran modernise doit :
 | Lot | Ecran | Objectif | Statut |
 | --- | --- | --- | --- |
 | UI-01 | Dashboard infirmier | KPI, alerte stock, actions rapides, sessions, pull-to-refresh | Implemente, recette appareil requise |
-| UI-02 | RDV infirmier | Recherche, filtres, statuts, actions contextuelles | A faire |
+| UI-02 | RDV infirmier | Recherche, filtres comptes, statuts, actions contextuelles | Implemente, recette appareil requise |
 | UI-03 | Vaccination | Formulaire Material, validation inline, confirmation serveur | A faire |
 | UI-04 | File d'attente | Separation en cours/en attente, appel et reprise | A faire |
 | UI-05 | Flacons et stock | Etats serveur lisibles, formulaires roles adaptes | A faire |
@@ -58,6 +69,23 @@ Ameliorations :
 - tests UI du contenu operationnel et du pull-to-refresh.
 
 La logique API et le `DashboardViewModel` restent inchanges.
+
+## Deuxieme lot : Rendez-vous infirmier
+
+L'ecran RDV utilise maintenant un layout Material conforme a la composition de
+`07_Screen_RDV.xml`, adapte aux contraintes metier existantes.
+
+Ameliorations :
+
+- selection explicite de la session serveur ;
+- recherche locale par enfant, parent, telephone et vaccin ;
+- filtres de statut avec compteurs reels ;
+- cartes Material avec statut semantique et actions contextuelles ;
+- transitions de statut isolees et testees ;
+- succes affiche uniquement apres confirmation serveur ;
+- actions session, file et flacons conservees ;
+- pull-to-refresh, chargement, erreur et etat vide ;
+- test UI de la hierarchie essentielle.
 
 ## Preuves requises avant fermeture UI-01
 

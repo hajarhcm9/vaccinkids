@@ -1,165 +1,151 @@
 package com.example.vaccinkid
 
 import android.os.Bundle
-import android.view.Gravity
+import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
-import android.widget.Button
-import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
-import androidx.core.view.setPadding
+import androidx.core.content.ContextCompat
+import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.example.vaccinkid.model.RendezVousDto
 import com.example.vaccinkid.model.SessionDto
 import com.example.vaccinkid.model.UpdateRendezVousRequest
 import com.example.vaccinkid.network.ApiClient
+import com.google.android.material.button.MaterialButton
+import com.google.android.material.chip.Chip
+import com.google.android.material.chip.ChipGroup
+import com.google.android.material.textfield.TextInputEditText
 import kotlinx.coroutines.launch
 
-class RdvFragment : Fragment() {
+class RdvFragment : Fragment(R.layout.fragment_rdv) {
+    private lateinit var refreshView: SwipeRefreshLayout
     private lateinit var sessionSpinner: Spinner
-    private lateinit var statusSpinner: Spinner
+    private lateinit var statusFilters: ChipGroup
+    private lateinit var searchInput: TextInputEditText
     private lateinit var recyclerView: RecyclerView
     private lateinit var progress: ProgressBar
     private lateinit var messageView: TextView
     private lateinit var adapter: StaffRdvAdapter
-    private lateinit var queueButton: Button
-    private lateinit var vialsButton: Button
-    private lateinit var startButton: Button
-    private lateinit var endButton: Button
+    private lateinit var queueButton: MaterialButton
+    private lateinit var vialsButton: MaterialButton
+    private lateinit var startButton: MaterialButton
+    private lateinit var endButton: MaterialButton
+
     private var sessions: List<SessionDto> = emptyList()
+    private var rendezVous: List<RendezVousDto> = emptyList()
+    private var selectedStatus = ALL_STATUSES
     private var actionInFlight = false
-    private val statuses = listOf("Tous", "EN_ATTENTE", "CONFIRME", "PRESENT", "ABSENT")
-
-    override fun onCreateView(
-        inflater: android.view.LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        val root = LinearLayout(requireContext()).apply {
-            orientation = LinearLayout.VERTICAL
-            setBackgroundColor(StaffUi.BACKGROUND)
-        }
-
-        root.addView(TextView(requireContext()).apply {
-            text = "RDV par session"
-            textSize = 22f
-            setTextColor(StaffUi.INK)
-            setPadding(dp(16), dp(16), dp(16), dp(6))
-            setTypeface(typeface, android.graphics.Typeface.BOLD)
-        })
-
-        sessionSpinner = Spinner(requireContext())
-        statusSpinner = Spinner(requireContext())
-        progress = ProgressBar(requireContext()).apply { visibility = View.GONE }
-        messageView = TextView(requireContext()).apply {
-            setTextColor(0xFFC8550A.toInt())
-            setPadding(dp(16), dp(6), dp(16), dp(6))
-        }
-
-        root.addView(sessionSpinner, matchWrap())
-        root.addView(statusSpinner, matchWrap())
-
-        val actionRow = LinearLayout(requireContext()).apply {
-            orientation = LinearLayout.HORIZONTAL
-            setPadding(dp(16), dp(8), dp(16), dp(8))
-        }
-        actionRow.addView(button("Rafraichir") { loadSessions() }, weightWrap())
-        queueButton = button("File") {
-            (activity as? MainInfirmierActivity)?.naviguerVers(QueueFragment())
-        }
-        vialsButton = button("Flacons") { openFlacons() }
-        actionRow.addView(queueButton, weightWrap())
-        actionRow.addView(vialsButton, weightWrap())
-        root.addView(actionRow)
-
-        val sessionRow = LinearLayout(requireContext()).apply {
-            orientation = LinearLayout.HORIZONTAL
-            setPadding(dp(16), 0, dp(16), dp(8))
-        }
-        startButton = button("Demarrer") { updateSession(start = true) }
-        endButton = button("Terminer") { updateSession(start = false) }
-        sessionRow.addView(startButton, weightWrap())
-        sessionRow.addView(endButton, weightWrap())
-        root.addView(sessionRow)
-        updateSessionActions(null)
-
-        root.addView(progress, matchWrap())
-        root.addView(messageView, matchWrap())
-
-        recyclerView = RecyclerView(requireContext()).apply {
-            layoutManager = LinearLayoutManager(requireContext())
-        }
-        adapter = StaffRdvAdapter(
-            onPresent = { updateRdvStatus(it, "PRESENT") },
-            onAbsent = { updateRdvStatus(it, "ABSENT") },
-            onVaccinate = { openVaccination(it) },
-            onGrowth = { openGrowth(it) }
-        )
-        recyclerView.adapter = adapter
-        root.addView(recyclerView, LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            0,
-            1f
-        ))
-
-        statusSpinner.adapter = ArrayAdapter(
-            requireContext(),
-            android.R.layout.simple_spinner_dropdown_item,
-            statuses
-        )
-        statusSpinner.setOnItemSelectedListener(object : android.widget.AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: android.widget.AdapterView<*>?, view: View?, position: Int, id: Long) {
-                loadRdvForSelectedSession()
-            }
-            override fun onNothingSelected(parent: android.widget.AdapterView<*>?) = Unit
-        })
-
-        return root
-    }
+    private var loadingRequests = 0
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        StaffUi.decorateScreen(view)
+        bindViews(view)
+        bindActions()
+        setupStatusFilters()
         loadSessions()
+    }
+
+    private fun bindViews(view: View) {
+        refreshView = view.findViewById(R.id.rdvRefresh)
+        sessionSpinner = view.findViewById(R.id.rdvSessionSpinner)
+        statusFilters = view.findViewById(R.id.rdvStatusFilters)
+        searchInput = view.findViewById(R.id.rdvSearch)
+        recyclerView = view.findViewById(R.id.rdvList)
+        progress = view.findViewById(R.id.rdvProgress)
+        messageView = view.findViewById(R.id.rdvMessage)
+        queueButton = view.findViewById(R.id.rdvOpenQueue)
+        vialsButton = view.findViewById(R.id.rdvOpenVials)
+        startButton = view.findViewById(R.id.rdvStartSession)
+        endButton = view.findViewById(R.id.rdvEndSession)
+
+        adapter = StaffRdvAdapter(
+            onPresent = { updateRdvStatus(it, "PRESENT") },
+            onAbsent = { updateRdvStatus(it, "ABSENT") },
+            onVaccinate =(::openVaccination),
+            onGrowth =(::openGrowth)
+        )
+        recyclerView.layoutManager = LinearLayoutManager(requireContext())
+        recyclerView.adapter = adapter
+    }
+
+    private fun bindActions() {
+        refreshView.setColorSchemeResources(R.color.staff_primary, R.color.brand_coral, R.color.brand_blue)
+        refreshView.setOnRefreshListener(::loadSessions)
+        searchInput.doAfterTextChanged { applyFilters() }
+        queueButton.setOnClickListener {
+            (activity as? MainInfirmierActivity)?.naviguerVers(QueueFragment())
+        }
+        vialsButton.setOnClickListener { openFlacons() }
+        startButton.setOnClickListener { updateSession(start = true) }
+        endButton.setOnClickListener { updateSession(start = false) }
+        updateSessionActions(null)
+    }
+
+    private fun setupStatusFilters() {
+        STATUS_OPTIONS.forEach { status ->
+            statusFilters.addView(Chip(requireContext()).apply {
+                id = View.generateViewId()
+                text = statusLabel(status)
+                isCheckable = true
+                isChecked = status == ALL_STATUSES
+                tag = status
+            })
+        }
+        statusFilters.setOnCheckedStateChangeListener { group, checkedIds ->
+            val checkedChip = checkedIds.firstOrNull()?.let { group.findViewById<Chip>(it) }
+            selectedStatus = checkedChip?.tag as? String ?: ALL_STATUSES
+            applyFilters()
+        }
     }
 
     private fun loadSessions() {
         viewLifecycleOwner.lifecycleScope.launch {
-            setLoading(true, "Chargement des sessions du jour...")
+            beginLoading("Chargement des sessions du jour...")
             try {
                 val response = ApiClient.apiService.getTodaySessions()
-                sessions = response.data ?: emptyList()
                 if (response.status != "success") throw Exception(response.message ?: "Sessions indisponibles")
-                val labels = sessions.map { it.label() }.ifEmpty { listOf("Aucune session aujourd'hui") }
+                sessions = response.data.orEmpty()
                 sessionSpinner.adapter = ArrayAdapter(
                     requireContext(),
                     android.R.layout.simple_spinner_dropdown_item,
-                    labels
+                    sessions.map { it.label() }.ifEmpty { listOf("Aucune session aujourd'hui") }
                 )
-                sessionSpinner.setOnItemSelectedListener(object : android.widget.AdapterView.OnItemSelectedListener {
-                    override fun onItemSelected(parent: android.widget.AdapterView<*>?, view: View?, position: Int, id: Long) {
+                sessionSpinner.onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
+                    override fun onItemSelected(
+                        parent: android.widget.AdapterView<*>?,
+                        view: View?,
+                        position: Int,
+                        id: Long
+                    ) {
                         updateSessionActions(selectedSession())
                         loadRdvForSelectedSession()
                     }
+
                     override fun onNothingSelected(parent: android.widget.AdapterView<*>?) = Unit
-                })
-                if (sessions.isEmpty()) {
-                    adapter.submit(emptyList())
-                    updateSessionActions(null)
                 }
-                setLoading(false, if (sessions.isEmpty()) "Aucune session aujourd'hui." else "")
-            } catch (e: Exception) {
+                if (sessions.isEmpty()) {
+                    rendezVous = emptyList()
+                    applyFilters()
+                    updateSessionActions(null)
+                    messageView.text = "Aucune session aujourd'hui."
+                }
+            } catch (error: Exception) {
                 sessions = emptyList()
-                adapter.submit(emptyList())
+                rendezVous = emptyList()
+                applyFilters()
                 updateSessionActions(null)
-                setLoading(false, e.message ?: "Erreur reseau")
+                messageView.text = error.message ?: "Erreur reseau"
+            } finally {
+                endLoading()
             }
         }
     }
@@ -167,66 +153,105 @@ class RdvFragment : Fragment() {
     private fun loadRdvForSelectedSession() {
         val session = selectedSession() ?: return
         viewLifecycleOwner.lifecycleScope.launch {
-            setLoading(true, "Chargement des rendez-vous...")
+            beginLoading("Chargement des rendez-vous...")
             try {
                 val response = ApiClient.apiService.getSessionRendezVous(session.id)
-                val selectedStatus = statuses.getOrNull(statusSpinner.selectedItemPosition)
-                val items = (response.data ?: emptyList()).filter {
-                    selectedStatus == null || selectedStatus == "Tous" || it.statut == selectedStatus
-                }
                 if (response.status != "success") throw Exception(response.message ?: "RDV indisponibles")
-                adapter.submit(items)
-                setLoading(false, "${items.size} rendez-vous")
-            } catch (e: Exception) {
-                adapter.submit(emptyList())
-                setLoading(false, e.message ?: "Erreur reseau")
+                rendezVous = response.data.orEmpty()
+                applyFilters()
+            } catch (error: Exception) {
+                rendezVous = emptyList()
+                applyFilters()
+                messageView.text = error.message ?: "Erreur reseau"
+            } finally {
+                endLoading()
             }
         }
     }
 
-    private fun updateRdvStatus(rdv: RendezVousDto, statut: String) {
-        if (actionInFlight) return
-        val allowed = when (rdv.statut) {
-            "EN_ATTENTE" -> statut == "CONFIRME" || statut == "ABSENT"
-            "EN_LISTE_ATTENTE" -> statut == "CONFIRME"
-            "CONFIRME" -> statut == "PRESENT" || statut == "ABSENT"
-            else -> false
+    private fun applyFilters() {
+        updateStatusFilterCounts()
+        val query = searchInput.text?.toString().orEmpty().trim().lowercase()
+        val filtered = rendezVous.filter { rdv ->
+            val matchesStatus = selectedStatus == ALL_STATUSES || rdv.statut == selectedStatus
+            val searchable = listOf(
+                rdv.bebePrenom,
+                rdv.bebeNom,
+                rdv.parentPrenom,
+                rdv.parentNom,
+                rdv.parentTelephone,
+                rdv.vaccinNom
+            ).joinToString(" ").lowercase()
+            matchesStatus && (query.isBlank() || searchable.contains(query))
         }
-        if (!allowed) {
-            messageView.text = "Transition ${rdv.statut ?: "inconnue"} -> $statut interdite."
+        adapter.submit(filtered)
+        if (loadingRequests == 0) {
+            messageView.text = when {
+                sessions.isEmpty() -> "Aucune session aujourd'hui."
+                filtered.isEmpty() -> "Aucun rendez-vous pour ces filtres."
+                else -> "${filtered.size} rendez-vous affiche(s)"
+            }
+        }
+    }
+
+    private fun updateStatusFilterCounts() {
+        (0 until statusFilters.childCount)
+            .mapNotNull { statusFilters.getChildAt(it) as? Chip }
+            .forEach { chip ->
+                val status = chip.tag as? String ?: return@forEach
+                val count = if (status == ALL_STATUSES) {
+                    rendezVous.size
+                } else {
+                    rendezVous.count { it.statut == status }
+                }
+                chip.text = "${statusLabel(status)} $count"
+            }
+    }
+
+    private fun updateRdvStatus(rdv: RendezVousDto, status: String) {
+        if (actionInFlight) return
+        if (!RdvTransitionPolicy.allows(rdv.statut, status)) {
+            messageView.text = "Transition ${rdv.statut ?: "inconnue"} -> $status interdite."
             return
         }
         actionInFlight = true
+        adapter.setActionsEnabled(false)
         viewLifecycleOwner.lifecycleScope.launch {
-            setLoading(true, "Mise a jour $statut...")
+            beginLoading("Mise a jour ${statusLabel(status)}...")
             try {
-                val response = ApiClient.apiService.updateRendezVous(
-                    rdv.id,
-                    UpdateRendezVousRequest(statut)
-                )
+                val response = ApiClient.apiService.updateRendezVous(rdv.id, UpdateRendezVousRequest(status))
                 if (response.status != "success") throw Exception(response.message ?: "Mise a jour impossible")
                 Toast.makeText(requireContext(), "Statut confirme par le serveur", Toast.LENGTH_SHORT).show()
                 loadRdvForSelectedSession()
-            } catch (e: Exception) {
-                setLoading(false, e.message ?: "Erreur reseau")
+            } catch (error: Exception) {
+                messageView.text = error.message ?: "Erreur reseau"
             } finally {
                 actionInFlight = false
+                adapter.setActionsEnabled(true)
+                endLoading()
             }
         }
     }
 
     private fun updateSession(start: Boolean) {
+        if (actionInFlight) return
         val session = selectedSession() ?: return
+        actionInFlight = true
+        setSessionButtonsEnabled(false)
         viewLifecycleOwner.lifecycleScope.launch {
-            setLoading(true, if (start) "Demarrage session..." else "Cloture session...")
+            beginLoading(if (start) "Demarrage session..." else "Cloture session...")
             try {
                 val response = if (start) ApiClient.apiService.startSession(session.id)
                 else ApiClient.apiService.endSession(session.id)
                 if (response.status != "success") throw Exception(response.message ?: "Action session impossible")
                 Toast.makeText(requireContext(), "Session confirmee par le serveur", Toast.LENGTH_SHORT).show()
                 loadSessions()
-            } catch (e: Exception) {
-                setLoading(false, e.message ?: "Erreur reseau")
+            } catch (error: Exception) {
+                messageView.text = error.message ?: "Erreur reseau"
+            } finally {
+                actionInFlight = false
+                setSessionButtonsEnabled(true)
+                endLoading()
             }
         }
     }
@@ -240,16 +265,23 @@ class RdvFragment : Fragment() {
 
     private fun openVaccination(rdv: RendezVousDto) {
         val session = selectedSession() ?: return
-        val name = listOfNotNull(rdv.bebePrenom, rdv.bebeNom).joinToString(" ").ifBlank { "Bebe #${rdv.bebeId}" }
+        val name = listOfNotNull(rdv.bebePrenom, rdv.bebeNom).joinToString(" ")
+            .ifBlank { "Bebe #${rdv.bebeId}" }
         (activity as? MainInfirmierActivity)?.naviguerVers(
-            EnregistrementVaccinationFragment.newInstance(name, rdv.bebeId?.toString() ?: "", rdv.id, session.id)
+            EnregistrementVaccinationFragment.newInstance(
+                name,
+                rdv.bebeId?.toString() ?: "",
+                rdv.id,
+                session.id
+            )
         )
     }
 
     private fun openGrowth(rdv: RendezVousDto) {
-        val bebeId = rdv.bebeId ?: return
-        val name = listOfNotNull(rdv.bebePrenom, rdv.bebeNom).joinToString(" ").ifBlank { "Bebe #$bebeId" }
-        (activity as? MainInfirmierActivity)?.naviguerVers(GrowthChartFragment.newInstance(bebeId, name))
+        val babyId = rdv.bebeId ?: return
+        val name = listOfNotNull(rdv.bebePrenom, rdv.bebeNom).joinToString(" ")
+            .ifBlank { "Bebe #$babyId" }
+        (activity as? MainInfirmierActivity)?.naviguerVers(GrowthChartFragment.newInstance(babyId, name))
     }
 
     private fun selectedSession(): SessionDto? = sessions.getOrNull(sessionSpinner.selectedItemPosition)
@@ -262,37 +294,47 @@ class RdvFragment : Fragment() {
         endButton.visibility = if (status == "EN_COURS") View.VISIBLE else View.GONE
     }
 
-    private fun setLoading(isLoading: Boolean, message: String) {
-        progress.visibility = if (isLoading) View.VISIBLE else View.GONE
+    private fun setSessionButtonsEnabled(enabled: Boolean) {
+        startButton.isEnabled = enabled
+        endButton.isEnabled = enabled
+        queueButton.isEnabled = enabled
+        vialsButton.isEnabled = enabled
+    }
+
+    private fun beginLoading(message: String) {
+        loadingRequests += 1
+        progress.visibility = View.VISIBLE
+        refreshView.isRefreshing = true
         messageView.text = message
     }
 
-    private fun SessionDto.label(): String {
-        val vaccin = vaccinNom ?: "Vaccin #${vaccinId ?: "-"}"
-        val heure = heureDebut ?: "--:--"
-        val count = "${inscrits ?: 0}/${maxInscriptions ?: "?"}"
-        return "#$id - $vaccin - $heure - ${statut ?: "?"} - $count"
+    private fun endLoading() {
+        loadingRequests = (loadingRequests - 1).coerceAtLeast(0)
+        val loading = loadingRequests > 0
+        progress.visibility = if (loading) View.VISIBLE else View.GONE
+        refreshView.isRefreshing = loading
     }
 
-    private fun button(text: String, onClick: () -> Unit): Button =
-        Button(requireContext()).apply {
-            this.text = text
-            textSize = 12f
-            setOnClickListener { onClick() }
-        }
+    private fun SessionDto.label(): String {
+        val vaccine = vaccinNom ?: "Vaccin #${vaccinId ?: "-"}"
+        val hour = heureDebut ?: "--:--"
+        val count = "${inscrits ?: 0}/${maxInscriptions ?: "?"}"
+        return "$vaccine - $hour - ${statut ?: "?"} - $count"
+    }
 
-    private fun matchWrap() = LinearLayout.LayoutParams(
-        ViewGroup.LayoutParams.MATCH_PARENT,
-        ViewGroup.LayoutParams.WRAP_CONTENT
-    )
+    private fun statusLabel(status: String): String = when (status) {
+        ALL_STATUSES -> "Tous"
+        "EN_ATTENTE" -> "En attente"
+        "CONFIRME" -> "Confirmes"
+        "PRESENT" -> "Presents"
+        "ABSENT" -> "Absents"
+        else -> status
+    }
 
-    private fun weightWrap() = LinearLayout.LayoutParams(
-        0,
-        ViewGroup.LayoutParams.WRAP_CONTENT,
-        1f
-    ).apply { marginEnd = dp(4) }
-
-    private fun dp(value: Int) = (value * resources.displayMetrics.density).toInt()
+    companion object {
+        private const val ALL_STATUSES = "ALL"
+        private val STATUS_OPTIONS = listOf(ALL_STATUSES, "EN_ATTENTE", "CONFIRME", "PRESENT", "ABSENT")
+    }
 }
 
 private class StaffRdvAdapter(
@@ -302,84 +344,91 @@ private class StaffRdvAdapter(
     private val onGrowth: (RendezVousDto) -> Unit
 ) : RecyclerView.Adapter<StaffRdvAdapter.ViewHolder>() {
     private var items: List<RendezVousDto> = emptyList()
+    private var actionsEnabled = true
 
     fun submit(next: List<RendezVousDto>) {
         items = next
         notifyDataSetChanged()
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val root = LinearLayout(parent.context).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(24)
-            setBackgroundColor(0xFFFFFFFF.toInt())
-        }
-        return ViewHolder(root)
+    fun setActionsEnabled(enabled: Boolean) {
+        actionsEnabled = enabled
+        notifyDataSetChanged()
     }
 
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder =
+        ViewHolder(
+            LayoutInflater.from(parent.context).inflate(R.layout.item_staff_rdv, parent, false)
+        )
+
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val rdv = items[position]
-        holder.bind(rdv, onPresent, onAbsent, onVaccinate, onGrowth)
+        holder.bind(items[position], actionsEnabled, onPresent, onAbsent, onVaccinate, onGrowth)
     }
 
     override fun getItemCount() = items.size
 
-    class ViewHolder(private val root: LinearLayout) : RecyclerView.ViewHolder(root) {
+    class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        private val babyView: TextView = view.findViewById(R.id.staffRdvBaby)
+        private val metaView: TextView = view.findViewById(R.id.staffRdvMeta)
+        private val parentView: TextView = view.findViewById(R.id.staffRdvParent)
+        private val statusView: TextView = view.findViewById(R.id.staffRdvStatus)
+        private val presentButton: MaterialButton = view.findViewById(R.id.staffRdvPresent)
+        private val absentButton: MaterialButton = view.findViewById(R.id.staffRdvAbsent)
+        private val vaccinateButton: MaterialButton = view.findViewById(R.id.staffRdvVaccinate)
+        private val growthButton: MaterialButton = view.findViewById(R.id.staffRdvGrowth)
+
         fun bind(
             rdv: RendezVousDto,
+            actionsEnabled: Boolean,
             onPresent: (RendezVousDto) -> Unit,
             onAbsent: (RendezVousDto) -> Unit,
             onVaccinate: (RendezVousDto) -> Unit,
             onGrowth: (RendezVousDto) -> Unit
         ) {
-            root.removeAllViews()
-            StaffUi.styleCard(root)
-            val ctx = root.context
-            val name = listOfNotNull(rdv.bebePrenom, rdv.bebeNom).joinToString(" ").ifBlank { "Bebe #${rdv.bebeId}" }
+            val name = listOfNotNull(rdv.bebePrenom, rdv.bebeNom).joinToString(" ")
+                .ifBlank { "Bebe #${rdv.bebeId}" }
             val parent = listOfNotNull(rdv.parentPrenom, rdv.parentNom).joinToString(" ")
-                .ifBlank { rdv.parentTelephone ?: "Parent #${rdv.parentId}" }
-            root.addView(TextView(ctx).apply {
-                text = "$name - ${rdv.statut ?: "INCONNU"}"
-                textSize = 17f
-                setTypeface(typeface, android.graphics.Typeface.BOLD)
-            })
-            root.addView(TextView(ctx).apply {
-                text = "Parent : $parent | Tel : ${rdv.parentTelephone ?: "-"}"
-                textSize = 13f
-            })
-            root.addView(TextView(ctx).apply {
-                text = "RDV #${rdv.id} | Bebe #${rdv.bebeId ?: "-"}"
-                textSize = 12f
-            })
-            val row = LinearLayout(ctx).apply {
-                orientation = LinearLayout.HORIZONTAL
-                gravity = Gravity.CENTER_VERTICAL
+                .ifBlank { "Parent #${rdv.parentId}" }
+            babyView.text = name
+            metaView.text = listOfNotNull(rdv.heureDebut, rdv.vaccinNom, "RDV #${rdv.id}").joinToString(" - ")
+            parentView.text = "$parent - ${rdv.parentTelephone ?: "Telephone indisponible"}"
+            statusView.text = rdv.statut ?: "INCONNU"
+            styleStatus(rdv.statut)
+
+            bindAction(presentButton, actionsEnabled && RdvTransitionPolicy.allows(rdv.statut, "PRESENT")) {
+                onPresent(rdv)
             }
-            if (rdv.statut == "CONFIRME") {
-                row.addView(actionButton(ctx, "Present") { onPresent(rdv) })
+            bindAction(absentButton, actionsEnabled && RdvTransitionPolicy.allows(rdv.statut, "ABSENT")) {
+                onAbsent(rdv)
             }
-            if (rdv.statut == "CONFIRME" || rdv.statut == "EN_ATTENTE") {
-                row.addView(actionButton(ctx, "Absent") { onAbsent(rdv) })
+            bindAction(vaccinateButton, actionsEnabled && rdv.statut in listOf("PRESENT", "CONFIRME")) {
+                onVaccinate(rdv)
             }
-            if (rdv.statut == "PRESENT" || rdv.statut == "CONFIRME") {
-                row.addView(actionButton(ctx, "Vacciner") { onVaccinate(rdv) })
-                row.addView(actionButton(ctx, "Carnet") { onGrowth(rdv) })
+            bindAction(growthButton, actionsEnabled && rdv.statut in listOf("PRESENT", "CONFIRME")) {
+                onGrowth(rdv)
             }
-            if (row.childCount > 0) root.addView(row)
-            StaffUi.decorateTree(root)
         }
 
-        private fun actionButton(ctx: android.content.Context, label: String, action: () -> Unit): Button =
-            Button(ctx).apply {
-                text = label
-                textSize = 11f
-                setOnClickListener { action() }
-                StaffUi.styleButton(this)
-                layoutParams = LinearLayout.LayoutParams(
-                    0,
-                    ViewGroup.LayoutParams.WRAP_CONTENT,
-                    1f
-                )
+        private fun bindAction(button: MaterialButton, visible: Boolean, action: () -> Unit) {
+            button.visibility = if (visible) View.VISIBLE else View.GONE
+            button.isEnabled = visible
+            button.setOnClickListener { action() }
+        }
+
+        private fun styleStatus(status: String?) {
+            val context = statusView.context
+            val (textColor, backgroundColor) = when (status) {
+                "PRESENT" -> R.color.success_dark to R.color.success_light
+                "CONFIRME" -> R.color.info_dark to R.color.info_light
+                "ABSENT" -> R.color.error_dark to R.color.error_light
+                else -> R.color.warning_dark to R.color.warning_light
             }
+            statusView.setTextColor(ContextCompat.getColor(context, textColor))
+            statusView.background = StaffUi.rounded(
+                ContextCompat.getColor(context, backgroundColor),
+                ContextCompat.getColor(context, backgroundColor),
+                20
+            )
+        }
     }
 }

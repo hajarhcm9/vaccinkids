@@ -1,125 +1,142 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.swiperefreshlayout.widget.SwipeRefreshLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/rdvRefresh"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F5F5F5"
-    tools:context=".RdvFragment">
+    android:background="@color/staff_background">
 
-    <!-- Header : spinners -->
     <LinearLayout
-        android:id="@+id/llHeader"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:orientation="vertical"
-        android:padding="12dp"
-        app:layout_constraintTop_toTopOf="parent">
+        android:paddingHorizontal="16dp"
+        android:paddingTop="18dp">
+
+        <TextView
+            style="@style/TextAppearance.Vaccinkid.Headline"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Rendez-vous" />
+
+        <TextView
+            style="@style/TextAppearance.Vaccinkid.Body"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:text="Selectionnez une session puis traitez les patients." />
 
         <Spinner
-            android:id="@+id/spinnerCentre"
+            android:id="@+id/rdvSessionSpinner"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/bg_spinner"
+            android:paddingHorizontal="12dp" />
+
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@drawable/bg_spinner"
-            android:padding="8dp" />
+            android:layout_marginTop="10dp"
+            android:hint="Rechercher bebe, parent ou telephone">
 
-        <Spinner
-            android:id="@+id/spinnerStatut"
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/rdvSearch"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="text"
+                android:maxLines="1" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <HorizontalScrollView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:background="@drawable/bg_spinner"
-            android:padding="8dp" />
+            android:scrollbars="none">
 
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/rdvStatusFilters"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:chipSpacingHorizontal="6dp"
+                app:selectionRequired="true"
+                app:singleSelection="true" />
+        </HorizontalScrollView>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:orientation="horizontal">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/rdvOpenQueue"
+                style="@style/Widget.Vaccinkid.Button.Coral"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:text="File"
+                app:icon="@drawable/ic_queue_people" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/rdvOpenVials"
+                style="@style/Widget.Vaccinkid.Button.Outlined"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="8dp"
+                android:layout_weight="1"
+                android:text="Flacons"
+                app:icon="@drawable/ic_syringe"
+                app:iconTint="@color/brand_teal" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:orientation="horizontal">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/rdvStartSession"
+                style="@style/Widget.Vaccinkid.Button"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:text="Demarrer session" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/rdvEndSession"
+                style="@style/Widget.Vaccinkid.Button.Danger"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="8dp"
+                android:layout_weight="1"
+                android:text="Terminer session" />
+        </LinearLayout>
+
+        <ProgressBar
+            android:id="@+id/rdvProgress"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="8dp"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/rdvMessage"
+            style="@style/TextAppearance.Vaccinkid.Body"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginVertical="8dp"
+            android:textColor="@color/text_secondary" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rdvList"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:clipToPadding="false"
+            android:paddingBottom="20dp" />
     </LinearLayout>
-
-    <!-- Boutons : Rafraîchir / File / Flacons -->
-    <LinearLayout
-        android:id="@+id/llActions1"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:paddingStart="12dp"
-        android:paddingEnd="12dp"
-        app:layout_constraintTop_toBottomOf="@id/llHeader">
-
-        <Button
-            android:id="@+id/btnRafraichir"
-            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_marginEnd="4dp"
-            android:text="🔄 Rafraîchir"
-            android:textColor="#2196F3"
-            app:strokeColor="#2196F3" />
-
-        <Button
-            android:id="@+id/btnFile"
-            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_marginStart="4dp"
-            android:layout_marginEnd="4dp"
-            android:text="📋 File"
-            android:textColor="#4CAF50"
-            app:strokeColor="#4CAF50" />
-
-        <Button
-            android:id="@+id/btnFlacons"
-            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_marginStart="4dp"
-            android:text="💊 Flacons"
-            android:textColor="#FFC107"
-            app:strokeColor="#FFC107" />
-
-    </LinearLayout>
-
-    <!-- Boutons : Démarrer / Terminer -->
-    <LinearLayout
-        android:id="@+id/llActions2"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="12dp"
-        app:layout_constraintTop_toBottomOf="@id/llActions1">
-
-        <Button
-            android:id="@+id/btnDemarrer"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_marginEnd="4dp"
-            android:text="▶ Démarrer"
-            android:textColor="@android:color/white"
-            android:backgroundTint="#4CAF50" />
-
-        <Button
-            android:id="@+id/btnTerminer"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_marginStart="4dp"
-            android:text="⏹ Terminer"
-            android:textColor="@android:color/white"
-            android:backgroundTint="#F44336" />
-
-    </LinearLayout>
-
-    <!-- Liste RDV -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rvRdv"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:paddingHorizontal="12dp"
-        android:clipToPadding="false"
-        app:layout_constraintTop_toBottomOf="@id/llActions2"
-        app:layout_constraintBottom_toBottomOf="parent"
-        tools:listitem="@layout/item_rdv" />
-
-</androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
