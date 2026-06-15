@@ -1,0 +1,292 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.swiperefreshlayout.widget.SwipeRefreshLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/dashboardRefresh"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/staff_background">
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
+        android:fillViewport="true"
+        android:paddingBottom="24dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="16dp"
+            android:paddingTop="18dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/dashboardTitle"
+                        style="@style/TextAppearance.Vaccinkid.Headline"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Bonjour, infirmier" />
+
+                    <TextView
+                        android:id="@+id/dashboardDate"
+                        style="@style/TextAppearance.Vaccinkid.Body"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp" />
+                </LinearLayout>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/dashboardNotifications"
+                    style="@style/Widget.Material3.Button.IconButton.Outlined"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:contentDescription="Notifications staff"
+                    app:icon="@drawable/ic_notifications"
+                    app:iconTint="@color/staff_primary_dark"
+                    app:strokeColor="@color/staff_border" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/dashboardLogout"
+                    style="@style/Widget.Material3.Button.IconButton.Outlined"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_marginStart="8dp"
+                    android:contentDescription="Se deconnecter"
+                    app:icon="@drawable/ic_logout"
+                    app:iconTint="@color/staff_primary_dark"
+                    app:strokeColor="@color/staff_border" />
+            </LinearLayout>
+
+            <TextView
+                style="@style/TextAppearance.Vaccinkid.Title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:text="Activite du jour" />
+
+            <GridLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:columnCount="2"
+                android:rowCount="2"
+                android:useDefaultMargins="false">
+
+                <com.google.android.material.card.MaterialCardView
+                    style="@style/Widget.Vaccinkid.Card.Outlined"
+                    android:layout_width="0dp"
+                    android:layout_height="104dp"
+                    android:layout_columnWeight="1"
+                    android:layout_marginEnd="5dp"
+                    android:layout_marginBottom="10dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:gravity="center_vertical"
+                        android:orientation="vertical"
+                        android:padding="14dp">
+
+                        <TextView
+                            android:id="@+id/dashboardConfirmedCount"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="..."
+                            android:textColor="@color/brand_blue"
+                            android:textSize="26sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            style="@style/TextAppearance.Vaccinkid.Caption"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="RDV confirmes" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.card.MaterialCardView
+                    style="@style/Widget.Vaccinkid.Card.Outlined"
+                    android:layout_width="0dp"
+                    android:layout_height="104dp"
+                    android:layout_columnWeight="1"
+                    android:layout_marginStart="5dp"
+                    android:layout_marginBottom="10dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:gravity="center_vertical"
+                        android:orientation="vertical"
+                        android:padding="14dp">
+
+                        <TextView
+                            android:id="@+id/dashboardPresentCount"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="..."
+                            android:textColor="@color/success"
+                            android:textSize="26sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            style="@style/TextAppearance.Vaccinkid.Caption"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Presents" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.card.MaterialCardView
+                    style="@style/Widget.Vaccinkid.Card.Outlined"
+                    android:layout_width="0dp"
+                    android:layout_height="104dp"
+                    android:layout_columnWeight="1"
+                    android:layout_marginEnd="5dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:gravity="center_vertical"
+                        android:orientation="vertical"
+                        android:padding="14dp">
+
+                        <TextView
+                            android:id="@+id/dashboardWaitingCount"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="..."
+                            android:textColor="@color/warning"
+                            android:textSize="26sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            style="@style/TextAppearance.Vaccinkid.Caption"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="En attente" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.card.MaterialCardView
+                    style="@style/Widget.Vaccinkid.Card.Outlined"
+                    android:layout_width="0dp"
+                    android:layout_height="104dp"
+                    android:layout_columnWeight="1"
+                    android:layout_marginStart="5dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:gravity="center_vertical"
+                        android:orientation="vertical"
+                        android:padding="14dp">
+
+                        <TextView
+                            android:id="@+id/dashboardAbsentCount"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="..."
+                            android:textColor="@color/error"
+                            android:textSize="26sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            style="@style/TextAppearance.Vaccinkid.Caption"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Absents" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+            </GridLayout>
+
+            <TextView
+                android:id="@+id/dashboardStockAlert"
+                style="@style/TextAppearance.Vaccinkid.Body"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:background="@drawable/bg_badge_warning"
+                android:padding="14dp"
+                android:text="Alertes stock : chargement..."
+                android:textColor="@color/warning_dark"
+                android:textStyle="bold" />
+
+            <TextView
+                style="@style/TextAppearance.Vaccinkid.Title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:text="Actions rapides" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:orientation="horizontal">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/dashboardOpenRdv"
+                    style="@style/Widget.Vaccinkid.Button"
+                    android:layout_width="0dp"
+                    android:layout_height="56dp"
+                    android:layout_weight="1"
+                    android:text="Rendez-vous"
+                    app:icon="@drawable/ic_calendar_event" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/dashboardOpenQueue"
+                    style="@style/Widget.Vaccinkid.Button.Coral"
+                    android:layout_width="0dp"
+                    android:layout_height="56dp"
+                    android:layout_marginStart="8dp"
+                    android:layout_weight="1"
+                    android:text="Appeler"
+                    app:icon="@drawable/ic_queue_people" />
+            </LinearLayout>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/dashboardOpenScan"
+                style="@style/Widget.Vaccinkid.Button.Outlined"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:layout_marginTop="8dp"
+                android:text="Scanner un carnet"
+                app:icon="@drawable/ic_scan"
+                app:iconTint="@color/brand_teal" />
+
+            <TextView
+                style="@style/TextAppearance.Vaccinkid.Title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:text="Sessions du jour" />
+
+            <LinearLayout
+                android:id="@+id/dashboardSessions"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:orientation="vertical" />
+
+            <TextView
+                android:id="@+id/dashboardMessage"
+                style="@style/TextAppearance.Vaccinkid.Body"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:textColor="@color/error_dark" />
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+</androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
