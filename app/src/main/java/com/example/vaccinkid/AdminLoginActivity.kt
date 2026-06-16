@@ -2,7 +2,7 @@ package com.example.vaccinkid
 
 import android.os.Bundle
 
-class AdminLoginActivity : BaseLoginActivity() {
+open class AdminLoginActivity : BaseLoginActivity() {
 
     override val expectedRole = "admin"
     override val errorWrongRole = R.string.error_nurse_only

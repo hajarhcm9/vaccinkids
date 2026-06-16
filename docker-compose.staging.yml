@@ -19,14 +19,11 @@ services:
 
   # ── Backend API ─────────────────────────────────────────────────────────────
   api:
-    image: node:20-alpine
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: vaccinikids-api
     restart: unless-stopped
-    working_dir: /app
-    volumes:
-      - .:/app:ro
-      - /app/node_modules
-    command: ['node', 'src/server.js']
     environment:
       NODE_ENV: staging
       PORT: 3000
@@ -74,11 +71,48 @@ services:
       SYNC_PUSH_ENABLED: 'false'
       DATABASE_SSL_MODE: ${DATABASE_SSL_MODE:-disable}
     healthcheck:
-      test: ['CMD', 'node', '-e', "require('http').get('http://localhost:3000/api/health', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
+      test: ['CMD', 'node', '-e', "require('http').get('http://localhost:3000/health', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
       interval: 15s
       timeout: 5s
       retries: 5
       start_period: 20s
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - vaccinikids
+
+  # ── Reminder worker (push notifications for upcoming appointments) ───────────
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vaccinikids-worker
+    restart: unless-stopped
+    command: ['node', 'src/workers/reminderWorker.js']
+    environment:
+      NODE_ENV: staging
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-vaccinikids}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
+      JWT_SECRET: ${JWT_SECRET}
+      OTP_HASH_SECRET: ${OTP_HASH_SECRET}
+      FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID}
+      FIREBASE_PRIVATE_KEY: ${FIREBASE_PRIVATE_KEY}
+      FIREBASE_CLIENT_EMAIL: ${FIREBASE_CLIENT_EMAIL}
+      FIREBASE_TOKEN_URI: ${FIREBASE_TOKEN_URI:-https://oauth2.googleapis.com/token}
+      EMAIL_HOST: ${EMAIL_HOST}
+      EMAIL_PORT: ${EMAIL_PORT:-587}
+      EMAIL_SECURE: ${EMAIL_SECURE:-false}
+      EMAIL_USER: ${EMAIL_USER}
+      EMAIL_PASSWORD: ${EMAIL_PASSWORD}
+      EMAIL_FROM: ${EMAIL_FROM}
+      LOG_USER_HASH_SALT: ${LOG_USER_HASH_SALT}
     depends_on:
       postgres:
         condition: service_healthy
@@ -117,7 +151,7 @@ services:
     volumes:
       - redisdata_staging:/data
     healthcheck:
-      test: ['CMD', 'redis-cli', '-a', '${REDIS_PASSWORD}', 'ping']
+      test: ['CMD-SHELL', 'redis-cli -a "$$REDIS_PASSWORD" ping']
       interval: 10s
       timeout: 5s
       retries: 5

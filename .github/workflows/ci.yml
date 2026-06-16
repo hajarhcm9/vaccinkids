@@ -68,6 +68,7 @@ jobs:
       - run: npm run db:verify-invariants
       - run: npm run test:performance
       - run: npm run mobile:bundle:android
+      - run: npm run test:mobile
       - name: Exercise encrypted backup and isolated restore
         run: |
           sudo apt-get update

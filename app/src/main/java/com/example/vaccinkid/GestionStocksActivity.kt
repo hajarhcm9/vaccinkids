@@ -204,7 +204,7 @@ class GestionStocksActivity : AppCompatActivity() {
                 if (TokenManager.getUserRole() != "admin") {
                     val assignedCentre = TokenManager.getCentreId()
                         ?: throw Exception("Aucun centre affecte")
-                    centres = listOf(AdminCentreDto(id = assignedCentre, nom = "Centre affecte"))
+                    centres = listOf(AdminRefCentreDto(id = assignedCentre, nom = "Centre affecte"))
                     centreInput.adapter = ArrayAdapter(
                         this@GestionStocksActivity,
                         android.R.layout.simple_spinner_dropdown_item,
