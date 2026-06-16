@@ -1,293 +1,356 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@color/white"
-    android:fillViewport="true">
+    android:layout_height="match_parent">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <!-- ════════════════════════════════════════════
+         TOP HERO — dark teal gradient (top 38%)
+    ═════════════════════════════════════════════ -->
+    <FrameLayout
+        android:id="@+id/flLoginHero"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:paddingBottom="40dp">
+        android:layout_height="0dp"
+        android:background="@drawable/bg_login_hero"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/glLogin"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
 
-        <!-- Decorative teal wave top-right -->
+        <!-- Decorative glow circles -->
         <View
-            android:layout_width="180dp"
-            android:layout_height="180dp"
-            android:alpha="0.07"
-            android:background="@drawable/bg_circle_teal"
-            android:translationX="60dp"
-            android:translationY="-60dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            android:layout_width="220dp"
+            android:layout_height="220dp"
+            android:layout_gravity="end|top"
+            android:translationX="80dp"
+            android:translationY="-80dp"
+            android:background="@drawable/bg_white_glow_circle"
+            android:alpha="0.10" />
 
-        <!-- Logo area -->
+        <View
+            android:layout_width="140dp"
+            android:layout_height="140dp"
+            android:layout_gravity="start|bottom"
+            android:translationX="-50dp"
+            android:translationY="50dp"
+            android:background="@drawable/bg_white_glow_circle"
+            android:alpha="0.08" />
+
+        <!-- Brand center content -->
         <LinearLayout
-            android:id="@+id/llLoginLogo"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="48dp"
+            android:layout_gravity="center"
             android:gravity="center"
-            android:orientation="vertical"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
+            android:orientation="vertical">
 
+            <!-- Logo box -->
             <FrameLayout
-                android:layout_width="60dp"
-                android:layout_height="60dp"
-                android:background="@drawable/bg_circle_staff_primary">
-
+                android:layout_width="68dp"
+                android:layout_height="68dp"
+                android:background="@drawable/bg_white_glow_circle">
                 <ImageView
-                    android:layout_width="30dp"
-                    android:layout_height="30dp"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
                     android:layout_gravity="center"
                     android:contentDescription="@null"
                     android:src="@drawable/ic_syringe"
                     app:tint="@color/white" />
             </FrameLayout>
 
-            <TextView
+            <!-- VaccinKids wordmark -->
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:text="VaccinKids"
-                android:textColor="@color/text_primary"
-                android:textSize="26sp"
-                android:textStyle="bold" />
+                android:layout_marginTop="12dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Vaccin"
+                    android:textColor="@color/white"
+                    android:textSize="26sp"
+                    android:textStyle="bold" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Kids"
+                    android:textColor="@color/pearl_aqua"
+                    android:textSize="26sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
 
             <TextView
                 android:id="@+id/tvLoginSpace"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:letterSpacing="0.3"
+                android:layout_marginTop="4dp"
                 android:text="STAFF"
-                android:textColor="@color/brand_teal"
-                android:textSize="10sp"
-                android:textStyle="bold" />
+                android:textColor="@color/white_70"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.25" />
         </LinearLayout>
+    </FrameLayout>
 
-        <!-- Titles -->
-        <TextView
-            android:id="@+id/tvLoginTitle"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginHorizontal="28dp"
-            android:layout_marginTop="28dp"
-            android:text="Bon retour !"
-            android:textColor="@color/text_primary"
-            android:textSize="22sp"
-            android:textStyle="bold"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/llLoginLogo" />
+    <!-- Guideline at 38% from top -->
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/glLogin"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.37" />
 
-        <TextView
-            android:id="@+id/tvLoginAccessBadge"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginHorizontal="28dp"
-            android:layout_marginTop="4dp"
-            android:text="Connectez-vous à votre compte"
-            android:textColor="@color/text_secondary"
-            android:textSize="14sp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tvLoginTitle" />
+    <!-- ════════════════════════════════════════════
+         FORM CARD — white, rounded top 32dp
+    ═════════════════════════════════════════════ -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:background="@drawable/bg_login_card"
+        android:scrollbars="none"
+        android:fillViewport="true"
+        app:layout_constraintTop_toTopOf="@id/glLogin"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
 
-        <!-- Role switcher -->
         <LinearLayout
-            android:id="@+id/llRoleSwitcher"
-            android:layout_width="0dp"
-            android:layout_height="50dp"
-            android:layout_marginHorizontal="28dp"
-            android:layout_marginTop="22dp"
-            android:background="@drawable/bg_role_selector"
-            android:orientation="horizontal"
-            android:padding="4dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tvLoginAccessBadge">
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnRoleInfirmier"
-                style="@style/Widget.Material3.Button.TextButton"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:text="Infirmier"
-                android:textSize="14sp"
-                android:textStyle="bold" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnRoleAdmin"
-                style="@style/Widget.Material3.Button.TextButton"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:text="Admin"
-                android:textSize="14sp"
-                android:textStyle="bold" />
-        </LinearLayout>
-
-        <!-- CIN / Email field -->
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/tilEmail"
-            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginHorizontal="28dp"
-            android:layout_marginTop="24dp"
-            android:hint="CIN / Email"
-            app:startIconDrawable="@drawable/ic_medical_staff"
-            app:startIconTint="@color/brand_teal"
-            app:boxStrokeColor="@color/brand_teal"
-            app:boxCornerRadiusTopStart="10dp"
-            app:boxCornerRadiusTopEnd="10dp"
-            app:boxCornerRadiusBottomStart="10dp"
-            app:boxCornerRadiusBottomEnd="10dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/llRoleSwitcher">
+            android:orientation="vertical"
+            android:paddingHorizontal="28dp"
+            android:paddingBottom="36dp">
 
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/etEmailInfirmier"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="textCapCharacters"
-                android:maxLines="1"
-                android:importantForAutofill="no" />
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <TextView
-            android:id="@+id/tvEmailErrorInfirmier"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginHorizontal="28dp"
-            android:layout_marginTop="3dp"
-            android:textColor="@color/error"
-            android:textSize="12sp"
-            android:visibility="gone"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tilEmail" />
-
-        <!-- Password field -->
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/tilPassword"
-            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginHorizontal="28dp"
-            android:layout_marginTop="14dp"
-            android:hint="Mot de passe"
-            app:endIconMode="password_toggle"
-            app:startIconDrawable="@drawable/ic_lock"
-            app:startIconTint="@color/brand_teal"
-            app:boxStrokeColor="@color/brand_teal"
-            app:boxCornerRadiusTopStart="10dp"
-            app:boxCornerRadiusTopEnd="10dp"
-            app:boxCornerRadiusBottomStart="10dp"
-            app:boxCornerRadiusBottomEnd="10dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tvEmailErrorInfirmier">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/etPasswordInfirmier"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:imeOptions="actionDone"
-                android:inputType="textPassword"
-                android:maxLines="1" />
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <TextView
-            android:id="@+id/tvPasswordErrorInfirmier"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginHorizontal="28dp"
-            android:layout_marginTop="3dp"
-            android:textColor="@color/error"
-            android:textSize="12sp"
-            android:visibility="gone"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tilPassword" />
-
-        <!-- Login button -->
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnLoginInfirmier"
-            style="@style/Widget.Material3.Button"
-            android:layout_width="0dp"
-            android:layout_height="52dp"
-            android:layout_marginHorizontal="28dp"
-            android:layout_marginTop="22dp"
-            android:text="Se connecter"
-            android:textColor="@color/white"
-            android:textSize="15sp"
-            android:textStyle="bold"
-            app:backgroundTint="@color/brand_teal"
-            app:cornerRadius="26dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tvPasswordErrorInfirmier" />
-
-        <!-- Divider "ou continuer avec" -->
-        <LinearLayout
-            android:id="@+id/llDivider"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginHorizontal="28dp"
-            android:layout_marginTop="24dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/btnLoginInfirmier">
-
+            <!-- Drag handle -->
             <View
-                android:layout_width="0dp"
-                android:layout_height="1dp"
-                android:layout_weight="1"
-                android:background="@color/outline" />
+                android:layout_width="44dp"
+                android:layout_height="4dp"
+                android:layout_marginTop="14dp"
+                android:layout_marginBottom="24dp"
+                android:layout_gravity="center_horizontal"
+                android:background="@drawable/bg_drag_handle" />
+
+            <!-- Title block -->
+            <TextView
+                android:id="@+id/tvLoginTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Bon retour !"
+                android:textColor="@color/text_primary"
+                android:textSize="26sp"
+                android:textStyle="bold"
+                android:letterSpacing="-0.02" />
 
             <TextView
-                android:layout_width="wrap_content"
+                android:id="@+id/tvLoginAccessBadge"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginHorizontal="12dp"
-                android:text="ou continuer avec"
+                android:layout_marginTop="6dp"
+                android:layout_marginBottom="24dp"
+                android:text="Connectez-vous à votre compte"
                 android:textColor="@color/text_secondary"
-                android:textSize="12sp" />
+                android:textSize="15sp" />
 
-            <View
-                android:layout_width="0dp"
-                android:layout_height="1dp"
-                android:layout_weight="1"
-                android:background="@color/outline" />
+            <!-- Role segment switcher -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:layout_marginBottom="28dp"
+                android:background="@drawable/bg_segment_container"
+                android:orientation="horizontal"
+                android:padding="5dp">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnRoleInfirmier"
+                    style="@style/Widget.Material3.Button.TextButton"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:text="Infirmier"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnRoleAdmin"
+                    style="@style/Widget.Material3.Button.TextButton"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:text="Admin"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <!-- CIN / Email -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:text="CIN / Email"
+                android:textColor="@color/text_body"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilEmail"
+                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:startIconDrawable="@drawable/ic_medical_staff"
+                app:startIconTint="@color/brand_teal"
+                app:boxStrokeColor="@color/brand_teal"
+                app:boxStrokeWidthFocused="2dp"
+                app:boxCornerRadiusTopStart="14dp"
+                app:boxCornerRadiusTopEnd="14dp"
+                app:boxCornerRadiusBottomStart="14dp"
+                app:boxCornerRadiusBottomEnd="14dp"
+                app:hintEnabled="false">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etEmailInfirmier"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:hint="ex: AA123456"
+                    android:inputType="textCapCharacters"
+                    android:maxLines="1"
+                    android:importantForAutofill="no"
+                    android:textColor="@color/text_primary"
+                    android:textSize="15sp" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <TextView
+                android:id="@+id/tvEmailErrorInfirmier"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:textColor="@color/error"
+                android:textSize="12sp"
+                android:visibility="gone" />
+
+            <!-- Mot de passe -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:layout_marginBottom="8dp"
+                android:text="Mot de passe"
+                android:textColor="@color/text_body"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilPassword"
+                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:endIconMode="password_toggle"
+                app:startIconDrawable="@drawable/ic_lock"
+                app:startIconTint="@color/brand_teal"
+                app:boxStrokeColor="@color/brand_teal"
+                app:boxStrokeWidthFocused="2dp"
+                app:boxCornerRadiusTopStart="14dp"
+                app:boxCornerRadiusTopEnd="14dp"
+                app:boxCornerRadiusBottomStart="14dp"
+                app:boxCornerRadiusBottomEnd="14dp"
+                app:hintEnabled="false">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etPasswordInfirmier"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:hint="••••••••"
+                    android:imeOptions="actionDone"
+                    android:inputType="textPassword"
+                    android:maxLines="1"
+                    android:textColor="@color/text_primary"
+                    android:textSize="15sp" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <TextView
+                android:id="@+id/tvPasswordErrorInfirmier"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:textColor="@color/error"
+                android:textSize="12sp"
+                android:visibility="gone" />
+
+            <!-- Se connecter button -->
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/btnLoginInfirmier"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginTop="28dp"
+                android:background="@drawable/bg_btn_teal_pill"
+                android:text="Se connecter"
+                android:textColor="@color/white"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.02"
+                android:stateListAnimator="@null"
+                android:elevation="6dp" />
+
+            <!-- Divider: ou continuer avec -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="1dp"
+                    android:layout_weight="1"
+                    android:background="@color/outline" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="14dp"
+                    android:text="ou continuer avec"
+                    android:textColor="@color/text_hint"
+                    android:textSize="12sp" />
+
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="1dp"
+                    android:layout_weight="1"
+                    android:background="@color/outline" />
+            </LinearLayout>
+
+            <!-- Biometric FAB -->
+            <FrameLayout
+                android:id="@+id/btnBiometric"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:layout_marginTop="20dp"
+                android:layout_gravity="center_horizontal"
+                android:background="@drawable/bg_kpi_card"
+                android:elevation="4dp">
+
+                <ImageView
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:layout_gravity="center"
+                    android:contentDescription="Authentification biométrique"
+                    android:src="@drawable/ic_lock"
+                    app:tint="@color/brand_teal" />
+            </FrameLayout>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:gravity="center"
+                android:text="Biométrie"
+                android:textColor="@color/text_hint"
+                android:textSize="11sp" />
+
         </LinearLayout>
+    </ScrollView>
 
-        <!-- Biometric button -->
-        <FrameLayout
-            android:id="@+id/btnBiometric"
-            android:layout_width="56dp"
-            android:layout_height="56dp"
-            android:layout_marginTop="18dp"
-            android:background="@drawable/bg_biometric_btn"
-            android:elevation="4dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/llDivider">
-
-            <ImageView
-                android:layout_width="28dp"
-                android:layout_height="28dp"
-                android:layout_gravity="center"
-                android:contentDescription="Biométrie"
-                android:src="@drawable/ic_lock"
-                app:tint="@color/text_primary" />
-        </FrameLayout>
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
-</ScrollView>
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,51 +1,45 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
-    <color name="staff_primary">#087F73</color>
-    <color name="staff_primary_dark">#075E57</color>
-    <color name="staff_secondary">#E85D5D</color>
-    <color name="staff_tertiary">#F2B84B</color>
-    <color name="staff_background">#F4F7F6</color>
-    <color name="staff_surface">#FFFFFF</color>
-    <color name="staff_ink">#17332F</color>
-    <color name="staff_muted">#637773</color>
-    <color name="staff_border">#D8E4E1</color>
+    <!-- ═══════════════════════════════════════════════
+         VACCINKIDS — Design Token Palette
+         5-colour brand system:
+           stormy_teal      #006D77  primary action
+           pearl_aqua       #83C5BE  light accent / highlights
+           alice_blue       #EDF6F9  screen & card backgrounds
+           almond_silk      #FFDDD2  warm tinted surfaces
+           tangerine_dream  #E29578  warm accent / "Kids" wordmark
+    ════════════════════════════════════════════════ -->
 
-    <color name="brand_teal">#0F766E</color>
-    <color name="brand_teal_light">#14B8A6</color>
-    <color name="brand_teal_dark">#0D5F59</color>
-    <color name="brand_coral">#F97316</color>
-    <color name="brand_coral_light">#FB923C</color>
-    <color name="brand_coral_dark">#EA580C</color>
-    <color name="brand_rose">#BE185D</color>
-    <color name="brand_rose_light">#EC4899</color>
-    <color name="brand_blue">#0EA5E9</color>
-    <color name="brand_lavender">#7B5EA7</color>
-    <color name="brand_lavender_light">#F0E5FF</color>
-    <color name="brand_lavender_dark">#2D0F52</color>
+    <!-- ── Brand Palette (source of truth) ───────── -->
+    <color name="stormy_teal">#006D77</color>
+    <color name="pearl_aqua">#83C5BE</color>
+    <color name="alice_blue">#EDF6F9</color>
+    <color name="almond_silk">#FFDDD2</color>
+    <color name="tangerine_dream">#E29578</color>
 
-    <color name="primary_medical">#0D9373</color>
-    <color name="primary_container">#C8F5E8</color>
-    <color name="on_primary_container">#002117</color>
-    <color name="secondary_warm">#C05555</color>
-    <color name="secondary_container">#FFE8E6</color>
-    <color name="on_secondary_container">#3B0F0F</color>
-    <color name="tertiary_admin">#7B5EA7</color>
-    <color name="tertiary_container">#F0E5FF</color>
-    <color name="on_tertiary_container">#2D0F52</color>
+    <!-- ── Teal scale derived from stormy_teal ───── -->
+    <color name="teal_50">#E8F7F8</color>
+    <color name="teal_100">#C5E9EC</color>
+    <color name="teal_200">#9DD5D9</color>
+    <color name="teal_300">#83C5BE</color>
+    <color name="teal_400">#4AAFB4</color>
+    <color name="teal_500">#1A9099</color>
+    <color name="teal_600">#006D77</color>
+    <color name="teal_700">#005561</color>
+    <color name="teal_800">#003D46</color>
+    <color name="teal_900">#00282F</color>
 
-    <color name="bg_primary">#F8FAFC</color>
-    <color name="bg_secondary">#F1F5F9</color>
-    <color name="bg_card">#FFFFFF</color>
-    <color name="bg_overlay">#80000000</color>
+    <!-- ── Warm accent scale (tangerine → almond) ── -->
+    <color name="warm_100">#FFF0EB</color>
+    <color name="warm_200">#FFDDD2</color>
+    <color name="warm_300">#F5C4B0</color>
+    <color name="warm_400">#E29578</color>
+    <color name="warm_500">#C97A5F</color>
 
-    <color name="text_primary">#0F172A</color>
-    <color name="text_secondary">#475569</color>
-    <color name="text_tertiary">#94A3B8</color>
-    <color name="text_on_primary">#FFFFFF</color>
-    <color name="text_link">#0EA5E9</color>
+    <!-- ── Amber (sparkle dots) ──────────────────── -->
+    <color name="amber_400">#FBBF24</color>
 
+    <!-- ── Semantic ───────────────────────────────── -->
     <color name="success">#10B981</color>
     <color name="success_light">#D1FAE5</color>
     <color name="success_dark">#065F46</color>
@@ -58,17 +52,99 @@
     <color name="info">#3B82F6</color>
     <color name="info_light">#DBEAFE</color>
     <color name="info_dark">#1D4ED8</color>
-    <color name="waiting_light">#E0E7FF</color>
-    <color name="waiting_dark">#3730A3</color>
 
-    <color name="outline">#E2E8F0</color>
-    <color name="surface_variant">#E1E3DE</color>
-    <color name="on_surface_variant">#414942</color>
-    <color name="outline_strong">#727970</color>
-    <color name="outline_variant">#C2C9BD</color>
-    <color name="teal_input">#F0FDFA</color>
-    <color name="teal_input_border">#99F6E4</color>
-    <color name="scan_zone">#E0F2FE</color>
+    <!-- ── Slate (text / UI chrome) ──────────────── -->
+    <color name="slate_50">#F8FAFC</color>
+    <color name="slate_100">#F1F5F9</color>
+    <color name="slate_200">#E2E8F0</color>
+    <color name="slate_300">#CBD5E1</color>
+    <color name="slate_400">#94A3B8</color>
+    <color name="slate_500">#64748B</color>
+    <color name="slate_600">#475569</color>
+    <color name="slate_700">#334155</color>
+    <color name="slate_800">#1E293B</color>
+    <color name="slate_900">#0F172A</color>
+
+    <!-- ── Base ───────────────────────────────────── -->
+    <color name="white">#FFFFFFFF</color>
+    <color name="black">#FF000000</color>
+
+    <!-- ── Alias tokens (use these in layouts) ───── -->
+
+    <!-- Primary brand -->
+    <color name="brand_teal">#006D77</color>
+    <color name="brand_teal_light">#83C5BE</color>
+    <color name="brand_teal_dark">#005561</color>
+    <color name="brand_teal_darker">#003D46</color>
+    <color name="brand_coral">#E29578</color>
+    <color name="brand_coral_light">#FFDDD2</color>
+
+    <!-- Backgrounds -->
+    <color name="bg_screen">#EDF6F9</color>
+    <color name="bg_card">#FFFFFF</color>
+    <color name="bg_card_soft">#EDF6F9</color>
+    <color name="bg_tint">#FFDDD2</color>
+    <color name="bg_overlay">#80000000</color>
+
+    <!-- Text -->
+    <color name="text_primary">#003D46</color>
+    <color name="text_body">#334155</color>
+    <color name="text_secondary">#64748B</color>
+    <color name="text_hint">#94A3B8</color>
+    <color name="text_on_primary">#FFFFFF</color>
+    <color name="staff_ink">#003D46</color>
+
+    <!-- Borders & dividers -->
+    <color name="outline">#C5E9EC</color>
+    <color name="outline_focus">#006D77</color>
+    <color name="drag_handle">#9DD5D9</color>
+
+    <!-- Semi-transparent whites (used on dark/gradient surfaces) -->
+    <color name="white_10">#1AFFFFFF</color>
+    <color name="white_15">#26FFFFFF</color>
+    <color name="white_20">#33FFFFFF</color>
+    <color name="white_30">#4DFFFFFF</color>
+    <color name="white_50">#80FFFFFF</color>
+    <color name="white_70">#B3FFFFFF</color>
     <color name="white_75">#BFFFFFFF</color>
     <color name="white_80">#CCFFFFFF</color>
+    <color name="white_90">#E6FFFFFF</color>
+
+    <!-- Legacy aliases (kept for backward compat) -->
+    <color name="brand_blue">#0EA5E9</color>
+    <color name="brand_lavender">#8B5CF6</color>
+    <color name="brand_lavender_light">#EDE9FE</color>
+    <color name="brand_lavender_dark">#4C1D95</color>
+    <color name="staff_primary">#006D77</color>
+    <color name="staff_primary_dark">#005561</color>
+    <color name="staff_secondary">#E29578</color>
+    <color name="staff_background">#EDF6F9</color>
+    <color name="staff_surface">#FFFFFF</color>
+    <color name="staff_border">#C5E9EC</color>
+    <color name="bg_primary">#EDF6F9</color>
+    <color name="bg_secondary">#FFDDD2</color>
+    <color name="bg_overlay_dark">#CC000000</color>
+    <color name="text_tertiary">#94A3B8</color>
+    <color name="text_link">#006D77</color>
+    <color name="surface_variant">#EDF6F9</color>
+    <color name="on_surface_variant">#475569</color>
+    <color name="outline_strong">#83C5BE</color>
+    <color name="outline_variant">#C5E9EC</color>
+    <color name="scan_zone">#EDF6F9</color>
+    <color name="teal_input">#EDF6F9</color>
+    <color name="teal_input_border">#83C5BE</color>
+    <color name="waiting_light">#E0E7FF</color>
+    <color name="waiting_dark">#3730A3</color>
+    <color name="primary_medical">#006D77</color>
+    <color name="primary_container">#C5E9EC</color>
+    <color name="on_primary_container">#003D46</color>
+    <color name="secondary_warm">#E29578</color>
+    <color name="secondary_container">#FFDDD2</color>
+    <color name="on_secondary_container">#4C1D00</color>
+    <color name="tertiary_admin">#8B5CF6</color>
+    <color name="tertiary_container">#EDE9FE</color>
+    <color name="on_tertiary_container">#2E1065</color>
+    <color name="brand_rose">#F43F5E</color>
+    <color name="brand_rose_light">#FB7185</color>
+    <color name="brand_coral_dark">#C97A5F</color>
 </resources>
