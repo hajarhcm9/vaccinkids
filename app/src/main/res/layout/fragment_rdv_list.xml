@@ -3,86 +3,150 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/white"
+    android:background="@color/bg_primary"
     android:orientation="vertical">
 
-    <!-- En-tête -->
+    <!-- ── Header ── -->
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="16dp">
+        android:paddingHorizontal="20dp"
+        android:paddingVertical="16dp">
 
         <ImageView
             android:id="@+id/btnBackRdv"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:layout_alignParentLeft="true"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
             android:layout_alignParentStart="true"
             android:layout_centerVertical="true"
-            android:src="@drawable/ic_logout"
+            android:contentDescription="Retour"
             android:rotation="180"
-            app:tint="@color/black"
-            android:contentDescription="@string/edit" />
+            android:src="@drawable/ic_logout"
+            app:tint="@color/text_primary" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
             android:text="Rendez-vous"
-            android:textColor="@color/black"
+            android:textColor="@color/text_primary"
             android:textSize="18sp"
             android:textStyle="bold" />
     </RelativeLayout>
 
-    <!-- Recherche -->
+    <!-- ── Search row ── -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="16dp"
-        android:layout_marginRight="16dp"
         android:gravity="center_vertical"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:paddingHorizontal="20dp">
 
         <EditText
             android:id="@+id/etSearchRdv"
             android:layout_width="0dp"
             android:layout_height="48dp"
             android:layout_weight="1"
-            android:background="@drawable/bg_card_rounded"
-            android:drawableLeft="@android:drawable/ic_menu_search"
+            android:background="@drawable/bg_search_bar"
             android:drawableStart="@android:drawable/ic_menu_search"
-            android:drawablePadding="12dp"
-            android:hint="Rechercher un enfant..."
-            android:paddingLeft="16dp"
-            android:paddingRight="16dp"
-            android:textSize="14sp"
+            android:drawablePadding="10dp"
+            android:hint="Rechercher un enfant…"
             android:importantForAutofill="no"
-            android:inputType="text" />
+            android:inputType="text"
+            android:paddingHorizontal="14dp"
+            android:textColor="@color/text_primary"
+            android:textColorHint="@color/text_tertiary"
+            android:textSize="14sp" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnFilterRdv"
-            style="@style/Widget.Material3.Button.IconButton.Filled.Tonal"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:layout_marginLeft="12dp"
-            android:layout_marginStart="12dp"
+            style="@style/Widget.Material3.Button.IconButton"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:layout_marginStart="10dp"
+            android:background="@drawable/bg_card_rounded"
             app:icon="@drawable/ic_more_horizontal"
-            app:iconTint="@color/black" />
+            app:iconTint="@color/text_primary" />
     </LinearLayout>
 
+    <!-- ── Filter chip bar ── -->
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:paddingHorizontal="20dp"
+        android:paddingBottom="2dp"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/chipTous"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:background="@drawable/bg_chip_active"
+                android:gravity="center"
+                android:paddingHorizontal="16dp"
+                android:text="Tous"
+                android:textColor="@color/white"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/chipConfirmes"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:layout_marginStart="8dp"
+                android:background="@drawable/bg_chip_inactive"
+                android:gravity="center"
+                android:paddingHorizontal="16dp"
+                android:text="Confirmés"
+                android:textColor="@color/text_secondary"
+                android:textSize="13sp" />
+
+            <TextView
+                android:id="@+id/chipAttente"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:layout_marginStart="8dp"
+                android:background="@drawable/bg_chip_inactive"
+                android:gravity="center"
+                android:paddingHorizontal="16dp"
+                android:text="En attente"
+                android:textColor="@color/text_secondary"
+                android:textSize="13sp" />
+
+            <TextView
+                android:id="@+id/chipAbsents"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:layout_marginStart="8dp"
+                android:background="@drawable/bg_chip_inactive"
+                android:gravity="center"
+                android:paddingHorizontal="16dp"
+                android:text="Absents"
+                android:textColor="@color/text_secondary"
+                android:textSize="13sp" />
+        </LinearLayout>
+    </HorizontalScrollView>
+
+    <!-- ── List / Empty ── -->
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginTop="8dp">
+        android:layout_marginTop="12dp">
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recyclerRdv"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:clipToPadding="false"
-            android:paddingLeft="16dp"
-            android:paddingRight="16dp"
-            android:paddingBottom="16dp" />
+            android:paddingHorizontal="20dp"
+            android:paddingBottom="100dp" />
 
         <LinearLayout
             android:id="@+id/emptyRdv"
@@ -93,12 +157,23 @@
             android:padding="32dp"
             android:visibility="gone">
 
+            <ImageView
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:alpha="0.3"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_calendar_event"
+                app:tint="@color/brand_teal" />
+
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
                 android:text="Aucun rendez-vous"
-                android:textSize="18sp"
+                android:textColor="@color/text_secondary"
+                android:textSize="16sp"
                 android:textStyle="bold" />
         </LinearLayout>
     </FrameLayout>
+
 </LinearLayout>
