@@ -31,6 +31,12 @@ router.patch('/centres/:id/deactivate', AdminController.deactivateCentre);
 router.patch('/centres/:id/reactivate', AdminController.reactivateCentre);
 
 // ==========================================
+// REFERENCES (lightweight selectors)
+// ==========================================
+
+router.get('/references', AdminController.getReferences);
+
+// ==========================================
 // AUDIT LOG
 // ==========================================
 

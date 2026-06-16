@@ -46,7 +46,7 @@ class AdminActivity : AppCompatActivity() {
                     "Connexion requise : ${error.message ?: "session invalide"}",
                     Toast.LENGTH_LONG
                 ).show()
-                startActivity(Intent(this@AdminActivity, MainActivity::class.java).apply {
+                startActivity(Intent(this@AdminActivity, AdminLoginActivity::class.java).apply {
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                 })
                 finish()

@@ -1,9 +1,28 @@
 <resources>
     <string name="app_name">VacciniKids Staff</string>
     <string name="rdv">Rendez-vous</string>
-    <string name="file">File attenteli</string>
+    <string name="file">File d\'attente</string>
     <string name="scan">Scanner QR</string>
     <string name="icone_cadenas">Cadenas</string>
     <string name="logo_seringue">Seringue</string>
     <string name="edit">Modifier</string>
+
+    <!-- Login -->
+    <string name="login_title">Bon retour !</string>
+    <string name="login_subtitle">Connectez-vous à votre compte sécurisé.</string>
+    <string name="login_admin_title">Connexion Admin</string>
+    <string name="login_nurse_title">Espace Infirmier</string>
+    <string name="login_admin_badge">Accès réservé aux administrateurs</string>
+    <string name="login_nurse_badge">Accès réservé au personnel soignant</string>
+    <string name="login_staff_badge">Accès réservé au personnel autorisé</string>
+    <string name="label_cin">CIN</string>
+    <string name="label_password">Mot de passe</string>
+    <string name="btn_login">Se connecter</string>
+    <string name="error_cin_empty">Veuillez entrer votre CIN.</string>
+    <string name="error_password_empty">Veuillez entrer votre mot de passe.</string>
+    <string name="error_invalid_credentials">CIN ou mot de passe incorrect.</string>
+    <string name="error_nurse_only">Utilisez l\'espace Infirmier pour ce compte.</string>
+    <string name="error_admin_only">Utilisez l\'espace Admin pour ce compte.</string>
+    <string name="role_nurse">Infirmier</string>
+    <string name="role_admin">Admin</string>
 </resources>

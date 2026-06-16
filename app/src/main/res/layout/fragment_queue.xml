@@ -4,21 +4,39 @@
     android:id="@+id/queueRefresh"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/bg_primary">
+    android:background="@color/white">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
         android:paddingHorizontal="20dp"
-        android:paddingTop="18dp">
+        android:paddingTop="12dp">
 
-        <TextView
-            style="@style/TextAppearance.Vaccinkid.Headline"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="File d'attente" />
+        <!-- En-tête -->
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
 
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:text="File d'attente"
+                android:textColor="@color/black"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:src="@drawable/ic_notifications"
+                app:tint="@color/black" />
+        </RelativeLayout>
+
+        <!-- Sélecteur d'état -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="52dp"
@@ -33,7 +51,6 @@
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:checkable="true"
                 android:text="En attente 0" />
 
             <com.google.android.material.button.MaterialButton
@@ -42,7 +59,6 @@
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:checkable="true"
                 android:text="Appelés 0" />
         </LinearLayout>
 
@@ -56,29 +72,34 @@
 
         <TextView
             android:id="@+id/queueMessage"
-            style="@style/TextAppearance.Vaccinkid.Body"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginVertical="8dp"
+            android:layout_marginTop="8dp"
             android:gravity="center"
-            android:textColor="@color/text_secondary" />
+            android:textColor="@color/text_secondary"
+            android:textSize="14sp" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/queueList"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
+            android:layout_marginTop="12dp"
             android:clipToPadding="false"
-            android:paddingBottom="12dp" />
+            android:paddingBottom="80dp" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/queueCallNext"
-            style="@style/Widget.Vaccinkid.Button"
+            style="@style/Widget.Material3.Button"
             android:layout_width="match_parent"
             android:layout_height="56dp"
             android:layout_marginBottom="16dp"
+            app:backgroundTint="@color/brand_teal_dark"
             android:text="Appeler le prochain"
-            app:icon="@drawable/ic_queue_people"
+            android:textColor="@color/white"
+            android:textStyle="bold"
+            app:cornerRadius="28dp"
+            app:icon="@drawable/ic_notifications"
             app:iconTint="@color/white" />
     </LinearLayout>
 </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>

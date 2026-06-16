@@ -1,0 +1,139 @@
+services:
+  # ── Reverse proxy + automatic TLS (Let's Encrypt) ──────────────────────────
+  caddy:
+    image: caddy:2-alpine
+    container_name: vaccinikids-caddy
+    restart: unless-stopped
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - ./Caddyfile.staging:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - vaccinikids
+
+  # ── Backend API ─────────────────────────────────────────────────────────────
+  api:
+    image: node:20-alpine
+    container_name: vaccinikids-api
+    restart: unless-stopped
+    working_dir: /app
+    volumes:
+      - .:/app:ro
+      - /app/node_modules
+    command: ['node', 'src/server.js']
+    environment:
+      NODE_ENV: staging
+      PORT: 3000
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-vaccinikids}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-15m}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-7d}
+      OTP_LENGTH: ${OTP_LENGTH:-6}
+      OTP_EXPIRY_MINUTES: ${OTP_EXPIRY_MINUTES:-5}
+      OTP_MAX_ATTEMPTS: ${OTP_MAX_ATTEMPTS:-5}
+      OTP_HASH_SECRET: ${OTP_HASH_SECRET}
+      SMS_PROVIDER: ${SMS_PROVIDER:-smspartner}
+      SMS_API_KEY: ${SMS_API_KEY}
+      SMS_SENDER_NAME: ${SMS_SENDER_NAME:-VacciniKids}
+      SMS_API_URL: ${SMS_API_URL:-https://api.smspartner.fr/v1/send}
+      SMS_AUTH_SCHEME: ${SMS_AUTH_SCHEME:-Bearer}
+      ALLOW_PROVIDER_STUBS: 'false'
+      FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID}
+      FIREBASE_PRIVATE_KEY: ${FIREBASE_PRIVATE_KEY}
+      FIREBASE_CLIENT_EMAIL: ${FIREBASE_CLIENT_EMAIL}
+      FIREBASE_TOKEN_URI: ${FIREBASE_TOKEN_URI:-https://oauth2.googleapis.com/token}
+      EMAIL_HOST: ${EMAIL_HOST}
+      EMAIL_PORT: ${EMAIL_PORT:-587}
+      EMAIL_SECURE: ${EMAIL_SECURE:-false}
+      EMAIL_USER: ${EMAIL_USER}
+      EMAIL_PASSWORD: ${EMAIL_PASSWORD}
+      EMAIL_FROM: ${EMAIL_FROM}
+      CORS_ORIGIN: ${CORS_ORIGIN}
+      TRUST_PROXY: '1'
+      RATE_LIMIT_REQUIRE_REDIS: 'true'
+      LOG_USER_HASH_SALT: ${LOG_USER_HASH_SALT}
+      METRICS_BEARER_TOKEN: ${METRICS_BEARER_TOKEN}
+      AUDIT_EXTERNAL_URL: ${AUDIT_EXTERNAL_URL:-}
+      AUDIT_EXTERNAL_SECRET: ${AUDIT_EXTERNAL_SECRET:-}
+      AUDIT_EXTERNAL_REQUIRED: ${AUDIT_EXTERNAL_REQUIRED:-false}
+      SWAGGER_ENABLED: 'false'
+      WEB_ADMIN_ENABLED: ${WEB_ADMIN_ENABLED:-false}
+      WAITING_ROOM_ENABLED: ${WAITING_ROOM_ENABLED:-false}
+      SYNC_PUSH_ENABLED: 'false'
+      DATABASE_SSL_MODE: ${DATABASE_SSL_MODE:-disable}
+    healthcheck:
+      test: ['CMD', 'node', '-e', "require('http').get('http://localhost:3000/api/health', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - vaccinikids
+
+  # ── PostgreSQL ───────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:15-alpine
+    container_name: vaccinikids-db-staging
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME:-vaccinikids}
+    volumes:
+      - pgdata_staging:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${DB_USER} -d ${DB_NAME:-vaccinikids}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - vaccinikids
+
+  # ── Redis ────────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: vaccinikids-redis-staging
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    volumes:
+      - redisdata_staging:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', '-a', '${REDIS_PASSWORD}', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - vaccinikids
+
+volumes:
+  pgdata_staging:
+    driver: local
+  redisdata_staging:
+    driver: local
+  caddy_data:
+    driver: local
+  caddy_config:
+    driver: local
+
+networks:
+  vaccinikids:
+    driver: bridge

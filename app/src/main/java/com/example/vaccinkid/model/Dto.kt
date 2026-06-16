@@ -370,6 +370,21 @@ data class AdminAuditLogListDto(
     val totalPages: Int = 1
 )
 
+data class AdminRefCentreDto(
+    val id: Int,
+    val nom: String? = null
+)
+
+data class AdminRefVaccinDto(
+    val id: Int,
+    val nom: String? = null
+)
+
+data class AdminReferencesDto(
+    val centres: List<AdminRefCentreDto> = emptyList(),
+    val vaccins: List<AdminRefVaccinDto> = emptyList()
+)
+
 data class StockMovementDto(
     val id: Int,
     @SerializedName("stock_id") val stockId: Int? = null,

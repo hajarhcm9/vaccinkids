@@ -18,6 +18,8 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.vaccinkid.model.AdminCentreDto
+import com.example.vaccinkid.model.AdminRefCentreDto
+import com.example.vaccinkid.model.AdminRefVaccinDto
 import com.example.vaccinkid.model.SessionDto
 import com.example.vaccinkid.model.SessionRequest
 import com.example.vaccinkid.model.VaccinDto
@@ -27,8 +29,8 @@ import kotlinx.coroutines.launch
 class GestionSessionsFragment : Fragment() {
     private lateinit var messageView: TextView
     private lateinit var adapter: AdminSessionAdapter
-    private var centres: List<AdminCentreDto> = emptyList()
-    private var vaccins: List<VaccinDto> = emptyList()
+    private var centres: List<AdminRefCentreDto> = emptyList()
+    private var vaccins: List<AdminRefVaccinDto> = emptyList()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         adapter = AdminSessionAdapter(
@@ -96,18 +98,14 @@ class GestionSessionsFragment : Fragment() {
             orientation = LinearLayout.VERTICAL
             setPadding(24)
         }
-        val availableCentres = centres.filter { it.estActif != false || it.id == item?.centreId }
-        val availableVaccins = vaccins.filter { it.estActif != false || it.id == item?.vaccinId }
+        val availableCentres = centres
+        val availableVaccins = vaccins
         val centre = selector(
-            availableCentres.map {
-                "${it.nom ?: "Centre #${it.id}"}${if (it.estActif == false) " (inactif)" else ""}"
-            },
+            availableCentres.map { it.nom ?: "Centre #${it.id}" },
             availableCentres.indexOfFirst { it.id == item?.centreId }
         )
         val vaccin = selector(
-            availableVaccins.map {
-                "${it.nom ?: "Vaccin #${it.id}"}${if (it.estActif == false) " (inactif)" else ""}"
-            },
+            availableVaccins.map { it.nom ?: "Vaccin #${it.id}" },
             availableVaccins.indexOfFirst { it.id == item?.vaccinId }
         )
         val date = edit("Date YYYY-MM-DD").also { it.setText(item?.dateSession?.take(10) ?: "") }
@@ -186,13 +184,10 @@ class GestionSessionsFragment : Fragment() {
     private fun loadReferences() {
         viewLifecycleOwner.lifecycleScope.launch {
             try {
-                val centreResponse = ApiClient.apiService.getAdminCentres(limit = 100)
-                val vaccinResponse = ApiClient.apiService.getVaccins(all = true)
-                if (centreResponse.status != "success" || vaccinResponse.status != "success") {
-                    throw Exception("References indisponibles")
-                }
-                centres = centreResponse.data?.centres.orEmpty()
-                vaccins = vaccinResponse.data.orEmpty()
+                val response = ApiClient.apiService.getAdminReferences()
+                if (response.status != "success") throw Exception("References indisponibles")
+                centres = response.data?.centres.orEmpty()
+                vaccins = response.data?.vaccins.orEmpty()
                 if (centres.isEmpty() || vaccins.isEmpty()) {
                     messageView.text = "Un centre actif et un vaccin actif sont requis."
                 }

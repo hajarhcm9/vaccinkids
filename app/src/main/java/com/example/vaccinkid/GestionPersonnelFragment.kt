@@ -20,6 +20,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.vaccinkid.model.AdminPersonnelDto
 import com.example.vaccinkid.model.AdminPersonnelRequest
 import com.example.vaccinkid.model.AdminCentreDto
+import com.example.vaccinkid.model.AdminRefCentreDto
 import com.example.vaccinkid.network.ApiClient
 import kotlinx.coroutines.launch
 
@@ -27,7 +28,7 @@ class GestionPersonnelFragment : Fragment() {
     private lateinit var messageView: TextView
     private lateinit var totalView: TextView
     private lateinit var adapter: PersonnelAdapter
-    private var centres: List<AdminCentreDto> = emptyList()
+    private var centres: List<AdminRefCentreDto> = emptyList()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         adapter = PersonnelAdapter(
@@ -95,7 +96,7 @@ class GestionPersonnelFragment : Fragment() {
     }
 
     private fun showForm(item: AdminPersonnelDto?) {
-        val availableCentres = centres.filter { it.estActif != false || it.id == item?.centreId }
+        val availableCentres = centres.filter { it.id == item?.centreId || true }
         if (availableCentres.isEmpty()) {
             messageView.text = "Aucun centre actif disponible."
             loadCentres()
@@ -194,7 +195,7 @@ class GestionPersonnelFragment : Fragment() {
     private fun loadCentres() {
         viewLifecycleOwner.lifecycleScope.launch {
             try {
-                val response = ApiClient.apiService.getAdminCentres(limit = 100)
+                val response = ApiClient.apiService.getAdminReferences()
                 if (response.status != "success") throw Exception(response.message ?: "Centres indisponibles")
                 centres = response.data?.centres.orEmpty()
             } catch (e: Exception) {

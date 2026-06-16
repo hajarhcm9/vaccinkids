@@ -15,6 +15,8 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.vaccinkid.model.AdminCentreDto
+import com.example.vaccinkid.model.AdminRefCentreDto
+import com.example.vaccinkid.model.AdminRefVaccinDto
 import com.example.vaccinkid.model.StockDto
 import com.example.vaccinkid.model.StockMovementDto
 import com.example.vaccinkid.model.UpdateStockRequest
@@ -30,8 +32,8 @@ class GestionStocksActivity : AppCompatActivity() {
     private lateinit var adapter: StockAdapter
     private lateinit var movementAdapter: StockMovementAdapter
     private lateinit var centreInput: Spinner
-    private var centres: List<AdminCentreDto> = emptyList()
-    private var vaccins: List<VaccinDto> = emptyList()
+    private var centres: List<AdminRefCentreDto> = emptyList()
+    private var vaccins: List<AdminRefVaccinDto> = emptyList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -211,13 +213,12 @@ class GestionStocksActivity : AppCompatActivity() {
                     loadForSelectedCentre()
                     return@launch
                 }
-                val centreResponse = ApiClient.apiService.getAdminCentres(limit = 100)
-                val vaccinResponse = ApiClient.apiService.getVaccins(all = true)
-                if (centreResponse.status != "success" || vaccinResponse.status != "success") {
+                val refsResponse = ApiClient.apiService.getAdminReferences()
+                if (refsResponse.status != "success") {
                     throw Exception("References indisponibles")
                 }
-                centres = centreResponse.data?.centres.orEmpty().filter { it.estActif != false }
-                vaccins = vaccinResponse.data.orEmpty().filter { it.estActif != false }
+                centres = refsResponse.data?.centres.orEmpty()
+                vaccins = refsResponse.data?.vaccins.orEmpty()
                 centreInput.adapter = ArrayAdapter(
                     this@GestionStocksActivity,
                     android.R.layout.simple_spinner_dropdown_item,

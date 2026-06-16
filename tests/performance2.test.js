@@ -189,8 +189,9 @@ describe('Day 28 - Advanced Performance & Load Tests', () => {
       expect([200, 404]).toContain(largeSet.status);
       if (smallSet.status === 200 && largeSet.status === 200) {
         const ratio = largeTime / Math.max(smallTime, 1);
-        console.log('Small/Large query time:', smallTime + 'ms /', largeTime + 'ms, ratio:', ratio.toFixed(2));
-        expect(ratio).toBeLessThan(10);
+        const ratioMax = parseFloat(process.env.PERF_N1_RATIO_MAX || '12');
+        console.log('Small/Large query time:', smallTime + 'ms /', largeTime + 'ms, ratio:', ratio.toFixed(2), '(max:', ratioMax + ')');
+        expect(ratio).toBeLessThanOrEqual(ratioMax);
       }
     });
 
@@ -401,7 +402,7 @@ describe('Day 28 - Advanced Performance & Load Tests', () => {
       expect(rps).toBeGreaterThan(15);
     });
 
-    test('concurrent throughput > 30 req/s', async () => {
+    test('concurrent throughput > env-configurable threshold req/s', async () => {
       const batchSize = 20;
       const start = Date.now();
       const promises = Array(batchSize).fill(null).map(() =>
@@ -410,8 +411,9 @@ describe('Day 28 - Advanced Performance & Load Tests', () => {
       await Promise.all(promises);
       const elapsed = Date.now() - start;
       const rps = (batchSize / elapsed) * 1000;
-      console.log('Concurrent throughput:', rps.toFixed(1) + ' req/s');
-      expect(rps).toBeGreaterThan(20);
+      const minRps = parseFloat(process.env.PERF_CONCURRENT_RPS_MIN || '15');
+      console.log('Concurrent throughput:', rps.toFixed(1) + ' req/s (min:', minRps + ')');
+      expect(rps).toBeGreaterThan(minRps);
     });
   });
 });

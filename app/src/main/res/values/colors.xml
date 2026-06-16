@@ -69,4 +69,6 @@
     <color name="teal_input">#F0FDFA</color>
     <color name="teal_input_border">#99F6E4</color>
     <color name="scan_zone">#E0F2FE</color>
+    <color name="white_75">#BFFFFFFF</color>
+    <color name="white_80">#CCFFFFFF</color>
 </resources>

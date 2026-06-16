@@ -653,6 +653,23 @@ class AdminService {
   }
 
   // ==========================================
+  // REFERENCES (lightweight selectors)
+  // ==========================================
+
+  async getReferences() {
+    var centreRes = await pool.query(
+      'SELECT id, nom FROM centre WHERE est_actif = TRUE ORDER BY nom',
+    );
+    var vaccinRes = await pool.query(
+      'SELECT id, nom FROM vaccin WHERE est_actif = TRUE ORDER BY nom',
+    );
+    return {
+      centres: centreRes.rows,
+      vaccins: vaccinRes.rows,
+    };
+  }
+
+  // ==========================================
   // SYSTEM INFO
   // ==========================================
 

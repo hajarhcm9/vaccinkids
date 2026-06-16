@@ -104,6 +104,9 @@ interface ApiService {
     @PATCH("admin/personnel/{id}/reactivate")
     suspend fun reactivateAdminPersonnel(@Path("id") id: Int): ApiResponse<Map<String, Any?>>
 
+    @GET("admin/references")
+    suspend fun getAdminReferences(): ApiResponse<AdminReferencesDto>
+
     @GET("admin/centres")
     suspend fun getAdminCentres(
         @Query("page") page: Int = 1,

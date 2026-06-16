@@ -1,98 +1,243 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/bg_primary"
-    android:orientation="vertical"
-    android:padding="20dp">
+    android:background="@color/white">
 
-    <TextView
-        android:id="@+id/tvGrowthTitle"
+    <!-- En-tête -->
+    <RelativeLayout
+        android:id="@+id/rlGrowthHeader"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textAppearance="@style/TextAppearance.Vaccinkid.Headline" />
+        android:padding="16dp"
+        app:layout_constraintTop_toTopOf="parent">
 
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="2dp"
-        android:text="Suivi de croissance clinique"
-        android:textAppearance="@style/TextAppearance.Vaccinkid.Body" />
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        android:orientation="horizontal">
+        <ImageView
+            android:id="@+id/btnBackGrowth"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_centerVertical="true"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:src="@drawable/ic_logout"
+            android:rotation="180"
+            app:tint="@color/black"
+            android:contentDescription="@string/edit" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:background="@drawable/bg_badge_warning"
-            android:paddingHorizontal="12dp"
-            android:paddingVertical="6dp"
-            android:text="Poids (kg)"
-            android:textColor="@color/warning_dark"
+            android:layout_centerInParent="true"
+            android:text="Courbe de croissance"
+            android:textColor="@color/black"
+            android:textSize="18sp"
             android:textStyle="bold" />
+    </RelativeLayout>
+
+    <!-- Fiche d'identité -->
+    <LinearLayout
+        android:id="@+id/llGrowthPatient"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="20dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginRight="20dp"
+        android:layout_marginEnd="20dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        app:layout_constraintTop_toBottomOf="@id/rlGrowthHeader">
+
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/ivGrowthAvatar"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:src="@drawable/ic_medical_staff"
+            app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Full"
+            android:contentDescription="@null" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="12dp"
+            android:layout_marginStart="12dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tvGrowthPatientName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Patient"
+                android:textColor="@color/black"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvGrowthPatientAge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Age"
+                android:textColor="@color/text_secondary"
+                android:textSize="13sp" />
+        </LinearLayout>
 
         <TextView
+            android:id="@+id/tvGrowthGender"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
             android:background="@drawable/bg_badge_info"
-            android:paddingHorizontal="12dp"
-            android:paddingVertical="6dp"
-            android:text="Taille (cm)"
+            android:paddingLeft="10dp"
+            android:paddingRight="10dp"
+            android:paddingTop="4dp"
+            android:paddingBottom="4dp"
+            android:text="Garçon"
             android:textColor="@color/info_dark"
+            android:textSize="11sp"
             android:textStyle="bold" />
     </LinearLayout>
 
-    <ProgressBar
-        android:id="@+id/progressGrowth"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginTop="12dp"
-        android:indeterminateTint="@color/brand_teal"
-        android:visibility="gone" />
-
-    <TextView
-        android:id="@+id/tvGrowthEmpty"
+    <!-- Tabs -->
+    <LinearLayout
+        android:id="@+id/llGrowthTabs"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="48dp"
+        android:layout_marginLeft="20dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginRight="20dp"
+        android:layout_marginEnd="20dp"
         android:layout_marginTop="20dp"
-        android:background="@drawable/bg_card_rounded"
-        android:gravity="center"
-        android:padding="28dp"
-        android:textAppearance="@style/TextAppearance.Vaccinkid.Body"
-        android:visibility="gone" />
+        android:background="@drawable/bg_role_selector"
+        android:orientation="horizontal"
+        android:padding="4dp"
+        app:layout_constraintTop_toBottomOf="@id/llGrowthPatient">
 
-    <com.google.android.material.card.MaterialCardView
-        style="@style/Widget.Vaccinkid.Card"
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnTabPoids"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:text="Poids"
+            android:textColor="@color/white"
+            app:backgroundTint="@color/brand_teal"
+            app:cornerRadius="20dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnTabTaille"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:text="Taille"
+            android:textColor="@color/text_secondary" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnTabImc"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:text="IMC"
+            android:textColor="@color/text_secondary" />
+    </LinearLayout>
+
+    <!-- Chart -->
+    <LinearLayout
+        android:id="@+id/llChartContainer"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_marginTop="16dp"
-        android:layout_weight="1">
+        android:layout_marginLeft="20dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginRight="20dp"
+        android:layout_marginEnd="20dp"
+        android:layout_marginTop="24dp"
+        android:layout_marginBottom="16dp"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toTopOf="@id/llGrowthFooter"
+        app:layout_constraintTop_toBottomOf="@id/llGrowthTabs">
 
-        <LinearLayout
+        <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="vertical"
-            android:padding="14dp">
-
+            android:layout_height="wrap_content">
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Courbes de croissance"
-                android:textAppearance="@style/TextAppearance.Vaccinkid.Title" />
+                android:text="Mesure"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp" />
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentRight="true"
+                android:layout_alignParentEnd="true"
+                android:gravity="end"
+                android:orientation="vertical">
+                <TextView
+                    android:id="@+id/tvCurrentValue"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="--"
+                    android:textColor="@color/black"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+                <TextView
+                    android:id="@+id/tvGrowthEvolution"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text=""
+                    android:textColor="@color/success"
+                    android:textSize="11sp" />
+            </LinearLayout>
+        </RelativeLayout>
 
-            <com.github.mikephil.charting.charts.LineChart
-                android:id="@+id/lineChartGrowth"
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_marginTop="8dp"
-                android:layout_weight="1" />
+        <com.github.mikephil.charting.charts.LineChart
+            android:id="@+id/lineChartGrowth"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="16dp" />
+    </LinearLayout>
+
+    <!-- Footer -->
+    <RelativeLayout
+        android:id="@+id/llGrowthFooter"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="20dp"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:orientation="vertical">
+            <TextView
+                android:id="@+id/tvLastMeasure"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Dernière mesure"
+                android:textColor="@color/black"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+            <TextView
+                android:id="@+id/tvLastMeasureDate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="--"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp" />
         </LinearLayout>
-    </com.google.android.material.card.MaterialCardView>
-</LinearLayout>
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/fabAddMeasure"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true"
+            android:src="@android:drawable/ic_input_add"
+            app:backgroundTint="@color/brand_teal_dark"
+            app:tint="@color/white"
+            android:contentDescription="@null" />
+    </RelativeLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

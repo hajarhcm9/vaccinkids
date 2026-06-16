@@ -35,7 +35,7 @@
         android:layout_height="wrap_content"
         android:text="Enregistrer une entree"
         android:backgroundTint="@color/staff_primary"
-        android:textColor="#FFFFFF"
+        android:textColor="@color/white"
         android:layout_marginBottom="16dp"/>
 
     <androidx.recyclerview.widget.RecyclerView

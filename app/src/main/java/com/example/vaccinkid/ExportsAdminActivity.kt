@@ -15,6 +15,7 @@ import androidx.core.content.FileProvider
 import androidx.lifecycle.lifecycleScope
 import com.example.vaccinkid.network.ApiClient
 import com.example.vaccinkid.model.AdminCentreDto
+import com.example.vaccinkid.model.AdminRefCentreDto
 import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -25,7 +26,8 @@ class ExportsAdminActivity : AppCompatActivity() {
     private lateinit var typeSpinner: Spinner
     private lateinit var formatSpinner: Spinner
     private lateinit var centreInput: Spinner
-    private var centres: List<AdminCentreDto> = emptyList()
+    private var centres: List<AdminRefCentreDto> = emptyList()
+    private var centresLoaded = false
     private lateinit var startInput: EditText
     private lateinit var endInput: EditText
     private lateinit var statusView: TextView
@@ -56,6 +58,7 @@ class ExportsAdminActivity : AppCompatActivity() {
         statusView = TextView(this)
         exportButton = Button(this).apply {
             text = "Telecharger"
+            isEnabled = false
             setOnClickListener { exportSelected() }
         }
         listOf(typeSpinner, formatSpinner, centreInput, startInput, endInput, exportButton, statusView).forEach { root.addView(it) }
@@ -64,6 +67,10 @@ class ExportsAdminActivity : AppCompatActivity() {
     }
 
     private fun exportSelected() {
+        if (!centresLoaded) {
+            statusView.text = "Chargement des references en cours, veuillez patienter."
+            return
+        }
         val type = typeSpinner.selectedItem.toString()
         val format = formatSpinner.selectedItem.toString()
         if (type == "stock" && format == "pdf") {
@@ -133,18 +140,24 @@ class ExportsAdminActivity : AppCompatActivity() {
     private fun edit(hintText: String): EditText = EditText(this).apply { hint = hintText }
 
     private fun loadCentres() {
+        statusView.text = "Chargement des references..."
+        exportButton.isEnabled = false
         lifecycleScope.launch {
             try {
-                val response = ApiClient.apiService.getAdminCentres(limit = 100)
-                if (response.status != "success") throw Exception(response.message ?: "Centres indisponibles")
+                val response = ApiClient.apiService.getAdminReferences()
+                if (response.status != "success") throw Exception(response.message ?: "References indisponibles")
                 centres = response.data?.centres.orEmpty()
                 centreInput.adapter = ArrayAdapter(
                     this@ExportsAdminActivity,
                     android.R.layout.simple_spinner_dropdown_item,
                     listOf("Tous les centres") + centres.map { it.nom ?: "Centre #${it.id}" }
                 )
+                centresLoaded = true
+                exportButton.isEnabled = true
+                statusView.text = ""
             } catch (e: Exception) {
-                statusView.text = e.message ?: "Centres indisponibles"
+                statusView.text = (e.message ?: "References indisponibles") + " — export desactive."
+                exportButton.isEnabled = false
             }
         }
     }

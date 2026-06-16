@@ -13,6 +13,7 @@ import androidx.core.view.setPadding
 import androidx.lifecycle.lifecycleScope
 import com.example.vaccinkid.model.ApiResponse
 import com.example.vaccinkid.model.AdminCentreDto
+import com.example.vaccinkid.model.AdminRefCentreDto
 import com.example.vaccinkid.network.ApiClient
 import kotlinx.coroutines.launch
 
@@ -20,7 +21,7 @@ class StatsAdminActivity : AppCompatActivity() {
     private lateinit var content: LinearLayout
     private lateinit var messageView: TextView
     private lateinit var centreInput: Spinner
-    private var centres: List<AdminCentreDto> = emptyList()
+    private var centres: List<AdminRefCentreDto> = emptyList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -112,8 +113,8 @@ class StatsAdminActivity : AppCompatActivity() {
     private fun loadCentres() {
         lifecycleScope.launch {
             try {
-                val response = ApiClient.apiService.getAdminCentres(limit = 100)
-                if (response.status != "success") throw Exception(response.message ?: "Centres indisponibles")
+                val response = ApiClient.apiService.getAdminReferences()
+                if (response.status != "success") throw Exception(response.message ?: "References indisponibles")
                 centres = response.data?.centres.orEmpty()
                 centreInput.adapter = ArrayAdapter(
                     this@StatsAdminActivity,
@@ -122,7 +123,7 @@ class StatsAdminActivity : AppCompatActivity() {
                 )
                 loadStats()
             } catch (e: Exception) {
-                messageView.text = e.message ?: "Centres indisponibles"
+                messageView.text = e.message ?: "References indisponibles"
             }
         }
     }

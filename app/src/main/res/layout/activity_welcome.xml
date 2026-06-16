@@ -1,143 +1,179 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/bg_primary">
+    android:background="@color/white">
 
-    <View
-        android:id="@+id/welcomeAccent"
-        android:layout_width="220dp"
-        android:layout_height="220dp"
-        android:layout_marginTop="-72dp"
-        android:layout_marginEnd="-72dp"
-        android:background="@drawable/bg_circle_teal"
-        android:alpha="0.12"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
+    <!-- 3. Logo & Titre -->
     <LinearLayout
-        android:id="@+id/welcomeBrand"
+        android:id="@+id/llLogoContainer"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="36dp"
+        android:layout_marginTop="60dp"
         android:gravity="center"
-        android:orientation="horizontal"
+        android:orientation="vertical"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-        <FrameLayout
-            android:layout_width="56dp"
-            android:layout_height="56dp"
-            android:background="@drawable/bg_circle_staff_primary">
-
-            <ImageView
-                android:layout_width="28dp"
-                android:layout_height="28dp"
-                android:layout_gravity="center"
-                android:contentDescription="VaccinKids"
-                android:src="@drawable/ic_syringe"
-                app:tint="@color/white" />
-        </FrameLayout>
+        <ImageView
+            android:id="@+id/ivLogo"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:src="@drawable/ic_syringe"
+            app:tint="@color/brand_teal" />
 
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
-            android:orientation="vertical">
+            android:layout_marginTop="8dp"
+            android:orientation="horizontal">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="VaccinKids"
-                android:textColor="@color/text_primary"
-                android:textSize="27sp"
+                android:text="Vaccin"
+                android:textColor="@color/brand_teal"
+                android:textSize="28sp"
                 android:textStyle="bold" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:letterSpacing="0.28"
-                android:text="STAFF"
-                android:textColor="@color/brand_teal"
-                android:textSize="10sp"
+                android:text="Kids"
+                android:textColor="@color/brand_coral"
+                android:textSize="28sp"
                 android:textStyle="bold" />
         </LinearLayout>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:letterSpacing="0.4"
+            android:text="STAFF"
+            android:textColor="@color/brand_teal"
+            android:textSize="12sp"
+            android:textStyle="bold" />
     </LinearLayout>
 
-    <FrameLayout
-        android:id="@+id/welcomeIllustration"
-        android:layout_width="220dp"
-        android:layout_height="220dp"
-        android:background="@drawable/bg_circle_teal"
-        app:layout_constraintBottom_toTopOf="@id/welcomeTitle"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/welcomeBrand">
-
-        <ImageView
-            android:layout_width="96dp"
-            android:layout_height="96dp"
-            android:layout_gravity="center"
-            android:contentDescription="Gestion des vaccinations"
-            android:src="@drawable/ic_medical_staff"
-            app:tint="@color/white" />
-    </FrameLayout>
-
+    <!-- 4. Bienvenue -->
     <TextView
-        android:id="@+id/welcomeTitle"
-        style="@style/TextAppearance.Vaccinkid.Headline"
+        android:id="@+id/tvWelcomeTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
         android:text="Bienvenue !"
-        app:layout_constraintBottom_toTopOf="@id/welcomeSubtitle"
+        android:textColor="@color/black"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/llLogoContainer" />
+
+    <TextView
+        android:id="@+id/tvWelcomeSubtitle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="48dp"
+        android:layout_marginTop="8dp"
+        android:gravity="center"
+        android:text="Prenez soin de chaque enfant, protégez leur avenir."
+        android:textColor="@color/text_secondary"
+        android:textSize="14sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tvWelcomeTitle" />
+
+    <!-- 5. Illustration (Simplified with what we have) -->
+    <FrameLayout
+        android:id="@+id/flIllustration"
+        android:layout_width="260dp"
+        android:layout_height="260dp"
+        app:layout_constraintBottom_toTopOf="@id/btnCommencer"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tvWelcomeSubtitle">
+
+        <View
+            android:layout_width="220dp"
+            android:layout_height="220dp"
+            android:layout_gravity="center"
+            android:alpha="0.1"
+            android:background="@drawable/bg_circle_teal" />
+
+        <ImageView
+            android:layout_width="140dp"
+            android:layout_height="140dp"
+            android:layout_gravity="center"
+            android:src="@drawable/ic_medical_staff"
+            app:tint="@color/brand_teal" />
+    </FrameLayout>
+
+    <!-- 6. Boutons & Pagination -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnCommencer"
+        style="@style/Widget.Material3.Button"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:layout_marginHorizontal="32dp"
+        android:layout_marginBottom="12dp"
+        app:backgroundTint="@color/brand_teal"
+        android:text="Commencer"
+        android:textColor="@color/white"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        app:cornerRadius="28dp"
+        app:layout_constraintBottom_toTopOf="@id/tvEnSavoirPlus" />
+
+    <TextView
+        android:id="@+id/tvEnSavoirPlus"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="32dp"
+        android:text="En savoir plus"
+        android:textColor="@color/brand_teal"
+        android:textSize="14sp"
+        app:layout_constraintBottom_toTopOf="@id/llDots"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
-    <TextView
-        android:id="@+id/welcomeSubtitle"
-        style="@style/TextAppearance.Vaccinkid.Body"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginHorizontal="42dp"
-        android:layout_marginTop="8dp"
-        android:gravity="center"
-        android:text="Prenez soin de chaque enfant et gérez les vaccinations en toute sécurité."
-        android:textSize="15sp"
-        app:layout_constraintBottom_toTopOf="@id/welcomeActions"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/welcomeTitle" />
-
     <LinearLayout
-        android:id="@+id/welcomeActions"
-        android:layout_width="0dp"
+        android:id="@+id/llDots"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginHorizontal="24dp"
         android:layout_marginBottom="24dp"
-        android:orientation="vertical"
+        android:orientation="horizontal"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent">
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnInfirmier"
-            style="@style/Widget.Vaccinkid.Button"
-            android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:text="Continuer comme infirmier"
-            app:icon="@drawable/ic_medical_staff"
-            app:iconTint="@color/white" />
+        <View
+            android:layout_width="8dp"
+            android:layout_height="8dp"
+            android:background="@drawable/bg_circle_teal" />
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnAdmin"
-            style="@style/Widget.Vaccinkid.Button.Outlined"
-            android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:layout_marginTop="10dp"
-            android:text="Continuer comme admin"
-            app:icon="@drawable/ic_admin_panel"
-            app:iconTint="@color/brand_teal" />
+        <View
+            android:layout_width="8dp"
+            android:layout_height="8dp"
+            android:layout_marginStart="8dp"
+            android:alpha="0.3"
+            android:background="@color/staff_muted" />
+
+        <View
+            android:layout_width="8dp"
+            android:layout_height="8dp"
+            android:layout_marginStart="8dp"
+            android:alpha="0.3"
+            android:background="@color/staff_muted" />
+
+        <View
+            android:layout_width="8dp"
+            android:layout_height="8dp"
+            android:layout_marginStart="8dp"
+            android:alpha="0.3"
+            android:background="@color/staff_muted" />
     </LinearLayout>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

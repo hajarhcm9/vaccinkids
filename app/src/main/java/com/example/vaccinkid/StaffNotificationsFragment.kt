@@ -1,12 +1,11 @@
 package com.example.vaccinkid
 
+import android.graphics.Color
+import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
-import android.widget.LinearLayout
-import android.widget.ProgressBar
+import android.widget.ImageView
 import android.widget.TextView
-import androidx.core.view.setPadding
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -15,135 +14,64 @@ import com.example.vaccinkid.model.NotificationDto
 import com.example.vaccinkid.network.ApiClient
 import kotlinx.coroutines.launch
 
-class StaffNotificationsFragment : Fragment() {
-    private lateinit var progress: ProgressBar
-    private lateinit var message: TextView
-    private lateinit var adapter: StaffNotificationAdapter
-    private lateinit var markAllReadButton: Button
+class StaffNotificationsFragment : Fragment(R.layout.fragment_staff_notifications) {
+    private lateinit var rvNotifications: RecyclerView
+    private lateinit var adapter: NotificationAdapter
     private var loading = false
 
-    override fun onCreateView(
-        inflater: android.view.LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: android.os.Bundle?
-    ): View {
-        val root = LinearLayout(requireContext()).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(24)
-        }
-        root.addView(TextView(requireContext()).apply {
-            text = "Notifications staff"
-            textSize = 24f
-            setTextColor(StaffUi.INK)
-            setTypeface(typeface, android.graphics.Typeface.BOLD)
-        })
-        root.addView(TextView(requireContext()).apply {
-            text = "Alertes et informations liees a votre activite"
-            StaffUi.styleSubtitle(this)
-            setPadding(0, 0, 0, 10)
-        })
-        val actions = LinearLayout(requireContext()).apply { orientation = LinearLayout.HORIZONTAL }
-        actions.addView(button("Rafraichir") { loadNotifications() }, weight())
-        markAllReadButton = button("Tout marquer lu") { markAllRead() }.apply {
-            visibility = View.GONE
-        }
-        actions.addView(markAllReadButton, weight())
-        root.addView(actions)
-        progress = ProgressBar(requireContext()).apply { visibility = View.GONE }
-        message = TextView(requireContext()).apply { setPadding(0, 8, 0, 8) }
-        root.addView(progress)
-        root.addView(message)
-        adapter = StaffNotificationAdapter { markRead(it) }
-        root.addView(RecyclerView(requireContext()).apply {
-            layoutManager = LinearLayoutManager(requireContext())
-            adapter = this@StaffNotificationsFragment.adapter
-        }, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f))
-        return root
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: android.os.Bundle?) {
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        StaffUi.decorateScreen(view)
+        
+        rvNotifications = view.findViewById(R.id.rvNotifications)
+        rvNotifications.layoutManager = LinearLayoutManager(requireContext())
+        adapter = NotificationAdapter { markRead(it) }
+        rvNotifications.adapter = adapter
+        
+        view.findViewById<View>(R.id.tvMarkAllAsRead).setOnClickListener { markAllRead() }
+        
         loadNotifications()
     }
 
     private fun loadNotifications() {
         if (loading) return
-        setLoading(true, "Chargement...")
+        loading = true
         viewLifecycleOwner.lifecycleScope.launch {
             try {
                 val response = ApiClient.apiService.getNotifications()
-                if (response.status != "success") {
-                    throw Exception(response.message ?: "Notifications indisponibles")
+                if (response.status == "success") {
+                    adapter.submit(response.data.orEmpty())
                 }
-                val notifications = response.data.orEmpty()
-                adapter.submit(notifications)
-                val unreadCount = notifications.count { it.estLue != true }
-                markAllReadButton.visibility = if (unreadCount > 0) View.VISIBLE else View.GONE
-                setLoading(
-                    false,
-                    if (notifications.isEmpty()) {
-                        "Aucune notification. Les nouvelles alertes apparaitront ici."
-                    } else {
-                        "$unreadCount non lue(s)"
-                    }
-                )
-            } catch (error: Exception) {
-                adapter.submit(emptyList())
-                markAllReadButton.visibility = View.GONE
-                setLoading(false, error.message ?: "Connexion requise")
+            } catch (_: Exception) {
+            } finally {
+                loading = false
             }
         }
     }
 
     private fun markRead(notification: NotificationDto) {
         if (loading || notification.estLue == true) return
-        setLoading(true, "Mise a jour...")
         viewLifecycleOwner.lifecycleScope.launch {
             try {
-                val response = ApiClient.apiService.markNotificationRead(notification.id)
-                if (response.status != "success") throw Exception(response.message ?: "Action refusee")
-                setLoading(false)
+                ApiClient.apiService.markNotificationRead(notification.id)
                 loadNotifications()
-            } catch (error: Exception) {
-                setLoading(false, error.message ?: "Connexion requise")
-            }
+            } catch (_: Exception) {}
         }
     }
 
     private fun markAllRead() {
         if (loading) return
-        setLoading(true, "Mise a jour...")
         viewLifecycleOwner.lifecycleScope.launch {
             try {
-                val response = ApiClient.apiService.markAllNotificationsRead()
-                if (response.status != "success") throw Exception(response.message ?: "Action refusee")
-                setLoading(false)
+                ApiClient.apiService.markAllNotificationsRead()
                 loadNotifications()
-            } catch (error: Exception) {
-                setLoading(false, error.message ?: "Connexion requise")
-            }
+            } catch (_: Exception) {}
         }
     }
-
-    private fun setLoading(value: Boolean, text: String? = null) {
-        loading = value
-        progress.visibility = if (value) View.VISIBLE else View.GONE
-        if (text != null) message.text = text
-    }
-
-    private fun button(label: String, action: () -> Unit): Button =
-        Button(requireContext()).apply {
-            text = label
-            setOnClickListener { action() }
-        }
-
-    private fun weight() = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
 }
 
-private class StaffNotificationAdapter(
+private class NotificationAdapter(
     private val onRead: (NotificationDto) -> Unit
-) : RecyclerView.Adapter<StaffNotificationAdapter.ViewHolder>() {
+) : RecyclerView.Adapter<NotificationAdapter.ViewHolder>() {
     private var items = emptyList<NotificationDto>()
 
     fun submit(next: List<NotificationDto>) {
@@ -152,37 +80,45 @@ private class StaffNotificationAdapter(
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder =
-        ViewHolder(LinearLayout(parent.context).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(20)
-        })
+        ViewHolder(android.view.LayoutInflater.from(parent.context).inflate(R.layout.item_notification, parent, false))
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) = holder.bind(items[position])
-
     override fun getItemCount(): Int = items.size
 
-    inner class ViewHolder(private val root: LinearLayout) : RecyclerView.ViewHolder(root) {
+    inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        private val title = view.findViewById<TextView>(R.id.tvNotifTitle)
+        private val message = view.findViewById<TextView>(R.id.tvNotifMessage)
+        private val time = view.findViewById<TextView>(R.id.tvNotifTime)
+        private val icon = view.findViewById<ImageView>(R.id.ivNotifIcon)
+        private val iconContainer = view.findViewById<View>(R.id.flNotifIconContainer)
+
         fun bind(notification: NotificationDto) {
-            root.removeAllViews()
-            StaffUi.styleCard(root, if (notification.estLue == true) null else StaffUi.CORAL)
-            root.addView(TextView(root.context).apply {
-                text = notification.titre ?: "Notification"
-                textSize = 16f
-                setTextColor(StaffUi.INK)
-                setTypeface(typeface, android.graphics.Typeface.BOLD)
-            })
-            root.addView(TextView(root.context).apply {
-                text = notification.message ?: ""
-                setTextColor(StaffUi.MUTED)
-            })
-            root.addView(TextView(root.context).apply {
-                text = if (notification.estLue == true) "Lue" else "Non lue"
-                StaffUi.statusPill(this, if (notification.estLue == true) "ACTIF" else "EN_ATTENTE")
-            })
-            root.setOnClickListener(if (notification.estLue == true) null else View.OnClickListener {
-                onRead(notification)
-            })
-            StaffUi.decorateTree(root)
+            title.text = notification.titre ?: "Notification"
+            message.text = notification.message ?: ""
+            time.text = "Aujourd'hui"
+            
+            // Styliser selon le titre pour le demo
+            val t = title.text.toString().lowercase()
+            when {
+                t.contains("vaccin") -> {
+                    icon.setImageResource(R.drawable.ic_syringe)
+                    iconContainer.backgroundTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#E0F2FE"))
+                    icon.imageTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#0EA5E9"))
+                }
+                t.contains("stock") -> {
+                    icon.setImageResource(R.drawable.ic_notifications)
+                    iconContainer.backgroundTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#FEF3C7"))
+                    icon.imageTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#F59E0B"))
+                }
+                else -> {
+                    icon.setImageResource(R.drawable.ic_notifications)
+                    iconContainer.backgroundTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#F0FDFA"))
+                    icon.imageTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#0F766E"))
+                }
+            }
+            
+            itemView.alpha = if (notification.estLue == true) 0.6f else 1.0f
+            itemView.setOnClickListener { onRead(notification) }
         }
     }
 }

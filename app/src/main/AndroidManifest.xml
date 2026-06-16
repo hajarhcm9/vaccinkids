@@ -44,6 +44,12 @@
 
         <!-- Login Admin -->
         <activity
+            android:name=".AdminLoginActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
+        <!-- Deprecated alias kept for compatibility; delegates to AdminLoginActivity -->
+        <activity
             android:name=".MainActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />

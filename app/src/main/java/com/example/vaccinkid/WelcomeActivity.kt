@@ -11,17 +11,14 @@ class WelcomeActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_welcome)
 
-        findViewById<Button>(R.id.btnInfirmier).setOnClickListener {
+        findViewById<Button>(R.id.btnCommencer).setOnClickListener {
+            // Par defaut, on va vers l'ecran de login (qui permet de choisir entre infirmier et admin)
             startActivity(Intent(this, LoginInfirmierActivity::class.java))
-        }
-
-        findViewById<Button>(R.id.btnAdmin).setOnClickListener {
-            startActivity(Intent(this, MainActivity::class.java))
         }
 
         // Acces rapide au diagnostic uniquement en debug.
         if (BuildConfig.DEBUG) {
-            findViewById<Button>(R.id.btnInfirmier).setOnLongClickListener {
+            findViewById<Button>(R.id.btnCommencer).setOnLongClickListener {
                 startActivity(Intent(this, ApiDiagnosticsActivity::class.java))
                 true
             }

@@ -1,0 +1,24 @@
+# Replace staging.vaccinikids.ma with your actual staging domain.
+# Caddy automatically provisions a Let's Encrypt TLS certificate.
+staging.vaccinikids.ma {
+    # Forward all /api/* traffic to the Node.js API
+    reverse_proxy /api/* api:3000
+
+    # Security headers (complement helmet in the Express layer)
+    header {
+        Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
+        X-Content-Type-Options nosniff
+        X-Frame-Options DENY
+        Referrer-Policy strict-origin-when-cross-origin
+        -Server
+    }
+
+    # Access log
+    log {
+        output file /data/caddy/access.log {
+            roll_size 50mb
+            roll_keep 5
+        }
+        format json
+    }
+}

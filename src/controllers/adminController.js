@@ -192,6 +192,19 @@ const AdminController = {
   }),
 
   // ==========================================
+  // REFERENCES
+  // ==========================================
+
+  /**
+   * GET /api/admin/references
+   * Return all active centres and vaccines as lightweight id/nom pairs for selectors.
+   */
+  getReferences: catchAsync(async (req, res, next) => {
+    const result = await adminService.getReferences();
+    return success(res, 200, 'References actives', result);
+  }),
+
+  // ==========================================
   // SYSTEM INFO
   // ==========================================
 
