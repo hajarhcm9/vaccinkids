@@ -16,12 +16,13 @@
         android:textColor="@color/staff_ink"
         android:layout_marginBottom="16dp"/>
 
-    <EditText
+    <Spinner
         android:id="@+id/inputCentreStock"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Centre ID"
-        android:inputType="number" />
+        android:layout_height="52dp"
+        android:layout_marginBottom="8dp"
+        android:background="@drawable/bg_input_outlined"
+        android:paddingHorizontal="12dp" />
 
     <Button
         android:id="@+id/btnChargerStock"

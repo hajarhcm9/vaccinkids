@@ -1,144 +1,239 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/bg_primary">
+    android:background="@color/bg_screen">
 
-    <!-- Back button -->
-    <ImageView
-        android:id="@+id/btnBackScan"
-        android:layout_width="28dp"
-        android:layout_height="28dp"
-        android:layout_margin="20dp"
-        android:contentDescription="Retour"
-        android:rotation="180"
-        android:src="@drawable/ic_logout"
-        app:layout_constraintStart_toStartOf="parent"
+    <!-- ══════ GRADIENT HEADER ══════ -->
+    <FrameLayout
+        android:id="@+id/flScanHeader"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:background="@drawable/bg_welcome_hero"
         app:layout_constraintTop_toTopOf="parent"
-        app:tint="@color/text_primary" />
-
-    <!-- Titles -->
-    <TextView
-        android:id="@+id/tvScanTitle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:text="Scan QR Code"
-        android:textColor="@color/text_primary"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/glScan"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent">
 
-    <TextView
-        android:id="@+id/tvScanSubtitle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
-        android:text="Scannez le QR code du carnet de santé"
-        android:textColor="@color/text_secondary"
-        android:textSize="14sp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tvScanTitle" />
-
-    <!-- Camera / QR viewfinder -->
-    <FrameLayout
-        android:id="@+id/scanContainer"
-        android:layout_width="280dp"
-        android:layout_height="280dp"
-        android:layout_marginTop="24dp"
-        android:background="@drawable/bg_scan_viewfinder"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tvScanSubtitle">
-
-        <!-- Dimmed overlay around corners (visual corner brackets via bg_scan_corners border) -->
-        <ImageView
-            android:layout_width="160dp"
-            android:layout_height="160dp"
-            android:layout_gravity="center"
-            android:alpha="0.25"
-            android:contentDescription="@null"
-            android:src="@drawable/ic_scan"
-            app:tint="@color/brand_teal" />
-
-        <!-- Animated scan line -->
+        <!-- Decorative glow -->
         <View
-            android:id="@+id/scanLine"
+            android:layout_width="200dp"
+            android:layout_height="200dp"
+            android:layout_gravity="end|bottom"
+            android:translationX="60dp"
+            android:translationY="60dp"
+            android:background="@drawable/bg_white_glow_circle"
+            android:alpha="0.08" />
+
+        <!-- Back button -->
+        <FrameLayout
+            android:id="@+id/btnBackScan"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_gravity="start|top"
+            android:layout_margin="20dp"
+            android:background="@drawable/bg_circle_white_alpha">
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_gravity="center"
+                android:contentDescription="Retour"
+                android:rotation="180"
+                android:src="@drawable/ic_logout"
+                app:tint="@color/white" />
+        </FrameLayout>
+
+        <!-- Titles centered -->
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="2dp"
-            android:layout_gravity="top"
-            android:background="@color/brand_teal"
-            android:alpha="0.8" />
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:paddingHorizontal="24dp">
+
+            <TextView
+                android:id="@+id/tvScanTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Scanner QR"
+                android:textColor="@color/white"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:letterSpacing="-0.01" />
+
+            <TextView
+                android:id="@+id/tvScanSubtitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:gravity="center"
+                android:text="Scannez le QR code du carnet de santé"
+                android:textColor="@color/white_80"
+                android:textSize="14sp" />
+        </LinearLayout>
     </FrameLayout>
 
-    <!-- Open camera button -->
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnScanner"
-        style="@style/Widget.Material3.Button"
-        android:layout_width="0dp"
-        android:layout_height="52dp"
-        android:layout_marginHorizontal="28dp"
-        android:layout_marginTop="28dp"
-        android:text="Ouvrir la caméra"
-        android:textColor="@color/white"
-        android:textSize="15sp"
-        android:textStyle="bold"
-        app:backgroundTint="@color/brand_teal"
-        app:cornerRadius="26dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/scanContainer" />
-
-    <!-- Manual entry link -->
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnSaisieManuelle"
-        style="@style/Widget.Material3.Button.TextButton"
+    <!-- Guideline at 38% -->
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/glScan"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="Saisie manuelle"
-        android:textColor="@color/brand_teal"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/btnScanner" />
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.36" />
 
-    <!-- Torch FAB -->
-    <FrameLayout
-        android:id="@+id/btnTorch"
-        android:layout_width="56dp"
-        android:layout_height="56dp"
-        android:layout_marginBottom="120dp"
-        android:background="@drawable/bg_fab_teal"
-        android:elevation="6dp"
+    <!-- ══════ WHITE CONTENT CARD ══════ -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:background="@drawable/bg_bottom_sheet_white"
+        android:scrollbars="none"
+        android:fillViewport="true"
+        app:layout_constraintTop_toTopOf="@id/glScan"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent">
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
 
-        <ImageView
-            android:layout_width="26dp"
-            android:layout_height="26dp"
-            android:layout_gravity="center"
-            android:contentDescription="Torche"
-            android:src="@drawable/ic_notifications"
-            app:tint="@color/white" />
-    </FrameLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:orientation="vertical"
+            android:paddingBottom="40dp">
 
-    <!-- Detection overlay card (shown after successful scan) -->
+            <!-- Drag handle -->
+            <View
+                android:layout_width="44dp"
+                android:layout_height="4dp"
+                android:layout_marginTop="14dp"
+                android:layout_marginBottom="22dp"
+                android:background="@drawable/bg_drag_handle" />
+
+            <!-- ── Viewfinder ── -->
+            <FrameLayout
+                android:id="@+id/scanContainer"
+                android:layout_width="264dp"
+                android:layout_height="264dp"
+                android:background="@drawable/bg_scan_viewfinder">
+
+                <!-- Corner brackets overlay -->
+                <ImageView
+                    android:layout_width="80dp"
+                    android:layout_height="80dp"
+                    android:layout_gravity="start|top"
+                    android:alpha="0.0"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_scan" />
+
+                <!-- Scan icon watermark -->
+                <ImageView
+                    android:layout_width="72dp"
+                    android:layout_height="72dp"
+                    android:layout_gravity="center"
+                    android:alpha="0.18"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_scan"
+                    app:tint="@color/stormy_teal" />
+
+                <!-- Animated scan line -->
+                <View
+                    android:id="@+id/scanLine"
+                    android:layout_width="match_parent"
+                    android:layout_height="2.5dp"
+                    android:layout_gravity="top"
+                    android:background="@color/brand_teal"
+                    android:alpha="0.85" />
+            </FrameLayout>
+
+            <!-- Hint text below viewfinder -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="18dp"
+                android:gravity="center"
+                android:text="Placez le code QR dans le cadre"
+                android:textColor="@color/text_secondary"
+                android:textSize="14sp" />
+
+            <!-- ── Open camera button ── -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnScanner"
+                android:layout_width="280dp"
+                android:layout_height="54dp"
+                android:layout_marginTop="28dp"
+                android:background="@drawable/bg_btn_teal_pill"
+                android:text="Ouvrir la caméra"
+                android:textColor="@color/white"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:stateListAnimator="@null"
+                android:elevation="4dp"
+                app:backgroundTint="@null"
+                app:cornerRadius="27dp" />
+
+            <!-- Manual entry -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnSaisieManuelle"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="Saisie manuelle du numéro"
+                android:textColor="@color/brand_teal"
+                android:textSize="14sp"
+                app:rippleColor="@color/teal_100" />
+
+            <!-- ── Torch toggle ── -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <FrameLayout
+                    android:id="@+id/btnTorch"
+                    android:layout_width="54dp"
+                    android:layout_height="54dp"
+                    android:background="@drawable/bg_kpi_icon_blue"
+                    android:elevation="3dp">
+                    <ImageView
+                        android:layout_width="26dp"
+                        android:layout_height="26dp"
+                        android:layout_gravity="center"
+                        android:contentDescription="Torche"
+                        android:src="@drawable/ic_notifications"
+                        app:tint="@color/info" />
+                </FrameLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text="Torche"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- ══════ DETECTION OVERLAY CARD ══════ -->
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/cvDetectedPatient"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginHorizontal="16dp"
-        android:layout_marginBottom="16dp"
+        android:layout_marginHorizontal="18dp"
+        android:layout_marginBottom="24dp"
         android:visibility="gone"
-        app:cardBackgroundColor="@color/brand_teal_dark"
-        app:cardCornerRadius="18dp"
-        app:cardElevation="8dp"
+        app:cardBackgroundColor="@color/stormy_teal"
+        app:cardCornerRadius="22dp"
+        app:cardElevation="10dp"
         app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
         app:strokeWidth="0dp">
 
         <LinearLayout
@@ -146,22 +241,22 @@
             android:layout_height="wrap_content"
             android:gravity="center_vertical"
             android:orientation="horizontal"
-            android:padding="16dp">
+            android:padding="18dp">
 
             <com.google.android.material.imageview.ShapeableImageView
                 android:id="@+id/ivDetectedAvatar"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
+                android:layout_width="52dp"
+                android:layout_height="52dp"
                 android:contentDescription="@null"
                 android:src="@drawable/ic_medical_staff"
                 app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Full"
-                app:strokeColor="@color/white_80"
-                app:strokeWidth="1.5dp" />
+                app:strokeColor="@color/pearl_aqua"
+                app:strokeWidth="2dp" />
 
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="14dp"
+                android:layout_marginStart="16dp"
                 android:layout_weight="1"
                 android:orientation="vertical">
 
@@ -169,13 +264,16 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Enfant détecté"
-                    android:textColor="@color/white_75"
-                    android:textSize="11sp" />
+                    android:textColor="@color/pearl_aqua"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.08" />
 
                 <TextView
                     android:id="@+id/tvDetectedName"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
                     android:text="Youssef Amine"
                     android:textColor="@color/white"
                     android:textSize="17sp"
@@ -191,17 +289,16 @@
             </LinearLayout>
 
             <FrameLayout
-                android:layout_width="36dp"
-                android:layout_height="36dp"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
                 android:background="@drawable/bg_circle_white_alpha">
-
                 <ImageView
-                    android:layout_width="18dp"
-                    android:layout_height="18dp"
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
                     android:layout_gravity="center"
                     android:contentDescription="Confirmer"
                     android:src="@drawable/ic_syringe"
-                    app:tint="@color/brand_teal" />
+                    app:tint="@color/white" />
             </FrameLayout>
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>

@@ -1,50 +1,75 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.swiperefreshlayout.widget.SwipeRefreshLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/queueRefresh"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/bg_primary">
+    android:background="@color/bg_screen">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical">
 
-        <!-- ── Header ── -->
-        <RelativeLayout
+        <!-- ══════ HEADER ══════ -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingHorizontal="20dp"
-            android:paddingVertical="16dp">
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingHorizontal="22dp"
+            android:paddingTop="22dp"
+            android:paddingBottom="18dp">
 
-            <TextView
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_centerInParent="true"
-                android:text="File d'attente"
-                android:textColor="@color/text_primary"
-                android:textSize="18sp"
-                android:textStyle="bold" />
+                android:layout_weight="1"
+                android:orientation="vertical">
 
-            <com.google.android.material.button.MaterialButton
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="File d'attente"
+                    android:textColor="@color/text_primary"
+                    android:textSize="22sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="-0.01" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="Temps réel · session du jour"
+                    android:textColor="@color/brand_teal"
+                    android:textSize="13sp" />
+            </LinearLayout>
+
+            <!-- Live indicator -->
+            <FrameLayout
                 android:layout_width="44dp"
                 android:layout_height="44dp"
-                android:layout_alignParentEnd="true"
-                android:layout_centerVertical="true"
-                style="@style/Widget.Material3.Button.IconButton"
-                app:icon="@drawable/ic_notifications"
-                app:iconTint="@color/text_primary" />
-        </RelativeLayout>
+                android:background="@drawable/bg_kpi_card"
+                android:elevation="2dp">
+                <ImageView
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:layout_gravity="center"
+                    android:contentDescription="Notifications"
+                    android:src="@drawable/ic_notifications"
+                    app:tint="@color/brand_teal" />
+            </FrameLayout>
+        </LinearLayout>
 
-        <!-- ── Segment switcher ── -->
+        <!-- ══════ TAB SWITCHER ══════ -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="50dp"
-            android:layout_marginHorizontal="20dp"
-            android:background="@drawable/bg_role_selector"
+            android:layout_marginHorizontal="22dp"
+            android:background="@drawable/bg_segment_container"
             android:orientation="horizontal"
-            android:padding="4dp">
+            android:padding="5dp">
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/queueWaitingTab"
@@ -52,9 +77,11 @@
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:text="En attente 0"
+                android:text="En attente"
                 android:textSize="13sp"
-                android:textStyle="bold" />
+                android:textStyle="bold"
+                android:textColor="@color/brand_teal"
+                app:rippleColor="@color/pearl_aqua" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/queueCalledTab"
@@ -62,58 +89,67 @@
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:text="Appelés 0"
+                android:text="Appelés"
                 android:textSize="13sp"
-                android:textStyle="bold" />
+                android:textStyle="bold"
+                android:textColor="@color/text_secondary"
+                app:rippleColor="@color/pearl_aqua" />
         </LinearLayout>
 
-        <!-- Loading / message -->
+        <!-- ══════ STATE: loading / message ══════ -->
         <ProgressBar
             android:id="@+id/queueProgress"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginTop="8dp"
+            style="@android:style/Widget.ProgressBar.Horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="3dp"
+            android:layout_marginHorizontal="22dp"
+            android:layout_marginTop="10dp"
+            android:indeterminate="true"
+            android:indeterminateTint="@color/brand_teal"
             android:visibility="gone" />
 
         <TextView
             android:id="@+id/queueMessage"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="6dp"
             android:gravity="center"
-            android:paddingHorizontal="20dp"
+            android:paddingHorizontal="22dp"
             android:textColor="@color/text_secondary"
-            android:textSize="14sp" />
+            android:textSize="13sp" />
 
-        <!-- ── Queue list ── -->
+        <!-- ══════ LIST ══════ -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/queueList"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="14dp"
             android:layout_weight="1"
             android:clipToPadding="false"
-            android:paddingHorizontal="20dp"
+            android:paddingHorizontal="22dp"
             android:paddingBottom="16dp" />
 
-        <!-- ── Call next CTA ── -->
+        <!-- ══════ CALL NEXT CTA ══════ -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/queueCallNext"
-            style="@style/Widget.Material3.Button"
             android:layout_width="match_parent"
             android:layout_height="56dp"
-            android:layout_marginHorizontal="20dp"
-            android:layout_marginBottom="20dp"
+            android:layout_marginHorizontal="22dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="24dp"
+            android:background="@drawable/bg_btn_teal_pill"
             android:text="Appeler le prochain"
             android:textColor="@color/white"
             android:textSize="15sp"
             android:textStyle="bold"
-            app:backgroundTint="@color/brand_teal"
+            android:stateListAnimator="@null"
+            android:elevation="4dp"
+            app:backgroundTint="@null"
             app:cornerRadius="28dp"
             app:icon="@drawable/ic_queue_people"
             app:iconTint="@color/white"
-            app:iconSize="22dp" />
+            app:iconSize="22dp"
+            app:iconGravity="textStart" />
 
     </LinearLayout>
 </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>

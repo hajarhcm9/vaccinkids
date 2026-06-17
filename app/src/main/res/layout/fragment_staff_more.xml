@@ -1,138 +1,270 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.core.widget.NestedScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/bg_primary"
+    android:background="@color/bg_screen"
     android:clipToPadding="false"
     android:paddingBottom="24dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:paddingHorizontal="20dp"
-        android:paddingTop="18dp">
+        android:orientation="vertical">
 
-        <TextView
-            style="@style/TextAppearance.Vaccinkid.Headline"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Plus" />
-
-        <com.google.android.material.card.MaterialCardView
-            style="@style/Widget.Vaccinkid.Card.Outlined"
+        <!-- ══════ HEADER ══════ -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="18dp">
+            android:orientation="vertical"
+            android:paddingHorizontal="22dp"
+            android:paddingTop="22dp"
+            android:paddingBottom="8dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Plus"
+                android:textColor="@color/text_primary"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:letterSpacing="-0.01" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="3dp"
+                android:text="Profil et paramètres"
+                android:textColor="@color/text_secondary"
+                android:textSize="13sp" />
+        </LinearLayout>
+
+        <!-- ══════ PROFILE CARD ══════ -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="22dp"
+            android:layout_marginTop="10dp"
+            app:cardBackgroundColor="@color/white"
+            app:cardCornerRadius="24dp"
+            app:cardElevation="4dp"
+            app:strokeWidth="0dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:gravity="center_vertical"
                 android:orientation="horizontal">
 
-                <FrameLayout
+                <!-- Teal left panel -->
+                <LinearLayout
                     android:layout_width="90dp"
-                    android:layout_height="120dp"
-                    android:background="@color/brand_teal">
+                    android:layout_height="match_parent"
+                    android:background="@color/stormy_teal"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:padding="16dp">
 
-                    <ImageView
-                        android:layout_width="42dp"
-                        android:layout_height="42dp"
-                        android:layout_gravity="center"
-                        android:contentDescription="Profil personnel"
+                    <com.google.android.material.imageview.ShapeableImageView
+                        android:layout_width="52dp"
+                        android:layout_height="52dp"
+                        android:contentDescription="@null"
                         android:src="@drawable/ic_medical_staff"
+                        app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Full"
+                        app:strokeColor="@color/pearl_aqua"
+                        app:strokeWidth="2dp"
                         app:tint="@color/white" />
-                </FrameLayout>
 
+                    <View
+                        android:layout_width="30dp"
+                        android:layout_height="2dp"
+                        android:layout_marginTop="14dp"
+                        android:background="@color/pearl_aqua"
+                        android:alpha="0.6" />
+
+                    <View
+                        android:layout_width="20dp"
+                        android:layout_height="2dp"
+                        android:layout_marginTop="6dp"
+                        android:background="@color/pearl_aqua"
+                        android:alpha="0.4" />
+                </LinearLayout>
+
+                <!-- Right info panel -->
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:orientation="vertical"
-                    android:padding="16dp">
+                    android:padding="18dp">
 
                     <TextView
                         android:id="@+id/moreUserName"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Chargement du profil..."
+                        android:text="Chargement..."
                         android:textColor="@color/text_primary"
                         android:textSize="17sp"
                         android:textStyle="bold" />
 
                     <TextView
                         android:id="@+id/moreUserRole"
-                        style="@style/TextAppearance.Vaccinkid.Caption"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="3dp"
-                        android:textColor="@color/brand_teal" />
+                        android:layout_marginTop="4dp"
+                        android:textColor="@color/brand_teal"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
 
                     <TextView
                         android:id="@+id/moreUserCentre"
-                        style="@style/TextAppearance.Vaccinkid.Caption"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="3dp" />
+                        android:layout_marginTop="4dp"
+                        android:drawableStart="@drawable/ic_medical_staff"
+                        android:drawablePadding="5dp"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="12sp" />
+
+                    <!-- Status badge -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:background="@drawable/bg_badge_success"
+                        android:paddingHorizontal="10dp"
+                        android:paddingVertical="4dp"
+                        android:text="● En service"
+                        android:textColor="@color/success_dark"
+                        android:textSize="11sp"
+                        android:textStyle="bold" />
                 </LinearLayout>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
+        <!-- ══════ OUTILS SECTION ══════ -->
         <TextView
-            style="@style/TextAppearance.Vaccinkid.Title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:text="Outils" />
+            android:layout_marginHorizontal="22dp"
+            android:layout_marginTop="28dp"
+            android:layout_marginBottom="12dp"
+            android:text="OUTILS"
+            android:textColor="@color/text_tertiary"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.08" />
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/moreNotifications"
-            style="@style/Widget.Vaccinkid.Button.Outlined"
+        <!-- Notifications row -->
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
-            android:layout_height="54dp"
-            android:layout_marginTop="12dp"
-            android:gravity="start|center_vertical"
-            android:text="Notifications"
-            app:icon="@drawable/ic_notifications"
-            app:iconTint="@color/brand_teal" />
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="22dp"
+            android:layout_marginBottom="1dp"
+            app:cardBackgroundColor="@color/white"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="1dp"
+            app:strokeWidth="0dp">
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/moreStock"
-            style="@style/Widget.Vaccinkid.Button.Outlined"
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/moreNotifications"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:gravity="start|center_vertical"
+                android:paddingHorizontal="18dp"
+                android:text="Notifications"
+                android:textColor="@color/text_primary"
+                android:textSize="15sp"
+                app:backgroundTint="@android:color/transparent"
+                app:icon="@drawable/ic_notifications"
+                app:iconTint="@color/brand_teal"
+                app:iconSize="22dp"
+                app:iconPadding="14dp"
+                app:iconGravity="textStart"
+                app:rippleColor="@color/teal_50" />
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Stocks row -->
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
-            android:layout_height="54dp"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="22dp"
             android:layout_marginTop="8dp"
-            android:gravity="start|center_vertical"
-            android:text="Stocks de vaccins"
-            app:icon="@drawable/ic_syringe"
-            app:iconTint="@color/brand_teal" />
+            app:cardBackgroundColor="@color/white"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="1dp"
+            app:strokeWidth="0dp">
 
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/moreStock"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:gravity="start|center_vertical"
+                android:paddingHorizontal="18dp"
+                android:text="Stocks de vaccins"
+                android:textColor="@color/text_primary"
+                android:textSize="15sp"
+                app:backgroundTint="@android:color/transparent"
+                app:icon="@drawable/ic_syringe"
+                app:iconTint="@color/brand_teal"
+                app:iconSize="22dp"
+                app:iconPadding="14dp"
+                app:iconGravity="textStart"
+                app:rippleColor="@color/teal_50" />
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Error / status message -->
         <TextView
             android:id="@+id/moreMessage"
-            style="@style/TextAppearance.Vaccinkid.Body"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginHorizontal="22dp"
             android:layout_marginTop="14dp"
-            android:textColor="@color/error" />
+            android:textColor="@color/error"
+            android:textSize="13sp"
+            android:visibility="gone" />
 
+        <!-- Spacer -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginHorizontal="22dp"
+            android:layout_marginTop="28dp"
+            android:background="@color/outline" />
+
+        <!-- Version -->
         <TextView
-            style="@style/TextAppearance.Vaccinkid.Caption"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="28dp"
+            android:layout_marginTop="20dp"
             android:gravity="center"
-            android:text="VaccinKids STAFF v1.0" />
+            android:text="VaccinKids STAFF v1.0"
+            android:textColor="@color/text_tertiary"
+            android:textSize="12sp" />
 
+        <!-- ══════ LOGOUT BUTTON ══════ -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/moreLogout"
-            style="@style/Widget.Vaccinkid.Button.Danger"
             android:layout_width="match_parent"
-            android:layout_height="54dp"
-            android:layout_marginTop="14dp"
+            android:layout_height="56dp"
+            android:layout_marginHorizontal="22dp"
+            android:layout_marginTop="20dp"
+            android:layout_marginBottom="16dp"
             android:text="Se déconnecter"
+            android:textColor="@color/white"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:stateListAnimator="@null"
+            app:backgroundTint="@color/error"
+            app:cornerRadius="28dp"
             app:icon="@drawable/ic_logout"
-            app:iconTint="@color/white" />
+            app:iconTint="@color/white"
+            app:iconSize="20dp"
+            app:iconGravity="textStart"
+            app:iconPadding="8dp"
+            app:rippleColor="@color/error_light" />
+
     </LinearLayout>
 </androidx.core.widget.NestedScrollView>

@@ -3,78 +3,97 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/bg_primary"
+    android:background="@color/bg_screen"
     android:orientation="vertical">
 
-    <!-- ── Header ── -->
-    <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:paddingHorizontal="20dp"
-        android:paddingVertical="16dp">
-
-        <ImageView
-            android:id="@+id/btnBackRdv"
-            android:layout_width="28dp"
-            android:layout_height="28dp"
-            android:layout_alignParentStart="true"
-            android:layout_centerVertical="true"
-            android:contentDescription="Retour"
-            android:rotation="180"
-            android:src="@drawable/ic_logout"
-            app:tint="@color/text_primary" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
-            android:text="Rendez-vous"
-            android:textColor="@color/text_primary"
-            android:textSize="18sp"
-            android:textStyle="bold" />
-    </RelativeLayout>
-
-    <!-- ── Search row ── -->
+    <!-- ══════ HEADER ══════ -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:paddingHorizontal="20dp">
+        android:paddingHorizontal="22dp"
+        android:paddingTop="22dp"
+        android:paddingBottom="18dp">
 
-        <EditText
-            android:id="@+id/etSearchRdv"
+        <LinearLayout
             android:layout_width="0dp"
-            android:layout_height="48dp"
+            android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:background="@drawable/bg_search_bar"
-            android:drawableStart="@android:drawable/ic_menu_search"
-            android:drawablePadding="10dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Rendez-vous"
+                android:textColor="@color/text_primary"
+                android:textSize="22sp"
+                android:textStyle="bold"
+                android:letterSpacing="-0.01" />
+
+            <TextView
+                android:id="@+id/tvRdvDateLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="Aujourd'hui"
+                android:textColor="@color/brand_teal"
+                android:textSize="13sp" />
+        </LinearLayout>
+
+        <!-- Filter button -->
+        <FrameLayout
+            android:id="@+id/btnFilterRdv"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:background="@drawable/bg_kpi_card"
+            android:elevation="2dp">
+            <ImageView
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:layout_gravity="center"
+                android:contentDescription="Filtrer"
+                android:src="@drawable/ic_more_horizontal"
+                app:tint="@color/brand_teal" />
+        </FrameLayout>
+    </LinearLayout>
+
+    <!-- ══════ SEARCH BAR ══════ -->
+    <com.google.android.material.textfield.TextInputLayout
+        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="22dp"
+        app:startIconDrawable="@drawable/ic_scan"
+        app:startIconTint="@color/brand_teal"
+        app:boxStrokeColor="@color/pearl_aqua"
+        app:boxStrokeWidthFocused="2dp"
+        app:boxCornerRadiusTopStart="16dp"
+        app:boxCornerRadiusTopEnd="16dp"
+        app:boxCornerRadiusBottomStart="16dp"
+        app:boxCornerRadiusBottomEnd="16dp"
+        app:boxBackgroundColor="@color/white"
+        app:hintEnabled="false">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/etSearchRdv"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
             android:hint="Rechercher un enfant…"
             android:importantForAutofill="no"
             android:inputType="text"
-            android:paddingHorizontal="14dp"
+            android:maxLines="1"
             android:textColor="@color/text_primary"
-            android:textColorHint="@color/text_tertiary"
+            android:textColorHint="@color/text_hint"
             android:textSize="14sp" />
+    </com.google.android.material.textfield.TextInputLayout>
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnFilterRdv"
-            style="@style/Widget.Material3.Button.IconButton"
-            android:layout_width="44dp"
-            android:layout_height="44dp"
-            android:layout_marginStart="10dp"
-            android:background="@drawable/bg_card_rounded"
-            app:icon="@drawable/ic_more_horizontal"
-            app:iconTint="@color/text_primary" />
-    </LinearLayout>
-
-    <!-- ── Filter chip bar ── -->
+    <!-- ══════ FILTER CHIPS ══════ -->
     <HorizontalScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        android:paddingHorizontal="20dp"
+        android:layout_marginTop="14dp"
+        android:paddingHorizontal="22dp"
         android:paddingBottom="2dp"
         android:scrollbars="none">
 
@@ -90,7 +109,7 @@
                 android:layout_height="36dp"
                 android:background="@drawable/bg_chip_active"
                 android:gravity="center"
-                android:paddingHorizontal="16dp"
+                android:paddingHorizontal="18dp"
                 android:text="Tous"
                 android:textColor="@color/white"
                 android:textSize="13sp"
@@ -103,9 +122,9 @@
                 android:layout_marginStart="8dp"
                 android:background="@drawable/bg_chip_inactive"
                 android:gravity="center"
-                android:paddingHorizontal="16dp"
+                android:paddingHorizontal="18dp"
                 android:text="Confirmés"
-                android:textColor="@color/text_secondary"
+                android:textColor="@color/brand_teal"
                 android:textSize="13sp" />
 
             <TextView
@@ -115,9 +134,9 @@
                 android:layout_marginStart="8dp"
                 android:background="@drawable/bg_chip_inactive"
                 android:gravity="center"
-                android:paddingHorizontal="16dp"
+                android:paddingHorizontal="18dp"
                 android:text="En attente"
-                android:textColor="@color/text_secondary"
+                android:textColor="@color/brand_teal"
                 android:textSize="13sp" />
 
             <TextView
@@ -127,26 +146,26 @@
                 android:layout_marginStart="8dp"
                 android:background="@drawable/bg_chip_inactive"
                 android:gravity="center"
-                android:paddingHorizontal="16dp"
+                android:paddingHorizontal="18dp"
                 android:text="Absents"
-                android:textColor="@color/text_secondary"
+                android:textColor="@color/brand_teal"
                 android:textSize="13sp" />
         </LinearLayout>
     </HorizontalScrollView>
 
-    <!-- ── List / Empty ── -->
+    <!-- ══════ LIST / EMPTY STATE ══════ -->
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginTop="12dp">
+        android:layout_marginTop="14dp">
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recyclerRdv"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:clipToPadding="false"
-            android:paddingHorizontal="20dp"
-            android:paddingBottom="100dp" />
+            android:paddingHorizontal="22dp"
+            android:paddingBottom="110dp" />
 
         <LinearLayout
             android:id="@+id/emptyRdv"
@@ -157,22 +176,38 @@
             android:padding="32dp"
             android:visibility="gone">
 
-            <ImageView
-                android:layout_width="64dp"
-                android:layout_height="64dp"
-                android:alpha="0.3"
-                android:contentDescription="@null"
-                android:src="@drawable/ic_calendar_event"
-                app:tint="@color/brand_teal" />
+            <FrameLayout
+                android:layout_width="88dp"
+                android:layout_height="88dp"
+                android:background="@drawable/bg_kpi_icon_blue"
+                android:elevation="0dp">
+                <ImageView
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:layout_gravity="center"
+                    android:alpha="0.5"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_calendar_event"
+                    app:tint="@color/brand_teal" />
+            </FrameLayout>
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
+                android:layout_marginTop="16dp"
                 android:text="Aucun rendez-vous"
-                android:textColor="@color/text_secondary"
-                android:textSize="16sp"
+                android:textColor="@color/text_primary"
+                android:textSize="17sp"
                 android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:gravity="center"
+                android:text="Il n'y a aucun RDV pour ce filtre."
+                android:textColor="@color/text_secondary"
+                android:textSize="14sp" />
         </LinearLayout>
     </FrameLayout>
 
