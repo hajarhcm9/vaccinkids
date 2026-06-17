@@ -77,14 +77,14 @@ export default function RegisterScreen({ navigation }) {
   return (
     <LinearGradient colors={Gradients.auth} style={styles.container}>
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
-        keyboardVerticalOffset={20}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
       >
         <ScrollView
           contentContainerStyle={styles.scroll}
           showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
+          keyboardShouldPersistTaps="always"
         >
           <TouchableOpacity
             style={styles.backBtn}
@@ -97,7 +97,7 @@ export default function RegisterScreen({ navigation }) {
 
           <View style={styles.brand}>
             <View style={styles.logoBadge}>
-              <Ionicons name="medkit" size={28} color={Colors.surface} />
+              <Ionicons name="shield-checkmark" size={28} color={Colors.surface} />
             </View>
             <Text style={styles.logo}>VacciKids</Text>
           </View>

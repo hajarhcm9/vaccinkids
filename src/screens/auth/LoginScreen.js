@@ -1,19 +1,24 @@
 import React, { useState, useContext } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
+import {
+  View, Text, StyleSheet, ScrollView, TouchableOpacity,
+  KeyboardAvoidingView, Platform, StatusBar,
+} from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AppButton from '../../components/ui/AppButton';
 import AppInput from '../../components/ui/AppInput';
-import { Colors, Gradients, Radii, Spacing, Elevation, Typography } from '../../constants/theme';
+import { Colors, Gradients, Radii, Spacing, Elevation } from '../../constants/theme';
 import { authService, ApiError } from '../../services';
 import { AuthContext } from '../../context/AuthContext';
 
 export default function LoginScreen({ navigation }) {
-  const { loginDemo } = useContext(AuthContext);
-  const [cin, setCin] = useState('');
+  const { loginDemo }    = useContext(AuthContext);
+  const insets           = useSafeAreaInsets();
+  const [cin, setCin]    = useState('');
   const [password, setPassword] = useState('');
-  const [errors, setErrors] = useState({});
-  const [loading, setLoading] = useState(false);
+  const [errors, setErrors]     = useState({});
+  const [loading, setLoading]   = useState(false);
 
   const validate = () => {
     const e = {};
@@ -36,9 +41,9 @@ export default function LoginScreen({ navigation }) {
       });
     } catch (e) {
       if (e instanceof ApiError) {
-        if (e.isAuth) setErrors({ password: 'CIN ou mot de passe incorrect' });
+        if (e.isAuth)    setErrors({ password: 'CIN ou mot de passe incorrect' });
         else if (e.isNetwork) setErrors({ cin: 'Vérifiez votre connexion internet' });
-        else setErrors({ password: e.message });
+        else             setErrors({ password: e.message });
       } else {
         setErrors({ password: 'Erreur inattendue. Réessayez.' });
       }
@@ -47,53 +52,60 @@ export default function LoginScreen({ navigation }) {
     }
   };
 
-  const canSubmit = cin.trim().length > 0 && password.length > 0;
-
   return (
-    <LinearGradient colors={Gradients.auth} style={styles.container}>
+    <View style={styles.root}>
+      <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+      <LinearGradient colors={Gradients.auth} style={StyleSheet.absoluteFillObject} />
+
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={{ flex: 1 }}
-        keyboardVerticalOffset={20}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
       >
         <ScrollView
-          contentContainerStyle={styles.scroll}
+          contentContainerStyle={[
+            styles.scroll,
+            { paddingTop: insets.top + Spacing['2xl'], paddingBottom: insets.bottom + Spacing.xl },
+          ]}
           showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
+          keyboardShouldPersistTaps="always"
+          bounces={false}
         >
-          <View style={styles.brand}>
-            <View style={styles.logoBadge}>
-              <Ionicons name="medkit" size={32} color={Colors.surface} />
+          {/* ── Logo block ── */}
+          <View style={styles.logoBlock}>
+            <View style={styles.iconRing}>
+              <View style={styles.iconInner}>
+                <Ionicons name="shield-checkmark" size={32} color={Colors.white} />
+              </View>
             </View>
-            <Text style={styles.logo}>VacciKids</Text>
-            <Text style={styles.subtitle}>Suivi vaccinal pédiatrique</Text>
+            <Text style={styles.appName}>VacciKids</Text>
+            <Text style={styles.tagline}>Suivi vaccinal pédiatrique</Text>
           </View>
 
+          {/* ── Form card ── */}
           <View style={styles.card}>
-            <Text style={styles.title}>Bon retour 👋</Text>
-            <Text style={styles.description}>
-              Connectez-vous avec votre Carte d'Identité Nationale pour accéder à votre espace.
+            <Text style={styles.cardTitle}>Bon retour 👋</Text>
+            <Text style={styles.cardSub}>
+              Connectez-vous avec votre Carte d'Identité Nationale
             </Text>
 
             <AppInput
-              label="Carte d'Identité Nationale (CIN)"
+              label="CIN"
               placeholder="Ex : AB123456"
               value={cin}
               onChangeText={(v) => { setCin(v); if (errors.cin) setErrors({ ...errors, cin: null }); }}
               error={errors.cin}
-              touched={true}
+              touched={!!errors.cin}
               icon="card-outline"
               autoCapitalize="characters"
-              accessibilityLabel="Numéro de Carte d'Identité Nationale"
             />
-
             <AppInput
               label="Mot de passe"
-              placeholder="Votre mot de passe"
+              placeholder="••••••••"
               value={password}
               onChangeText={(v) => { setPassword(v); if (errors.password) setErrors({ ...errors, password: null }); }}
               error={errors.password}
-              touched={true}
+              touched={!!errors.password}
               secureTextEntry
               icon="lock-closed-outline"
             />
@@ -101,64 +113,70 @@ export default function LoginScreen({ navigation }) {
             <TouchableOpacity
               onPress={() => navigation.navigate('ForgotPassword')}
               style={styles.forgotRow}
+              hitSlop={{ top: 8, bottom: 8 }}
             >
-              <Text style={styles.link}>Mot de passe oublié ?</Text>
+              <Text style={styles.forgotText}>Mot de passe oublié ?</Text>
             </TouchableOpacity>
 
             <AppButton
               title="Se connecter"
               onPress={handleLogin}
               loading={loading}
-              disabled={!canSubmit}
-              icon="log-in-outline"
+              disabled={!cin.trim() || !password}
+              icon="arrow-forward"
               iconPosition="right"
             />
           </View>
 
-          <TouchableOpacity style={styles.demoBtn} onPress={loginDemo}>
-            <Ionicons name="eye-outline" size={16} color="rgba(255,255,255,0.7)" />
-            <Text style={styles.demoText}>Accès démo — voir l'application</Text>
+          {/* ── Demo access ── */}
+          <TouchableOpacity
+            style={styles.demoBtn}
+            onPress={loginDemo}
+            activeOpacity={0.8}
+            hitSlop={{ top: 4, bottom: 4 }}
+          >
+            <View style={styles.demoBadge}>
+              <Ionicons name="eye-outline" size={14} color={Colors.accent} />
+            </View>
+            <Text style={styles.demoText}>Accès démo — explorer sans compte</Text>
+            <Ionicons name="chevron-forward" size={14} color="rgba(255,255,255,0.5)" />
           </TouchableOpacity>
 
+          {/* ── Sign up ── */}
           <View style={styles.signupRow}>
-            <Text style={styles.signupText}>Pas encore de compte ?</Text>
-            <TouchableOpacity onPress={() => navigation.navigate('Register')} style={styles.signupBtn}>
-              <Text style={styles.signupLink}>Créer un compte</Text>
-              <Ionicons name="arrow-forward" size={14} color={Colors.accent} style={{ marginLeft: 4 }} />
+            <Text style={styles.signupLabel}>Pas encore de compte ?</Text>
+            <TouchableOpacity onPress={() => navigation.navigate('Register')}>
+              <Text style={styles.signupLink}> Créer un compte →</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </LinearGradient>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  scroll: { flexGrow: 1, justifyContent: 'center', padding: Spacing.xl, paddingVertical: Spacing['4xl'] },
-  brand: { alignItems: 'center', marginBottom: Spacing.xl },
-  logoBadge: {
-    width: 64, height: 64, borderRadius: 32,
-    backgroundColor: 'rgba(255,255,255,0.18)',
-    alignItems: 'center', justifyContent: 'center',
-    marginBottom: Spacing.md,
-  },
-  logo: { fontSize: 32, fontWeight: '800', color: Colors.textInverse, letterSpacing: 0.5 },
-  subtitle: { fontSize: 14, color: 'rgba(255,255,255,0.85)', marginTop: 4 },
-  card: {
-    backgroundColor: Colors.surface,
-    borderRadius: Radii['2xl'],
-    padding: Spacing.xl,
-    ...Elevation.lg,
-  },
-  title: { ...Typography.title, marginBottom: 8, textAlign: 'left' },
-  description: { ...Typography.body, marginBottom: Spacing.lg, lineHeight: 22 },
-  forgotRow: { alignSelf: 'flex-end', marginBottom: Spacing.md, marginTop: -Spacing.xs },
-  link: { color: Colors.primary, fontSize: 13, fontWeight: '600' },
-  demoBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: Spacing.lg, padding: Spacing.base, borderRadius: Radii.sm, backgroundColor: 'rgba(255,255,255,0.12)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.25)' },
-  demoText: { color: 'rgba(255,255,255,0.85)', fontSize: 14, fontWeight: '600' },
-  signupRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: Spacing.xl, flexWrap: 'wrap' },
-  signupText: { color: 'rgba(255,255,255,0.9)', fontSize: 14 },
-  signupBtn: { flexDirection: 'row', alignItems: 'center', marginLeft: 6, padding: 4 },
-  signupLink: { color: Colors.accent, fontSize: 14, fontWeight: '700' },
+  root:   { flex: 1, backgroundColor: Colors.primaryDeep },
+  scroll: { flexGrow: 1, paddingHorizontal: Spacing.xl },
+
+  logoBlock: { alignItems: 'center', marginBottom: Spacing['2xl'] },
+  iconRing:  { width: 88, height: 88, borderRadius: 44, backgroundColor: Colors.glass, borderWidth: 2, borderColor: Colors.glassBorder, alignItems: 'center', justifyContent: 'center', marginBottom: Spacing.md },
+  iconInner: { width: 66, height: 66, borderRadius: 33, backgroundColor: Colors.primaryLight, alignItems: 'center', justifyContent: 'center' },
+  appName:   { fontSize: 34, fontWeight: '800', color: Colors.white, letterSpacing: -0.5, marginBottom: 4 },
+  tagline:   { fontSize: 13, color: 'rgba(255,255,255,0.70)', letterSpacing: 0.3 },
+
+  card:      { backgroundColor: Colors.surface, borderRadius: Radii['2xl'], padding: Spacing.xl, ...Elevation.xl, marginBottom: Spacing.lg },
+  cardTitle: { fontSize: 22, fontWeight: '700', color: Colors.text, marginBottom: 6 },
+  cardSub:   { fontSize: 13, color: Colors.textSecondary, marginBottom: Spacing.lg, lineHeight: 20 },
+
+  forgotRow:  { alignSelf: 'flex-end', marginBottom: Spacing.base, marginTop: -4 },
+  forgotText: { color: Colors.primary, fontSize: 13, fontWeight: '600' },
+
+  demoBtn:   { flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.glass, borderWidth: 1.5, borderColor: Colors.glassBorder, borderRadius: Radii.xl, paddingHorizontal: Spacing.base, paddingVertical: Spacing.md, marginBottom: Spacing.lg, gap: Spacing.sm },
+  demoBadge: { width: 28, height: 28, borderRadius: 14, backgroundColor: 'rgba(245,165,36,0.2)', alignItems: 'center', justifyContent: 'center' },
+  demoText:  { flex: 1, color: 'rgba(255,255,255,0.85)', fontSize: 13, fontWeight: '600' },
+
+  signupRow:  { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', flexWrap: 'wrap' },
+  signupLabel:{ color: 'rgba(255,255,255,0.65)', fontSize: 14 },
+  signupLink: { color: Colors.accentLight, fontSize: 14, fontWeight: '700' },
 });

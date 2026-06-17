@@ -1,21 +1,41 @@
 import React, { useContext } from 'react';
-import { View, Text, StyleSheet, ScrollView, FlatList, TouchableOpacity, RefreshControl } from 'react-native';
+import {
+  View, Text, StyleSheet, ScrollView, FlatList,
+  TouchableOpacity, RefreshControl, StatusBar,
+} from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AuthContext } from '../../context/AuthContext';
 import { Colors, Gradients, Radii, Spacing, Elevation, Typography } from '../../constants/theme';
-import { rdvService, notificationService, ApiError } from '../../services';
+import { rdvService, notificationService } from '../../services';
 
 const MOCK_ACTUS = [
-  { id: '1', type: 'ALERTE',  titre: 'Campagne de rappel Rougeole', description: 'Le centre lance une campagne de rattrapage pour le vaccin ROR. N\'hésitez pas à prendre rendez-vous.', date: 'Aujourd\'hui' },
-  { id: '2', type: 'CONSEIL', titre: 'Comment préparer votre enfant ?', description: 'Astuce : Expliquez à l\'enfant à quoi sert le vaccin pour diminuer l\'anxiété.', date: 'Hier' },
-  { id: '3', type: 'INFO',    titre: 'Nouveaux horaires', description: 'Le centre ouvrira exceptionnellement le samedi matin de 9h à 12h à partir du mois prochain.', date: 'Il y a 3 jours' },
+  { id: '1', type: 'ALERTE',  titre: 'Campagne de rappel Rougeole',   description: 'Le centre lance une campagne de rattrapage pour le vaccin ROR. N\'hésitez pas à prendre rendez-vous.', date: 'Aujourd\'hui' },
+  { id: '2', type: 'CONSEIL', titre: 'Préparer votre enfant au vaccin', description: 'Expliquez à voix douce à quoi sert le vaccin pour diminuer l\'anxiété et favoriser la coopération.', date: 'Hier' },
+  { id: '3', type: 'INFO',    titre: 'Nouveaux horaires du centre',    description: 'Le centre ouvrira exceptionnellement le samedi matin de 9h à 12h à partir du mois prochain.', date: 'Il y a 3 jours' },
 ];
 
+const TYPE_META = {
+  ALERTE:  { color: Colors.danger,   bg: Colors.dangerBg,  icon: 'warning',               label: 'Alerte' },
+  CONSEIL: { color: Colors.primary,  bg: Colors.primaryTint,icon: 'bulb-outline',          label: 'Conseil' },
+  INFO:    { color: Colors.accent,   bg: Colors.accentLight,icon: 'information-circle-outline', label: 'Info' },
+};
+
+function StatChip({ icon, value, label, color }) {
+  return (
+    <View style={[styles.statChip, { backgroundColor: color + '22' }]}>
+      <Ionicons name={icon} size={16} color={color} />
+      <Text style={[styles.statValue, { color }]}>{value}</Text>
+      <Text style={styles.statLabel}>{label}</Text>
+    </View>
+  );
+}
 
 export default function HomeScreen({ navigation }) {
   const { user } = useContext(AuthContext);
-  const prenom = user?.prenom || 'Invité';
+  const insets  = useSafeAreaInsets();
+  const prenom  = user?.prenom || 'Parent';
   const [refreshing, setRefreshing] = React.useState(false);
   const [nextRdv, setNextRdv] = React.useState({ enfant: 'Salma', vaccin: 'DTP 2', date: 'Vendredi 20 Juin', heure: '09:30' });
   const [unreadCount, setUnreadCount] = React.useState(2);
@@ -26,7 +46,7 @@ export default function HomeScreen({ navigation }) {
         rdvService.listRdv('A_VENIR').catch(() => null),
         notificationService.getUnreadCount().catch(() => null),
       ]);
-      if (rdvResp && Array.isArray(rdvResp) && rdvResp.length > 0) {
+      if (rdvResp?.length > 0) {
         const r = rdvResp[0];
         setNextRdv({
           enfant: r.enfant_nom,
@@ -47,91 +67,120 @@ export default function HomeScreen({ navigation }) {
     setRefreshing(false);
   }, [loadData]);
 
-  const typeMeta = (type) => {
-    switch (type) {
-      case 'ALERTE':  return { color: Colors.danger,  icon: 'alert-circle-outline',   label: 'Alerte' };
-      case 'CONSEIL': return { color: Colors.primary, icon: 'bulb-outline',           label: 'Conseil' };
-      case 'INFO':    return { color: Colors.info,    icon: 'information-circle-outline', label: 'Info' };
-      default:        return { color: Colors.textSecondary, icon: 'document-text-outline', label: type };
-    }
-  };
-
   const renderActu = ({ item }) => {
-    const m = typeMeta(item.type);
+    const m = TYPE_META[item.type] || TYPE_META.INFO;
     return (
       <View style={[styles.actuCard, { borderLeftColor: m.color }]}>
-        <View style={styles.actuHeader}>
-          <View style={[styles.actuIcon, { backgroundColor: m.color + '15' }]}>
-            <Ionicons name={m.icon} size={18} color={m.color} />
-          </View>
-          <Text style={[styles.actuType, { color: m.color }]}>{m.label}</Text>
-          <Text style={styles.actuDate}>{item.date}</Text>
+        <View style={[styles.actuIconWrap, { backgroundColor: m.bg }]}>
+          <Ionicons name={m.icon} size={16} color={m.color} />
         </View>
-        <Text style={styles.actuTitre}>{item.titre}</Text>
-        <Text style={styles.actuDescription}>{item.description}</Text>
+        <View style={{ flex: 1 }}>
+          <View style={styles.actuTop}>
+            <View style={[styles.actuBadge, { backgroundColor: m.bg }]}>
+              <Text style={[styles.actuBadgeText, { color: m.color }]}>{m.label}</Text>
+            </View>
+            <Text style={styles.actuDate}>{item.date}</Text>
+          </View>
+          <Text style={styles.actuTitre}>{item.titre}</Text>
+          <Text style={styles.actuDesc} numberOfLines={2}>{item.description}</Text>
+        </View>
       </View>
     );
   };
 
   return (
     <ScrollView
-      style={styles.container}
+      style={styles.root}
       showsVerticalScrollIndicator={false}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[Colors.primary]} tintColor={Colors.primary} />}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh}
+          colors={[Colors.primary]} tintColor={Colors.primary} />
+      }
     >
-      <LinearGradient colors={Gradients.brand} style={styles.header}>
-        <View style={styles.headerRow}>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.headerGreeting}>Bonjour,</Text>
-            <Text style={styles.headerName}>{prenom} 👋</Text>
+      <StatusBar barStyle="light-content" />
+
+      {/* ── Header gradient ── */}
+      <LinearGradient colors={Gradients.brandWide} style={[styles.header, { paddingTop: insets.top + Spacing.xl }]}>
+        {/* Decorative circle */}
+        <View style={styles.decCircle1} />
+        <View style={styles.decCircle2} />
+
+        <View style={styles.headerTop}>
+          <View>
+            <Text style={styles.greeting}>Bonjour,</Text>
+            <Text style={styles.userName}>{prenom} 👋</Text>
           </View>
           <TouchableOpacity
-            style={styles.bellBtn}
+            style={styles.bellWrap}
             onPress={() => navigation.navigate('Notifs')}
-            accessibilityRole="button"
-            accessibilityLabel="Notifications"
           >
-            <Ionicons name="notifications-outline" size={22} color={Colors.surface} />
-            {unreadCount > 0 && <View style={styles.bellDot} />}
+            <Ionicons name="notifications-outline" size={22} color={Colors.white} />
+            {unreadCount > 0 && (
+              <View style={styles.bellBadge}>
+                <Text style={styles.bellBadgeText}>{unreadCount}</Text>
+              </View>
+            )}
           </TouchableOpacity>
+        </View>
+
+        {/* ── Stats row ── */}
+        <View style={styles.statsRow}>
+          <StatChip icon="people-outline"   value="2" label="Enfants"   color={Colors.accentLight} />
+          <StatChip icon="calendar-outline" value="1" label="RDV prévu" color={Colors.accentLight} />
+          <StatChip icon="shield-checkmark-outline" value="83%" label="Couverture" color={Colors.accentLight} />
         </View>
       </LinearGradient>
 
-      <View style={styles.rdvContainer}>
-        <Text style={styles.sectionTitle}>Prochain rendez-vous</Text>
+      {/* ── Prochain RDV card ── */}
+      <View style={styles.section}>
+        <Text style={styles.sectionLabel}>Prochain rendez-vous</Text>
         {nextRdv ? (
           <TouchableOpacity
             style={styles.rdvCard}
             activeOpacity={0.9}
             onPress={() => navigation.navigate('RDV')}
-            accessibilityRole="button"
-            accessibilityLabel={`Rendez-vous ${nextRdv.vaccin} pour ${nextRdv.enfant}, ${nextRdv.date} à ${nextRdv.heure}`}
           >
-            <View style={styles.rdvIcon}>
-              <Ionicons name="medkit" size={26} color={Colors.surface} />
-            </View>
+            <LinearGradient colors={Gradients.card} style={styles.rdvIconBg}>
+              <Ionicons name="medkit" size={24} color={Colors.white} />
+            </LinearGradient>
             <View style={styles.rdvInfo}>
-              <Text style={styles.rdvTitle}>{nextRdv.vaccin} · {nextRdv.enfant}</Text>
+              <Text style={styles.rdvVaccin}>{nextRdv.vaccin}</Text>
+              <Text style={styles.rdvEnfant}>Pour {nextRdv.enfant}</Text>
               <View style={styles.rdvMeta}>
-                <Ionicons name="calendar-outline" size={13} color={Colors.textSecondary} />
-                <Text style={styles.rdvDetails}>{nextRdv.date} · {nextRdv.heure}</Text>
+                <Ionicons name="calendar-outline" size={12} color={Colors.textLight} />
+                <Text style={styles.rdvMetaText}>{nextRdv.date}</Text>
+                <View style={styles.rdvDot} />
+                <Ionicons name="time-outline" size={12} color={Colors.textLight} />
+                <Text style={styles.rdvMetaText}>{nextRdv.heure}</Text>
               </View>
             </View>
-            <Ionicons name="chevron-forward" size={20} color={Colors.textLight} />
+            <View style={styles.rdvChevron}>
+              <Ionicons name="chevron-forward" size={18} color={Colors.primary} />
+            </View>
           </TouchableOpacity>
         ) : (
-          <View style={[styles.rdvCard, styles.rdvCardEmpty]}>
-            <Ionicons name="calendar-outline" size={26} color={Colors.textLight} />
-            <Text style={styles.rdvEmptyText}>Aucun rendez-vous planifié</Text>
-            <TouchableOpacity onPress={() => navigation.navigate('RDV')}>
-              <Text style={styles.rdvEmptyCta}>Prendre rendez-vous</Text>
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity style={styles.rdvEmpty} onPress={() => navigation.navigate('RDV')}>
+            <Ionicons name="calendar-outline" size={32} color={Colors.textLight} />
+            <Text style={styles.rdvEmptyTitle}>Aucun rendez-vous planifié</Text>
+            <Text style={styles.rdvEmptyCta}>Prendre rendez-vous →</Text>
+          </TouchableOpacity>
         )}
       </View>
 
-      <View style={styles.actuSection}>
-        <Text style={styles.sectionTitle}>Consignes & actualités</Text>
+      {/* ── Quick actions ── */}
+      <View style={styles.section}>
+        <Text style={styles.sectionLabel}>Accès rapide</Text>
+        <View style={styles.quickRow}>
+          <QuickAction icon="people" label="Enfants"   color={Colors.primary}   bg={Colors.primaryTint} onPress={() => navigation.navigate('Enfants')} />
+          <QuickAction icon="calendar" label="Calendrier" color="#7C3AED"       bg="#F5F3FF"            onPress={() => navigation.navigate('Enfants')} />
+          <QuickAction icon="medkit"  label="RDV"      color={Colors.successDark} bg={Colors.successBg} onPress={() => navigation.navigate('RDV')} />
+          <QuickAction icon="notifications" label="Alertes" color={Colors.danger} bg={Colors.dangerBg}  onPress={() => navigation.navigate('Notifs')} />
+        </View>
+      </View>
+
+      {/* ── Actualités ── */}
+      <View style={[styles.section, { marginBottom: Spacing['4xl'] }]}>
+        <Text style={styles.sectionLabel}>Consignes & actualités</Text>
         <FlatList
           data={MOCK_ACTUS}
           keyExtractor={(item) => item.id}
@@ -143,64 +192,68 @@ export default function HomeScreen({ navigation }) {
   );
 }
 
+function QuickAction({ icon, label, color, bg, onPress }) {
+  return (
+    <TouchableOpacity style={styles.qaWrap} onPress={onPress} activeOpacity={0.75}>
+      <View style={[styles.qaIcon, { backgroundColor: bg }]}>
+        <Ionicons name={icon} size={22} color={color} />
+      </View>
+      <Text style={styles.qaLabel}>{label}</Text>
+    </TouchableOpacity>
+  );
+}
+
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
-  header: {
-    paddingHorizontal: Spacing.xl,
-    paddingTop: Spacing['3xl'],
-    paddingBottom: Spacing['3xl'] + 10,
-    borderBottomLeftRadius: Radii.header,
-    borderBottomRightRadius: Radii.header,
-  },
-  headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  headerGreeting: { fontSize: 14, color: 'rgba(255,255,255,0.85)' },
-  headerName: { fontSize: 26, fontWeight: '800', color: Colors.surface, marginTop: 2 },
-  bellBtn: {
-    width: 44, height: 44, borderRadius: 22,
-    backgroundColor: 'rgba(255,255,255,0.18)',
-    alignItems: 'center', justifyContent: 'center',
-  },
-  bellDot: {
-    position: 'absolute', top: 10, right: 10,
-    width: 9, height: 9, borderRadius: 4.5,
-    backgroundColor: Colors.accent,
-    borderWidth: 2, borderColor: Colors.primaryDark,
-  },
-  rdvContainer: { marginTop: -28, marginHorizontal: Spacing.lg },
-  sectionTitle: { ...Typography.subtitle, marginBottom: Spacing.md },
-  rdvCard: {
-    flexDirection: 'row', alignItems: 'center',
-    backgroundColor: Colors.surface,
-    borderRadius: Radii.lg,
-    padding: Spacing.lg,
-    ...Elevation.md,
-  },
-  rdvCardEmpty: { flexDirection: 'column', gap: 8, padding: Spacing.xl, alignItems: 'center' },
-  rdvIcon: {
-    width: 52, height: 52, borderRadius: 26,
-    backgroundColor: Colors.primary,
-    alignItems: 'center', justifyContent: 'center',
-    marginRight: Spacing.base,
-  },
-  rdvInfo: { flex: 1 },
-  rdvTitle: { fontSize: 15, fontWeight: '700', color: Colors.text },
-  rdvMeta: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },
-  rdvDetails: { fontSize: 13, color: Colors.textSecondary },
-  rdvEmptyText: { fontSize: 14, color: Colors.textSecondary, textAlign: 'center' },
-  rdvEmptyCta: { color: Colors.primary, fontSize: 13, fontWeight: '700', marginTop: 4 },
-  actuSection: { padding: Spacing.lg },
-  actuCard: {
-    backgroundColor: Colors.surface,
-    borderRadius: Radii.lg,
-    padding: Spacing.base,
-    marginBottom: Spacing.md,
-    borderLeftWidth: 4,
-    ...Elevation.sm,
-  },
-  actuHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 8, gap: 8 },
-  actuIcon: { width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-  actuType: { fontSize: 11, fontWeight: '700', letterSpacing: 0.5, textTransform: 'uppercase', flex: 1 },
-  actuDate: { fontSize: 11, color: Colors.textLight },
-  actuTitre: { fontSize: 15, fontWeight: '700', color: Colors.text, marginBottom: 4 },
-  actuDescription: { fontSize: 13, color: Colors.textSecondary, lineHeight: 18 },
+  root: { flex: 1, backgroundColor: Colors.background },
+
+  // Header
+  header:       { paddingBottom: Spacing['2xl'], paddingHorizontal: Spacing.xl, position: 'relative', overflow: 'hidden' },
+  decCircle1:   { position: 'absolute', width: 220, height: 220, borderRadius: 110, backgroundColor: Colors.glass, top: -80, right: -60 },
+  decCircle2:   { position: 'absolute', width: 140, height: 140, borderRadius: 70,  backgroundColor: Colors.glass, bottom: -50, left: -30 },
+  headerTop:    { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: Spacing['2xl'] },
+  greeting:     { fontSize: 14, color: 'rgba(255,255,255,0.70)', marginBottom: 2 },
+  userName:     { fontSize: 26, fontWeight: '800', color: Colors.white, letterSpacing: -0.3 },
+  bellWrap:     { width: 44, height: 44, borderRadius: 22, backgroundColor: Colors.glass, borderWidth: 1, borderColor: Colors.glassBorder, alignItems: 'center', justifyContent: 'center' },
+  bellBadge:    { position: 'absolute', top: 6, right: 6, width: 16, height: 16, borderRadius: 8, backgroundColor: Colors.danger, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: Colors.primaryDark },
+  bellBadgeText:{ color: Colors.white, fontSize: 9, fontWeight: '800' },
+
+  // Stats row
+  statsRow:     { flexDirection: 'row', gap: Spacing.sm },
+  statChip:     { flex: 1, flexDirection: 'column', alignItems: 'center', paddingVertical: 10, borderRadius: Radii.lg, gap: 2 },
+  statValue:    { fontSize: 15, fontWeight: '800' },
+  statLabel:    { fontSize: 10, color: 'rgba(255,255,255,0.60)', fontWeight: '600' },
+
+  // Sections
+  section:      { paddingHorizontal: Spacing.lg, marginTop: Spacing.xl },
+  sectionLabel: { fontSize: 13, fontWeight: '700', color: Colors.textSecondary, textTransform: 'uppercase', letterSpacing: 1, marginBottom: Spacing.md },
+
+  // RDV card
+  rdvCard:      { flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.surface, borderRadius: Radii['2xl'], padding: Spacing.lg, ...Elevation.card, gap: Spacing.base },
+  rdvIconBg:    { width: 52, height: 52, borderRadius: Radii.lg, alignItems: 'center', justifyContent: 'center' },
+  rdvInfo:      { flex: 1 },
+  rdvVaccin:    { fontSize: 16, fontWeight: '700', color: Colors.text, marginBottom: 2 },
+  rdvEnfant:    { fontSize: 12, color: Colors.primary, fontWeight: '600', marginBottom: 6 },
+  rdvMeta:      { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  rdvMetaText:  { fontSize: 12, color: Colors.textLight },
+  rdvDot:       { width: 3, height: 3, borderRadius: 2, backgroundColor: Colors.borderStrong },
+  rdvChevron:   { width: 32, height: 32, borderRadius: 16, backgroundColor: Colors.primaryTint, alignItems: 'center', justifyContent: 'center' },
+  rdvEmpty:     { backgroundColor: Colors.surface, borderRadius: Radii['2xl'], padding: Spacing['2xl'], alignItems: 'center', gap: Spacing.sm, borderWidth: 1.5, borderColor: Colors.border, borderStyle: 'dashed' },
+  rdvEmptyTitle:{ fontSize: 15, fontWeight: '600', color: Colors.textSecondary },
+  rdvEmptyCta:  { fontSize: 13, fontWeight: '700', color: Colors.primary },
+
+  // Quick actions
+  quickRow:     { flexDirection: 'row', justifyContent: 'space-between' },
+  qaWrap:       { alignItems: 'center', gap: Spacing.sm },
+  qaIcon:       { width: 60, height: 60, borderRadius: Radii.lg, alignItems: 'center', justifyContent: 'center', ...Elevation.sm },
+  qaLabel:      { fontSize: 11, fontWeight: '600', color: Colors.textSecondary },
+
+  // Actus
+  actuCard:     { flexDirection: 'row', gap: Spacing.md, backgroundColor: Colors.surface, borderRadius: Radii.xl, padding: Spacing.base, marginBottom: Spacing.sm, borderLeftWidth: 4, ...Elevation.sm },
+  actuIconWrap: { width: 36, height: 36, borderRadius: Radii.sm, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
+  actuTop:      { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, marginBottom: 4 },
+  actuBadge:    { paddingHorizontal: 8, paddingVertical: 2, borderRadius: Radii.pill },
+  actuBadgeText:{ fontSize: 10, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5 },
+  actuDate:     { fontSize: 10, color: Colors.textLight, marginLeft: 'auto' },
+  actuTitre:    { fontSize: 14, fontWeight: '700', color: Colors.text, marginBottom: 3 },
+  actuDesc:     { fontSize: 12, color: Colors.textSecondary, lineHeight: 17 },
 });

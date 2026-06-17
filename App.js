@@ -1,14 +1,17 @@
 import React from 'react';
 import { PaperProvider } from 'react-native-paper';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider } from './src/context/AuthContext';
 import RootNavigator from './src/navigation/RootNavigator';
 
 export default function App() {
   return (
-    <PaperProvider>
-      <AuthProvider>
-        <RootNavigator />
-      </AuthProvider>
-    </PaperProvider>
+    <SafeAreaProvider>
+      <PaperProvider>
+        <AuthProvider>
+          <RootNavigator />
+        </AuthProvider>
+      </PaperProvider>
+    </SafeAreaProvider>
   );
 }

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, Radii, Spacing, Typography, TouchTargets } from '../../constants/theme';
+import { Colors, Radii, Spacing, TouchTargets } from '../../constants/theme';
 
 export default function AppInput({
   label, placeholder, value, onChangeText, onBlur,
@@ -13,10 +13,16 @@ export default function AppInput({
   const [showPassword, setShowPassword] = useState(false);
 
   const handleFocus = () => setFocused(true);
-  const handleBlur = (e) => { setFocused(false); onBlur?.(e); };
+  const handleBlur  = (e) => { setFocused(false); onBlur?.(e); };
 
-  const isError = touched && error;
+  const isError  = touched && error;
   const isSecure = secureTextEntry && !showPassword;
+
+  const borderColor = isError
+    ? Colors.danger
+    : isFocused
+    ? Colors.primary
+    : Colors.border;
 
   return (
     <View style={styles.wrapper}>
@@ -30,16 +36,16 @@ export default function AppInput({
       <View
         style={[
           styles.inputContainer,
-          { height: TouchTargets.comfortable },
+          { borderColor },
           isFocused && styles.inputFocused,
-          isError && styles.inputError,
-          disabled && styles.inputDisabled,
+          isError   && styles.inputError,
+          disabled  && styles.inputDisabled,
         ]}
       >
         {icon && (
           <Ionicons
             name={icon}
-            size={20}
+            size={19}
             color={isError ? Colors.danger : isFocused ? Colors.primary : Colors.textLight}
             style={styles.leftIcon}
           />
@@ -67,43 +73,71 @@ export default function AppInput({
             onPress={() => setShowPassword(!showPassword)}
             style={styles.rightIconBtn}
             accessibilityRole="button"
-            accessibilityLabel={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+            accessibilityLabel={showPassword ? 'Masquer' : 'Afficher'}
           >
-            <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={20} color={Colors.textSecondary} />
+            <Ionicons
+              name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+              size={19}
+              color={Colors.textSecondary}
+            />
           </TouchableOpacity>
         )}
 
         {rightIcon && !secureTextEntry && (
           <TouchableOpacity onPress={onRightIconPress} style={styles.rightIconBtn} disabled={!onRightIconPress}>
-            <Ionicons name={rightIcon} size={20} color={Colors.textSecondary} />
+            <Ionicons name={rightIcon} size={19} color={Colors.textSecondary} />
           </TouchableOpacity>
         )}
-
-        {isError && <Ionicons name="alert-circle" size={20} color={Colors.danger} style={styles.rightIcon} />}
       </View>
 
-      {isError && <Text style={styles.errorText} accessibilityLiveRegion="assertive">{error}</Text>}
+      {isError && (
+        <View style={styles.errorRow}>
+          <Ionicons name="alert-circle" size={13} color={Colors.danger} />
+          <Text style={styles.errorText} accessibilityLiveRegion="assertive">{error}</Text>
+        </View>
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  wrapper: { marginBottom: Spacing.md },
-  labelRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6, paddingHorizontal: 4 },
-  label: { fontSize: 13, fontWeight: '600', color: Colors.text },
+  wrapper: { marginBottom: Spacing.base },
+  labelRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 7,
+    paddingHorizontal: 2,
+  },
+  label:  { fontSize: 13, fontWeight: '700', color: Colors.text, letterSpacing: 0.1 },
   helper: { fontSize: 11, color: Colors.textLight },
   inputContainer: {
-    flexDirection: 'row', alignItems: 'center',
-    borderWidth: 1.5, borderColor: Colors.border,
-    borderRadius: Radii.sm, backgroundColor: Colors.surface,
-    paddingHorizontal: Spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: 52,
+    borderWidth: 1.5,
+    borderRadius: Radii.lg,
+    backgroundColor: Colors.surface,
+    paddingHorizontal: Spacing.base,
   },
-  inputFocused: { borderColor: Colors.primary, borderWidth: 1.5, shadowColor: Colors.primary, shadowOpacity: 0.15, shadowRadius: 4, shadowOffset: { width: 0, height: 0 }, elevation: 1 },
-  inputError: { borderColor: Colors.danger },
+  inputFocused: {
+    shadowColor: Colors.primary,
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 0 },
+    elevation: 2,
+  },
+  inputError:    { backgroundColor: Colors.dangerBg + '60' },
   inputDisabled: { backgroundColor: Colors.surfaceMuted, opacity: 0.7 },
-  input: { flex: 1, fontSize: 16, color: Colors.text, paddingVertical: 0, paddingHorizontal: Spacing.xs },
-  leftIcon: { marginRight: Spacing.sm },
-  rightIconBtn: { padding: Spacing.xs },
-  rightIcon: { marginLeft: Spacing.sm },
-  errorText: { color: Colors.danger, fontSize: 12, marginTop: 4, marginLeft: 4 },
+  input: {
+    flex: 1,
+    fontSize: 15,
+    color: Colors.text,
+    paddingVertical: 0,
+    paddingHorizontal: Spacing.sm,
+  },
+  leftIcon:     { marginRight: 4 },
+  rightIconBtn: { padding: Spacing.xs, marginLeft: 4 },
+  errorRow:     { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 5, marginLeft: 2 },
+  errorText:    { color: Colors.danger, fontSize: 12, flex: 1 },
 });

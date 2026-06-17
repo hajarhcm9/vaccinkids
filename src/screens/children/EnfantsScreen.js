@@ -1,173 +1,194 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Modal, KeyboardAvoidingView, Platform } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import {
+  View, Text, StyleSheet, FlatList, TouchableOpacity,
+  RefreshControl, StatusBar, Alert,
+} from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { Formik } from 'formik';
-import * as Yup from 'yup';
-import AppButton from '../../components/ui/AppButton';
-import AppInput from '../../components/ui/AppInput';
-import { Colors, Radii, Spacing, Elevation, Typography } from '../../constants/theme';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Colors, Gradients, Radii, Spacing, Elevation } from '../../constants/theme';
 import { enfantService } from '../../services';
 
-const EnfantSchema = Yup.object().shape({
-  nom: Yup.string().required('Le nom est obligatoire'),
-  prenom: Yup.string().required('Le prénom est obligatoire'),
-  date_naissance: Yup.string().required('La date de naissance est obligatoire'),
-  sexe: Yup.string().oneOf(['M', 'F'], 'Choisissez M ou F').required('Le sexe est obligatoire'),
-});
-
 const MOCK_ENFANTS = [
-  { id: '1', nom: 'Dupont', prenom: 'Salma',  date_naissance: '25/08/2021', sexe: 'F' },
-  { id: '2', nom: 'Dupont', prenom: 'Asmae',  date_naissance: '12/05/2023', sexe: 'F' },
+  { id: '1', nom: 'Badioui', prenom: 'Salma',  date_naissance: '25/08/2021', sexe: 'F', vaccins_faits: 7, vaccins_total: 9 },
+  { id: '2', nom: 'Badioui', prenom: 'Asmae',  date_naissance: '12/05/2023', sexe: 'F', vaccins_faits: 4, vaccins_total: 6 },
 ];
 
-function AddEnfantModal({ visible, onClose, onAdd }) {
+const AVATAR_GRADIENTS = [
+  ['#6366F1', '#8B5CF6'],
+  ['#EC4899', '#F43F5E'],
+  ['#F59E0B', '#EF4444'],
+  ['#10B981', '#06B6D4'],
+  ['#3B82F6', '#6366F1'],
+];
+
+function getAge(dob) {
+  if (!dob) return '';
+  const [d, m, y] = dob.split('/');
+  const birth  = new Date(`${y}-${m}-${d}`);
+  const now    = new Date();
+  const years  = now.getFullYear() - birth.getFullYear();
+  const months = (now.getFullYear() * 12 + now.getMonth()) - (birth.getFullYear() * 12 + birth.getMonth());
+  if (years >= 1) return `${years} an${years > 1 ? 's' : ''}`;
+  return `${months} mois`;
+}
+
+function ProgressPill({ done, total }) {
+  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
   return (
-    <Modal visible={visible} animationType="slide" transparent>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
-          <View style={styles.modalHandle} />
-          <Text style={styles.modalTitle}>Ajouter un enfant</Text>
-          <Text style={styles.modalSubtitle}>
-            Renseignez les informations de votre enfant pour suivre son calendrier vaccinal.
-          </Text>
-          <Formik
-            initialValues={{ nom: '', prenom: '', date_naissance: '', sexe: 'F' }}
-            validationSchema={EnfantSchema}
-            onSubmit={(values) => { onAdd(values); }}
-          >
-            {({ handleChange, handleBlur, handleSubmit, values, errors, touched, setFieldValue }) => (
-              <>
-                <AppInput label="Nom *" placeholder="Nom de l'enfant" value={values.nom} onChangeText={handleChange('nom')} onBlur={handleBlur('nom')} error={errors.nom} touched={touched.nom} />
-                <AppInput label="Prénom *" placeholder="Prénom de l'enfant" value={values.prenom} onChangeText={handleChange('prenom')} onBlur={handleBlur('prenom')} error={errors.prenom} touched={touched.prenom} />
-                <AppInput label="Date de naissance *" placeholder="JJ / MM / AAAA" value={values.date_naissance} onChangeText={handleChange('date_naissance')} onBlur={handleBlur('date_naissance')} error={errors.date_naissance} touched={touched.date_naissance} icon="calendar-outline" keyboardType="numeric" helper="Format : JJ/MM/AAAA" />
-                <Text style={styles.fieldLabel}>Sexe *</Text>
-                <View style={styles.sexeContainer}>
-                  <TouchableOpacity style={[styles.sexeButton, values.sexe === 'F' && styles.sexeActiveF]} onPress={() => setFieldValue('sexe', 'F')}>
-                    <Ionicons name="female" size={16} color={values.sexe === 'F' ? Colors.surface : Colors.textSecondary} />
-                    <Text style={[styles.sexeText, values.sexe === 'F' && styles.sexeTextActive]}>Fille</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={[styles.sexeButton, values.sexe === 'M' && styles.sexeActiveM]} onPress={() => setFieldValue('sexe', 'M')}>
-                    <Ionicons name="male" size={16} color={values.sexe === 'M' ? Colors.surface : Colors.textSecondary} />
-                    <Text style={[styles.sexeText, values.sexe === 'M' && styles.sexeTextActive]}>Garçon</Text>
-                  </TouchableOpacity>
-                </View>
-                <View style={styles.buttonRow}>
-                  <AppButton title="Annuler" onPress={onClose} variant="ghost" fullWidth={false} style={{ flex: 1 }} />
-                  <View style={{ width: Spacing.sm }} />
-                  <AppButton title="Ajouter" onPress={handleSubmit} icon="checkmark" iconPosition="right" fullWidth={false} style={{ flex: 1 }} />
-                </View>
-              </>
-            )}
-          </Formik>
-        </View>
-      </KeyboardAvoidingView>
-    </Modal>
+    <View style={pills.wrap}>
+      <View style={pills.track}>
+        <View style={[pills.fill, { width: `${pct}%`, backgroundColor: pct >= 80 ? Colors.success : pct >= 50 ? Colors.accent : Colors.danger }]} />
+      </View>
+      <Text style={pills.label}>{done}/{total}</Text>
+    </View>
   );
 }
 
-export default function EnfantsScreen({ navigation }) {
-  const [modalVisible, setModalVisible] = useState(false);
-  const [enfants, setEnfants] = useState(MOCK_ENFANTS);
+const pills = StyleSheet.create({
+  wrap:  { gap: 4 },
+  track: { height: 5, backgroundColor: Colors.border, borderRadius: Radii.pill, width: 70, overflow: 'hidden' },
+  fill:  { height: 5, borderRadius: Radii.pill },
+  label: { fontSize: 10, fontWeight: '700', color: Colors.textSecondary, textAlign: 'right' },
+});
 
-  const loadEnfants = React.useCallback(async () => {
+export default function EnfantsScreen({ navigation }) {
+  const insets = useSafeAreaInsets();
+  const [enfants, setEnfants]       = useState(MOCK_ENFANTS);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const loadEnfants = useCallback(async () => {
     try {
       const data = await enfantService.listEnfants();
-      if (Array.isArray(data) && data.length > 0) setEnfants(data);
+      if (data?.length) setEnfants(data);
     } catch (e) {}
   }, []);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await loadEnfants();
+    setRefreshing(false);
+  }, [loadEnfants]);
+
   React.useEffect(() => { loadEnfants(); }, [loadEnfants]);
 
-  const handleAdd = async (values) => {
-    try {
-      const created = await enfantService.addEnfant(values);
-      setEnfants([...enfants, created || { id: Date.now().toString(), ...values }]);
-    } catch (e) {
-      setEnfants([...enfants, { id: Date.now().toString(), ...values }]);
-    }
-    setModalVisible(false);
+  const renderItem = ({ item, index }) => {
+    const gradient  = AVATAR_GRADIENTS[index % AVATAR_GRADIENTS.length];
+    const initials  = `${item.prenom?.[0] || ''}${item.nom?.[0] || ''}`.toUpperCase();
+    const sexeColor = item.sexe === 'F' ? Colors.danger : Colors.primary;
+    const sexeLabel = item.sexe === 'F' ? '♀  Fille' : '♂  Garçon';
+
+    return (
+      <TouchableOpacity
+        style={styles.card}
+        activeOpacity={0.88}
+        onPress={() => navigation.navigate('EnfantDetail', { enfant: item })}
+      >
+        <LinearGradient colors={gradient} style={styles.avatar}>
+          <Text style={styles.avatarText}>{initials}</Text>
+        </LinearGradient>
+
+        <View style={{ flex: 1 }}>
+          <View style={styles.nameRow}>
+            <Text style={styles.enfantName}>{item.prenom} {item.nom}</Text>
+            <View style={[styles.sexeBadge, { backgroundColor: sexeColor + '18' }]}>
+              <Text style={[styles.sexeText, { color: sexeColor }]}>{sexeLabel}</Text>
+            </View>
+          </View>
+          <Text style={styles.enfantAge}>{getAge(item.date_naissance)}  ·  {item.date_naissance}</Text>
+          {item.vaccins_total != null && (
+            <ProgressPill done={item.vaccins_faits} total={item.vaccins_total} />
+          )}
+        </View>
+
+        <View style={styles.chevronWrap}>
+          <Ionicons name="chevron-forward" size={16} color={Colors.textLight} />
+        </View>
+      </TouchableOpacity>
+    );
   };
 
-  const renderEnfant = ({ item }) => (
-    <TouchableOpacity style={styles.card} activeOpacity={0.85} onPress={() => navigation.navigate('EnfantDetail', { enfant: item })}>
-      <View style={[styles.avatar, item.sexe === 'F' ? styles.avatarF : styles.avatarM]}>
-        <Text style={styles.avatarText}>{item.prenom[0]}</Text>
+  const renderEmpty = () => (
+    <View style={styles.emptyWrap}>
+      <View style={styles.emptyIconWrap}>
+        <Text style={{ fontSize: 44 }}>👶</Text>
       </View>
-      <View style={styles.info}>
-        <Text style={styles.name}>{item.prenom} {item.nom}</Text>
-        <Text style={styles.details}>Né(e) le : {item.date_naissance}</Text>
-        <View style={styles.codeRow}>
-          <Ionicons name="link-outline" size={11} color={Colors.primary} />
-          <Text style={styles.linkText}>Code centre : •••••••{item.id === '1' ? '12' : '45'}</Text>
-        </View>
-      </View>
-      <View style={[styles.badge, item.sexe === 'F' ? styles.badgeF : styles.badgeM]}>
-        <Ionicons name={item.sexe === 'F' ? 'female' : 'male'} size={11} color={item.sexe === 'F' ? '#A14D6B' : '#1B6E4D'} />
-        <Text style={[styles.badgeText, { color: item.sexe === 'F' ? '#A14D6B' : '#1B6E4D' }]}>
-          {item.sexe === 'F' ? 'Fille' : 'Garçon'}
-        </Text>
-      </View>
-    </TouchableOpacity>
+      <Text style={styles.emptyTitle}>Aucun enfant enregistré</Text>
+      <Text style={styles.emptyBody}>
+        Ajoutez votre premier enfant pour commencer le suivi vaccinal.
+      </Text>
+    </View>
   );
 
   return (
-    <View style={styles.container}>
+    <View style={styles.root}>
+      <StatusBar barStyle="light-content" />
+
+      <LinearGradient colors={Gradients.brandWide} style={[styles.header, { paddingTop: insets.top + Spacing.xl }]}>
+        <View style={styles.decCircle} />
+        <Text style={styles.headerSub}>Votre famille</Text>
+        <Text style={styles.headerTitle}>Mes enfants</Text>
+        <View style={styles.countPill}>
+          <Ionicons name="people" size={13} color="rgba(255,255,255,0.85)" />
+          <Text style={styles.countText}>{enfants.length} enfant{enfants.length !== 1 ? 's' : ''}</Text>
+        </View>
+      </LinearGradient>
+
       <FlatList
         data={enfants}
         keyExtractor={(item) => item.id}
-        renderItem={renderEnfant}
-        contentContainerStyle={{ padding: Spacing.lg, paddingBottom: 100 }}
-        ListHeaderComponent={<Text style={styles.headerTitle}>Mes enfants</Text>}
-        ListEmptyComponent={
-          <View style={styles.empty}>
-            <View style={styles.emptyIcon}>
-              <Ionicons name="people-outline" size={48} color={Colors.primary} />
-            </View>
-            <Text style={styles.emptyTitle}>Aucun enfant lié</Text>
-            <Text style={styles.emptyMessage}>Ajoutez votre enfant pour suivre son calendrier vaccinal.</Text>
-          </View>
+        renderItem={renderItem}
+        ListEmptyComponent={renderEmpty}
+        contentContainerStyle={[styles.list, !enfants.length && { flexGrow: 1 }]}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh}
+            colors={[Colors.primary]} tintColor={Colors.primary} />
         }
       />
-      <TouchableOpacity style={styles.fab} onPress={() => setModalVisible(true)} accessibilityRole="button" accessibilityLabel="Ajouter un enfant">
-        <Ionicons name="add" size={28} color={Colors.surface} />
+
+      <TouchableOpacity
+        style={styles.fab}
+        activeOpacity={0.88}
+        onPress={() => Alert.alert('Ajouter un enfant', 'Cette fonctionnalité sera disponible prochainement.')}
+      >
+        <LinearGradient colors={Gradients.brand} style={styles.fabGradient}>
+          <Ionicons name="add" size={28} color={Colors.white} />
+        </LinearGradient>
       </TouchableOpacity>
-      <AddEnfantModal visible={modalVisible} onClose={() => setModalVisible(false)} onAdd={handleAdd} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
-  headerTitle: { ...Typography.title, marginBottom: Spacing.lg },
-  card: { flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.surface, padding: Spacing.base, borderRadius: Radii.lg, marginBottom: Spacing.md, ...Elevation.sm },
-  avatar: { width: 46, height: 46, borderRadius: 23, alignItems: 'center', justifyContent: 'center', marginRight: Spacing.base },
-  avatarF: { backgroundColor: '#FFE0EB' },
-  avatarM: { backgroundColor: Colors.primaryTint },
-  avatarText: { fontSize: 18, fontWeight: '700', color: Colors.text },
-  info: { flex: 1 },
-  name: { fontSize: 15, fontWeight: '700', color: Colors.text },
-  details: { fontSize: 13, color: Colors.textSecondary, marginTop: 2 },
-  codeRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },
-  linkText: { fontSize: 11, color: Colors.primary, fontWeight: '600' },
-  badge: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 4, borderRadius: Radii.pill },
-  badgeF: { backgroundColor: '#FFE0EB' },
-  badgeM: { backgroundColor: Colors.primaryTint },
-  badgeText: { fontSize: 11, fontWeight: '700' },
-  empty: { alignItems: 'center', paddingVertical: Spacing['4xl'] },
-  emptyIcon: { width: 96, height: 96, borderRadius: 48, backgroundColor: Colors.primaryTint, alignItems: 'center', justifyContent: 'center', marginBottom: Spacing.base },
-  emptyTitle: { ...Typography.subtitle, marginBottom: 8 },
-  emptyMessage: { ...Typography.body, textAlign: 'center', maxWidth: 280 },
-  fab: { position: 'absolute', right: Spacing.lg, bottom: Spacing.xl, width: 56, height: 56, borderRadius: 28, backgroundColor: Colors.primary, alignItems: 'center', justifyContent: 'center', ...Elevation.md },
-  modalOverlay: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.5)' },
-  modalContent: { backgroundColor: Colors.surface, borderTopLeftRadius: Radii['2xl'], borderTopRightRadius: Radii['2xl'], padding: Spacing.xl, paddingBottom: Spacing['2xl'] },
-  modalHandle: { width: 40, height: 4, borderRadius: 2, backgroundColor: Colors.border, alignSelf: 'center', marginBottom: Spacing.md },
-  modalTitle: { ...Typography.title, textAlign: 'center', marginBottom: 6 },
-  modalSubtitle: { fontSize: 13, color: Colors.textSecondary, textAlign: 'center', marginBottom: Spacing.lg, lineHeight: 18 },
-  fieldLabel: { fontSize: 13, fontWeight: '600', color: Colors.text, marginBottom: 8, marginTop: 4, paddingHorizontal: 4 },
-  sexeContainer: { flexDirection: 'row', gap: Spacing.sm, marginBottom: Spacing.lg },
-  sexeButton: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 12, borderRadius: Radii.sm, borderWidth: 1.5, borderColor: Colors.border, backgroundColor: Colors.surface },
-  sexeActiveF: { backgroundColor: '#E84A8A', borderColor: '#E84A8A' },
-  sexeActiveM: { backgroundColor: Colors.primary, borderColor: Colors.primary },
-  sexeText: { fontSize: 14, fontWeight: '600', color: Colors.textSecondary },
-  sexeTextActive: { color: Colors.surface, fontWeight: '700' },
-  buttonRow: { flexDirection: 'row', alignItems: 'center', marginTop: Spacing.sm },
+  root: { flex: 1, backgroundColor: Colors.background },
+
+  header:      { paddingHorizontal: Spacing.xl, paddingBottom: Spacing['2xl'], position: 'relative', overflow: 'hidden' },
+  decCircle:   { position: 'absolute', width: 200, height: 200, borderRadius: 100, backgroundColor: Colors.glass, top: -70, right: -50 },
+  headerSub:   { fontSize: 13, color: 'rgba(255,255,255,0.65)', marginBottom: 4 },
+  headerTitle: { fontSize: 30, fontWeight: '800', color: Colors.white, letterSpacing: -0.5, marginBottom: Spacing.md },
+  countPill:   { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', backgroundColor: Colors.glass, borderWidth: 1, borderColor: Colors.glassBorder, borderRadius: Radii.pill, paddingHorizontal: Spacing.base, paddingVertical: 5 },
+  countText:   { fontSize: 12, fontWeight: '700', color: 'rgba(255,255,255,0.90)' },
+
+  list:        { padding: Spacing.lg, gap: Spacing.md },
+
+  card:        { flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.surface, borderRadius: Radii['2xl'], padding: Spacing.lg, ...Elevation.card, gap: Spacing.base },
+  avatar:      { width: 58, height: 58, borderRadius: 29, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
+  avatarText:  { fontSize: 20, fontWeight: '800', color: Colors.white },
+
+  nameRow:     { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, marginBottom: 4, flexWrap: 'wrap' },
+  enfantName:  { fontSize: 16, fontWeight: '700', color: Colors.text },
+  sexeBadge:   { paddingHorizontal: 8, paddingVertical: 3, borderRadius: Radii.pill },
+  sexeText:    { fontSize: 11, fontWeight: '700' },
+  enfantAge:   { fontSize: 12, color: Colors.textSecondary, marginBottom: 8 },
+
+  chevronWrap: { width: 30, height: 30, borderRadius: 15, backgroundColor: Colors.primaryTint, alignItems: 'center', justifyContent: 'center' },
+
+  emptyWrap:     { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: Spacing['2xl'], paddingTop: Spacing['3xl'] },
+  emptyIconWrap: { width: 90, height: 90, borderRadius: 45, backgroundColor: Colors.primaryTint, alignItems: 'center', justifyContent: 'center', marginBottom: Spacing.xl },
+  emptyTitle:    { fontSize: 19, fontWeight: '700', color: Colors.text, marginBottom: 8, textAlign: 'center' },
+  emptyBody:     { fontSize: 14, color: Colors.textSecondary, textAlign: 'center', lineHeight: 21 },
+
+  fab:         { position: 'absolute', bottom: 28, right: 24, borderRadius: 32, overflow: 'hidden', ...Elevation.xl },
+  fabGradient: { width: 60, height: 60, alignItems: 'center', justifyContent: 'center' },
 });

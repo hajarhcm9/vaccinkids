@@ -1,131 +1,154 @@
 import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity, Modal,
-  ScrollView, KeyboardAvoidingView, Platform, Alert,
+  ScrollView, StatusBar, Alert,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, Gradients, Radii, Spacing, Elevation, Typography } from '../../constants/theme';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Colors, Gradients, Radii, Spacing, Elevation } from '../../constants/theme';
 import { rdvService } from '../../services';
 
 const MOCK_DATA = {
   A_VENIR: [
-    { id: '1', vaccin: 'DTP 2',      enfant: 'Salma', enfant_nom: 'Salma', date: '2026-06-20', heure: '09:30', centre: 'Centre Rabat — Agdal', statut: 'A_VENIR' },
-    { id: '2', vaccin: 'Rougeole 1', enfant: 'Asmae', enfant_nom: 'Asmae', date: '2026-06-27', heure: '14:00', centre: 'Centre Rabat — Agdal', statut: 'A_VENIR' },
+    { id: 'r1', enfant: 'Salma',  enfant_nom: 'Salma', vaccin: 'DTP 2',    date: '2026-06-20', heure: '09:30', centre: 'Centre de Santé Maârif', statut: 'A_VENIR' },
+    { id: 'r2', enfant: 'Asmae',  enfant_nom: 'Asmae', vaccin: 'BCG',      date: '2026-06-25', heure: '10:00', centre: 'Polyclinique Sidi Moumen', statut: 'A_VENIR' },
   ],
   FAIT: [
-    { id: '3', vaccin: 'BCG',          enfant: 'Salma', enfant_nom: 'Salma', date: '2026-05-12', heure: '10:00', centre: 'Centre Rabat — Hassan', statut: 'FAIT' },
-    { id: '4', vaccin: 'Hépatite B 1', enfant: 'Asmae', enfant_nom: 'Asmae', date: '2026-05-04', heure: '11:30', centre: 'Centre Rabat — Hassan', statut: 'FAIT' },
-    { id: '5', vaccin: 'DTP 1',        enfant: 'Salma', enfant_nom: 'Salma', date: '2026-04-18', heure: '09:00', centre: 'Centre Rabat — Agdal',  statut: 'FAIT' },
+    { id: 'r3', enfant: 'Salma',  enfant_nom: 'Salma', vaccin: 'Pentavalent 1', date: '2025-12-10', heure: '09:00', centre: 'Centre de Santé Maârif', statut: 'FAIT' },
+    { id: 'r4', enfant: 'Salma',  enfant_nom: 'Salma', vaccin: 'BCG',           date: '2025-09-01', heure: '08:30', centre: 'Maternité Al Farabi', statut: 'FAIT' },
   ],
   ANNULE: [
-    { id: '6', vaccin: 'Varicelle', enfant: 'Asmae', enfant_nom: 'Asmae', date: '2026-06-05', heure: '10:30', centre: 'Centre Rabat — Hassan', statut: 'ANNULE' },
+    { id: 'r5', enfant: 'Asmae',  enfant_nom: 'Asmae', vaccin: 'ROR 1',    date: '2025-11-05', heure: '11:00', centre: 'Centre de Santé Maârif', statut: 'ANNULE', motif: 'Enfant malade' },
   ],
 };
 
 const SEGMENTS = [
-  { key: 'A_VENIR', label: 'À venir', icon: 'calendar-outline' },
-  { key: 'FAIT',    label: 'Passés',  icon: 'checkmark-done-outline' },
-  { key: 'ANNULE',  label: 'Annulés', icon: 'close-circle-outline' },
+  { key: 'A_VENIR', label: 'À venir',  icon: 'time-outline',          color: Colors.primary  },
+  { key: 'FAIT',    label: 'Effectués', icon: 'checkmark-circle-outline', color: Colors.success },
+  { key: 'ANNULE',  label: 'Annulés',   icon: 'close-circle-outline',  color: Colors.danger   },
 ];
 
+const STATUS_META = {
+  A_VENIR: { color: Colors.primary,  bg: Colors.primaryTint,  icon: 'time-outline',           label: 'À venir'   },
+  FAIT:    { color: Colors.success,  bg: Colors.successBg,    icon: 'checkmark-circle',        label: 'Effectué'  },
+  ANNULE:  { color: Colors.danger,   bg: Colors.dangerBg,     icon: 'close-circle',            label: 'Annulé'    },
+};
+
+const MOCK_ENFANTS = [
+  { id: '1', prenom: 'Salma' },
+  { id: '2', prenom: 'Asmae' },
+];
+const MOCK_VACCINS  = ['BCG', 'DTP 1', 'DTP 2', 'Pentavalent 1', 'ROR 1', 'Hépatite B'];
+const MOCK_CENTRES  = ['Centre de Santé Maârif', 'Polyclinique Sidi Moumen', 'Maternité Al Farabi', 'CHU Ibn Rochd'];
+const MOCK_SLOTS    = ['08:30', '09:00', '09:30', '10:00', '10:30', '11:00'];
+
 function formatDate(iso) {
-  const d = new Date(iso);
-  return d.toLocaleDateString('fr-FR', { weekday: 'short', day: '2-digit', month: 'short' });
+  if (!iso) return '—';
+  return new Date(iso).toLocaleDateString('fr-FR', { weekday: 'short', day: '2-digit', month: 'long', year: 'numeric' });
 }
 
 export default function RdvScreen({ navigation }) {
-  const [segment, setSegment] = useState('A_VENIR');
-  const [showTakeRdv, setShowTakeRdv] = useState(false);
-  const [data, setData] = useState(MOCK_DATA);
+  const insets = useSafeAreaInsets();
+  const [segment,    setSegment]   = useState('A_VENIR');
+  const [rdvs,       setRdvs]      = useState({ ...MOCK_DATA });
+  const [showModal,  setShowModal] = useState(false);
 
-  const loadRdv = React.useCallback(async (seg) => {
-    try {
-      const resp = await rdvService.listRdv(seg);
-      if (Array.isArray(resp) && resp.length > 0) {
-        setData((prev) => ({ ...prev, [seg]: resp }));
-      }
-    } catch (e) {}
-  }, []);
-
-  React.useEffect(() => { loadRdv(segment); }, [segment]);
-
-  const currentData = data[segment] || [];
-
-  const statusMeta = (status) => {
-    switch (status) {
-      case 'A_VENIR': return { color: Colors.primary, bg: Colors.primary + '20', icon: 'time-outline',    label: 'À venir' };
-      case 'FAIT':    return { color: Colors.success, bg: Colors.success + '20', icon: 'checkmark-circle', label: 'Confirmé' };
-      case 'ANNULE':  return { color: Colors.danger,  bg: Colors.danger  + '20', icon: 'close-circle',    label: 'Annulé' };
-      default:        return { color: Colors.textSecondary, bg: Colors.surfaceMuted, icon: 'ellipse-outline', label: status };
-    }
-  };
+  const [selEnfant,  setSelEnfant] = useState(null);
+  const [selVaccin,  setSelVaccin] = useState(null);
+  const [selCentre,  setSelCentre] = useState(null);
+  const [selSlot,    setSelSlot]   = useState(null);
 
   const handleCancel = (item) => {
     Alert.alert(
-      'Annuler le RDV',
-      `Annuler le rendez-vous ${item.vaccin} pour ${item.enfant_nom || item.enfant} ?`,
+      'Annuler ce rendez-vous',
+      `Confirmer l'annulation du RDV de ${item.enfant} pour le ${item.vaccin} ?`,
       [
         { text: 'Non', style: 'cancel' },
         {
           text: 'Oui, annuler', style: 'destructive',
           onPress: async () => {
-            setData((prev) => ({
-              ...prev,
-              A_VENIR: prev.A_VENIR.filter((r) => r.id !== item.id),
-              ANNULE:  [{ ...item, statut: 'ANNULE' }, ...prev.ANNULE],
-            }));
             try { await rdvService.cancelRdv(item.id); } catch (e) {}
+            setRdvs((prev) => {
+              const nextAVenir  = prev.A_VENIR.filter((r) => r.id !== item.id);
+              const nextAnnule  = [{ ...item, statut: 'ANNULE', motif: 'Annulation utilisateur' }, ...prev.ANNULE];
+              return { ...prev, A_VENIR: nextAVenir, ANNULE: nextAnnule };
+            });
           },
         },
       ]
     );
   };
 
-  const handleAddRdv = (newRdv) => {
-    setData((prev) => ({
-      ...prev,
-      A_VENIR: [newRdv, ...prev.A_VENIR],
-    }));
-    setShowTakeRdv(false);
+  const handleConfirmRdv = () => {
+    if (!selEnfant || !selVaccin || !selCentre || !selSlot) {
+      Alert.alert('Champs manquants', 'Veuillez compléter tous les champs.');
+      return;
+    }
+    const now = new Date();
+    const newRdv = {
+      id: `r_${Date.now()}`,
+      enfant: selEnfant.prenom,
+      enfant_nom: selEnfant.prenom,
+      vaccin: selVaccin,
+      date: now.toISOString().slice(0, 10),
+      heure: selSlot,
+      centre: selCentre,
+      statut: 'A_VENIR',
+    };
+    setRdvs((prev) => ({ ...prev, A_VENIR: [newRdv, ...prev.A_VENIR] }));
+    setShowModal(false);
+    setSelEnfant(null); setSelVaccin(null); setSelCentre(null); setSelSlot(null);
+    setSegment('A_VENIR');
   };
 
-  const renderRdv = ({ item }) => {
-    const s = statusMeta(item.statut);
+  const currentList = rdvs[segment] || [];
+
+  const renderCard = ({ item }) => {
+    const m = STATUS_META[item.statut] || STATUS_META.A_VENIR;
     return (
       <View style={styles.card}>
-        <View style={styles.cardHeader}>
-          <View style={[styles.cardIcon, { backgroundColor: s.color }]}>
-            <Ionicons name="medkit" size={20} color={Colors.surface} />
+        <View style={[styles.cardAccent, { backgroundColor: m.color }]} />
+        <View style={styles.cardBody}>
+          <View style={styles.cardTop}>
+            <View style={[styles.iconWrap, { backgroundColor: m.bg }]}>
+              <Ionicons name="medkit" size={20} color={m.color} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.vaccinNom}>{item.vaccin}</Text>
+              <Text style={styles.enfantLabel}>Pour {item.enfant}</Text>
+            </View>
+            <View style={[styles.badge, { backgroundColor: m.bg }]}>
+              <Ionicons name={m.icon} size={11} color={m.color} />
+              <Text style={[styles.badgeText, { color: m.color }]}>{m.label}</Text>
+            </View>
           </View>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.cardTitle}>{item.vaccin}</Text>
-            <Text style={styles.cardSubtitle}>{item.enfant_nom || item.enfant} · {item.centre}</Text>
+
+          <View style={styles.cardMeta}>
+            <MetaItem icon="calendar-outline" value={formatDate(item.date)} />
+            <MetaItem icon="time-outline"     value={item.heure} />
+            <MetaItem icon="location-outline" value={item.centre} />
           </View>
-          <View style={[styles.statusBadge, { backgroundColor: s.bg }]}>
-            <Ionicons name={s.icon} size={11} color={s.color} style={{ marginRight: 4 }} />
-            <Text style={[styles.statusText, { color: s.color }]}>{s.label}</Text>
-          </View>
-        </View>
-        <View style={styles.cardFooter}>
-          <View style={styles.metaRow}>
-            <Ionicons name="calendar-outline" size={13} color={Colors.textSecondary} />
-            <Text style={styles.metaText}>{formatDate(item.date)}</Text>
-          </View>
-          <View style={styles.metaRow}>
-            <Ionicons name="time-outline" size={13} color={Colors.textSecondary} />
-            <Text style={styles.metaText}>{item.heure}</Text>
-          </View>
+
+          {item.motif && (
+            <View style={styles.motifRow}>
+              <Ionicons name="information-circle-outline" size={13} color={Colors.danger} />
+              <Text style={styles.motifText}>{item.motif}</Text>
+            </View>
+          )}
+
           {item.statut === 'A_VENIR' && (
             <View style={styles.cardActions}>
-              <TouchableOpacity style={[styles.actionBtn, styles.actionSecondary]} onPress={() => handleCancel(item)}>
-                <Text style={styles.actionSecondaryText}>Annuler</Text>
-              </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.actionBtn, styles.actionPrimary]}
+                style={styles.detailBtn}
                 onPress={() => navigation.navigate('RdvDetail', { rdvId: item.id, rdv: item })}
               >
-                <Text style={styles.actionPrimaryText}>Détails</Text>
+                <Text style={styles.detailBtnText}>Voir détails</Text>
+                <Ionicons name="chevron-forward" size={13} color={Colors.primary} />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.cancelBtn} onPress={() => handleCancel(item)}>
+                <Ionicons name="close-circle-outline" size={14} color={Colors.danger} />
+                <Text style={styles.cancelBtnText}>Annuler</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -134,235 +157,245 @@ export default function RdvScreen({ navigation }) {
     );
   };
 
+  const renderEmpty = () => (
+    <View style={styles.emptyWrap}>
+      <View style={styles.emptyIcon}><Text style={{ fontSize: 36 }}>📅</Text></View>
+      <Text style={styles.emptyTitle}>Aucun rendez-vous</Text>
+      <Text style={styles.emptyBody}>
+        {segment === 'A_VENIR' ? 'Prenez votre premier rendez-vous via le bouton +' : 'L\'historique apparaîtra ici.'}
+      </Text>
+    </View>
+  );
+
   return (
-    <View style={styles.container}>
-      <LinearGradient colors={Gradients.brand} style={styles.header}>
-        <Text style={styles.headerTitle}>Rendez-vous</Text>
-        <Text style={styles.headerSubtitle}>Gérez les rendez-vous de vos enfants</Text>
+    <View style={styles.root}>
+      <StatusBar barStyle="light-content" />
+
+      <LinearGradient colors={Gradients.brandWide} style={[styles.header, { paddingTop: insets.top + Spacing.xl }]}>
+        <View style={styles.decCircle} />
+        <Text style={styles.headerSub}>Suivi médical</Text>
+        <Text style={styles.headerTitle}>Mes rendez-vous</Text>
+
+        {/* Segment */}
+        <View style={styles.segmentBar}>
+          {SEGMENTS.map((s) => {
+            const active = segment === s.key;
+            const count  = (rdvs[s.key] || []).length;
+            return (
+              <TouchableOpacity
+                key={s.key}
+                style={[styles.segBtn, active && styles.segBtnActive]}
+                onPress={() => setSegment(s.key)}
+                activeOpacity={0.8}
+              >
+                <Text style={[styles.segLabel, active && { color: Colors.text }]}>{s.label}</Text>
+                {count > 0 && (
+                  <View style={[styles.segCount, { backgroundColor: active ? s.color : Colors.glass }]}>
+                    <Text style={[styles.segCountText, { color: active ? Colors.white : 'rgba(255,255,255,0.7)' }]}>{count}</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+            );
+          })}
+        </View>
       </LinearGradient>
 
-      <View style={styles.segmentsRow}>
-        {SEGMENTS.map((seg) => {
-          const active = segment === seg.key;
-          const count = data[seg.key]?.length || 0;
-          return (
-            <TouchableOpacity
-              key={seg.key}
-              style={[styles.segment, active && styles.segmentActive]}
-              onPress={() => setSegment(seg.key)}
-              accessibilityRole="tab"
-              accessibilityState={{ selected: active }}
-            >
-              <Ionicons name={seg.icon} size={14} color={active ? Colors.surface : Colors.textSecondary} />
-              <Text style={[styles.segmentText, active && styles.segmentTextActive]}>{seg.label}</Text>
-              {count > 0 && (
-                <View style={[styles.segmentBadge, active && styles.segmentBadgeActive]}>
-                  <Text style={[styles.segmentBadgeText, active && styles.segmentBadgeTextActive]}>{count}</Text>
-                </View>
-              )}
-            </TouchableOpacity>
-          );
-        })}
-      </View>
-
       <FlatList
-        data={currentData}
+        data={currentList}
         keyExtractor={(item) => item.id}
-        renderItem={renderRdv}
-        contentContainerStyle={{ paddingHorizontal: Spacing.lg, paddingTop: Spacing.lg, paddingBottom: 100 }}
-        ListEmptyComponent={
-          <View style={styles.empty}>
-            <View style={styles.emptyIcon}>
-              <Ionicons name="calendar-outline" size={48} color={Colors.primary} />
-            </View>
-            <Text style={styles.emptyTitle}>
-              Aucun rendez-vous {segment === 'A_VENIR' ? 'à venir' : segment === 'FAIT' ? 'passé' : 'annulé'}
-            </Text>
-            <Text style={styles.emptyMessage}>
-              {segment === 'A_VENIR' ? 'Planifiez le prochain vaccin de votre enfant.' : 'Vos rendez-vous apparaîtront ici.'}
-            </Text>
-          </View>
-        }
+        renderItem={renderCard}
+        ListEmptyComponent={renderEmpty}
+        contentContainerStyle={[styles.list, !currentList.length && { flexGrow: 1 }]}
+        showsVerticalScrollIndicator={false}
       />
 
-      <TouchableOpacity style={styles.fab} onPress={() => setShowTakeRdv(true)} accessibilityRole="button">
-        <Ionicons name="add" size={28} color={Colors.surface} />
-        <Text style={styles.fabLabel}>RDV</Text>
+      {/* FAB */}
+      <TouchableOpacity style={styles.fab} onPress={() => setShowModal(true)} activeOpacity={0.88}>
+        <LinearGradient colors={Gradients.brand} style={styles.fabGradient}>
+          <Ionicons name="add" size={28} color={Colors.white} />
+        </LinearGradient>
       </TouchableOpacity>
 
-      <TakeRdvModal visible={showTakeRdv} onClose={() => setShowTakeRdv(false)} onConfirm={handleAddRdv} />
+      {/* ── Take RDV Modal ── */}
+      <Modal visible={showModal} transparent animationType="slide" onRequestClose={() => setShowModal(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalSheet}>
+            <View style={styles.modalHandle} />
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Nouveau rendez-vous</Text>
+              <TouchableOpacity onPress={() => setShowModal(false)} style={styles.modalCloseBtn}>
+                <Ionicons name="close" size={22} color={Colors.textSecondary} />
+              </TouchableOpacity>
+            </View>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <PickerSection label="Enfant" icon="person-outline" color={Colors.primary}>
+                <View style={styles.chipRow}>
+                  {MOCK_ENFANTS.map((e) => (
+                    <TouchableOpacity
+                      key={e.id}
+                      style={[styles.chip, selEnfant?.id === e.id && styles.chipActive]}
+                      onPress={() => setSelEnfant(e)}
+                    >
+                      <Text style={[styles.chipText, selEnfant?.id === e.id && styles.chipTextActive]}>{e.prenom}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </PickerSection>
+
+              <PickerSection label="Vaccin" icon="medkit-outline" color="#7C3AED">
+                <View style={styles.chipRow}>
+                  {MOCK_VACCINS.map((v) => (
+                    <TouchableOpacity
+                      key={v}
+                      style={[styles.chip, selVaccin === v && styles.chipActive]}
+                      onPress={() => setSelVaccin(v)}
+                    >
+                      <Text style={[styles.chipText, selVaccin === v && styles.chipTextActive]}>{v}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </PickerSection>
+
+              <PickerSection label="Centre de santé" icon="location-outline" color={Colors.success}>
+                <View style={styles.chipCol}>
+                  {MOCK_CENTRES.map((c) => (
+                    <TouchableOpacity
+                      key={c}
+                      style={[styles.centreRow, selCentre === c && styles.centreRowActive]}
+                      onPress={() => setSelCentre(c)}
+                    >
+                      <Ionicons name="business-outline" size={15} color={selCentre === c ? Colors.primary : Colors.textLight} />
+                      <Text style={[styles.centreText, selCentre === c && { color: Colors.primary, fontWeight: '700' }]}>{c}</Text>
+                      {selCentre === c && <Ionicons name="checkmark-circle" size={17} color={Colors.primary} style={{ marginLeft: 'auto' }} />}
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </PickerSection>
+
+              <PickerSection label="Créneau horaire" icon="time-outline" color={Colors.accent}>
+                <View style={styles.chipRow}>
+                  {MOCK_SLOTS.map((s) => (
+                    <TouchableOpacity
+                      key={s}
+                      style={[styles.chip, selSlot === s && styles.chipActive]}
+                      onPress={() => setSelSlot(s)}
+                    >
+                      <Text style={[styles.chipText, selSlot === s && styles.chipTextActive]}>{s}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </PickerSection>
+
+              <TouchableOpacity style={styles.confirmBtn} onPress={handleConfirmRdv} activeOpacity={0.88}>
+                <LinearGradient colors={Gradients.brand} style={styles.confirmGrad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
+                  <Ionicons name="checkmark-circle-outline" size={20} color={Colors.white} />
+                  <Text style={styles.confirmBtnText}>Confirmer le rendez-vous</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
 
-const ENFANTS_MOCK  = ['Salma', 'Asmae'];
-const VACCINS_MOCK  = ['DTP 2', 'Hépatite B 2', 'Rougeole 1', 'Varicelle'];
-const CENTRES_MOCK  = ['Centre Rabat — Agdal', 'Centre Rabat — Hassan', 'Centre Salé — Centre'];
-const SLOTS_MOCK    = ['Mer 18/06 09:30', 'Mer 18/06 11:00', 'Jeu 19/06 14:00', 'Ven 20/06 10:00', 'Sam 21/06 09:00'];
-
-function TakeRdvModal({ visible, onClose, onConfirm }) {
-  const [selectedEnfant, setSelectedEnfant] = useState(0);
-  const [selectedVaccin, setSelectedVaccin] = useState(0);
-  const [selectedCentre, setSelectedCentre] = useState(0);
-  const [selectedSlot, setSelectedSlot] = useState(null);
-
-  const handleConfirm = () => {
-    if (selectedSlot === null) {
-      Alert.alert('Créneau requis', 'Veuillez choisir un créneau disponible.');
-      return;
-    }
-    const slotParts = SLOTS_MOCK[selectedSlot].split(' ');
-    onConfirm({
-      id: Date.now().toString(),
-      vaccin: VACCINS_MOCK[selectedVaccin],
-      enfant: ENFANTS_MOCK[selectedEnfant],
-      enfant_nom: ENFANTS_MOCK[selectedEnfant],
-      date: new Date().toISOString(),
-      heure: slotParts[slotParts.length - 1],
-      centre: CENTRES_MOCK[selectedCentre],
-      statut: 'A_VENIR',
-    });
-    setSelectedSlot(null);
-  };
-
+function MetaItem({ icon, value }) {
   return (
-    <Modal visible={visible} animationType="slide" transparent>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.modalOverlay}>
-        <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
-          <View style={styles.modalHandle} />
-          <Text style={styles.modalTitle}>Prendre rendez-vous</Text>
-          <Text style={styles.modalSubtitle}>Choisissez un créneau disponible pour le prochain vaccin.</Text>
+    <View style={styles.metaItem}>
+      <Ionicons name={icon} size={12} color={Colors.textLight} />
+      <Text style={styles.metaText}>{value}</Text>
+    </View>
+  );
+}
 
-          <Text style={styles.fieldLabel}>Enfant</Text>
-          <View style={styles.chipsRow}>
-            {ENFANTS_MOCK.map((n, i) => (
-              <TouchableOpacity
-                key={n}
-                style={[styles.chip, selectedEnfant === i && styles.chipActive]}
-                onPress={() => setSelectedEnfant(i)}
-              >
-                <Text style={[styles.chipText, selectedEnfant === i && styles.chipTextActive]}>{n}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          <Text style={styles.fieldLabel}>Vaccin à administrer</Text>
-          {VACCINS_MOCK.map((v, i) => (
-            <TouchableOpacity
-              key={v}
-              style={[styles.selectBox, selectedVaccin === i && styles.selectBoxActive]}
-              onPress={() => setSelectedVaccin(i)}
-            >
-              <Text style={[styles.selectText, selectedVaccin === i && { color: Colors.primary, fontWeight: '700' }]}>{v}</Text>
-              {selectedVaccin === i && <Ionicons name="checkmark-circle" size={18} color={Colors.primary} />}
-            </TouchableOpacity>
-          ))}
-
-          <Text style={styles.fieldLabel}>Centre</Text>
-          {CENTRES_MOCK.map((c, i) => (
-            <TouchableOpacity
-              key={c}
-              style={[styles.selectBox, selectedCentre === i && styles.selectBoxActive]}
-              onPress={() => setSelectedCentre(i)}
-            >
-              <Ionicons name="location-outline" size={15} color={selectedCentre === i ? Colors.primary : Colors.textSecondary} style={{ marginRight: 8 }} />
-              <Text style={[styles.selectText, { flex: 1 }, selectedCentre === i && { color: Colors.primary, fontWeight: '700' }]}>{c}</Text>
-              {selectedCentre === i && <Ionicons name="checkmark-circle" size={18} color={Colors.primary} />}
-            </TouchableOpacity>
-          ))}
-
-          <Text style={styles.fieldLabel}>Créneau disponible</Text>
-          <View style={styles.slotsGrid}>
-            {SLOTS_MOCK.map((slot, i) => (
-              <TouchableOpacity
-                key={slot}
-                style={[styles.slot, selectedSlot === i && styles.slotActive]}
-                onPress={() => setSelectedSlot(i)}
-              >
-                <Text style={[styles.slotText, selectedSlot === i && styles.slotTextActive]}>{slot}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          <View style={styles.buttonRow}>
-            <TouchableOpacity style={[styles.btn, styles.btnGhost, { flex: 1 }]} onPress={onClose}>
-              <Text style={[styles.btnText, styles.btnTextGhost]}>Annuler</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.btn, styles.btnPrimary, { flex: 1 }, selectedSlot === null && { opacity: 0.5 }]}
-              onPress={handleConfirm}
-            >
-              <Text style={[styles.btnText, styles.btnTextPrimary]}>Confirmer</Text>
-            </TouchableOpacity>
-          </View>
-
-          <View style={{ height: Spacing.xl }} />
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </Modal>
+function PickerSection({ label, icon, color, children }) {
+  return (
+    <View style={styles.pickerSection}>
+      <View style={styles.pickerLabel}>
+        <View style={[styles.pickerIconWrap, { backgroundColor: color + '18' }]}>
+          <Ionicons name={icon} size={15} color={color} />
+        </View>
+        <Text style={styles.pickerLabelText}>{label}</Text>
+      </View>
+      {children}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container:          { flex: 1, backgroundColor: Colors.background },
-  header:             { paddingHorizontal: Spacing.xl, paddingTop: Spacing['3xl'], paddingBottom: Spacing.xl, borderBottomLeftRadius: Radii.header, borderBottomRightRadius: Radii.header },
-  headerTitle:        { fontSize: 24, fontWeight: '800', color: Colors.surface },
-  headerSubtitle:     { fontSize: 13, color: 'rgba(255,255,255,0.85)', marginTop: 4 },
-  segmentsRow:        { flexDirection: 'row', marginHorizontal: Spacing.lg, marginTop: -Spacing.md, backgroundColor: Colors.surface, borderRadius: Radii.pill, padding: 4, ...Elevation.sm },
-  segment:            { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, paddingVertical: 10, borderRadius: Radii.pill },
-  segmentActive:      { backgroundColor: Colors.primary },
-  segmentText:        { fontSize: 11, fontWeight: '600', color: Colors.textSecondary },
-  segmentTextActive:  { color: Colors.surface, fontWeight: '700' },
-  segmentBadge:       { backgroundColor: Colors.border, borderRadius: 8, paddingHorizontal: 5, paddingVertical: 1 },
-  segmentBadgeActive: { backgroundColor: 'rgba(255,255,255,0.3)' },
-  segmentBadgeText:   { fontSize: 10, fontWeight: '700', color: Colors.textSecondary },
-  segmentBadgeTextActive: { color: Colors.surface },
-  card:               { backgroundColor: Colors.surface, borderRadius: Radii.lg, padding: Spacing.base, marginBottom: Spacing.md, ...Elevation.sm },
-  cardHeader:         { flexDirection: 'row', alignItems: 'center', gap: Spacing.md },
-  cardIcon:           { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
-  cardTitle:          { fontSize: 15, fontWeight: '700', color: Colors.text },
-  cardSubtitle:       { fontSize: 12, color: Colors.textSecondary, marginTop: 2 },
-  statusBadge:        { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8, paddingVertical: 4, borderRadius: Radii.pill },
-  statusText:         { fontSize: 10, fontWeight: '700' },
-  cardFooter:         { flexDirection: 'row', alignItems: 'center', gap: Spacing.md, marginTop: Spacing.md, paddingTop: Spacing.md, borderTopWidth: 1, borderTopColor: Colors.border, flexWrap: 'wrap' },
-  metaRow:            { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  metaText:           { fontSize: 12, color: Colors.textSecondary },
-  cardActions:        { flexDirection: 'row', gap: Spacing.sm, marginLeft: 'auto' },
-  actionBtn:          { paddingHorizontal: 12, paddingVertical: 6, borderRadius: Radii.sm },
-  actionSecondary:    { backgroundColor: Colors.surfaceMuted },
-  actionSecondaryText:{ color: Colors.textSecondary, fontSize: 12, fontWeight: '600' },
-  actionPrimary:      { backgroundColor: Colors.primaryTint },
-  actionPrimaryText:  { color: Colors.primary, fontSize: 12, fontWeight: '700' },
-  empty:              { alignItems: 'center', paddingVertical: Spacing['4xl'] },
-  emptyIcon:          { width: 96, height: 96, borderRadius: 48, backgroundColor: Colors.primaryTint, alignItems: 'center', justifyContent: 'center', marginBottom: Spacing.base },
-  emptyTitle:         { ...Typography.subtitle, marginBottom: 8 },
-  emptyMessage:       { ...Typography.body, textAlign: 'center', maxWidth: 280 },
-  fab:                { position: 'absolute', right: Spacing.lg, bottom: Spacing.xl, flexDirection: 'row', alignItems: 'center', gap: 6, height: 56, paddingHorizontal: Spacing.lg, borderRadius: 28, backgroundColor: Colors.primary, ...Elevation.md },
-  fabLabel:           { color: Colors.surface, fontSize: 13, fontWeight: '700' },
-  modalOverlay:       { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.5)' },
-  modalContent:       { backgroundColor: Colors.surface, borderTopLeftRadius: Radii['2xl'], borderTopRightRadius: Radii['2xl'], padding: Spacing.xl, maxHeight: '92%' },
-  modalHandle:        { width: 40, height: 4, borderRadius: 2, backgroundColor: Colors.border, alignSelf: 'center', marginBottom: Spacing.md },
-  modalTitle:         { ...Typography.title, textAlign: 'center', marginBottom: 6 },
-  modalSubtitle:      { fontSize: 13, color: Colors.textSecondary, textAlign: 'center', marginBottom: Spacing.lg, lineHeight: 18 },
-  fieldLabel:         { fontSize: 12, fontWeight: '700', color: Colors.text, marginTop: Spacing.md, marginBottom: Spacing.sm, textTransform: 'uppercase', letterSpacing: 0.5 },
-  chipsRow:           { flexDirection: 'row', gap: Spacing.sm, marginBottom: Spacing.xs },
-  chip:               { paddingHorizontal: Spacing.base, paddingVertical: 8, borderRadius: Radii.pill, backgroundColor: Colors.surfaceMuted, borderWidth: 1.5, borderColor: Colors.border },
-  chipActive:         { backgroundColor: Colors.primary, borderColor: Colors.primary },
-  chipText:           { fontSize: 13, fontWeight: '600', color: Colors.textSecondary },
-  chipTextActive:     { color: Colors.surface },
-  selectBox:          { flexDirection: 'row', alignItems: 'center', paddingHorizontal: Spacing.md, paddingVertical: 12, borderRadius: Radii.sm, backgroundColor: Colors.surfaceMuted, borderWidth: 1.5, borderColor: Colors.border, marginBottom: Spacing.sm },
-  selectBoxActive:    { borderColor: Colors.primary, backgroundColor: Colors.primaryTint },
-  selectText:         { fontSize: 14, color: Colors.text, fontWeight: '500', flex: 1 },
-  slotsGrid:          { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm },
-  slot:               { paddingHorizontal: Spacing.base, paddingVertical: 8, borderRadius: Radii.sm, backgroundColor: Colors.surfaceMuted, borderWidth: 1.5, borderColor: Colors.border },
-  slotActive:         { backgroundColor: Colors.primary, borderColor: Colors.primary },
-  slotText:           { fontSize: 12, fontWeight: '600', color: Colors.textSecondary },
-  slotTextActive:     { color: Colors.surface },
-  buttonRow:          { flexDirection: 'row', gap: Spacing.sm, marginTop: Spacing.xl },
-  btn:                { paddingVertical: 14, borderRadius: Radii.sm, alignItems: 'center' },
-  btnPrimary:         { backgroundColor: Colors.primary },
-  btnGhost:           { backgroundColor: Colors.surfaceMuted, borderWidth: 1.5, borderColor: Colors.border },
-  btnText:            { fontSize: 14, fontWeight: '700' },
-  btnTextPrimary:     { color: Colors.surface },
-  btnTextGhost:       { color: Colors.textSecondary },
+  root: { flex: 1, backgroundColor: Colors.background },
+
+  header:        { paddingHorizontal: Spacing.xl, paddingBottom: Spacing.lg, position: 'relative', overflow: 'hidden' },
+  decCircle:     { position: 'absolute', width: 180, height: 180, borderRadius: 90, backgroundColor: Colors.glass, top: -60, right: -40 },
+  headerSub:     { fontSize: 13, color: 'rgba(255,255,255,0.65)', marginBottom: 4 },
+  headerTitle:   { fontSize: 30, fontWeight: '800', color: Colors.white, letterSpacing: -0.5, marginBottom: Spacing.lg },
+
+  segmentBar:    { flexDirection: 'row', backgroundColor: Colors.glass, borderWidth: 1, borderColor: Colors.glassBorder, borderRadius: Radii.xl, padding: 4 },
+  segBtn:        { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 8, borderRadius: Radii.lg, gap: 5 },
+  segBtnActive:  { backgroundColor: Colors.white },
+  segLabel:      { fontSize: 12, fontWeight: '700', color: 'rgba(255,255,255,0.70)' },
+  segCount:      { minWidth: 18, height: 18, borderRadius: 9, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4 },
+  segCountText:  { fontSize: 10, fontWeight: '800' },
+
+  list:          { padding: Spacing.lg, gap: Spacing.md },
+
+  card:          { backgroundColor: Colors.surface, borderRadius: Radii['2xl'], flexDirection: 'row', overflow: 'hidden', ...Elevation.card },
+  cardAccent:    { width: 5 },
+  cardBody:      { flex: 1, padding: Spacing.base, gap: Spacing.sm },
+  cardTop:       { flexDirection: 'row', alignItems: 'center', gap: Spacing.md },
+  iconWrap:      { width: 44, height: 44, borderRadius: Radii.md, alignItems: 'center', justifyContent: 'center' },
+  vaccinNom:     { fontSize: 15, fontWeight: '700', color: Colors.text, marginBottom: 2 },
+  enfantLabel:   { fontSize: 12, color: Colors.textSecondary },
+  badge:         { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 7, paddingVertical: 4, borderRadius: Radii.pill },
+  badgeText:     { fontSize: 10, fontWeight: '700' },
+
+  cardMeta:      { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.md },
+  metaItem:      { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  metaText:      { fontSize: 12, color: Colors.textSecondary },
+
+  motifRow:      { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: Colors.dangerBg, padding: Spacing.sm, borderRadius: Radii.sm },
+  motifText:     { fontSize: 12, color: Colors.danger, flex: 1 },
+
+  cardActions:   { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: Spacing.sm, borderTopWidth: 1, borderTopColor: Colors.border },
+  detailBtn:     { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  detailBtnText: { fontSize: 13, fontWeight: '700', color: Colors.primary },
+  cancelBtn:     { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  cancelBtnText: { fontSize: 12, fontWeight: '700', color: Colors.danger },
+
+  emptyWrap:     { flex: 1, alignItems: 'center', justifyContent: 'center', paddingTop: Spacing['3xl'], paddingHorizontal: Spacing['2xl'] },
+  emptyIcon:     { width: 80, height: 80, borderRadius: 40, backgroundColor: Colors.primaryTint, alignItems: 'center', justifyContent: 'center', marginBottom: Spacing.lg },
+  emptyTitle:    { fontSize: 18, fontWeight: '700', color: Colors.text, marginBottom: 8, textAlign: 'center' },
+  emptyBody:     { fontSize: 14, color: Colors.textSecondary, textAlign: 'center', lineHeight: 20 },
+
+  fab:           { position: 'absolute', bottom: 28, right: 24, borderRadius: 32, overflow: 'hidden', ...Elevation.xl },
+  fabGradient:   { width: 60, height: 60, alignItems: 'center', justifyContent: 'center' },
+
+  // Modal
+  modalOverlay:  { flex: 1, backgroundColor: Colors.overlay, justifyContent: 'flex-end' },
+  modalSheet:    { backgroundColor: Colors.surface, borderTopLeftRadius: Radii['3xl'], borderTopRightRadius: Radii['3xl'], paddingHorizontal: Spacing.xl, paddingBottom: Spacing['3xl'], maxHeight: '92%' },
+  modalHandle:   { width: 44, height: 5, borderRadius: 3, backgroundColor: Colors.border, alignSelf: 'center', marginTop: Spacing.md, marginBottom: Spacing.sm },
+  modalHeader:   { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: Spacing.md, marginBottom: Spacing.sm },
+  modalTitle:    { fontSize: 20, fontWeight: '800', color: Colors.text },
+  modalCloseBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: Colors.surfaceMuted, alignItems: 'center', justifyContent: 'center' },
+
+  pickerSection: { marginBottom: Spacing.lg },
+  pickerLabel:   { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, marginBottom: Spacing.md },
+  pickerIconWrap:{ width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
+  pickerLabelText:{ fontSize: 14, fontWeight: '700', color: Colors.text },
+
+  chipRow:       { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm },
+  chipCol:       { gap: Spacing.sm },
+  chip:          { paddingHorizontal: Spacing.base, paddingVertical: 8, borderRadius: Radii.pill, backgroundColor: Colors.surfaceMuted, borderWidth: 1.5, borderColor: Colors.border },
+  chipActive:    { backgroundColor: Colors.primaryTint, borderColor: Colors.primary },
+  chipText:      { fontSize: 13, fontWeight: '600', color: Colors.textSecondary },
+  chipTextActive:{ color: Colors.primary, fontWeight: '700' },
+
+  centreRow:     { flexDirection: 'row', alignItems: 'center', gap: Spacing.md, paddingVertical: Spacing.md, paddingHorizontal: Spacing.base, backgroundColor: Colors.surfaceMuted, borderRadius: Radii.md, borderWidth: 1.5, borderColor: 'transparent' },
+  centreRowActive:{ backgroundColor: Colors.primaryTint, borderColor: Colors.primary },
+  centreText:    { fontSize: 14, color: Colors.textSecondary, flex: 1 },
+
+  confirmBtn:    { marginTop: Spacing.lg, borderRadius: Radii.xl, overflow: 'hidden' },
+  confirmGrad:   { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.sm, paddingVertical: Spacing.lg },
+  confirmBtnText:{ fontSize: 16, fontWeight: '700', color: Colors.white },
 });
