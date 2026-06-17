@@ -10,6 +10,7 @@ import AppButton from '../../components/ui/AppButton';
 import AppInput from '../../components/ui/AppInput';
 import { Colors, Gradients, Radii, Spacing, Elevation, Typography } from '../../constants/theme';
 import { AuthContext } from '../../context/AuthContext';
+
 import { authService, ApiError } from '../../services';
 
 const ProfileSchema = Yup.object().shape({
@@ -22,7 +23,7 @@ const ProfileSchema = Yup.object().shape({
 });
 
 export default function ProfileSetupScreen({ route, navigation }) {
-  const { login } = useContext(AuthContext);
+  const { login, userToken } = useContext(AuthContext);
   const cin = route.params?.cin || '';
   const telephone = route.params?.telephone || '';
 
@@ -31,7 +32,8 @@ export default function ProfileSetupScreen({ route, navigation }) {
     try {
       const resp = await authService.completeProfile(values);
       if (resp.user) {
-        await login('ALREADY_LOGGED_IN', resp.user);
+        const token = resp.token || userToken;
+        await login(token, { ...resp.user, profileCompleted: true }, resp.refreshToken);
       }
     } catch (e) {
       if (e instanceof ApiError) {

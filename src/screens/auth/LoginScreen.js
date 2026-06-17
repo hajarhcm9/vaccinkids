@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -6,8 +6,10 @@ import AppButton from '../../components/ui/AppButton';
 import AppInput from '../../components/ui/AppInput';
 import { Colors, Gradients, Radii, Spacing, Elevation, Typography } from '../../constants/theme';
 import { authService, ApiError } from '../../services';
+import { AuthContext } from '../../context/AuthContext';
 
 export default function LoginScreen({ navigation }) {
+  const { loginDemo } = useContext(AuthContext);
   const [cin, setCin] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState({});
@@ -97,7 +99,7 @@ export default function LoginScreen({ navigation }) {
             />
 
             <TouchableOpacity
-              onPress={() => navigation.navigate('Register')}
+              onPress={() => navigation.navigate('ForgotPassword')}
               style={styles.forgotRow}
             >
               <Text style={styles.link}>Mot de passe oublié ?</Text>
@@ -112,6 +114,11 @@ export default function LoginScreen({ navigation }) {
               iconPosition="right"
             />
           </View>
+
+          <TouchableOpacity style={styles.demoBtn} onPress={loginDemo}>
+            <Ionicons name="eye-outline" size={16} color="rgba(255,255,255,0.7)" />
+            <Text style={styles.demoText}>Accès démo — voir l'application</Text>
+          </TouchableOpacity>
 
           <View style={styles.signupRow}>
             <Text style={styles.signupText}>Pas encore de compte ?</Text>
@@ -148,6 +155,8 @@ const styles = StyleSheet.create({
   description: { ...Typography.body, marginBottom: Spacing.lg, lineHeight: 22 },
   forgotRow: { alignSelf: 'flex-end', marginBottom: Spacing.md, marginTop: -Spacing.xs },
   link: { color: Colors.primary, fontSize: 13, fontWeight: '600' },
+  demoBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: Spacing.lg, padding: Spacing.base, borderRadius: Radii.sm, backgroundColor: 'rgba(255,255,255,0.12)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.25)' },
+  demoText: { color: 'rgba(255,255,255,0.85)', fontSize: 14, fontWeight: '600' },
   signupRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: Spacing.xl, flexWrap: 'wrap' },
   signupText: { color: 'rgba(255,255,255,0.9)', fontSize: 14 },
   signupBtn: { flexDirection: 'row', alignItems: 'center', marginLeft: 6, padding: 4 },

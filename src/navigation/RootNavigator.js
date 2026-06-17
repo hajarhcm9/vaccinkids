@@ -2,7 +2,7 @@ import React, { useContext } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { AuthContext } from '../context/AuthContext';
 import AuthNavigator from './AuthNavigator';
-import AppNavigator from './AppNavigator';
+import AppStack from './AppStack';
 import SplashScreen from '../screens/SplashScreen';
 
 export default function RootNavigator() {
@@ -14,7 +14,7 @@ export default function RootNavigator() {
 
   return (
     <NavigationContainer>
-      {userToken ? <AppNavigator /> : <AuthNavigator />}
+      {userToken ? <AppStack /> : <AuthNavigator />}
     </NavigationContainer>
   );
 }

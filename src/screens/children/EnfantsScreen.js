@@ -16,8 +16,8 @@ const EnfantSchema = Yup.object().shape({
 });
 
 const MOCK_ENFANTS = [
-  { id: '1', nom: 'Dupont', prenom: 'Asmae', date_naissance: '12/05/2023', sexe: 'F' },
-  { id: '2', nom: 'Dupont', prenom: 'Salma', date_naissance: '25/08/2021', sexe: 'M' },
+  { id: '1', nom: 'Dupont', prenom: 'Salma',  date_naissance: '25/08/2021', sexe: 'F' },
+  { id: '2', nom: 'Dupont', prenom: 'Asmae',  date_naissance: '12/05/2023', sexe: 'F' },
 ];
 
 function AddEnfantModal({ visible, onClose, onAdd }) {
@@ -65,7 +65,7 @@ function AddEnfantModal({ visible, onClose, onAdd }) {
   );
 }
 
-export default function EnfantsScreen() {
+export default function EnfantsScreen({ navigation }) {
   const [modalVisible, setModalVisible] = useState(false);
   const [enfants, setEnfants] = useState(MOCK_ENFANTS);
 
@@ -88,7 +88,7 @@ export default function EnfantsScreen() {
   };
 
   const renderEnfant = ({ item }) => (
-    <View style={styles.card}>
+    <TouchableOpacity style={styles.card} activeOpacity={0.85} onPress={() => navigation.navigate('EnfantDetail', { enfant: item })}>
       <View style={[styles.avatar, item.sexe === 'F' ? styles.avatarF : styles.avatarM]}>
         <Text style={styles.avatarText}>{item.prenom[0]}</Text>
       </View>
@@ -106,7 +106,7 @@ export default function EnfantsScreen() {
           {item.sexe === 'F' ? 'Fille' : 'Garçon'}
         </Text>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 
   return (

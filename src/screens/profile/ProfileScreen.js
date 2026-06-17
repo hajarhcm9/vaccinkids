@@ -7,7 +7,7 @@ import AppButton from '../../components/ui/AppButton';
 import { Colors, Gradients, Radii, Spacing, Elevation, Typography } from '../../constants/theme';
 import { AuthContext } from '../../context/AuthContext';
 
-export default function ProfileScreen() {
+export default function ProfileScreen({ navigation }) {
   const { logout, user } = useContext(AuthContext);
   const [image, setImage] = useState(null);
 
@@ -89,15 +89,15 @@ export default function ProfileScreen() {
 
         <Text style={styles.cardTitle}>Réglages</Text>
         <View style={styles.infoCard}>
-          <ActionRow icon="create-outline" label="Modifier mes informations" onPress={() => {}} />
+          <ActionRow icon="create-outline" label="Modifier mes informations" onPress={() => navigation.navigate('EditProfile')} />
           <View style={styles.infoDivider} />
-          <ActionRow icon="notifications-outline" label="Notifications" onPress={() => {}} />
+          <ActionRow icon="notifications-outline" label="Notifications" onPress={() => navigation.navigate('NotificationSettings')} />
           <View style={styles.infoDivider} />
-          <ActionRow icon="language-outline" label="Langue" value="Français" onPress={() => {}} />
+          <ActionRow icon="language-outline" label="Langue" value="Français" onPress={() => Alert.alert('Langue', 'Français (seule langue disponible pour le moment).')} />
           <View style={styles.infoDivider} />
-          <ActionRow icon="lock-closed-outline" label="Confidentialité & sécurité" onPress={() => {}} />
+          <ActionRow icon="lock-closed-outline" label="Confidentialité & sécurité" onPress={() => Alert.alert('Confidentialité', 'Vos données sont chiffrées et sécurisées. Aucune donnée n\'est partagée sans votre consentement.')} />
           <View style={styles.infoDivider} />
-          <ActionRow icon="help-circle-outline" label="Aide & support" onPress={() => {}} />
+          <ActionRow icon="help-circle-outline" label="Aide & support" onPress={() => Alert.alert('Support', 'Pour toute question, contactez votre centre de vaccination ou consultez le guide d\'utilisation.')} />
         </View>
 
         <AppButton

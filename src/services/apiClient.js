@@ -10,7 +10,7 @@ const REFRESH_TOKEN_KEY = 'refreshToken';
 
 const apiClient = axios.create({
   baseURL: BASE_URL,
-  timeout: 15000,
+  timeout: 3000,
   headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
 });
 

@@ -12,14 +12,13 @@ const MOCK_ACTUS = [
   { id: '3', type: 'INFO',    titre: 'Nouveaux horaires', description: 'Le centre ouvrira exceptionnellement le samedi matin de 9h à 12h à partir du mois prochain.', date: 'Il y a 3 jours' },
 ];
 
-const MOCK_NEXT_RDV = { enfant: 'Léa', vaccin: 'DTP 2', date: 'Mercredi 12 Juin', heure: '09:30' };
 
 export default function HomeScreen({ navigation }) {
   const { user } = useContext(AuthContext);
   const prenom = user?.prenom || 'Invité';
   const [refreshing, setRefreshing] = React.useState(false);
-  const [nextRdv, setNextRdv] = React.useState(MOCK_NEXT_RDV);
-  const [unreadCount, setUnreadCount] = React.useState(0);
+  const [nextRdv, setNextRdv] = React.useState({ enfant: 'Salma', vaccin: 'DTP 2', date: 'Vendredi 20 Juin', heure: '09:30' });
+  const [unreadCount, setUnreadCount] = React.useState(2);
 
   const loadData = React.useCallback(async () => {
     try {
@@ -35,13 +34,9 @@ export default function HomeScreen({ navigation }) {
           date: new Date(r.date).toLocaleDateString('fr-FR', { weekday: 'long', day: '2-digit', month: 'long' }),
           heure: r.heure,
         });
-      } else if (rdvResp && Array.isArray(rdvResp) && rdvResp.length === 0) {
-        setNextRdv(null);
       }
       if (notifResp?.count != null) setUnreadCount(notifResp.count);
-    } catch (e) {
-      // Fallback silencieux
-    }
+    } catch (e) {}
   }, []);
 
   React.useEffect(() => { loadData(); }, [loadData]);
@@ -104,22 +99,22 @@ export default function HomeScreen({ navigation }) {
 
       <View style={styles.rdvContainer}>
         <Text style={styles.sectionTitle}>Prochain rendez-vous</Text>
-        {MOCK_NEXT_RDV ? (
+        {nextRdv ? (
           <TouchableOpacity
             style={styles.rdvCard}
             activeOpacity={0.9}
             onPress={() => navigation.navigate('RDV')}
             accessibilityRole="button"
-            accessibilityLabel={`Rendez-vous ${MOCK_NEXT_RDV.vaccin} pour ${MOCK_NEXT_RDV.enfant}, ${MOCK_NEXT_RDV.date} à ${MOCK_NEXT_RDV.heure}`}
+            accessibilityLabel={`Rendez-vous ${nextRdv.vaccin} pour ${nextRdv.enfant}, ${nextRdv.date} à ${nextRdv.heure}`}
           >
             <View style={styles.rdvIcon}>
-              <Ionicons name="syringe" size={26} color={Colors.surface} />
+              <Ionicons name="medkit" size={26} color={Colors.surface} />
             </View>
             <View style={styles.rdvInfo}>
-              <Text style={styles.rdvTitle}>{MOCK_NEXT_RDV.vaccin} · {MOCK_NEXT_RDV.enfant}</Text>
+              <Text style={styles.rdvTitle}>{nextRdv.vaccin} · {nextRdv.enfant}</Text>
               <View style={styles.rdvMeta}>
                 <Ionicons name="calendar-outline" size={13} color={Colors.textSecondary} />
-                <Text style={styles.rdvDetails}>{MOCK_NEXT_RDV.date} · {MOCK_NEXT_RDV.heure}</Text>
+                <Text style={styles.rdvDetails}>{nextRdv.date} · {nextRdv.heure}</Text>
               </View>
             </View>
             <Ionicons name="chevron-forward" size={20} color={Colors.textLight} />

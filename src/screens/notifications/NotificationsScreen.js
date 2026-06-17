@@ -38,7 +38,7 @@ export default function NotificationsScreen({ navigation }) {
     setLoading(true);
     try {
       const data = await notificationService.listNotifications(filter === 'TOUS' ? undefined : filter);
-      if (Array.isArray(data)) setNotifications(data);
+      if (Array.isArray(data) && data.length > 0) setNotifications(data);
     } catch (e) {} finally { setLoading(false); }
   }, [filter]);
   React.useEffect(() => { loadNotifications(); }, [loadNotifications]);
