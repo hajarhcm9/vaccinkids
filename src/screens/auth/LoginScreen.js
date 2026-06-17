@@ -1,82 +1,155 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Alert, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 import AppButton from '../../components/ui/AppButton';
 import AppInput from '../../components/ui/AppInput';
-import { Colors } from '../../constants/theme';
+import { Colors, Gradients, Radii, Spacing, Elevation, Typography } from '../../constants/theme';
+import { authService, ApiError } from '../../services';
 
 export default function LoginScreen({ navigation }) {
-  const [telephone, setTelephone] = useState('');
+  const [cin, setCin] = useState('');
   const [password, setPassword] = useState('');
+  const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = () => {
-    if (telephone === '' || password === '') {
-      Alert.alert('Erreur', 'Veuillez entrer votre numéro et votre mot de passe');
-      return;
-    }
-
-    // SIMULATION : On simule la vérification du mot de passe par le backend
-    // Si c'est bon, le backend enverrait un SMS, alors on navigue vers l'écran OTP
-    Alert.alert('Succès', 'Mot de passe correct. Un code de vérification vous a été envoyé par SMS.');
-    navigation.navigate('OTPVerification', { telephone: telephone });
+  const validate = () => {
+    const e = {};
+    if (!cin.trim()) e.cin = 'Veuillez saisir votre CIN';
+    else if (cin.replace(/\s/g, '').length < 6) e.cin = 'CIN invalide (6 caractères minimum)';
+    if (!password) e.password = 'Veuillez saisir votre mot de passe';
+    setErrors(e);
+    return Object.keys(e).length === 0;
   };
 
+  const handleLogin = async () => {
+    if (!validate()) return;
+    setLoading(true);
+    try {
+      const resp = await authService.login(cin.replace(/\s/g, ''), password);
+      navigation.navigate('OTPVerification', {
+        cin: cin.replace(/\s/g, ''),
+        otpSentTo: resp.otpSentTo,
+        fromRegister: false,
+      });
+    } catch (e) {
+      if (e instanceof ApiError) {
+        if (e.isAuth) setErrors({ password: 'CIN ou mot de passe incorrect' });
+        else if (e.isNetwork) setErrors({ cin: 'Vérifiez votre connexion internet' });
+        else setErrors({ password: e.message });
+      } else {
+        setErrors({ password: 'Erreur inattendue. Réessayez.' });
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const canSubmit = cin.trim().length > 0 && password.length > 0;
+
   return (
-    <LinearGradient
-      colors={['#2C5FBF', '#4A90E2', '#82B1FF']}
-      style={styles.container}
-    >
-      <View style={styles.header}>
-        <Text style={styles.logo}>VacciTrack</Text>
-        <Text style={styles.subtitle}>Suivi vaccinal pédiatrique</Text>
-      </View>
+    <LinearGradient colors={Gradients.auth} style={styles.container}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={{ flex: 1 }}
+        keyboardVerticalOffset={20}
+      >
+        <ScrollView
+          contentContainerStyle={styles.scroll}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.brand}>
+            <View style={styles.logoBadge}>
+              <Ionicons name="medkit" size={32} color={Colors.surface} />
+            </View>
+            <Text style={styles.logo}>VacciKids</Text>
+            <Text style={styles.subtitle}>Suivi vaccinal pédiatrique</Text>
+          </View>
 
-      <View style={styles.card}>
-        <Text style={styles.title}>Connexion</Text>
-        <Text style={styles.description}>
-          Entrez vos identifiants pour accéder à votre espace.
-        </Text>
+          <View style={styles.card}>
+            <Text style={styles.title}>Bon retour 👋</Text>
+            <Text style={styles.description}>
+              Connectez-vous avec votre Carte d'Identité Nationale pour accéder à votre espace.
+            </Text>
 
-        <AppInput
-          placeholder="Numéro de téléphone"
-          value={telephone}
-          onChangeText={setTelephone}
-          keyboardType="phone-pad"
-        />
+            <AppInput
+              label="Carte d'Identité Nationale (CIN)"
+              placeholder="Ex : AB123456"
+              value={cin}
+              onChangeText={(v) => { setCin(v); if (errors.cin) setErrors({ ...errors, cin: null }); }}
+              error={errors.cin}
+              touched={true}
+              icon="card-outline"
+              autoCapitalize="characters"
+              accessibilityLabel="Numéro de Carte d'Identité Nationale"
+            />
 
-        <AppInput
-          placeholder="Mot de passe"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry={true}
-        />
+            <AppInput
+              label="Mot de passe"
+              placeholder="Votre mot de passe"
+              value={password}
+              onChangeText={(v) => { setPassword(v); if (errors.password) setErrors({ ...errors, password: null }); }}
+              error={errors.password}
+              touched={true}
+              secureTextEntry
+              icon="lock-closed-outline"
+            />
 
-        <AppButton title="Se connecter" onPress={handleLogin} />
+            <TouchableOpacity
+              onPress={() => navigation.navigate('Register')}
+              style={styles.forgotRow}
+            >
+              <Text style={styles.link}>Mot de passe oublié ?</Text>
+            </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => Alert.alert('Info', 'Fonctionnalité de récupération de mot de passe à venir.')}>
-          <Text style={styles.link}>Mot de passe oublié ?</Text>
-        </TouchableOpacity>
-      </View>
+            <AppButton
+              title="Se connecter"
+              onPress={handleLogin}
+              loading={loading}
+              disabled={!canSubmit}
+              icon="log-in-outline"
+              iconPosition="right"
+            />
+          </View>
+
+          <View style={styles.signupRow}>
+            <Text style={styles.signupText}>Pas encore de compte ?</Text>
+            <TouchableOpacity onPress={() => navigation.navigate('Register')} style={styles.signupBtn}>
+              <Text style={styles.signupLink}>Créer un compte</Text>
+              <Ionicons name="arrow-forward" size={14} color={Colors.accent} style={{ marginLeft: 4 }} />
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', padding: 20 },
-  header: { alignItems: 'center', marginBottom: 30 },
-  logo: { fontSize: 36, fontWeight: 'bold', color: Colors.surface, letterSpacing: 1 },
-  subtitle: { fontSize: 16, color: 'rgba(255,255,255,0.8)', marginTop: 5 },
+  container: { flex: 1 },
+  scroll: { flexGrow: 1, justifyContent: 'center', padding: Spacing.xl, paddingVertical: Spacing['4xl'] },
+  brand: { alignItems: 'center', marginBottom: Spacing.xl },
+  logoBadge: {
+    width: 64, height: 64, borderRadius: 32,
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    alignItems: 'center', justifyContent: 'center',
+    marginBottom: Spacing.md,
+  },
+  logo: { fontSize: 32, fontWeight: '800', color: Colors.textInverse, letterSpacing: 0.5 },
+  subtitle: { fontSize: 14, color: 'rgba(255,255,255,0.85)', marginTop: 4 },
   card: {
     backgroundColor: Colors.surface,
-    borderRadius: 24,
-    padding: 24,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.1,
-    shadowRadius: 20,
-    elevation: 10,
+    borderRadius: Radii['2xl'],
+    padding: Spacing.xl,
+    ...Elevation.lg,
   },
-  title: { fontSize: 22, fontWeight: 'bold', color: Colors.text, marginBottom: 10, textAlign: 'center' },
-  description: { fontSize: 14, color: Colors.textSecondary, textAlign: 'center', marginBottom: 20, lineHeight: 20 },
-  link: { color: Colors.primary, textAlign: 'center', marginTop: 20, fontSize: 14, fontWeight: '600' }
+  title: { ...Typography.title, marginBottom: 8, textAlign: 'left' },
+  description: { ...Typography.body, marginBottom: Spacing.lg, lineHeight: 22 },
+  forgotRow: { alignSelf: 'flex-end', marginBottom: Spacing.md, marginTop: -Spacing.xs },
+  link: { color: Colors.primary, fontSize: 13, fontWeight: '600' },
+  signupRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: Spacing.xl, flexWrap: 'wrap' },
+  signupText: { color: 'rgba(255,255,255,0.9)', fontSize: 14 },
+  signupBtn: { flexDirection: 'row', alignItems: 'center', marginLeft: 6, padding: 4 },
+  signupLink: { color: Colors.accent, fontSize: 14, fontWeight: '700' },
 });

@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { authService } from '../services';
 
 export const AuthContext = createContext();
 
@@ -8,20 +9,29 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const login = async (token, userData) => {
+  const login = async (token, userData, refreshToken) => {
     setUserToken(token);
     setUser(userData);
     await AsyncStorage.setItem('jwtToken', token);
-    if (userData) {
-      await AsyncStorage.setItem('userData', JSON.stringify(userData));
-    }
+    if (refreshToken) await AsyncStorage.setItem('refreshToken', refreshToken);
+    if (userData) await AsyncStorage.setItem('userData', JSON.stringify(userData));
   };
 
   const logout = async () => {
+    try {
+      await authService.logout();
+    } catch (e) {
+      // silencieux
+    }
     setUserToken(null);
     setUser(null);
-    await AsyncStorage.removeItem('jwtToken');
-    await AsyncStorage.removeItem('userData');
+    await AsyncStorage.multiRemove(['jwtToken', 'refreshToken', 'userData']);
+  };
+
+  const updateUser = async (partial) => {
+    const next = { ...user, ...partial };
+    setUser(next);
+    await AsyncStorage.setItem('userData', JSON.stringify(next));
   };
 
   const checkLoggedIn = async () => {
@@ -30,12 +40,10 @@ export const AuthProvider = ({ children }) => {
       const storedUserData = await AsyncStorage.getItem('userData');
       if (token) {
         setUserToken(token);
-        if (storedUserData) {
-          setUser(JSON.parse(storedUserData));
-        }
+        if (storedUserData) setUser(JSON.parse(storedUserData));
       }
     } catch (e) {
-      console.log('Erreur lecture token/data', e);
+      console.warn('Erreur lecture token/data', e);
     } finally {
       setIsLoading(false);
     }
@@ -44,7 +52,7 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => { checkLoggedIn(); }, []);
 
   return (
-    <AuthContext.Provider value={{ userToken, isLoading, login, logout, user }}>
+    <AuthContext.Provider value={{ userToken, isLoading, user, login, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   );

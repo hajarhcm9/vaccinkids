@@ -1,14 +1,17 @@
 import React, { useContext } from 'react';
-import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native';
+import {
+  View, Text, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, TouchableOpacity,
+} from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
 import AppButton from '../../components/ui/AppButton';
 import AppInput from '../../components/ui/AppInput';
-import { Colors } from '../../constants/theme';
+import { Colors, Gradients, Radii, Spacing, Elevation, Typography } from '../../constants/theme';
 import { AuthContext } from '../../context/AuthContext';
+import { authService, ApiError } from '../../services';
 
-// Validation avec l'email en plus
 const ProfileSchema = Yup.object().shape({
   nom: Yup.string().required('Le nom est obligatoire'),
   prenom: Yup.string().required('Le prénom est obligatoire'),
@@ -20,116 +23,164 @@ const ProfileSchema = Yup.object().shape({
 
 export default function ProfileSetupScreen({ route, navigation }) {
   const { login } = useContext(AuthContext);
+  const cin = route.params?.cin || '';
+  const telephone = route.params?.telephone || '';
 
-  // On récupère le téléphone passé en paramètre depuis l'écran OTP
-  const telephone = route.params?.telephone || 'Non renseigné';
-
-  const handleSaveProfile = (values) => {
-    Alert.alert(
-      'Profil complété !',
-      `Bienvenue ${values.prenom}. L'enfant associé au code ${values.codeCentre} a été lié à votre compte.`
-    );
-
-    // On envoie TOUTES les infos au contexte (nom, prenom, telephone, email)
-    login('FAKE_JWT_TOKEN_DEV1', {
-      nom: values.nom,
-      prenom: values.prenom,
-      telephone: telephone,
-      email: values.email // NOUVEAU
-    });
+  const handleSaveProfile = async (values, { setSubmitting, setErrors }) => {
+    setSubmitting(true);
+    try {
+      const resp = await authService.completeProfile(values);
+      if (resp.user) {
+        await login('ALREADY_LOGGED_IN', resp.user);
+      }
+    } catch (e) {
+      if (e instanceof ApiError) {
+        if (e.isValidation && e.details?.fields) {
+          setErrors(e.details.fields);
+        } else if (e.status === 404) {
+          setErrors({ codeCentre: 'Code centre introuvable' });
+        } else if (e.isNetwork) {
+          setErrors({ nom: 'Vérifiez votre connexion internet' });
+        } else {
+          setErrors({ nom: e.message });
+        }
+      } else {
+        setErrors({ nom: 'Erreur inattendue. Réessayez.' });
+      }
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
-    <LinearGradient
-      colors={['#2C5FBF', '#4A90E2', '#82B1FF']}
-      style={styles.container}
-    >
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <View style={styles.card}>
-          <Text style={styles.title}>Votre Profil</Text>
+    <LinearGradient colors={Gradients.auth} style={styles.container}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={{ flex: 1 }}
+        keyboardVerticalOffset={20}
+      >
+        <ScrollView
+          contentContainerStyle={styles.scroll}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.iconWrap}>
+            <Ionicons name="person-add" size={40} color={Colors.surface} />
+          </View>
+          <Text style={styles.title}>Complétez votre profil</Text>
           <Text style={styles.description}>
-            Complétez vos informations et liez votre enfant au centre de vaccination.
+            Dernière étape : liez votre enfant au centre de vaccination grâce au code qui vous a été remis.
           </Text>
 
-          <Formik
-            initialValues={{ nom: '', prenom: '', email: '', codeCentre: '' }}
-            validationSchema={ProfileSchema}
-            onSubmit={handleSaveProfile}
-          >
-            {({ handleChange, handleBlur, handleSubmit, values, errors, touched }) => (
-              <>
-                <AppInput
-                  placeholder="Votre Nom"
-                  value={values.nom}
-                  onChangeText={handleChange('nom')}
-                  onBlur={handleBlur('nom')}
-                />
-                {touched.nom && errors.nom && <Text style={styles.error}>{errors.nom}</Text>}
+          <View style={styles.card}>
+            <Formik
+              initialValues={{ nom: '', prenom: '', email: '', codeCentre: '' }}
+              validationSchema={ProfileSchema}
+              onSubmit={handleSaveProfile}
+            >
+              {({ handleChange, handleBlur, handleSubmit, values, errors, touched, isSubmitting }) => (
+                <>
+                  <Text style={styles.sectionLabel}>Vos informations</Text>
 
-                <AppInput
-                  placeholder="Votre Prénom"
-                  value={values.prenom}
-                  onChangeText={handleChange('prenom')}
-                  onBlur={handleBlur('prenom')}
-                />
-                {touched.prenom && errors.prenom && <Text style={styles.error}>{errors.prenom}</Text>}
+                  <AppInput
+                    label="Nom *"
+                    placeholder="Votre nom"
+                    value={values.nom}
+                    onChangeText={handleChange('nom')}
+                    onBlur={handleBlur('nom')}
+                    error={errors.nom}
+                    touched={touched.nom}
+                    icon="person-outline"
+                  />
+                  <AppInput
+                    label="Prénom *"
+                    placeholder="Votre prénom"
+                    value={values.prenom}
+                    onChangeText={handleChange('prenom')}
+                    onBlur={handleBlur('prenom')}
+                    error={errors.prenom}
+                    touched={touched.prenom}
+                  />
+                  <AppInput
+                    label="Email *"
+                    placeholder="salma@example.com"
+                    value={values.email}
+                    onChangeText={handleChange('email')}
+                    onBlur={handleBlur('email')}
+                    error={errors.email}
+                    touched={touched.email}
+                    icon="mail-outline"
+                    keyboardType="email-address"
+                  />
 
-                {/* NOUVEAU CHAMP EMAIL */}
-                <AppInput
-                  placeholder="Votre Email"
-                  value={values.email}
-                  onChangeText={handleChange('email')}
-                  onBlur={handleBlur('email')}
-                  keyboardType="email-address"
-                />
-                {touched.email && errors.email && <Text style={styles.error}>{errors.email}</Text>}
+                  <View style={styles.divider} />
 
-                <View style={styles.divider} />
+                  <Text style={styles.sectionLabel}>Lier votre enfant</Text>
+                  <Text style={styles.helper}>
+                    Saisissez le code de 9 chiffres figurant sur le carnet de vaccination remis par le centre.
+                  </Text>
 
-                <Text style={styles.subtitle}>Lier votre enfant</Text>
-                <Text style={styles.description}>
-                  Entrez le code de 9 chiffres qui vous a été remis lors de la première visite au centre.
-                </Text>
+                  <AppInput
+                    label="Code centre *"
+                    placeholder="_ _ _   _ _ _   _ _ _"
+                    value={values.codeCentre}
+                    onChangeText={(v) => {
+                      const digits = v.replace(/\D/g, '').slice(0, 9);
+                      handleChange('codeCentre')(digits);
+                    }}
+                    onBlur={handleBlur('codeCentre')}
+                    error={errors.codeCentre}
+                    touched={touched.codeCentre}
+                    icon="link-outline"
+                    keyboardType="number-pad"
+                    maxLength={9}
+                    helper="9 chiffres"
+                  />
 
-                <AppInput
-                  placeholder="Code de 9 chiffres"
-                  value={values.codeCentre}
-                  onChangeText={handleChange('codeCentre')}
-                  onBlur={handleBlur('codeCentre')}
-                  keyboardType="number-pad"
-                  maxLength={9}
-                />
-                {touched.codeCentre && errors.codeCentre && <Text style={styles.error}>{errors.codeCentre}</Text>}
+                  <TouchableOpacity style={styles.helpRow}>
+                    <Ionicons name="information-circle-outline" size={16} color={Colors.primary} />
+                    <Text style={styles.helpLink}>Où trouver mon code ?</Text>
+                  </TouchableOpacity>
 
-                <View style={styles.buttonContainer}>
-                  <AppButton title="Enregistrer et continuer" onPress={handleSubmit} />
-                </View>
-              </>
-            )}
-          </Formik>
-        </View>
-      </ScrollView>
+                  <AppButton
+                    title={isSubmitting ? 'Enregistrement…' : 'Enregistrer et continuer'}
+                    onPress={handleSubmit}
+                    loading={isSubmitting}
+                    disabled={isSubmitting}
+                    icon="checkmark-outline"
+                    iconPosition="right"
+                  />
+                </>
+              )}
+            </Formik>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  scrollContainer: { flexGrow: 1, justifyContent: 'center', padding: 20 },
+  scroll: { flexGrow: 1, justifyContent: 'center', padding: Spacing.xl, paddingVertical: Spacing['3xl'] },
+  iconWrap: {
+    width: 80, height: 80, borderRadius: 40,
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    alignItems: 'center', justifyContent: 'center',
+    alignSelf: 'center',
+    marginBottom: Spacing.lg,
+  },
+  title: { ...Typography.display, color: Colors.textInverse, textAlign: 'center', marginBottom: Spacing.sm },
+  description: { fontSize: 14, color: 'rgba(255,255,255,0.9)', textAlign: 'center', lineHeight: 20, maxWidth: 320, alignSelf: 'center', marginBottom: Spacing.xl },
   card: {
     backgroundColor: Colors.surface,
-    borderRadius: 24,
-    padding: 24,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.1,
-    shadowRadius: 20,
-    elevation: 10,
+    borderRadius: Radii['2xl'],
+    padding: Spacing.xl,
+    ...Elevation.lg,
   },
-  title: { fontSize: 22, fontWeight: 'bold', color: Colors.text, marginBottom: 10, textAlign: 'center' },
-  subtitle: { fontSize: 16, fontWeight: 'bold', color: Colors.primary, marginBottom: 5 },
-  description: { fontSize: 14, color: Colors.textSecondary, marginBottom: 15, lineHeight: 20 },
-  divider: { height: 1, backgroundColor: Colors.background, marginVertical: 15 },
-  error: { color: Colors.danger, fontSize: 12, marginBottom: 8, marginLeft: 4 },
-  buttonContainer: { marginTop: 10 }
+  sectionLabel: { fontSize: 13, fontWeight: '700', color: Colors.primary, marginBottom: Spacing.sm, marginTop: Spacing.xs, letterSpacing: 0.5, textTransform: 'uppercase' },
+  helper: { fontSize: 12, color: Colors.textSecondary, marginBottom: Spacing.md, lineHeight: 18 },
+  divider: { height: 1, backgroundColor: Colors.border, marginVertical: Spacing.lg },
+  helpRow: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', marginBottom: Spacing.md, gap: 6 },
+  helpLink: { color: Colors.primary, fontSize: 13, fontWeight: '600' },
 });
