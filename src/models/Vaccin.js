@@ -51,9 +51,12 @@ const Vaccin = {
   },
 
   async deactivate(id) {
-    const result = await query('UPDATE vaccin SET est_actif = FALSE WHERE id = $1 RETURNING *', [
-      id,
-    ]);
+    const result = await query('UPDATE vaccin SET est_actif = FALSE WHERE id = $1 RETURNING *', [id]);
+    return result.rows[0];
+  },
+
+  async reactivate(id) {
+    const result = await query('UPDATE vaccin SET est_actif = TRUE WHERE id = $1 RETURNING *', [id]);
     return result.rows[0];
   },
 };

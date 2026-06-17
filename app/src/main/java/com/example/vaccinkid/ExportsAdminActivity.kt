@@ -66,15 +66,30 @@ class ExportsAdminActivity : AppCompatActivity() {
         loadCentres()
     }
 
+    private fun isValidDate(s: String): Boolean {
+        if (s.isBlank()) return true
+        return try {
+            val sdf = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+            sdf.isLenient = false
+            sdf.parse(s)
+            true
+        } catch (_: Exception) { false }
+    }
+
     private fun exportSelected() {
         if (!centresLoaded) {
-            statusView.text = "Chargement des references en cours, veuillez patienter."
+            statusView.text = "Chargement des références en cours, veuillez patienter."
             return
         }
+        val start = startInput.text.toString().trim()
+        val end = endInput.text.toString().trim()
+        if (!isValidDate(start)) { statusView.text = "Date début invalide (format : AAAA-MM-JJ)"; return }
+        if (!isValidDate(end)) { statusView.text = "Date fin invalide (format : AAAA-MM-JJ)"; return }
+
         val type = typeSpinner.selectedItem.toString()
         val format = formatSpinner.selectedItem.toString()
         if (type == "stock" && format == "pdf") {
-            statusView.text = "Le backend expose stock en Excel uniquement."
+            statusView.text = "Le stock n'est exportable qu'en Excel."
             return
         }
         val endpoint = "exports/$type/$format${queryString()}"

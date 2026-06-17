@@ -152,6 +152,9 @@ interface ApiService {
     @DELETE("vaccins/{id}")
     suspend fun deactivateVaccin(@Path("id") id: Int): ApiResponse<VaccinDto>
 
+    @PATCH("vaccins/{id}/reactivate")
+    suspend fun reactivateVaccin(@Path("id") id: Int): ApiResponse<VaccinDto>
+
     @POST("flacons")
     suspend fun createFlacon(@Body request: CreateFlaconRequest): ApiResponse<FlaconDto>
 
@@ -232,4 +235,37 @@ interface ApiService {
 
     @POST("sync/push")
     suspend fun pushChanges(@Body request: SyncPushRequest): ApiResponse<List<SyncPushResultDto>>
+
+    @GET("kiosks")
+    suspend fun getKiosks(): ApiResponse<List<com.example.vaccinkid.model.KioskDto>>
+
+    @POST("kiosks")
+    suspend fun createKiosk(@Body request: com.example.vaccinkid.model.CreateKioskRequest): ApiResponse<com.example.vaccinkid.model.KioskDto>
+
+    @POST("kiosks/{id}/rotate")
+    suspend fun rotateKiosk(@Path("id") id: Int): ApiResponse<com.example.vaccinkid.model.KioskDto>
+
+    @POST("kiosks/{id}/revoke")
+    suspend fun revokeKiosk(@Path("id") id: Int): ApiResponse<com.example.vaccinkid.model.KioskDto>
+
+    @GET("alertes-retard/dashboard")
+    suspend fun getDelayDashboard(): ApiResponse<com.example.vaccinkid.model.DelayDashboardDto>
+
+    @POST("alertes-retard/send-alerts")
+    suspend fun sendDelayAlerts(@Body body: Map<String, Int?>): ApiResponse<Any>
+
+    @DELETE("rendez-vous/{id}")
+    suspend fun deleteRendezVous(@Path("id") id: Int): ApiResponse<Any>
+
+    @GET("recherche/global")
+    suspend fun searchGlobal(@Query("q") query: String): ApiResponse<List<Map<String, Any?>>>
+
+    @GET("admin/audit-log/stats")
+    suspend fun getAuditLogStats(): ApiResponse<Map<String, Any?>>
+
+    @GET("statistiques/vaccinations-mensuelles")
+    suspend fun getVaccinationsMensuelles(
+        @Query("centre_id") centreId: Int? = null,
+        @Query("annee") annee: Int? = null
+    ): ApiResponse<List<Map<String, Any?>>>
 }

@@ -1,17 +1,23 @@
 package com.example.vaccinkid
 
+import android.app.AlertDialog
 import android.graphics.Color
 import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
+import android.widget.EditText
+import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.example.vaccinkid.model.StockDto
+import com.example.vaccinkid.model.UpsertStockRequest
 import com.example.vaccinkid.network.ApiClient
 import kotlinx.coroutines.launch
 
@@ -34,8 +40,8 @@ class AdminStocksFragment : Fragment(R.layout.fragment_gestion_stocks_admin) {
         tvFaibles = view.findViewById(R.id.tvStockFaibles)
         tvPerimes = view.findViewById(R.id.tvStockPerimes)
 
-        alertAdapter = StockAdminAdapter()
-        okAdapter = StockAdminAdapter()
+        alertAdapter = StockAdminAdapter(onAdjust = { showAdjustDialog(it) })
+        okAdapter = StockAdminAdapter(onAdjust = { showAdjustDialog(it) })
 
         val rvAlert = view.findViewById<RecyclerView>(R.id.rvStocksAlert)
         rvAlert.layoutManager = LinearLayoutManager(requireContext())
@@ -47,6 +53,76 @@ class AdminStocksFragment : Fragment(R.layout.fragment_gestion_stocks_admin) {
 
         refreshLayout.setOnRefreshListener { loadStocks() }
         loadStocks()
+    }
+
+    private fun showAdjustDialog(stock: StockDto) {
+        val root = LinearLayout(requireContext()).apply {
+            orientation = LinearLayout.VERTICAL; setPadding(64, 32, 64, 8)
+        }
+        fun et(hint: String, value: String) = EditText(requireContext()).apply {
+            this.hint = hint; setText(value)
+            inputType = android.text.InputType.TYPE_CLASS_NUMBER
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT
+            ).also { it.bottomMargin = 16 }
+        }
+        val nom = stock.vaccinNom ?: stock.nom ?: "Vaccin #${stock.id}"
+        root.addView(TextView(requireContext()).apply {
+            text = nom; textSize = 14f
+            setTextColor(requireContext().getColor(R.color.text_secondary))
+        })
+        val qteInput = et("Quantité disponible", (stock.quantiteDisponible ?: 0).toString())
+        val seuilInput = et("Seuil d'alerte", (stock.seuilAlerte ?: 0).toString())
+        val motifInput = EditText(requireContext()).apply {
+            hint = "Motif (optionnel)"
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+        }
+        root.addView(qteInput)
+        root.addView(seuilInput)
+        root.addView(motifInput)
+
+        AlertDialog.Builder(requireContext())
+            .setTitle("Ajuster le stock")
+            .setView(root)
+            .setNegativeButton("Annuler", null)
+            .setPositiveButton("Enregistrer") { _, _ ->
+                val qte = qteInput.text.toString().toIntOrNull()
+                val seuil = seuilInput.text.toString().toIntOrNull()
+                val motif = motifInput.text.toString().trim().ifBlank { null }
+                if (qte == null) { Toast.makeText(requireContext(), "Quantité invalide", Toast.LENGTH_SHORT).show(); return@setPositiveButton }
+                saveStockAdjustment(stock, qte, seuil, motif)
+            }
+            .show()
+    }
+
+    private fun saveStockAdjustment(stock: StockDto, qte: Int, seuil: Int?, motif: String?) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                if (stock.id != 0) {
+                    val r = ApiClient.apiService.updateStock(stock.id,
+                        com.example.vaccinkid.model.UpdateStockRequest(
+                            quantiteDisponible = qte,
+                            seuilAlerte = seuil,
+                            motif = motif
+                        ))
+                    if (r.status != "success") throw Exception(r.message ?: "Refusé")
+                } else {
+                    val vaccinId = stock.vaccinId ?: return@launch
+                    val centreId = stock.centreId ?: return@launch
+                    val r = ApiClient.apiService.upsertStock(UpsertStockRequest(
+                        vaccinId = vaccinId, centreId = centreId,
+                        quantiteDisponible = qte, seuilAlerte = seuil ?: 0, motif = motif
+                    ))
+                    if (r.status != "success") throw Exception(r.message ?: "Refusé")
+                }
+                Toast.makeText(requireContext(), "Stock mis à jour", Toast.LENGTH_SHORT).show()
+                loadStocks()
+            } catch (e: Exception) {
+                Toast.makeText(requireContext(), e.message ?: "Erreur réseau", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     private fun loadStocks() {
@@ -92,18 +168,20 @@ class AdminStocksFragment : Fragment(R.layout.fragment_gestion_stocks_admin) {
     }
 }
 
-private class StockAdminAdapter : RecyclerView.Adapter<StockAdminAdapter.VH>() {
+private class StockAdminAdapter(
+    private val onAdjust: (StockDto) -> Unit
+) : RecyclerView.Adapter<StockAdminAdapter.VH>() {
     private var items: List<StockDto> = emptyList()
 
     fun submit(next: List<StockDto>) { items = next; notifyDataSetChanged() }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH =
-        VH(android.view.LayoutInflater.from(parent.context).inflate(R.layout.item_admin_stock, parent, false))
+        VH(android.view.LayoutInflater.from(parent.context).inflate(R.layout.item_admin_stock, parent, false), onAdjust)
 
     override fun getItemCount() = items.size
     override fun onBindViewHolder(holder: VH, position: Int) = holder.bind(items[position])
 
-    class VH(v: View) : RecyclerView.ViewHolder(v) {
+    class VH(v: View, private val onAdjust: (StockDto) -> Unit) : RecyclerView.ViewHolder(v) {
         private val severityBar = v.findViewById<View>(R.id.viewStockSeverityBar)
         private val tvNom = v.findViewById<TextView>(R.id.tvStockVaccinNom)
         private val tvCentre = v.findViewById<TextView>(R.id.tvStockCentre)
@@ -148,6 +226,8 @@ private class StockAdminAdapter : RecyclerView.Adapter<StockAdminAdapter.VH>() {
                     tvBadge.setTextColor(Color.parseColor("#065F46"))
                 }
             }
+
+            itemView.setOnClickListener { onAdjust(s) }
         }
     }
 }

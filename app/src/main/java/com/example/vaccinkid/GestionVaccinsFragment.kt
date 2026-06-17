@@ -36,7 +36,8 @@ class GestionVaccinsFragment : Fragment(R.layout.fragment_gestion_vaccins) {
 
         adapter = VaccinXmlAdapter(
             onEdit = { showForm(it) },
-            onDeactivate = { deactivate(it) }
+            onDeactivate = { deactivate(it) },
+            onReactivate = { reactivate(it) }
         )
         view.findViewById<RecyclerView>(R.id.rvVaccins).apply {
             layoutManager = LinearLayoutManager(requireContext())
@@ -166,20 +167,40 @@ class GestionVaccinsFragment : Fragment(R.layout.fragment_gestion_vaccins) {
             }
             .show()
     }
+
+    private fun reactivate(item: VaccinDto) {
+        AlertDialog.Builder(requireContext())
+            .setTitle("Réactiver vaccin")
+            .setMessage(item.nom ?: "Vaccin #${item.id}")
+            .setNegativeButton("Annuler", null)
+            .setPositiveButton("Confirmer") { _, _ ->
+                viewLifecycleOwner.lifecycleScope.launch {
+                    try {
+                        val r = ApiClient.apiService.reactivateVaccin(item.id)
+                        if (r.status != "success") throw Exception(r.message)
+                        loadVaccins()
+                    } catch (e: Exception) {
+                        Toast.makeText(requireContext(), e.message ?: "Erreur réseau", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+            .show()
+    }
 }
 
 private class VaccinXmlAdapter(
     private val onEdit: (VaccinDto) -> Unit,
-    private val onDeactivate: (VaccinDto) -> Unit
+    private val onDeactivate: (VaccinDto) -> Unit,
+    private val onReactivate: (VaccinDto) -> Unit
 ) : RecyclerView.Adapter<VaccinXmlAdapter.VH>() {
     private var items: List<VaccinDto> = emptyList()
     fun submit(next: List<VaccinDto>) { items = next; notifyDataSetChanged() }
     override fun getItemCount() = items.size
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH =
-        VH(android.view.LayoutInflater.from(parent.context).inflate(R.layout.item_admin_vaccin, parent, false), onEdit, onDeactivate)
+        VH(android.view.LayoutInflater.from(parent.context).inflate(R.layout.item_admin_vaccin, parent, false), onEdit, onDeactivate, onReactivate)
     override fun onBindViewHolder(h: VH, pos: Int) = h.bind(items[pos])
 
-    class VH(v: View, val onEdit: (VaccinDto) -> Unit, val onDeactivate: (VaccinDto) -> Unit) : RecyclerView.ViewHolder(v) {
+    class VH(v: View, val onEdit: (VaccinDto) -> Unit, val onDeactivate: (VaccinDto) -> Unit, val onReactivate: (VaccinDto) -> Unit) : RecyclerView.ViewHolder(v) {
         private val dot = v.findViewById<View>(R.id.viewVaccinStatusDot)
         private val tvNom = v.findViewById<TextView>(R.id.tvVaccinNom)
         private val tvBadge = v.findViewById<TextView>(R.id.tvVaccinBadge)
@@ -220,6 +241,7 @@ private class VaccinXmlAdapter(
             }
             btn("Modifier", Color.parseColor("#64748B")) { onEdit(v) }
             if (actif) btn("Désactiver", Color.parseColor("#EF4444")) { onDeactivate(v) }
+            else btn("Réactiver", Color.parseColor("#10B981")) { onReactivate(v) }
         }
     }
 }

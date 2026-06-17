@@ -34,6 +34,21 @@ class AdminMoreFragment : Fragment(R.layout.fragment_admin_more) {
         view.findViewById<View>(R.id.menuAdminAlertes).setOnClickListener {
             admin.naviguerVers(AdminAlertesFragment())
         }
+        view.findViewById<View>(R.id.menuAdminAudit).setOnClickListener {
+            admin.naviguerVers(AdminAuditLogFragment())
+        }
+        view.findViewById<View>(R.id.menuAdminKiosk).setOnClickListener {
+            admin.naviguerVers(AdminKioskFragment())
+        }
+        view.findViewById<View>(R.id.menuAdminRetards).setOnClickListener {
+            admin.naviguerVers(AdminDelayAlertsFragment())
+        }
+        view.findViewById<View>(R.id.menuAdminRdv).setOnClickListener {
+            admin.naviguerVers(AdminRendezVousFragment())
+        }
+        view.findViewById<View>(R.id.menuAdminRecherche).setOnClickListener {
+            admin.naviguerVers(AdminSearchFragment())
+        }
         view.findViewById<View>(R.id.menuAdminExports).setOnClickListener {
             startActivity(Intent(requireContext(), ExportsAdminActivity::class.java))
         }

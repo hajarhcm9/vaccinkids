@@ -64,10 +64,12 @@ class GestionPersonnelFragment : Fragment(R.layout.fragment_gestion_personnel) {
                     tv.setTextColor(requireContext().getColor(R.color.white))
                     tv.setTypeface(null, android.graphics.Typeface.BOLD)
                 } else {
-                    tv.background = null
+                    tv.setBackgroundResource(R.drawable.bg_chip_inactive)
                     tv.setTextColor(requireContext().getColor(R.color.text_secondary))
                     tv.setTypeface(null, android.graphics.Typeface.NORMAL)
                 }
+                tv.isClickable = true
+                tv.isFocusable = true
             }
             applyFilter()
         }

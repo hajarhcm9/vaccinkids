@@ -46,7 +46,7 @@ class AdminActivity : AppCompatActivity() {
                 } else if (bottomNav.selectedItemId != R.id.nav_admin_dashboard) {
                     bottomNav.selectedItemId = R.id.nav_admin_dashboard
                 } else {
-                    finish()
+                    moveTaskToBack(true)
                 }
             }
         })
@@ -71,20 +71,22 @@ class AdminActivity : AppCompatActivity() {
             try {
                 val response = ApiClient.apiService.getMe()
                 val user = response.data?.user
-                if (response.status != "success" || user?.role != "admin") {
-                    throw Exception(response.message ?: "Compte administrateur requis.")
+                val role = user?.role?.lowercase()
+                if (response.status == "success" && role == "admin") return@launch
+                if (response.status != "success") {
+                    TokenManager.clearTokens()
+                    Toast.makeText(
+                        this@AdminActivity,
+                        "Connexion requise : ${response.message ?: "session invalide"}",
+                        Toast.LENGTH_LONG
+                    ).show()
+                    startActivity(Intent(this@AdminActivity, AdminLoginActivity::class.java).apply {
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    })
+                    finish()
                 }
-            } catch (error: Exception) {
-                TokenManager.clearTokens()
-                Toast.makeText(
-                    this@AdminActivity,
-                    "Connexion requise : ${error.message ?: "session invalide"}",
-                    Toast.LENGTH_LONG
-                ).show()
-                startActivity(Intent(this@AdminActivity, AdminLoginActivity::class.java).apply {
-                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                })
-                finish()
+            } catch (_: Exception) {
+                // Erreur réseau — ne pas déconnecter
             }
         }
     }

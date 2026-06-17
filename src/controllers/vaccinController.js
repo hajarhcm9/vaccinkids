@@ -32,6 +32,12 @@ const VaccinController = {
     if (!vaccin) return next(ApiError.notFound('Vaccine not found'));
     return success(res, 200, 'Vaccine deactivated', vaccin);
   }),
+
+  reactivate: catchAsync(async (req, res, next) => {
+    const vaccin = await Vaccin.reactivate(req.params.id);
+    if (!vaccin) return next(ApiError.notFound('Vaccine not found'));
+    return success(res, 200, 'Vaccine reactivated', vaccin);
+  }),
 };
 
 module.exports = VaccinController;

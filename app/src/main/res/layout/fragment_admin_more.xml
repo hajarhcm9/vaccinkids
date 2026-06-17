@@ -186,6 +186,124 @@
                 <View android:layout_width="match_parent" android:layout_height="1dp"
                     android:background="@color/outline" android:layout_marginHorizontal="8dp" />
 
+                <View android:layout_width="match_parent" android:layout_height="1dp"
+                    android:background="@color/outline" android:layout_marginHorizontal="8dp" />
+
+                <!-- Journal d'audit -->
+                <LinearLayout android:id="@+id/menuAdminAudit"
+                    android:layout_width="match_parent" android:layout_height="60dp"
+                    android:gravity="center_vertical" android:orientation="horizontal"
+                    android:paddingHorizontal="12dp" android:background="?selectableItemBackground">
+                    <FrameLayout android:layout_width="38dp" android:layout_height="38dp"
+                        android:background="@drawable/bg_badge_info">
+                        <ImageView android:layout_width="20dp" android:layout_height="20dp"
+                            android:layout_gravity="center" android:src="@drawable/ic_bar_chart"
+                            android:contentDescription="@null" app:tint="@color/brand_blue" />
+                    </FrameLayout>
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_marginStart="14dp" android:layout_weight="1"
+                        android:text="Journal d'audit"
+                        android:textColor="@color/text_primary" android:textSize="15sp" android:textStyle="bold" />
+                    <ImageView android:layout_width="18dp" android:layout_height="18dp"
+                        android:src="@drawable/ic_logout" android:rotation="180"
+                        android:contentDescription="@null" app:tint="@color/text_secondary" />
+                </LinearLayout>
+
+                <View android:layout_width="match_parent" android:layout_height="1dp"
+                    android:background="@color/outline" android:layout_marginHorizontal="8dp" />
+
+                <!-- Kiosks -->
+                <LinearLayout android:id="@+id/menuAdminKiosk"
+                    android:layout_width="match_parent" android:layout_height="60dp"
+                    android:gravity="center_vertical" android:orientation="horizontal"
+                    android:paddingHorizontal="12dp" android:background="?selectableItemBackground">
+                    <FrameLayout android:layout_width="38dp" android:layout_height="38dp"
+                        android:background="@drawable/bg_kpi_icon_green">
+                        <ImageView android:layout_width="20dp" android:layout_height="20dp"
+                            android:layout_gravity="center" android:src="@drawable/ic_building"
+                            android:contentDescription="@null" app:tint="@color/brand_teal" />
+                    </FrameLayout>
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_marginStart="14dp" android:layout_weight="1"
+                        android:text="Kiosks salle d'attente"
+                        android:textColor="@color/text_primary" android:textSize="15sp" android:textStyle="bold" />
+                    <ImageView android:layout_width="18dp" android:layout_height="18dp"
+                        android:src="@drawable/ic_logout" android:rotation="180"
+                        android:contentDescription="@null" app:tint="@color/text_secondary" />
+                </LinearLayout>
+
+                <View android:layout_width="match_parent" android:layout_height="1dp"
+                    android:background="@color/outline" android:layout_marginHorizontal="8dp" />
+
+                <!-- Retards de vaccination -->
+                <LinearLayout android:id="@+id/menuAdminRetards"
+                    android:layout_width="match_parent" android:layout_height="60dp"
+                    android:gravity="center_vertical" android:orientation="horizontal"
+                    android:paddingHorizontal="12dp" android:background="?selectableItemBackground">
+                    <FrameLayout android:layout_width="38dp" android:layout_height="38dp"
+                        android:background="@drawable/bg_kpi_icon_orange">
+                        <ImageView android:layout_width="20dp" android:layout_height="20dp"
+                            android:layout_gravity="center" android:src="@drawable/ic_notifications"
+                            android:contentDescription="@null" app:tint="@color/warning_dark" />
+                    </FrameLayout>
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_marginStart="14dp" android:layout_weight="1"
+                        android:text="Retards de vaccination"
+                        android:textColor="@color/text_primary" android:textSize="15sp" android:textStyle="bold" />
+                    <ImageView android:layout_width="18dp" android:layout_height="18dp"
+                        android:src="@drawable/ic_logout" android:rotation="180"
+                        android:contentDescription="@null" app:tint="@color/text_secondary" />
+                </LinearLayout>
+
+                <View android:layout_width="match_parent" android:layout_height="1dp"
+                    android:background="@color/outline" android:layout_marginHorizontal="8dp" />
+
+                <!-- Rendez-vous -->
+                <LinearLayout android:id="@+id/menuAdminRdv"
+                    android:layout_width="match_parent" android:layout_height="60dp"
+                    android:gravity="center_vertical" android:orientation="horizontal"
+                    android:paddingHorizontal="12dp" android:background="?selectableItemBackground">
+                    <FrameLayout android:layout_width="38dp" android:layout_height="38dp"
+                        android:background="@drawable/bg_badge_info">
+                        <ImageView android:layout_width="20dp" android:layout_height="20dp"
+                            android:layout_gravity="center" android:src="@drawable/ic_rdv"
+                            android:contentDescription="@null" app:tint="@color/brand_blue" />
+                    </FrameLayout>
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_marginStart="14dp" android:layout_weight="1"
+                        android:text="Gestion des RDV"
+                        android:textColor="@color/text_primary" android:textSize="15sp" android:textStyle="bold" />
+                    <ImageView android:layout_width="18dp" android:layout_height="18dp"
+                        android:src="@drawable/ic_logout" android:rotation="180"
+                        android:contentDescription="@null" app:tint="@color/text_secondary" />
+                </LinearLayout>
+
+                <View android:layout_width="match_parent" android:layout_height="1dp"
+                    android:background="@color/outline" android:layout_marginHorizontal="8dp" />
+
+                <!-- Recherche -->
+                <LinearLayout android:id="@+id/menuAdminRecherche"
+                    android:layout_width="match_parent" android:layout_height="60dp"
+                    android:gravity="center_vertical" android:orientation="horizontal"
+                    android:paddingHorizontal="12dp" android:background="?selectableItemBackground">
+                    <FrameLayout android:layout_width="38dp" android:layout_height="38dp"
+                        android:background="@drawable/bg_kpi_icon_blue">
+                        <ImageView android:layout_width="20dp" android:layout_height="20dp"
+                            android:layout_gravity="center" android:src="@drawable/ic_search"
+                            android:contentDescription="@null" app:tint="@color/info" />
+                    </FrameLayout>
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_marginStart="14dp" android:layout_weight="1"
+                        android:text="Recherche globale"
+                        android:textColor="@color/text_primary" android:textSize="15sp" android:textStyle="bold" />
+                    <ImageView android:layout_width="18dp" android:layout_height="18dp"
+                        android:src="@drawable/ic_logout" android:rotation="180"
+                        android:contentDescription="@null" app:tint="@color/text_secondary" />
+                </LinearLayout>
+
+                <View android:layout_width="match_parent" android:layout_height="1dp"
+                    android:background="@color/outline" android:layout_marginHorizontal="8dp" />
+
                 <!-- Exports -->
                 <LinearLayout android:id="@+id/menuAdminExports"
                     android:layout_width="match_parent" android:layout_height="60dp"

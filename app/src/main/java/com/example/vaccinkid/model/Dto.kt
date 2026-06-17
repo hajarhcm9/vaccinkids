@@ -406,3 +406,46 @@ data class StockMovementDto(
     @SerializedName("centre_nom") val centreNom: String? = null,
     @SerializedName("created_at") val createdAt: String? = null
 )
+
+data class KioskDto(
+    val id: Int,
+    val code: String? = null,
+    @SerializedName("centre_id") val centreId: Int? = null,
+    @SerializedName("centre_nom") val centreNom: String? = null,
+    @SerializedName("est_actif") val estActif: Boolean? = null,
+    @SerializedName("rotated_at") val rotatedAt: String? = null,
+    @SerializedName("created_at") val createdAt: String? = null
+)
+
+data class CreateKioskRequest(
+    val code: String,
+    @SerializedName("centre_id") val centreId: Int
+)
+
+data class DelayVaccinDto(
+    @SerializedName("vaccin_id") val vaccinId: Int? = null,
+    @SerializedName("vaccin_nom") val vaccinNom: String? = null,
+    @SerializedName("nb_enfants_retard") val nbEnfantsRetard: Int? = null,
+    @SerializedName("avg_jours_retard") val avgJoursRetard: Int? = null,
+    @SerializedName("age_cible_semaines") val ageCibleSemaines: Int? = null
+)
+
+data class DelayCentreDto(
+    @SerializedName("centre_id") val centreId: Int? = null,
+    @SerializedName("centre_nom") val centreNom: String? = null,
+    @SerializedName("nb_enfants_retard") val nbEnfantsRetard: Int? = null
+)
+
+data class DelayDashboardDto(
+    @SerializedName("total_delayed") val totalDelayed: Int? = null,
+    @SerializedName("urgent_count") val urgentCount: Int? = null,
+    @SerializedName("top_vaccines") val topVaccines: List<DelayVaccinDto>? = null,
+    @SerializedName("by_centre") val byCentre: List<DelayCentreDto>? = null
+)
+
+data class SearchResultDto(
+    val type: String? = null,
+    val id: Int? = null,
+    val label: String? = null,
+    val detail: String? = null
+)

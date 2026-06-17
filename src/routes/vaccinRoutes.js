@@ -16,5 +16,6 @@ router.post(
 );
 router.patch('/:id', authenticate, authorize('admin'), VaccinController.update);
 router.delete('/:id', authenticate, authorize('admin'), VaccinController.deactivate);
+router.patch('/:id/reactivate', authenticate, authorize('admin'), VaccinController.reactivate);
 
 module.exports = router;

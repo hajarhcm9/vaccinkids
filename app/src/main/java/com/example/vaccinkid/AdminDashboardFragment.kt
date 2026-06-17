@@ -85,8 +85,7 @@ class AdminDashboardFragment : Fragment(R.layout.fragment_admin_dashboard) {
                     centresCountView.text = stats.centresActifs?.toString() ?: "0"
                     staffCountView.text = stats.totalPersonnel?.toString() ?: "0"
                     sessionsCountView.text = stats.sessionsAVenir?.toString() ?: "0"
-                    
-                    renderRecentActivity()
+                    renderRecentActivity(stats)
                 }
             } catch (_: Exception) {
             } finally {
@@ -95,21 +94,39 @@ class AdminDashboardFragment : Fragment(R.layout.fragment_admin_dashboard) {
         }
     }
 
-    private fun renderRecentActivity() {
+    private fun renderRecentActivity(stats: com.example.vaccinkid.model.DashboardStatsDto) {
         activityContainer.removeAllViews()
-        val centers = listOf("Centre Al Amal" to "156 vaccinations", "Centre Al Nour" to "98 vaccinations")
-        centers.forEach { (name, desc) ->
-            val row = android.view.LayoutInflater.from(requireContext()).inflate(android.R.layout.simple_list_item_2, activityContainer, false)
-            row.findViewById<TextView>(android.R.id.text1).text = name
-            row.findViewById<TextView>(android.R.id.text1).setTextColor(Color.BLACK)
-            row.findViewById<TextView>(android.R.id.text1).textSize = 15f
-            row.findViewById<TextView>(android.R.id.text2).text = desc
+        val ctx = requireContext()
+        val rows = listOfNotNull(
+            if ((stats.rdvPresents ?: 0) > 0) "Patients présents aujourd'hui" to "${stats.rdvPresents}" else null,
+            if ((stats.rdvConfirmes ?: 0) > 0) "RDV confirmés en attente" to "${stats.rdvConfirmes}" else null,
+            if ((stats.rdvEnAttente ?: 0) > 0) "RDV en attente de confirmation" to "${stats.rdvEnAttente}" else null,
+            if ((stats.rdvAbsents ?: 0) > 0) "Absences enregistrées" to "${stats.rdvAbsents}" else null,
+            if ((stats.alertesStock ?: 0) > 0) "Alertes de stock actives" to "${stats.alertesStock}" else null,
+            "Total bébés suivis" to "${stats.totalBebes ?: 0}",
+            "Total parents inscrits" to "${stats.totalParents ?: 0}"
+        )
+        rows.forEach { (label, value) ->
+            val row = LinearLayout(ctx).apply {
+                orientation = LinearLayout.HORIZONTAL
+                setPadding(0, 10, 0, 10)
+            }
+            row.addView(TextView(ctx).apply {
+                text = label
+                textSize = 14f
+                setTextColor(ctx.getColor(R.color.text_secondary))
+                layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+            })
+            row.addView(TextView(ctx).apply {
+                text = value
+                textSize = 14f
+                setTypeface(null, android.graphics.Typeface.BOLD)
+                setTextColor(ctx.getColor(R.color.text_primary))
+            })
             activityContainer.addView(row)
-            
-            // Separator
-            val line = View(requireContext())
+            val line = View(ctx)
             line.layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 1)
-            line.setBackgroundColor(Color.LTGRAY)
+            line.setBackgroundColor(ctx.getColor(R.color.outline))
             activityContainer.addView(line)
         }
     }
