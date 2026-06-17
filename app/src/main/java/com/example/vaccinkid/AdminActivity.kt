@@ -3,13 +3,18 @@ package com.example.vaccinkid
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.example.vaccinkid.network.ApiClient
 import com.example.vaccinkid.network.TokenManager
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import kotlinx.coroutines.launch
 
 class AdminActivity : AppCompatActivity() {
+
+    private lateinit var bottomNav: BottomNavigationView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -17,14 +22,44 @@ class AdminActivity : AppCompatActivity() {
         setContentView(R.layout.activity_admin)
         validateSession()
 
-        if (savedInstanceState == null) {
-            supportFragmentManager.beginTransaction()
-                .replace(R.id.fragmentContainerAdmin, AdminDashboardFragment())
-                .commit()
+        bottomNav = findViewById(R.id.adminBottomNav)
+        bottomNav.setOnItemSelectedListener { item ->
+            when (item.itemId) {
+                R.id.nav_admin_dashboard  -> { selectRoot(AdminDashboardFragment()); true }
+                R.id.nav_admin_personnel  -> { selectRoot(GestionPersonnelFragment()); true }
+                R.id.nav_admin_sessions   -> { selectRoot(GestionSessionsFragment()); true }
+                R.id.nav_admin_stocks     -> { selectRoot(AdminStocksFragment()); true }
+                R.id.nav_admin_more       -> { selectRoot(AdminMoreFragment()); true }
+                else -> false
+            }
         }
+
+        if (savedInstanceState == null) {
+            bottomNav.selectedItemId = R.id.nav_admin_dashboard
+        }
+
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                val fm = supportFragmentManager
+                if (fm.backStackEntryCount > 0) {
+                    fm.popBackStack()
+                } else if (bottomNav.selectedItemId != R.id.nav_admin_dashboard) {
+                    bottomNav.selectedItemId = R.id.nav_admin_dashboard
+                } else {
+                    finish()
+                }
+            }
+        })
     }
 
-    fun naviguerVers(fragment: androidx.fragment.app.Fragment) {
+    private fun selectRoot(fragment: Fragment) {
+        supportFragmentManager.popBackStack(null, androidx.fragment.app.FragmentManager.POP_BACK_STACK_INCLUSIVE)
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.fragmentContainerAdmin, fragment)
+            .commit()
+    }
+
+    fun naviguerVers(fragment: Fragment) {
         supportFragmentManager.beginTransaction()
             .replace(R.id.fragmentContainerAdmin, fragment)
             .addToBackStack(null)

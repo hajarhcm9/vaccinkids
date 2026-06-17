@@ -397,7 +397,9 @@ private class StaffRdvAdapter(
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         private val babyView: TextView = view.findViewById(R.id.staffRdvBaby)
         private val metaView: TextView = view.findViewById(R.id.staffRdvMeta)
+        private val timeView: TextView = view.findViewById(R.id.staffRdvTime)
         private val parentView: TextView = view.findViewById(R.id.staffRdvParent)
+        private val phoneView: TextView = view.findViewById(R.id.staffRdvPhone)
         private val statusView: TextView = view.findViewById(R.id.staffRdvStatus)
         private val presentButton: MaterialButton = view.findViewById(R.id.staffRdvPresent)
         private val absentButton: MaterialButton = view.findViewById(R.id.staffRdvAbsent)
@@ -417,8 +419,10 @@ private class StaffRdvAdapter(
             val parent = listOfNotNull(rdv.parentPrenom, rdv.parentNom).joinToString(" ")
                 .ifBlank { "Parent #${rdv.parentId}" }
             babyView.text = name
-            metaView.text = listOfNotNull(rdv.heureDebut, rdv.vaccinNom, "RDV #${rdv.id}").joinToString(" - ")
-            parentView.text = "$parent - ${rdv.parentTelephone ?: "Telephone indisponible"}"
+            timeView.text = rdv.heureDebut?.take(5) ?: "—"
+            metaView.text = listOfNotNull(rdv.vaccinNom, "RDV #${rdv.id}").joinToString(" · ")
+            parentView.text = parent
+            phoneView.text = rdv.parentTelephone ?: "Tél. indisponible"
             statusView.text = rdv.statut ?: "INCONNU"
             styleStatus(rdv.statut)
 

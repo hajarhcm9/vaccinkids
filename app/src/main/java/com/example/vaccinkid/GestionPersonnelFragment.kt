@@ -1,261 +1,253 @@
 package com.example.vaccinkid
 
 import android.app.AlertDialog
+import android.graphics.Color
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
+import android.widget.ArrayAdapter
 import android.widget.EditText
 import android.widget.LinearLayout
+import android.widget.ProgressBar
 import android.widget.Spinner
 import android.widget.TextView
-import android.widget.ArrayAdapter
 import android.widget.Toast
-import androidx.core.view.setPadding
+import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.vaccinkid.model.AdminPersonnelDto
 import com.example.vaccinkid.model.AdminPersonnelRequest
-import com.example.vaccinkid.model.AdminCentreDto
 import com.example.vaccinkid.model.AdminRefCentreDto
 import com.example.vaccinkid.network.ApiClient
 import kotlinx.coroutines.launch
 
-class GestionPersonnelFragment : Fragment() {
-    private lateinit var messageView: TextView
-    private lateinit var totalView: TextView
-    private lateinit var adapter: PersonnelAdapter
-    private var centres: List<AdminRefCentreDto> = emptyList()
+class GestionPersonnelFragment : Fragment(R.layout.fragment_gestion_personnel) {
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        adapter = PersonnelAdapter(
-            onEdit = { showForm(it) },
-            onToggle = { togglePersonnel(it) }
-        )
-        return LinearLayout(requireContext()).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(20)
-            addView(TextView(requireContext()).apply {
-                text = "Gestion personnel"
-                textSize = 24f
-                setTextColor(StaffUi.INK)
-                setTypeface(typeface, android.graphics.Typeface.BOLD)
-            })
-            addView(TextView(requireContext()).apply {
-                text = "Comptes, roles et affectations aux centres"
-                StaffUi.styleSubtitle(this)
-                setPadding(0, 0, 0, 8)
-            })
-            totalView = TextView(requireContext())
-            addView(totalView)
-            messageView = TextView(requireContext()).apply { setPadding(0, 8, 0, 8) }
-            addView(messageView)
-            val actions = LinearLayout(requireContext()).apply { orientation = LinearLayout.HORIZONTAL }
-            actions.addView(Button(requireContext()).apply {
-                text = "Ajouter personnel"
-                tag = "accent-rose"
-                setOnClickListener { showForm(null) }
-            }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
-            actions.addView(Button(requireContext()).apply {
-                text = "Rafraichir"
-                setOnClickListener { loadPersonnel() }
-            }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
-            addView(actions)
-            addView(RecyclerView(requireContext()).apply {
-                layoutManager = LinearLayoutManager(requireContext())
-                adapter = this@GestionPersonnelFragment.adapter
-            }, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f))
-        }
-    }
+    private lateinit var adapter: PersonnelXmlAdapter
+    private lateinit var messageView: TextView
+    private lateinit var progressBar: ProgressBar
+    private var allItems: List<AdminPersonnelDto> = emptyList()
+    private var centres: List<AdminRefCentreDto> = emptyList()
+    private var activeTab = "TOUS"
+    private var searchQuery = ""
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        StaffUi.decorateScreen(view)
+
+        messageView = view.findViewById(R.id.tvPersonnelMessage)
+        progressBar = view.findViewById(R.id.personnelProgress)
+
+        adapter = PersonnelXmlAdapter(
+            onEdit = { showForm(it) },
+            onToggle = { togglePersonnel(it) }
+        )
+        val rv = view.findViewById<RecyclerView>(R.id.rvPersonnel)
+        rv.layoutManager = LinearLayoutManager(requireContext())
+        rv.adapter = adapter
+
+        // Tabs
+        val tabs = listOf(
+            view.findViewById<TextView>(R.id.tabPersonnelTous),
+            view.findViewById<TextView>(R.id.tabPersonnelInfirmiers),
+            view.findViewById<TextView>(R.id.tabPersonnelAdmins),
+            view.findViewById<TextView>(R.id.tabPersonnelInactifs)
+        )
+        val tabKeys = listOf("TOUS", "INFIRMIER", "ADMIN", "INACTIFS")
+
+        fun selectTab(idx: Int) {
+            activeTab = tabKeys[idx]
+            tabs.forEachIndexed { i, tv ->
+                if (i == idx) {
+                    tv.setBackgroundResource(R.drawable.bg_btn_teal_pill)
+                    tv.setTextColor(requireContext().getColor(R.color.white))
+                    tv.setTypeface(null, android.graphics.Typeface.BOLD)
+                } else {
+                    tv.background = null
+                    tv.setTextColor(requireContext().getColor(R.color.text_secondary))
+                    tv.setTypeface(null, android.graphics.Typeface.NORMAL)
+                }
+            }
+            applyFilter()
+        }
+
+        tabs.forEachIndexed { i, tv -> tv.setOnClickListener { selectTab(i) } }
+
+        // Search
+        view.findViewById<com.google.android.material.textfield.TextInputEditText>(R.id.etPersonnelSearch)
+            .addTextChangedListener { searchQuery = it?.toString().orEmpty(); applyFilter() }
+
+        // FAB
+        view.findViewById<View>(R.id.fabAddPersonnel).setOnClickListener { showForm(null) }
+
         loadPersonnel()
         loadCentres()
     }
 
+    private fun applyFilter() {
+        val filtered = allItems.filter { p ->
+            val matchSearch = searchQuery.isBlank() ||
+                (p.nom?.lowercase()?.contains(searchQuery.lowercase()) == true) ||
+                (p.prenom?.lowercase()?.contains(searchQuery.lowercase()) == true) ||
+                (p.centreNom?.lowercase()?.contains(searchQuery.lowercase()) == true)
+            val matchTab = when (activeTab) {
+                "INFIRMIER" -> p.role?.lowercase() == "infirmier"
+                "ADMIN" -> p.role?.lowercase() == "admin"
+                "INACTIFS" -> p.estActif == false
+                else -> true
+            }
+            matchSearch && matchTab
+        }
+        adapter.submit(filtered)
+        messageView.text = if (filtered.isEmpty() && allItems.isNotEmpty()) "Aucun résultat" else ""
+        messageView.visibility = if (filtered.isEmpty() && allItems.isNotEmpty()) View.VISIBLE else View.GONE
+    }
+
     private fun loadPersonnel() {
-        messageView.text = "Chargement..."
+        progressBar.visibility = View.VISIBLE
         viewLifecycleOwner.lifecycleScope.launch {
             try {
                 val response = ApiClient.apiService.getAdminPersonnel()
                 val data = response.data
-                if (response.status != "success" || data == null) throw Exception(response.message ?: "Personnel indisponible")
-                adapter.submit(data.personnel)
-                totalView.text = "Personnel: ${data.personnel.count { it.estActif == true }} actif(s) / ${data.total}"
-                messageView.text = ""
+                if (response.status != "success" || data == null) throw Exception(response.message)
+                allItems = data.personnel
+                applyFilter()
             } catch (e: Exception) {
-                adapter.submit(emptyList())
-                messageView.text = e.message ?: "Erreur reseau"
+                messageView.text = e.message ?: "Erreur réseau"
+                messageView.visibility = View.VISIBLE
+            } finally {
+                progressBar.visibility = View.GONE
             }
         }
     }
 
     private fun showForm(item: AdminPersonnelDto?) {
-        val availableCentres = centres.filter { it.id == item?.centreId || true }
-        if (availableCentres.isEmpty()) {
-            messageView.text = "Aucun centre actif disponible."
-            loadCentres()
-            return
-        }
         val root = LinearLayout(requireContext()).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(24)
+            orientation = LinearLayout.VERTICAL; setPadding(64, 32, 64, 8)
         }
-        val cin = edit("CIN").also { it.setText(item?.cin ?: "") }
-        val nom = edit("Nom").also { it.setText(item?.nom ?: "") }
-        val prenom = edit("Prenom").also { it.setText(item?.prenom ?: "") }
-        val centre = Spinner(requireContext()).apply {
-            adapter = ArrayAdapter(
-                requireContext(),
-                android.R.layout.simple_spinner_dropdown_item,
-                availableCentres.map { it.nom ?: "Centre #${it.id}" }
-            )
-            setSelection(availableCentres.indexOfFirst { it.id == item?.centreId }.coerceAtLeast(0))
+        fun et(hint: String, value: String = "") = EditText(requireContext()).apply {
+            this.hint = hint; setText(value)
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT
+            ).also { it.bottomMargin = 16 }
         }
-        val password = edit("Mot de passe ${if (item == null) "" else "(laisser vide si inchange)"}")
-        val role = Spinner(requireContext()).apply {
+        val cin = et("CIN", item?.cin ?: "")
+        val nom = et("Nom", item?.nom ?: "")
+        val prenom = et("Prénom", item?.prenom ?: "")
+        val pwd = et(if (item == null) "Mot de passe" else "Mot de passe (laisser vide)")
+        val roleSpinner = Spinner(requireContext()).apply {
             adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, listOf("infirmier", "admin"))
             setSelection(if (item?.role == "admin") 1 else 0)
         }
-        listOf(cin, nom, prenom, centre, role, password).forEach { root.addView(it) }
+        val centreSpinner = Spinner(requireContext()).apply {
+            adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item,
+                centres.map { it.nom ?: "Centre #${it.id}" })
+            val idx = centres.indexOfFirst { it.id == item?.centreId }
+            setSelection(if (idx >= 0) idx else 0)
+        }
+        if (item == null) root.addView(cin)
+        listOf(nom, prenom, roleSpinner, centreSpinner, pwd).forEach { root.addView(it) }
 
         AlertDialog.Builder(requireContext())
             .setTitle(if (item == null) "Ajouter personnel" else "Modifier personnel")
             .setView(root)
             .setNegativeButton("Annuler", null)
             .setPositiveButton("Valider") { _, _ ->
-                val request = AdminPersonnelRequest(
-                    cin = cin.text.toString().trim().takeIf { item == null },
+                savePersonnel(item?.id, AdminPersonnelRequest(
+                    cin = if (item == null) cin.text.toString().trim() else null,
                     nom = nom.text.toString().trim(),
                     prenom = prenom.text.toString().trim(),
-                    role = role.selectedItem.toString(),
-                    centreId = availableCentres.getOrNull(centre.selectedItemPosition)?.id,
-                    motDePasse = password.text.toString().trim().ifBlank { null }
-                )
-                savePersonnel(item?.id, request)
+                    role = roleSpinner.selectedItem.toString(),
+                    centreId = centres.getOrNull(centreSpinner.selectedItemPosition)?.id,
+                    motDePasse = pwd.text.toString().trim().ifBlank { null }
+                ))
             }
             .show()
     }
 
     private fun savePersonnel(id: Int?, request: AdminPersonnelRequest) {
-        if (request.nom.isNullOrBlank() || request.prenom.isNullOrBlank() || request.centreId == null) {
-            messageView.text = "Nom, prenom et centre sont obligatoires."
-            return
-        }
-        if (id == null && (request.cin.isNullOrBlank() || request.motDePasse.isNullOrBlank())) {
-            messageView.text = "CIN et mot de passe sont obligatoires a la creation."
-            return
-        }
         viewLifecycleOwner.lifecycleScope.launch {
             try {
-                val response = if (id == null) {
-                    ApiClient.apiService.createAdminPersonnel(request)
-                } else {
-                    ApiClient.apiService.updateAdminPersonnel(id, request.copy(cin = null))
-                }
-                if (response.status != "success") throw Exception(response.message ?: "Enregistrement refuse")
-                Toast.makeText(requireContext(), "Confirme par le serveur", Toast.LENGTH_SHORT).show()
+                val r = if (id == null) ApiClient.apiService.createAdminPersonnel(request)
+                else ApiClient.apiService.updateAdminPersonnel(id, request.copy(cin = null))
+                if (r.status != "success") throw Exception(r.message ?: "Refusé")
+                Toast.makeText(requireContext(), "Enregistré", Toast.LENGTH_SHORT).show()
                 loadPersonnel()
             } catch (e: Exception) {
-                messageView.text = e.message ?: "Erreur reseau"
+                Toast.makeText(requireContext(), e.message ?: "Erreur réseau", Toast.LENGTH_SHORT).show()
             }
         }
     }
 
     private fun togglePersonnel(item: AdminPersonnelDto) {
         AlertDialog.Builder(requireContext())
-            .setTitle(if (item.estActif == true) "Desactiver" else "Reactiver")
+            .setTitle(if (item.estActif == true) "Désactiver" else "Réactiver")
             .setMessage("${item.prenom ?: ""} ${item.nom ?: ""}")
             .setNegativeButton("Annuler", null)
             .setPositiveButton("Confirmer") { _, _ ->
                 viewLifecycleOwner.lifecycleScope.launch {
                     try {
-                        val response = if (item.estActif == true) {
+                        val r = if (item.estActif == true)
                             ApiClient.apiService.deactivateAdminPersonnel(item.id)
-                        } else {
-                            ApiClient.apiService.reactivateAdminPersonnel(item.id)
-                        }
-                        if (response.status != "success") throw Exception(response.message ?: "Action refusee")
+                        else ApiClient.apiService.reactivateAdminPersonnel(item.id)
+                        if (r.status != "success") throw Exception(r.message ?: "Refusé")
                         loadPersonnel()
                     } catch (e: Exception) {
-                        messageView.text = e.message ?: "Erreur reseau"
+                        Toast.makeText(requireContext(), e.message ?: "Erreur réseau", Toast.LENGTH_SHORT).show()
                     }
                 }
             }
             .show()
     }
 
-    private fun edit(hintText: String): EditText = EditText(requireContext()).apply { hint = hintText }
-
     private fun loadCentres() {
         viewLifecycleOwner.lifecycleScope.launch {
             try {
-                val response = ApiClient.apiService.getAdminReferences()
-                if (response.status != "success") throw Exception(response.message ?: "Centres indisponibles")
-                centres = response.data?.centres.orEmpty()
-            } catch (e: Exception) {
-                messageView.text = e.message ?: "Impossible de charger les centres."
-            }
+                val r = ApiClient.apiService.getAdminReferences()
+                if (r.status == "success") centres = r.data?.centres.orEmpty()
+            } catch (_: Exception) {}
         }
     }
 }
 
-private class PersonnelAdapter(
+private class PersonnelXmlAdapter(
     private val onEdit: (AdminPersonnelDto) -> Unit,
     private val onToggle: (AdminPersonnelDto) -> Unit
-) : RecyclerView.Adapter<PersonnelAdapter.ViewHolder>() {
+) : RecyclerView.Adapter<PersonnelXmlAdapter.VH>() {
     private var items: List<AdminPersonnelDto> = emptyList()
-    fun submit(next: List<AdminPersonnelDto>) {
-        items = next
-        notifyDataSetChanged()
-    }
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        return ViewHolder(LinearLayout(parent.context).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(16)
-        }, onEdit, onToggle)
-    }
+    fun submit(next: List<AdminPersonnelDto>) { items = next; notifyDataSetChanged() }
     override fun getItemCount() = items.size
-    override fun onBindViewHolder(holder: ViewHolder, position: Int) = holder.bind(items[position])
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH =
+        VH(android.view.LayoutInflater.from(parent.context).inflate(R.layout.item_admin_personnel, parent, false), onEdit, onToggle)
+    override fun onBindViewHolder(holder: VH, position: Int) = holder.bind(items[position])
 
-    class ViewHolder(
-        private val root: LinearLayout,
-        private val onEdit: (AdminPersonnelDto) -> Unit,
-        private val onToggle: (AdminPersonnelDto) -> Unit
-    ) : RecyclerView.ViewHolder(root) {
-        fun bind(item: AdminPersonnelDto) {
-            root.removeAllViews()
-            StaffUi.styleCard(root, if (item.estActif == true) StaffUi.PRIMARY else StaffUi.BORDER)
-            root.addView(TextView(root.context).apply {
-                text = "${item.prenom ?: ""} ${item.nom ?: ""}"
-                textSize = 16f
-                setTextColor(StaffUi.INK)
-                setTypeface(typeface, android.graphics.Typeface.BOLD)
-            })
-            root.addView(TextView(root.context).apply {
-                text = "${item.role ?: "-"} | ${if (item.estActif == true) "Actif" else "Inactif"}"
-                StaffUi.statusPill(this, if (item.estActif == true) "ACTIF" else "INACTIF")
-            })
-            root.addView(TextView(root.context).apply {
-                text = "CIN ${item.cin ?: "-"} | Centre ${item.centreNom ?: item.centreId ?: "-"}"
-                setTextColor(StaffUi.MUTED)
-            })
-            val row = LinearLayout(root.context).apply { orientation = LinearLayout.HORIZONTAL }
-            row.addView(Button(root.context).apply {
-                text = "Modifier"
-                setOnClickListener { onEdit(item) }
-            }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
-            row.addView(Button(root.context).apply {
-                text = if (item.estActif == true) "Desactiver" else "Reactiver"
-                setOnClickListener { onToggle(item) }
-            }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
-            root.addView(row)
-            StaffUi.decorateTree(root)
+    class VH(v: View, val onEdit: (AdminPersonnelDto) -> Unit, val onToggle: (AdminPersonnelDto) -> Unit) : RecyclerView.ViewHolder(v) {
+        private val tvInitials = v.findViewById<TextView>(R.id.tvPersonnelInitials)
+        private val tvNom = v.findViewById<TextView>(R.id.tvPersonnelNom)
+        private val tvRoleCentre = v.findViewById<TextView>(R.id.tvPersonnelRoleCentre)
+        private val tvStatus = v.findViewById<TextView>(R.id.tvPersonnelStatus)
+
+        fun bind(p: AdminPersonnelDto) {
+            val fullName = "${p.prenom ?: ""} ${p.nom ?: ""}".trim().ifBlank { "Inconnu" }
+            val initials = listOfNotNull(p.prenom?.firstOrNull(), p.nom?.firstOrNull())
+                .joinToString("").uppercase().ifBlank { "?" }
+            tvInitials.text = initials
+            tvNom.text = fullName
+            tvRoleCentre.text = "${p.role?.replaceFirstChar { it.uppercase() } ?: "-"} — ${p.centreNom ?: "Aucun centre"}"
+
+            if (p.estActif == true) {
+                tvStatus.text = "Actif"
+                tvStatus.setBackgroundResource(R.drawable.bg_badge_success)
+                tvStatus.setTextColor(Color.parseColor("#065F46"))
+            } else {
+                tvStatus.text = "Inactif"
+                tvStatus.setBackgroundResource(R.drawable.bg_badge_error)
+                tvStatus.setTextColor(Color.parseColor("#991B1B"))
+            }
+
+            itemView.setOnClickListener { onEdit(p) }
+            itemView.setOnLongClickListener { onToggle(p); true }
         }
     }
 }

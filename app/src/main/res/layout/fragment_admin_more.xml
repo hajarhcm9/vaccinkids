@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg_screen">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingBottom="32dp">
+
+        <!-- Admin profile card -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="22dp"
+            android:layout_marginTop="22dp"
+            android:layout_marginBottom="20dp"
+            app:cardBackgroundColor="@color/white"
+            app:cardCornerRadius="22dp"
+            app:cardElevation="3dp"
+            app:strokeWidth="0dp">
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_gradient_admin"
+                android:padding="20dp">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <FrameLayout
+                        android:layout_width="54dp"
+                        android:layout_height="54dp"
+                        android:background="@drawable/bg_legend_dot_teal">
+                        <TextView
+                            android:id="@+id/tvAdminMoreInitials"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:text="HA"
+                            android:textColor="@color/white"
+                            android:textSize="18sp"
+                            android:textStyle="bold" />
+                    </FrameLayout>
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:orientation="vertical">
+                        <TextView
+                            android:id="@+id/tvAdminMoreName"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Admin Hassan"
+                            android:textColor="@color/white"
+                            android:textSize="17sp"
+                            android:textStyle="bold" />
+                        <TextView
+                            android:id="@+id/tvAdminMoreRole"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="Administrateur principal"
+                            android:textColor="@color/white_75"
+                            android:textSize="13sp" />
+                    </LinearLayout>
+                </LinearLayout>
+            </FrameLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Menu items -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="22dp"
+            android:layout_marginBottom="12dp"
+            app:cardBackgroundColor="@color/white"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="2dp"
+            app:strokeWidth="0dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="8dp">
+
+                <!-- Centres -->
+                <LinearLayout android:id="@+id/menuAdminCentres"
+                    android:layout_width="match_parent" android:layout_height="60dp"
+                    android:gravity="center_vertical" android:orientation="horizontal"
+                    android:paddingHorizontal="12dp" android:background="?selectableItemBackground">
+                    <FrameLayout android:layout_width="38dp" android:layout_height="38dp"
+                        android:background="@drawable/bg_kpi_icon_blue">
+                        <ImageView android:layout_width="20dp" android:layout_height="20dp"
+                            android:layout_gravity="center" android:src="@drawable/ic_building"
+                            android:contentDescription="@null" app:tint="@color/brand_lavender" />
+                    </FrameLayout>
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_marginStart="14dp" android:layout_weight="1"
+                        android:text="Gestion des centres"
+                        android:textColor="@color/text_primary" android:textSize="15sp" android:textStyle="bold" />
+                    <ImageView android:layout_width="18dp" android:layout_height="18dp"
+                        android:src="@drawable/ic_logout" android:rotation="180"
+                        android:contentDescription="@null" app:tint="@color/text_secondary" />
+                </LinearLayout>
+
+                <View android:layout_width="match_parent" android:layout_height="1dp"
+                    android:background="@color/outline" android:layout_marginHorizontal="8dp" />
+
+                <!-- Vaccins -->
+                <LinearLayout android:id="@+id/menuAdminVaccins"
+                    android:layout_width="match_parent" android:layout_height="60dp"
+                    android:gravity="center_vertical" android:orientation="horizontal"
+                    android:paddingHorizontal="12dp" android:background="?selectableItemBackground">
+                    <FrameLayout android:layout_width="38dp" android:layout_height="38dp"
+                        android:background="@drawable/bg_kpi_icon_green">
+                        <ImageView android:layout_width="20dp" android:layout_height="20dp"
+                            android:layout_gravity="center" android:src="@drawable/ic_syringe"
+                            android:contentDescription="@null" app:tint="@color/brand_teal" />
+                    </FrameLayout>
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_marginStart="14dp" android:layout_weight="1"
+                        android:text="Gestion des vaccins"
+                        android:textColor="@color/text_primary" android:textSize="15sp" android:textStyle="bold" />
+                    <ImageView android:layout_width="18dp" android:layout_height="18dp"
+                        android:src="@drawable/ic_logout" android:rotation="180"
+                        android:contentDescription="@null" app:tint="@color/text_secondary" />
+                </LinearLayout>
+
+                <View android:layout_width="match_parent" android:layout_height="1dp"
+                    android:background="@color/outline" android:layout_marginHorizontal="8dp" />
+
+                <!-- Statistiques -->
+                <LinearLayout android:id="@+id/menuAdminStats"
+                    android:layout_width="match_parent" android:layout_height="60dp"
+                    android:gravity="center_vertical" android:orientation="horizontal"
+                    android:paddingHorizontal="12dp" android:background="?selectableItemBackground">
+                    <FrameLayout android:layout_width="38dp" android:layout_height="38dp"
+                        android:background="@drawable/bg_kpi_icon_blue">
+                        <ImageView android:layout_width="20dp" android:layout_height="20dp"
+                            android:layout_gravity="center" android:src="@drawable/ic_bar_chart"
+                            android:contentDescription="@null" app:tint="@color/info" />
+                    </FrameLayout>
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_marginStart="14dp" android:layout_weight="1"
+                        android:text="Statistiques globales"
+                        android:textColor="@color/text_primary" android:textSize="15sp" android:textStyle="bold" />
+                    <ImageView android:layout_width="18dp" android:layout_height="18dp"
+                        android:src="@drawable/ic_logout" android:rotation="180"
+                        android:contentDescription="@null" app:tint="@color/text_secondary" />
+                </LinearLayout>
+
+                <View android:layout_width="match_parent" android:layout_height="1dp"
+                    android:background="@color/outline" android:layout_marginHorizontal="8dp" />
+
+                <!-- Alertes -->
+                <LinearLayout android:id="@+id/menuAdminAlertes"
+                    android:layout_width="match_parent" android:layout_height="60dp"
+                    android:gravity="center_vertical" android:orientation="horizontal"
+                    android:paddingHorizontal="12dp" android:background="?selectableItemBackground">
+                    <FrameLayout android:layout_width="38dp" android:layout_height="38dp"
+                        android:background="@drawable/bg_kpi_icon_red">
+                        <ImageView android:layout_width="20dp" android:layout_height="20dp"
+                            android:layout_gravity="center" android:src="@drawable/ic_notifications"
+                            android:contentDescription="@null" app:tint="@color/error" />
+                    </FrameLayout>
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_marginStart="14dp" android:layout_weight="1"
+                        android:text="Alertes système"
+                        android:textColor="@color/text_primary" android:textSize="15sp" android:textStyle="bold" />
+                    <ImageView android:layout_width="18dp" android:layout_height="18dp"
+                        android:src="@drawable/ic_logout" android:rotation="180"
+                        android:contentDescription="@null" app:tint="@color/text_secondary" />
+                </LinearLayout>
+
+                <View android:layout_width="match_parent" android:layout_height="1dp"
+                    android:background="@color/outline" android:layout_marginHorizontal="8dp" />
+
+                <!-- Exports -->
+                <LinearLayout android:id="@+id/menuAdminExports"
+                    android:layout_width="match_parent" android:layout_height="60dp"
+                    android:gravity="center_vertical" android:orientation="horizontal"
+                    android:paddingHorizontal="12dp" android:background="?selectableItemBackground">
+                    <FrameLayout android:layout_width="38dp" android:layout_height="38dp"
+                        android:background="@drawable/bg_kpi_icon_orange">
+                        <ImageView android:layout_width="20dp" android:layout_height="20dp"
+                            android:layout_gravity="center" android:src="@drawable/ic_rdv"
+                            android:contentDescription="@null" app:tint="@color/warning_dark" />
+                    </FrameLayout>
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_marginStart="14dp" android:layout_weight="1"
+                        android:text="Rapports et exports"
+                        android:textColor="@color/text_primary" android:textSize="15sp" android:textStyle="bold" />
+                    <ImageView android:layout_width="18dp" android:layout_height="18dp"
+                        android:src="@drawable/ic_logout" android:rotation="180"
+                        android:contentDescription="@null" app:tint="@color/text_secondary" />
+                </LinearLayout>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Logout button -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnAdminMoreLogout"
+            style="@style/Widget.Vaccinkid.Button.Danger"
+            android:layout_width="match_parent"
+            android:layout_height="54dp"
+            android:layout_marginHorizontal="22dp"
+            android:layout_marginTop="8dp"
+            android:text="Se déconnecter"
+            app:icon="@drawable/ic_logout"
+            app:iconTint="@color/white" />
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>

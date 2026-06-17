@@ -1,16 +1,16 @@
 package com.example.vaccinkid
 
 import android.app.AlertDialog
+import android.graphics.Color
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
+import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
-import androidx.core.view.setPadding
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -20,68 +20,99 @@ import com.example.vaccinkid.model.VaccinRequest
 import com.example.vaccinkid.network.ApiClient
 import kotlinx.coroutines.launch
 
-class GestionVaccinsFragment : Fragment() {
-    private lateinit var messageView: TextView
-    private lateinit var adapter: VaccinAdapter
+class GestionVaccinsFragment : Fragment(R.layout.fragment_gestion_vaccins) {
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        adapter = VaccinAdapter(onEdit = { showForm(it) }, onDeactivate = { deactivate(it) })
-        return LinearLayout(requireContext()).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(20)
-            addView(TextView(requireContext()).apply {
-                text = "Gestion vaccins"
-                textSize = 22f
-                setTypeface(typeface, android.graphics.Typeface.BOLD)
-            })
-            messageView = TextView(requireContext()).apply { setPadding(0, 8, 0, 8) }
-            addView(messageView)
-            addView(Button(requireContext()).apply {
-                text = "Ajouter vaccin"
-                setOnClickListener { showForm(null) }
-            })
-            addView(Button(requireContext()).apply {
-                text = "Rafraichir"
-                setOnClickListener { loadVaccins() }
-            })
-            addView(RecyclerView(requireContext()).apply {
-                layoutManager = LinearLayoutManager(requireContext())
-                adapter = this@GestionVaccinsFragment.adapter
-            }, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f))
-        }
-    }
+    private lateinit var adapter: VaccinXmlAdapter
+    private lateinit var messageView: TextView
+    private lateinit var progressBar: ProgressBar
+    private var allVaccins: List<VaccinDto> = emptyList()
+    private var showAll = false
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        StaffUi.decorateScreen(view)
+
+        messageView = view.findViewById(R.id.tvVaccinsMessage)
+        progressBar = view.findViewById(R.id.vaccinsProgress)
+
+        adapter = VaccinXmlAdapter(
+            onEdit = { showForm(it) },
+            onDeactivate = { deactivate(it) }
+        )
+        view.findViewById<RecyclerView>(R.id.rvVaccins).apply {
+            layoutManager = LinearLayoutManager(requireContext())
+            adapter = this@GestionVaccinsFragment.adapter
+        }
+
+        val tabActifs = view.findViewById<TextView>(R.id.tabVaccinsActifs)
+        val tabTous = view.findViewById<TextView>(R.id.tabVaccinsTous)
+
+        fun selectTab(all: Boolean) {
+            showAll = all
+            if (all) {
+                tabTous.setBackgroundResource(R.drawable.bg_btn_teal_pill)
+                tabTous.setTextColor(requireContext().getColor(R.color.white))
+                tabTous.setTypeface(null, android.graphics.Typeface.BOLD)
+                tabActifs.background = null
+                tabActifs.setTextColor(requireContext().getColor(R.color.text_secondary))
+                tabActifs.setTypeface(null, android.graphics.Typeface.NORMAL)
+            } else {
+                tabActifs.setBackgroundResource(R.drawable.bg_btn_teal_pill)
+                tabActifs.setTextColor(requireContext().getColor(R.color.white))
+                tabActifs.setTypeface(null, android.graphics.Typeface.BOLD)
+                tabTous.background = null
+                tabTous.setTextColor(requireContext().getColor(R.color.text_secondary))
+                tabTous.setTypeface(null, android.graphics.Typeface.NORMAL)
+            }
+            applyFilter()
+        }
+
+        tabActifs.setOnClickListener { selectTab(false) }
+        tabTous.setOnClickListener { selectTab(true) }
+
+        view.findViewById<View>(R.id.fabAddVaccin).setOnClickListener { showForm(null) }
+
         loadVaccins()
     }
 
+    private fun applyFilter() {
+        val filtered = if (showAll) allVaccins else allVaccins.filter { it.estActif != false }
+        adapter.submit(filtered)
+        messageView.text = "${filtered.size} vaccin(s)"
+        messageView.visibility = View.VISIBLE
+    }
+
     private fun loadVaccins() {
-        messageView.text = "Chargement..."
+        progressBar.visibility = View.VISIBLE
         viewLifecycleOwner.lifecycleScope.launch {
             try {
                 val response = ApiClient.apiService.getVaccins(all = true)
                 val data = response.data
-                if (response.status != "success" || data == null) throw Exception(response.message ?: "Vaccins indisponibles")
-                adapter.submit(data)
-                messageView.text = "${data.size} vaccin(s)"
+                if (response.status != "success" || data == null) throw Exception(response.message)
+                allVaccins = data
+                applyFilter()
             } catch (e: Exception) {
-                adapter.submit(emptyList())
-                messageView.text = e.message ?: "Erreur reseau"
+                messageView.text = e.message ?: "Erreur réseau"
+                messageView.visibility = View.VISIBLE
+            } finally {
+                progressBar.visibility = View.GONE
             }
         }
     }
 
     private fun showForm(item: VaccinDto?) {
         val root = LinearLayout(requireContext()).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(24)
+            orientation = LinearLayout.VERTICAL; setPadding(64, 32, 64, 8)
         }
-        val nom = edit("Nom").also { it.setText(item?.nom ?: "") }
-        val doses = edit("Doses par flacon").also { it.setText(item?.dosesParFlacon?.toString() ?: "") }
-        val age = edit("Age cible semaines").also { it.setText(item?.ageCibleSemaines?.toString() ?: "") }
-        val maladies = edit("Maladies ciblees").also { it.setText(item?.maladiesCiblees ?: "") }
+        fun et(hint: String, value: String = "") = EditText(requireContext()).apply {
+            this.hint = hint; setText(value)
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT
+            ).also { it.bottomMargin = 16 }
+        }
+        val nom = et("Nom du vaccin", item?.nom ?: "")
+        val doses = et("Doses par flacon", item?.dosesParFlacon?.toString() ?: "")
+        val age = et("Âge cible (semaines)", item?.ageCibleSemaines?.toString() ?: "")
+        val maladies = et("Maladies ciblées", item?.maladiesCiblees ?: "")
         listOf(nom, doses, age, maladies).forEach { root.addView(it) }
 
         AlertDialog.Builder(requireContext())
@@ -89,105 +120,106 @@ class GestionVaccinsFragment : Fragment() {
             .setView(root)
             .setNegativeButton("Annuler", null)
             .setPositiveButton("Valider") { _, _ ->
-                val request = VaccinRequest(
+                saveVaccin(item?.id, VaccinRequest(
                     nom = nom.text.toString().trim(),
                     dosesParFlacon = doses.text.toString().trim().toIntOrNull(),
                     ageCibleSemaines = age.text.toString().trim().toIntOrNull(),
                     maladiesCiblees = maladies.text.toString().trim()
-                )
-                saveVaccin(item?.id, request)
+                ))
             }
             .show()
     }
 
     private fun saveVaccin(id: Int?, request: VaccinRequest) {
-        if (request.nom.isNullOrBlank() || request.dosesParFlacon == null || request.ageCibleSemaines == null || request.maladiesCiblees.isNullOrBlank()) {
-            messageView.text = "Nom, doses, age et maladies sont obligatoires."
+        if (request.nom.isNullOrBlank()) {
+            Toast.makeText(requireContext(), "Le nom est obligatoire", Toast.LENGTH_SHORT).show()
             return
         }
         viewLifecycleOwner.lifecycleScope.launch {
             try {
-                val response = if (id == null) ApiClient.apiService.createVaccin(request)
+                val r = if (id == null) ApiClient.apiService.createVaccin(request)
                 else ApiClient.apiService.updateVaccin(id, request)
-                if (response.status != "success") throw Exception(response.message ?: "Enregistrement refuse")
-                Toast.makeText(requireContext(), "Confirme par le serveur", Toast.LENGTH_SHORT).show()
+                if (r.status != "success") throw Exception(r.message ?: "Refusé")
+                Toast.makeText(requireContext(), "Vaccin enregistré", Toast.LENGTH_SHORT).show()
                 loadVaccins()
             } catch (e: Exception) {
-                messageView.text = e.message ?: "Erreur reseau"
+                Toast.makeText(requireContext(), e.message ?: "Erreur réseau", Toast.LENGTH_SHORT).show()
             }
         }
     }
 
     private fun deactivate(item: VaccinDto) {
         AlertDialog.Builder(requireContext())
-            .setTitle("Desactiver vaccin")
+            .setTitle("Désactiver vaccin")
             .setMessage(item.nom ?: "Vaccin #${item.id}")
             .setNegativeButton("Annuler", null)
             .setPositiveButton("Confirmer") { _, _ ->
                 viewLifecycleOwner.lifecycleScope.launch {
                     try {
-                        val response = ApiClient.apiService.deactivateVaccin(item.id)
-                        if (response.status != "success") throw Exception(response.message ?: "Desactivation refusee")
+                        val r = ApiClient.apiService.deactivateVaccin(item.id)
+                        if (r.status != "success") throw Exception(r.message)
                         loadVaccins()
                     } catch (e: Exception) {
-                        messageView.text = e.message ?: "Erreur reseau"
+                        Toast.makeText(requireContext(), e.message ?: "Erreur réseau", Toast.LENGTH_SHORT).show()
                     }
                 }
             }
             .show()
     }
-
-    private fun edit(hintText: String): EditText = EditText(requireContext()).apply { hint = hintText }
 }
 
-private class VaccinAdapter(
+private class VaccinXmlAdapter(
     private val onEdit: (VaccinDto) -> Unit,
     private val onDeactivate: (VaccinDto) -> Unit
-) : RecyclerView.Adapter<VaccinAdapter.ViewHolder>() {
+) : RecyclerView.Adapter<VaccinXmlAdapter.VH>() {
     private var items: List<VaccinDto> = emptyList()
-    fun submit(next: List<VaccinDto>) {
-        items = next
-        notifyDataSetChanged()
-    }
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        return ViewHolder(LinearLayout(parent.context).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(16)
-        }, onEdit, onDeactivate)
-    }
+    fun submit(next: List<VaccinDto>) { items = next; notifyDataSetChanged() }
     override fun getItemCount() = items.size
-    override fun onBindViewHolder(holder: ViewHolder, position: Int) = holder.bind(items[position])
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH =
+        VH(android.view.LayoutInflater.from(parent.context).inflate(R.layout.item_admin_vaccin, parent, false), onEdit, onDeactivate)
+    override fun onBindViewHolder(h: VH, pos: Int) = h.bind(items[pos])
 
-    class ViewHolder(
-        private val root: LinearLayout,
-        private val onEdit: (VaccinDto) -> Unit,
-        private val onDeactivate: (VaccinDto) -> Unit
-    ) : RecyclerView.ViewHolder(root) {
-        fun bind(item: VaccinDto) {
-            root.removeAllViews()
-            StaffUi.styleCard(root, if (item.estActif == false) StaffUi.BORDER else StaffUi.PRIMARY)
-            root.addView(TextView(root.context).apply {
-                text = "${item.nom ?: "Vaccin #${item.id}"} - ${if (item.estActif == false) "Inactif" else "Actif"}"
-                textSize = 16f
-                setTypeface(typeface, android.graphics.Typeface.BOLD)
-            })
-            root.addView(TextView(root.context).apply {
-                text = "Doses/flacon ${item.dosesParFlacon ?: "-"} | Age ${item.ageCibleSemaines ?: "-"} sem."
-            })
-            root.addView(TextView(root.context).apply { text = item.maladiesCiblees ?: "-" })
-            val row = LinearLayout(root.context).apply { orientation = LinearLayout.HORIZONTAL }
-            row.addView(Button(root.context).apply {
-                text = "Modifier"
-                setOnClickListener { onEdit(item) }
-            }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
-            if (item.estActif != false) {
-                row.addView(Button(root.context).apply {
-                    text = "Desactiver"
-                    setOnClickListener { onDeactivate(item) }
-                }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+    class VH(v: View, val onEdit: (VaccinDto) -> Unit, val onDeactivate: (VaccinDto) -> Unit) : RecyclerView.ViewHolder(v) {
+        private val dot = v.findViewById<View>(R.id.viewVaccinStatusDot)
+        private val tvNom = v.findViewById<TextView>(R.id.tvVaccinNom)
+        private val tvBadge = v.findViewById<TextView>(R.id.tvVaccinBadge)
+        private val tvMaladies = v.findViewById<TextView>(R.id.tvVaccinMaladies)
+        private val tvDoses = v.findViewById<TextView>(R.id.tvVaccinDoses)
+        private val tvAge = v.findViewById<TextView>(R.id.tvVaccinAge)
+        private val llActions = v.findViewById<LinearLayout>(R.id.llVaccinActions)
+
+        fun bind(v: VaccinDto) {
+            val actif = v.estActif != false
+            tvNom.text = v.nom ?: "Vaccin #${v.id}"
+            tvMaladies.text = v.maladiesCiblees ?: ""
+            tvDoses.text = "${v.dosesParFlacon ?: "-"} doses/flacon"
+            tvAge.text = "Âge cible : ${v.ageCibleSemaines ?: "-"} sem."
+
+            if (actif) {
+                tvBadge.text = "Actif"
+                tvBadge.setBackgroundResource(R.drawable.bg_badge_success)
+                tvBadge.setTextColor(Color.parseColor("#065F46"))
+                dot.setBackgroundResource(R.drawable.bg_legend_dot_teal)
+            } else {
+                tvBadge.text = "Inactif"
+                tvBadge.setBackgroundResource(R.drawable.bg_badge_error)
+                tvBadge.setTextColor(Color.parseColor("#991B1B"))
+                dot.setBackgroundResource(R.drawable.bg_legend_dot_gray)
             }
-            root.addView(row)
-            StaffUi.decorateTree(root)
+
+            llActions.removeAllViews()
+            fun btn(label: String, color: Int, click: () -> Unit) {
+                llActions.addView(Button(itemView.context).apply {
+                    text = label
+                    setTextColor(Color.WHITE)
+                    backgroundTintList = android.content.res.ColorStateList.valueOf(color)
+                    textSize = 11f
+                    layoutParams = LinearLayout.LayoutParams(0, 72).also { it.weight = 1f; it.marginEnd = 6 }
+                    setOnClickListener { click() }
+                })
+            }
+            btn("Modifier", Color.parseColor("#64748B")) { onEdit(v) }
+            if (actif) btn("Désactiver", Color.parseColor("#EF4444")) { onDeactivate(v) }
         }
     }
 }

@@ -35,7 +35,7 @@ class MainInfirmierActivity : AppCompatActivity() {
                 } else if (bottomNav.selectedItemId != R.id.nav_dashboard) {
                     bottomNav.selectedItemId = R.id.nav_dashboard
                 } else {
-                    finish()
+                    moveTaskToBack(true)
                 }
             }
         })
@@ -91,20 +91,25 @@ class MainInfirmierActivity : AppCompatActivity() {
             try {
                 val response = ApiClient.apiService.getMe()
                 val user = response.data?.user
-                if (response.status != "success" || user?.role != "infirmier" || user.centreId == null) {
-                    throw Exception(response.message ?: "Compte infirmier sans centre autorise.")
+                val role = user?.role?.lowercase()
+                if (response.status == "success" && (role == "infirmier" || role == "medecin") && user?.centreId != null) {
+                    return@launch // session valide
                 }
-            } catch (error: Exception) {
-                TokenManager.clearTokens()
-                Toast.makeText(
-                    this@MainInfirmierActivity,
-                    "Connexion requise : ${error.message ?: "session invalide"}",
-                    Toast.LENGTH_LONG
-                ).show()
-                val intent = Intent(this@MainInfirmierActivity, LoginInfirmierActivity::class.java)
-                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                startActivity(intent)
-                finish()
+                if (response.status != "success") {
+                    // Déconnecter uniquement si le serveur refuse explicitement l'auth
+                    TokenManager.clearTokens()
+                    Toast.makeText(
+                        this@MainInfirmierActivity,
+                        "Connexion requise : ${response.message ?: "session expirée"}",
+                        Toast.LENGTH_LONG
+                    ).show()
+                    val intent = Intent(this@MainInfirmierActivity, LoginInfirmierActivity::class.java)
+                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    startActivity(intent)
+                    finish()
+                }
+            } catch (_: Exception) {
+                // Erreur réseau — ne pas déconnecter, l'utilisateur peut être hors-ligne
             }
         }
     }

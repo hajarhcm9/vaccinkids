@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg_screen">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <!-- Header -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="22dp"
+            android:paddingTop="22dp"
+            android:paddingBottom="14dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Personnel"
+                android:textColor="@color/text_primary"
+                android:textSize="26sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="Comptes, rôles et affectations"
+                android:textColor="@color/text_secondary"
+                android:textSize="13sp" />
+        </LinearLayout>
+
+        <!-- Search bar -->
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="22dp"
+            android:layout_marginBottom="10dp"
+            android:hint="Rechercher par nom, rôle ou centre"
+            app:boxCornerRadiusTopStart="14dp"
+            app:boxCornerRadiusTopEnd="14dp"
+            app:boxCornerRadiusBottomStart="14dp"
+            app:boxCornerRadiusBottomEnd="14dp"
+            app:boxStrokeColor="@color/brand_teal"
+            app:startIconDrawable="@drawable/ic_scan"
+            app:startIconTint="@color/brand_teal">
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etPersonnelSearch"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="text"
+                android:maxLines="1" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Filter tabs -->
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:layout_marginHorizontal="22dp"
+            android:layout_marginBottom="10dp"
+            android:background="@drawable/bg_segment_container"
+            android:scrollbars="none">
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:padding="4dp">
+                <TextView android:id="@+id/tabPersonnelTous"
+                    android:layout_width="wrap_content" android:layout_height="match_parent"
+                    android:gravity="center" android:paddingHorizontal="18dp"
+                    android:background="@drawable/bg_btn_teal_pill"
+                    android:text="Tous" android:textColor="@color/white"
+                    android:textSize="13sp" android:textStyle="bold" />
+                <TextView android:id="@+id/tabPersonnelInfirmiers"
+                    android:layout_width="wrap_content" android:layout_height="match_parent"
+                    android:gravity="center" android:paddingHorizontal="18dp"
+                    android:text="Infirmiers" android:textColor="@color/text_secondary"
+                    android:textSize="13sp" />
+                <TextView android:id="@+id/tabPersonnelAdmins"
+                    android:layout_width="wrap_content" android:layout_height="match_parent"
+                    android:gravity="center" android:paddingHorizontal="18dp"
+                    android:text="Admins" android:textColor="@color/text_secondary"
+                    android:textSize="13sp" />
+                <TextView android:id="@+id/tabPersonnelInactifs"
+                    android:layout_width="wrap_content" android:layout_height="match_parent"
+                    android:gravity="center" android:paddingHorizontal="18dp"
+                    android:text="Inactifs" android:textColor="@color/text_secondary"
+                    android:textSize="13sp" />
+            </LinearLayout>
+        </HorizontalScrollView>
+
+        <!-- Status message -->
+        <TextView
+            android:id="@+id/tvPersonnelMessage"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingHorizontal="22dp"
+            android:textColor="@color/text_secondary"
+            android:textSize="13sp"
+            android:visibility="gone" />
+
+        <!-- Progress -->
+        <ProgressBar
+            android:id="@+id/personnelProgress"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="8dp"
+            android:visibility="gone" />
+
+        <!-- List -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvPersonnel"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:clipToPadding="false"
+            android:paddingHorizontal="22dp"
+            android:paddingTop="4dp"
+            android:paddingBottom="80dp" />
+    </LinearLayout>
+
+    <!-- FAB -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabAddPersonnel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="22dp"
+        android:contentDescription="Ajouter personnel"
+        android:src="@android:drawable/ic_input_add"
+        app:backgroundTint="@color/brand_teal"
+        app:tint="@color/white"
+        app:elevation="8dp" />
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

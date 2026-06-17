@@ -58,8 +58,22 @@ class QueueFragment : Fragment(R.layout.fragment_queue) {
 
     private fun selectTab(tab: String) {
         selectedTab = tab
-        waitingTab.isChecked = tab == TAB_WAITING
-        calledTab.isChecked = tab == TAB_CALLED
+        val teal = requireContext().getColor(R.color.brand_teal)
+        val white = requireContext().getColor(R.color.white)
+        val secondary = requireContext().getColor(R.color.text_secondary)
+        listOf(waitingTab to TAB_WAITING, calledTab to TAB_CALLED).forEach { (btn, t) ->
+            btn.isClickable = true
+            btn.isFocusable = true
+            if (t == tab) {
+                btn.setBackgroundResource(R.drawable.bg_btn_teal_pill)
+                btn.setTextColor(white)
+                btn.setTypeface(null, android.graphics.Typeface.BOLD)
+            } else {
+                btn.setBackgroundResource(R.drawable.bg_chip_inactive)
+                btn.setTextColor(secondary)
+                btn.setTypeface(null, android.graphics.Typeface.NORMAL)
+            }
+        }
         renderEntries()
     }
 
@@ -96,9 +110,15 @@ class QueueFragment : Fragment(R.layout.fragment_queue) {
         val visible = if (selectedTab == TAB_WAITING) waiting else called
         adapter.submit(visible)
         callNextButton.visibility = if (selectedTab == TAB_WAITING) View.VISIBLE else View.GONE
-        callNextButton.isEnabled = waiting.isNotEmpty() && !actionInFlight
+        val canCallNext = waiting.isNotEmpty() && !actionInFlight
+        callNextButton.isEnabled = canCallNext
+        callNextButton.alpha = if (canCallNext) 1.0f else 0.45f
         if (!refreshView.isRefreshing) {
-            message.text = queueError ?: if (visible.isEmpty()) "File vide" else ""
+            message.text = queueError ?: when {
+                visible.isEmpty() && selectedTab == TAB_WAITING -> "File vide – aucun patient en attente"
+                visible.isEmpty() -> "Aucun patient appelé"
+                else -> ""
+            }
         }
     }
 

@@ -51,12 +51,14 @@ class StaffNotificationsFragment : Fragment(R.layout.fragment_staff_notification
         val secondary = requireContext().getColor(R.color.text_secondary)
         val white = requireContext().getColor(R.color.white)
         listOf(tabToutes to "ALL", tabNonLues to "UNREAD", tabRdv to "RDV").forEach { (tv, t) ->
+            tv.isClickable = true
+            tv.isFocusable = true
             if (t == tab) {
                 tv.setBackgroundResource(R.drawable.bg_btn_teal_pill)
                 tv.setTextColor(white)
                 tv.setTypeface(null, android.graphics.Typeface.BOLD)
             } else {
-                tv.background = null
+                tv.setBackgroundResource(R.drawable.bg_chip_inactive)
                 tv.setTextColor(secondary)
                 tv.setTypeface(null, android.graphics.Typeface.NORMAL)
             }
@@ -136,24 +138,34 @@ private class NotificationAdapter(
         private val time = view.findViewById<TextView>(R.id.tvNotifTime)
         private val icon = view.findViewById<ImageView>(R.id.ivNotifIcon)
         private val iconContainer = view.findViewById<View>(R.id.flNotifIconContainer)
+        private val accentBar = view.findViewById<View>(R.id.notifAccentBar)
+        private val unreadDot = view.findViewById<View>(R.id.viewUnreadDot)
 
         fun bind(notification: NotificationDto) {
+            val isRead = notification.estLue == true
             title.text = notification.titre ?: "Notification"
             message.text = notification.message ?: ""
-            time.text = "Aujourd'hui"
-            
-            // Styliser selon le titre pour le demo
-            val t = title.text.toString().lowercase()
+
+            // Format time from ISO date if available, else fallback
+            val rawDate = notification.createdAt
+            time.text = formatRelativeTime(rawDate)
+
+            val t = (notification.titre ?: "").lowercase()
             when {
-                t.contains("vaccin") -> {
+                t.contains("vaccin") || t.contains("rappel") -> {
                     icon.setImageResource(R.drawable.ic_syringe)
                     iconContainer.backgroundTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#E0F2FE"))
                     icon.imageTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#0EA5E9"))
                 }
-                t.contains("stock") -> {
+                t.contains("stock") || t.contains("alerte") -> {
                     icon.setImageResource(R.drawable.ic_notifications)
                     iconContainer.backgroundTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#FEF3C7"))
                     icon.imageTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#F59E0B"))
+                }
+                t.contains("rdv") || t.contains("rendez") -> {
+                    icon.setImageResource(R.drawable.ic_calendar_event)
+                    iconContainer.backgroundTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#F0FDF4"))
+                    icon.imageTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#10B981"))
                 }
                 else -> {
                     icon.setImageResource(R.drawable.ic_notifications)
@@ -161,9 +173,33 @@ private class NotificationAdapter(
                     icon.imageTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#0F766E"))
                 }
             }
-            
-            itemView.alpha = if (notification.estLue == true) 0.6f else 1.0f
+
+            // Read/unread visuals
+            unreadDot.visibility = if (isRead) View.GONE else View.VISIBLE
+            accentBar.setBackgroundColor(
+                if (isRead) Color.parseColor("#CBD5E1") else Color.parseColor("#006D77")
+            )
+            itemView.alpha = if (isRead) 0.65f else 1.0f
+
             itemView.setOnClickListener { onRead(notification) }
+        }
+
+        private fun formatRelativeTime(iso: String?): String {
+            if (iso.isNullOrBlank()) return "Aujourd'hui"
+            return try {
+                val sdf = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", java.util.Locale.getDefault())
+                sdf.timeZone = java.util.TimeZone.getTimeZone("UTC")
+                val date = sdf.parse(iso) ?: return "Aujourd'hui"
+                val diffMs = System.currentTimeMillis() - date.time
+                val diffMin = diffMs / 60_000
+                when {
+                    diffMin < 1 -> "À l'instant"
+                    diffMin < 60 -> "Il y a ${diffMin}min"
+                    diffMin < 1440 -> "Il y a ${diffMin / 60}h"
+                    diffMin < 2880 -> "Hier"
+                    else -> "Il y a ${diffMin / 1440}j"
+                }
+            } catch (_: Exception) { "Aujourd'hui" }
         }
     }
 }

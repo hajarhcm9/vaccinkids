@@ -65,6 +65,7 @@ data class DashboardStatsDto(
 data class StockDto(
     val id: Int,
     @SerializedName("centre_id") val centreId: Int? = null,
+    @SerializedName("centre_nom") val centreNom: String? = null,
     @SerializedName("vaccin_id") val vaccinId: Int? = null,
     @SerializedName("vaccin_nom") val vaccinNom: String? = null,
     val nom: String? = null,
@@ -145,9 +146,9 @@ data class VaccinationDto(
 
 data class CreateVaccinationRequest(
     @SerializedName("flacon_id") val flaconId: Int?,
-    val poids: Double? = null,
-    val taille: Double? = null,
-    val reactions: String? = null
+    @SerializedName("poids") val poids: Double? = null,
+    @SerializedName("taille") val taille: Double? = null,
+    @SerializedName("reactions") val reactions: String? = null
 )
 
 data class AddCroissanceRequest(

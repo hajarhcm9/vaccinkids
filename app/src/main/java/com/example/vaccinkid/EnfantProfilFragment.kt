@@ -143,9 +143,13 @@ class EnfantProfilFragment : Fragment(R.layout.fragment_enfant_profil) {
     private fun updateRdvStatus(rdvId: Int, statut: String) {
         viewLifecycleOwner.lifecycleScope.launch {
             try {
-                ApiClient.apiService.updateRendezVous(rdvId, UpdateRendezVousRequest(statut))
-                val msg = if (statut == "present") "Marqué présent" else "Marqué absent"
+                val r = ApiClient.apiService.updateRendezVous(rdvId, UpdateRendezVousRequest(statut))
+                if (r.status != "success") throw Exception(r.message ?: "Refusé")
+                val msg = if (statut == "PRESENT") "✓ Patient marqué présent" else "Patient marqué absent"
                 Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+                // Refresh eligible RDVs in-place
+                eligibleRdvs = eligibleRdvs.map { if (it.id == rdvId) it.copy(statut = statut) else it }
+                setupEligibleRdvs(requireView())
             } catch (e: Exception) {
                 Toast.makeText(requireContext(), "Erreur : ${e.message}", Toast.LENGTH_SHORT).show()
             }
