@@ -183,14 +183,14 @@
                         app:cornerRadius="19dp"
                         app:rippleColor="@color/error_light" />
 
-                    <!-- Carnet -->
+                    <!-- Dossier -->
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/staffRdvGrowth"
                         style="@style/Widget.Material3.Button.OutlinedButton"
                         android:layout_width="0dp"
                         android:layout_height="38dp"
                         android:layout_weight="1"
-                        android:text="Carnet"
+                        android:text="Dossier"
                         android:textSize="13sp"
                         android:textColor="@color/brand_teal"
                         app:strokeColor="@color/brand_teal"

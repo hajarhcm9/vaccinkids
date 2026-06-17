@@ -150,6 +150,11 @@ data class CreateVaccinationRequest(
     val reactions: String? = null
 )
 
+data class AddCroissanceRequest(
+    val poids: Double? = null,
+    val taille: Double? = null
+)
+
 data class RendezVousDto(
     val id: Int,
     @SerializedName("session_id") val sessionId: Int? = null,

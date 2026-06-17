@@ -67,6 +67,7 @@
         android:padding="4dp">
 
         <TextView
+            android:id="@+id/tabNotifToutes"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
@@ -78,6 +79,7 @@
             android:textStyle="bold" />
 
         <TextView
+            android:id="@+id/tabNotifNonLues"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
@@ -87,6 +89,7 @@
             android:textSize="13sp" />
 
         <TextView
+            android:id="@+id/tabNotifRdv"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"

@@ -3,6 +3,7 @@ package com.example.vaccinkid
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.example.vaccinkid.network.ApiClient
@@ -26,6 +27,18 @@ class MainInfirmierActivity : AppCompatActivity() {
         if (savedInstanceState == null) {
             selectRootFragment(DashboardFragment(), "dashboard")
         }
+
+        onBackPressedDispatcher.addCallback(this, object : androidx.activity.OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                if (supportFragmentManager.backStackEntryCount > 0) {
+                    supportFragmentManager.popBackStack()
+                } else if (bottomNav.selectedItemId != R.id.nav_dashboard) {
+                    bottomNav.selectedItemId = R.id.nav_dashboard
+                } else {
+                    finish()
+                }
+            }
+        })
 
         bottomNav.setOnItemSelectedListener { item ->
             when (item.itemId) {

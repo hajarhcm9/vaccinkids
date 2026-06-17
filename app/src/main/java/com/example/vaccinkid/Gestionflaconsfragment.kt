@@ -4,12 +4,8 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
-import android.widget.EditText
-import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
-import androidx.core.view.setPadding
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -17,85 +13,54 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.vaccinkid.model.CreateFlaconRequest
 import com.example.vaccinkid.model.FlaconDto
 import com.example.vaccinkid.network.ApiClient
+import com.google.android.material.button.MaterialButton
+import com.google.android.material.textfield.TextInputEditText
 import kotlinx.coroutines.launch
 
-class GestionFlaconsFragment : Fragment() {
-    private lateinit var messageView: TextView
-    private lateinit var lotInput: EditText
-    private lateinit var fabricantInput: EditText
-    private lateinit var openButton: Button
+class GestionFlaconsFragment : Fragment(R.layout.fragment_gestion_flacons) {
+
+    private lateinit var etLot: TextInputEditText
+    private lateinit var etFabricant: TextInputEditText
+    private lateinit var btnOuvrir: MaterialButton
+    private lateinit var pbFlacons: View
+    private lateinit var tvMessage: TextView
+    private lateinit var rvFlacons: RecyclerView
+    private lateinit var tvEmpty: TextView
     private lateinit var adapter: FlaconAdapter
     private var loading = false
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        etLot = view.findViewById(R.id.etFlaconLot)
+        etFabricant = view.findViewById(R.id.etFlaconFabricant)
+        btnOuvrir = view.findViewById(R.id.btnOuvrirFlacon)
+        pbFlacons = view.findViewById(R.id.pbFlacons)
+        tvMessage = view.findViewById(R.id.tvFlaconsMessage)
+        rvFlacons = view.findViewById(R.id.rvFlacons)
+        tvEmpty = view.findViewById(R.id.tvFlaconsEmpty)
+
+        view.findViewById<TextView>(R.id.tvFlaconsSessionLabel).text =
+            requireArguments().getString(ARG_SESSION_LABEL) ?: "Session"
+
+        view.findViewById<View>(R.id.btnBackFlacons).setOnClickListener {
+            parentFragmentManager.popBackStack()
+        }
+
         adapter = FlaconAdapter(
             onWaste = { flacon -> recordWaste(flacon) },
             onClose = { flacon -> closeFlacon(flacon) }
         )
+        rvFlacons.layoutManager = LinearLayoutManager(requireContext())
+        rvFlacons.adapter = adapter
 
-        return LinearLayout(requireContext()).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(24)
-
-            addView(TextView(requireContext()).apply {
-                text = "Flacons de session"
-                textSize = 22f
-            })
-
-            addView(TextView(requireContext()).apply {
-                text = requireArguments().getString(ARG_SESSION_LABEL) ?: "Session"
-                textSize = 15f
-                setPadding(0, 8, 0, 12)
-            })
-
-            lotInput = EditText(requireContext()).apply { hint = "Numero de lot" }
-            addView(lotInput)
-
-            fabricantInput = EditText(requireContext()).apply { hint = "Fabricant" }
-            addView(fabricantInput)
-
-            val actions = LinearLayout(requireContext()).apply {
-                orientation = LinearLayout.HORIZONTAL
-            }
-            openButton = Button(requireContext()).apply {
-                text = "Ouvrir flacon"
-                setOnClickListener { openFlacon() }
-            }
-            actions.addView(openButton, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
-            actions.addView(Button(requireContext()).apply {
-                text = "Rafraichir"
-                setOnClickListener { loadFlacons() }
-            }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
-            addView(actions)
-
-            messageView = TextView(requireContext()).apply {
-                setPadding(0, 10, 0, 10)
-            }
-            addView(messageView)
-
-            addView(RecyclerView(requireContext()).apply {
-                layoutManager = LinearLayoutManager(requireContext())
-                adapter = this@GestionFlaconsFragment.adapter
-            }, LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                0,
-                1f
-            ))
-        }
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        StaffUi.decorateScreen(view)
         if (sessionId() <= 0 || vaccinId() <= 0) {
-            openButton.isEnabled = false
-            messageView.text = "Ouverture possible uniquement depuis une session serveur."
+            btnOuvrir.isEnabled = false
+            tvMessage.text = "Ouverture possible uniquement depuis une session serveur."
             return
         }
+
+        btnOuvrir.setOnClickListener { openFlacon() }
         loadFlacons()
     }
 
@@ -109,12 +74,15 @@ class GestionFlaconsFragment : Fragment() {
                 val data = response.data
                 if (response.status == "success" && data != null) {
                     adapter.submit(data)
-                    messageView.text = "${data.size} flacon(s) charge(s)."
+                    showList(data.isNotEmpty())
+                    tvMessage.text = "${data.size} flacon(s) chargé(s)."
                 } else {
-                    messageView.text = response.message ?: "Flacons indisponibles."
+                    tvMessage.text = response.message ?: "Flacons indisponibles."
+                    showList(false)
                 }
             } catch (e: Exception) {
-                messageView.text = e.message ?: "Erreur reseau."
+                tvMessage.text = e.message ?: "Erreur réseau."
+                showList(false)
             } finally {
                 setLoading(false)
             }
@@ -122,14 +90,14 @@ class GestionFlaconsFragment : Fragment() {
     }
 
     private fun openFlacon() {
-        val lot = lotInput.text.toString().trim()
-        val fabricant = fabricantInput.text.toString().trim()
+        val lot = etLot.text?.toString()?.trim().orEmpty()
+        val fabricant = etFabricant.text?.toString()?.trim().orEmpty()
         if (lot.isBlank() || fabricant.isBlank()) {
-            messageView.text = "Numero de lot et fabricant sont obligatoires."
+            tvMessage.text = "Numéro de lot et fabricant sont obligatoires."
             return
         }
         if (loading) return
-        setLoading(true, "Ouverture serveur en cours...")
+        setLoading(true, "Ouverture en cours...")
         viewLifecycleOwner.lifecycleScope.launch {
             try {
                 val response = ApiClient.apiService.createFlacon(
@@ -137,15 +105,15 @@ class GestionFlaconsFragment : Fragment() {
                 )
                 if (response.status == "success" && response.data != null) {
                     Toast.makeText(requireContext(), "Flacon ouvert", Toast.LENGTH_SHORT).show()
-                    lotInput.text.clear()
-                    fabricantInput.text.clear()
+                    etLot.text?.clear()
+                    etFabricant.text?.clear()
                     setLoading(false)
                     loadFlacons()
                 } else {
-                    messageView.text = response.message ?: "Ouverture refusee."
+                    tvMessage.text = response.message ?: "Ouverture refusée."
                 }
             } catch (e: Exception) {
-                messageView.text = e.message ?: "Erreur reseau."
+                tvMessage.text = e.message ?: "Erreur réseau."
             } finally {
                 setLoading(false)
             }
@@ -158,15 +126,15 @@ class GestionFlaconsFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             try {
                 val response = ApiClient.apiService.recordWaste(flacon.id)
-                if (response.status == "success" && response.data != null) {
-                    Toast.makeText(requireContext(), "Gaspillage enregistre", Toast.LENGTH_SHORT).show()
+                if (response.status == "success") {
+                    Toast.makeText(requireContext(), "Gaspillage enregistré", Toast.LENGTH_SHORT).show()
                     setLoading(false)
                     loadFlacons()
                 } else {
-                    messageView.text = response.message ?: "Gaspillage refuse."
+                    tvMessage.text = response.message ?: "Gaspillage refusé."
                 }
             } catch (e: Exception) {
-                messageView.text = e.message ?: "Erreur reseau."
+                tvMessage.text = e.message ?: "Erreur réseau."
             } finally {
                 setLoading(false)
             }
@@ -179,15 +147,15 @@ class GestionFlaconsFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             try {
                 val response = ApiClient.apiService.closeFlacon(flacon.id)
-                if (response.status == "success" && response.data != null) {
-                    Toast.makeText(requireContext(), "Flacon ferme par le serveur", Toast.LENGTH_SHORT).show()
+                if (response.status == "success") {
+                    Toast.makeText(requireContext(), "Flacon fermé", Toast.LENGTH_SHORT).show()
                     setLoading(false)
                     loadFlacons()
                 } else {
-                    messageView.text = response.message ?: "Fermeture refusee."
+                    tvMessage.text = response.message ?: "Fermeture refusée."
                 }
             } catch (e: Exception) {
-                messageView.text = e.message ?: "Erreur reseau."
+                tvMessage.text = e.message ?: "Erreur réseau."
             } finally {
                 setLoading(false)
             }
@@ -196,18 +164,24 @@ class GestionFlaconsFragment : Fragment() {
 
     private fun setLoading(value: Boolean, message: String? = null) {
         loading = value
-        openButton.isEnabled = !value && sessionId() > 0 && vaccinId() > 0
-        if (message != null) messageView.text = message
+        pbFlacons.visibility = if (value) View.VISIBLE else View.GONE
+        btnOuvrir.isEnabled = !value && sessionId() > 0 && vaccinId() > 0
+        if (message != null) tvMessage.text = message
+    }
+
+    private fun showList(hasItems: Boolean) {
+        rvFlacons.visibility = if (hasItems) View.VISIBLE else View.GONE
+        tvEmpty.visibility = if (hasItems) View.GONE else View.VISIBLE
     }
 
     private fun sessionId(): Int = requireArguments().getInt(ARG_SESSION_ID, 0)
-
     private fun vaccinId(): Int = requireArguments().getInt(ARG_VACCIN_ID, 0)
 
-    private class FlaconAdapter(
+    private inner class FlaconAdapter(
         private val onWaste: (FlaconDto) -> Unit,
         private val onClose: (FlaconDto) -> Unit
-    ) : RecyclerView.Adapter<FlaconAdapter.ViewHolder>() {
+    ) : RecyclerView.Adapter<FlaconAdapter.Holder>() {
+
         private val items = mutableListOf<FlaconDto>()
 
         fun submit(data: List<FlaconDto>) {
@@ -216,50 +190,52 @@ class GestionFlaconsFragment : Fragment() {
             notifyDataSetChanged()
         }
 
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-            return ViewHolder(
-                LinearLayout(parent.context).apply {
-                    orientation = LinearLayout.VERTICAL
-                    setPadding(16)
-                },
-                onWaste,
-                onClose
-            )
-        }
+        override fun getItemCount() = items.size
 
-        override fun getItemCount(): Int = items.size
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) = Holder(
+            LayoutInflater.from(parent.context).inflate(R.layout.item_flacon, parent, false)
+        )
 
-        override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-            holder.bind(items[position])
-        }
+        override fun onBindViewHolder(holder: Holder, position: Int) = holder.bind(items[position])
 
-        class ViewHolder(
-            private val root: LinearLayout,
-            private val onWaste: (FlaconDto) -> Unit,
-            private val onClose: (FlaconDto) -> Unit
-        ) : RecyclerView.ViewHolder(root) {
+        inner class Holder(v: View) : RecyclerView.ViewHolder(v) {
             fun bind(flacon: FlaconDto) {
-                root.removeAllViews()
-                StaffUi.styleCard(root, if (flacon.dateFermeture == null) StaffUi.PRIMARY else StaffUi.BORDER)
-                root.addView(TextView(root.context).apply {
-                    text = "Lot ${flacon.numeroLot ?: flacon.id} - ${flacon.fabricant ?: "fabricant inconnu"}"
-                    textSize = 16f
-                })
-                root.addView(TextView(root.context).apply {
-                    val closed = if (flacon.dateFermeture == null) "ouvert" else "ferme"
-                    text = "Utilisees ${flacon.dosesUtilisees ?: 0} / gaspillees ${flacon.dosesGaspillees ?: 0} / restantes ${flacon.remainingDosesLabel()} / $closed"
-                })
-                root.addView(Button(root.context).apply {
-                    text = "Declarer gaspillage"
-                    isEnabled = flacon.dateFermeture == null && (flacon.dosesRestantes ?: 0) > 0
-                    setOnClickListener { onWaste(flacon) }
-                })
-                root.addView(Button(root.context).apply {
-                    text = "Fermer flacon"
-                    isEnabled = flacon.dateFermeture == null && (flacon.dosesRestantes ?: 0) == 0
-                    setOnClickListener { onClose(flacon) }
-                })
-                StaffUi.decorateTree(root)
+                val v = itemView
+                val isClosed = flacon.dateFermeture != null
+
+                v.findViewById<View>(R.id.flaconAccentBar).setBackgroundColor(
+                    requireContext().getColor(if (isClosed) R.color.text_tertiary else R.color.brand_teal)
+                )
+
+                v.findViewById<TextView>(R.id.tvFlaconLot).text = "Lot ${flacon.numeroLot ?: flacon.id}"
+                v.findViewById<TextView>(R.id.tvFlaconFabricant).text = flacon.fabricant ?: "Fabricant inconnu"
+
+                val statusView = v.findViewById<TextView>(R.id.tvFlaconStatus)
+                if (isClosed) {
+                    statusView.text = "Fermé"
+                    statusView.setBackgroundResource(R.drawable.bg_badge_info)
+                    statusView.setTextColor(requireContext().getColor(R.color.info_dark))
+                } else {
+                    statusView.text = "Ouvert"
+                    statusView.setBackgroundResource(R.drawable.bg_badge_success)
+                    statusView.setTextColor(requireContext().getColor(R.color.success_dark))
+                }
+
+                v.findViewById<TextView>(R.id.tvFlaconUtilisees).text = (flacon.dosesUtilisees ?: 0).toString()
+                v.findViewById<TextView>(R.id.tvFlaconGaspillees).text = (flacon.dosesGaspillees ?: 0).toString()
+                v.findViewById<TextView>(R.id.tvFlaconRestantes).text = flacon.dosesRestantes?.toString() ?: "—"
+
+                val remaining = flacon.dosesRestantes ?: 0
+                val btnWaste = v.findViewById<MaterialButton>(R.id.btnFlaconGaspillage)
+                val btnClose = v.findViewById<MaterialButton>(R.id.btnFlaconFermer)
+
+                btnWaste.isEnabled = !isClosed && remaining > 0
+                btnWaste.alpha = if (btnWaste.isEnabled) 1f else 0.4f
+                btnWaste.setOnClickListener { onWaste(flacon) }
+
+                btnClose.isEnabled = !isClosed && remaining == 0
+                btnClose.alpha = if (btnClose.isEnabled) 1f else 0.4f
+                btnClose.setOnClickListener { onClose(flacon) }
             }
         }
     }
@@ -273,18 +249,12 @@ class GestionFlaconsFragment : Fragment() {
             sessionId: Int,
             vaccinId: Int,
             sessionLabel: String
-        ): GestionFlaconsFragment {
-            return GestionFlaconsFragment().apply {
-                arguments = Bundle().apply {
-                    putInt(ARG_SESSION_ID, sessionId)
-                    putInt(ARG_VACCIN_ID, vaccinId)
-                    putString(ARG_SESSION_LABEL, sessionLabel)
-                }
+        ): GestionFlaconsFragment = GestionFlaconsFragment().apply {
+            arguments = Bundle().apply {
+                putInt(ARG_SESSION_ID, sessionId)
+                putInt(ARG_VACCIN_ID, vaccinId)
+                putString(ARG_SESSION_LABEL, sessionLabel)
             }
         }
     }
-}
-
-private fun FlaconDto.remainingDosesLabel(): String {
-    return dosesRestantes?.toString() ?: "serveur indisponible"
 }

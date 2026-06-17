@@ -37,6 +37,7 @@ class RdvFragment : Fragment(R.layout.fragment_rdv) {
     private lateinit var adapter: StaffRdvAdapter
     private lateinit var queueButton: MaterialButton
     private lateinit var vialsButton: MaterialButton
+    private lateinit var statsButton: MaterialButton
     private lateinit var startButton: MaterialButton
     private lateinit var endButton: MaterialButton
 
@@ -64,6 +65,7 @@ class RdvFragment : Fragment(R.layout.fragment_rdv) {
         messageView = view.findViewById(R.id.rdvMessage)
         queueButton = view.findViewById(R.id.rdvOpenQueue)
         vialsButton = view.findViewById(R.id.rdvOpenVials)
+        statsButton = view.findViewById(R.id.rdvOpenStats)
         startButton = view.findViewById(R.id.rdvStartSession)
         endButton = view.findViewById(R.id.rdvEndSession)
 
@@ -85,12 +87,16 @@ class RdvFragment : Fragment(R.layout.fragment_rdv) {
             (activity as? MainInfirmierActivity)?.naviguerVers(QueueFragment())
         }
         vialsButton.setOnClickListener { openFlacons() }
+        statsButton.setOnClickListener { openStats() }
         startButton.setOnClickListener { updateSession(start = true) }
         endButton.setOnClickListener { updateSession(start = false) }
         updateSessionActions(null)
     }
 
     private fun setupStatusFilters() {
+        val tealColor = androidx.core.content.ContextCompat.getColor(requireContext(), R.color.brand_teal)
+        val white = androidx.core.content.ContextCompat.getColor(requireContext(), R.color.white)
+
         STATUS_OPTIONS.forEach { status ->
             statusFilters.addView(Chip(requireContext()).apply {
                 id = View.generateViewId()
@@ -98,6 +104,19 @@ class RdvFragment : Fragment(R.layout.fragment_rdv) {
                 isCheckable = true
                 isChecked = status == ALL_STATUSES
                 tag = status
+                chipCornerRadius = 20f
+                chipStrokeWidth = 1.5f
+                setChipStrokeColorResource(R.color.brand_teal)
+                isCheckedIconVisible = false
+                chipBackgroundColor = android.content.res.ColorStateList(
+                    arrayOf(intArrayOf(android.R.attr.state_checked), intArrayOf()),
+                    intArrayOf(tealColor, white)
+                )
+                setTextColor(android.content.res.ColorStateList(
+                    arrayOf(intArrayOf(android.R.attr.state_checked), intArrayOf()),
+                    intArrayOf(white, tealColor)
+                ))
+                textSize = 12.5f
             })
         }
         statusFilters.setOnCheckedStateChangeListener { group, checkedIds ->
@@ -278,10 +297,9 @@ class RdvFragment : Fragment(R.layout.fragment_rdv) {
     }
 
     private fun openGrowth(rdv: RendezVousDto) {
-        val babyId = rdv.bebeId ?: return
-        val name = listOfNotNull(rdv.bebePrenom, rdv.bebeNom).joinToString(" ")
-            .ifBlank { "Bebe #$babyId" }
-        (activity as? MainInfirmierActivity)?.naviguerVers(GrowthChartFragment.newInstance(babyId, name))
+        (activity as? MainInfirmierActivity)?.naviguerVers(
+            EnfantProfilFragment.newInstanceFromRdv(rdv)
+        )
     }
 
     private fun selectedSession(): SessionDto? = sessions.getOrNull(sessionSpinner.selectedItemPosition)
@@ -290,8 +308,16 @@ class RdvFragment : Fragment(R.layout.fragment_rdv) {
         val status = session?.statut?.uppercase()
         queueButton.visibility = if (session == null) View.GONE else View.VISIBLE
         vialsButton.visibility = if (status in listOf("CONFIRMEE", "EN_COURS")) View.VISIBLE else View.GONE
+        statsButton.visibility = if (status == "EN_COURS") View.VISIBLE else View.GONE
         startButton.visibility = if (status == "CONFIRMEE") View.VISIBLE else View.GONE
         endButton.visibility = if (status == "EN_COURS") View.VISIBLE else View.GONE
+    }
+
+    private fun openStats() {
+        val session = selectedSession() ?: return
+        (activity as? MainInfirmierActivity)?.naviguerVers(
+            StatistiquesSessionFragment.newInstance(session.id, session.label())
+        )
     }
 
     private fun setSessionButtonsEnabled(enabled: Boolean) {
@@ -299,6 +325,7 @@ class RdvFragment : Fragment(R.layout.fragment_rdv) {
         endButton.isEnabled = enabled
         queueButton.isEnabled = enabled
         vialsButton.isEnabled = enabled
+        statsButton.isEnabled = enabled
     }
 
     private fun beginLoading(message: String) {

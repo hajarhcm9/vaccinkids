@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="12dp"
+    app:cardBackgroundColor="@color/white"
+    app:cardCornerRadius="20dp"
+    app:cardElevation="2dp"
+    app:strokeWidth="0dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <!-- Left teal accent -->
+        <View
+            android:layout_width="5dp"
+            android:layout_height="match_parent"
+            android:background="@color/brand_teal" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <!-- Row 1: vaccine + statut -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/tvRdvVaccin"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Vaccin"
+                    android:textColor="@color/text_primary"
+                    android:textSize="15sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvRdvStatut"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingHorizontal="10dp"
+                    android:paddingVertical="4dp"
+                    android:textSize="11sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <!-- Row 2: heure -->
+            <TextView
+                android:id="@+id/tvRdvHeure"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:background="@drawable/bg_time_chip"
+                android:paddingHorizontal="10dp"
+                android:paddingVertical="4dp"
+                android:text="—"
+                android:textColor="@color/brand_teal_dark"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
+            <!-- Divider -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="14dp"
+                android:layout_marginBottom="12dp"
+                android:background="@color/outline" />
+
+            <!-- Action buttons -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <!-- Vacciner (primary) -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnRdvVacciner"
+                    android:layout_width="0dp"
+                    android:layout_height="42dp"
+                    android:layout_weight="1.2"
+                    android:layout_marginEnd="6dp"
+                    android:background="@drawable/bg_btn_teal_pill"
+                    android:text="Vacciner"
+                    android:textColor="@color/white"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:stateListAnimator="@null"
+                    android:elevation="2dp"
+                    app:backgroundTint="@null"
+                    app:cornerRadius="21dp"
+                    app:icon="@drawable/ic_syringe"
+                    app:iconTint="@color/white"
+                    app:iconSize="16dp"
+                    app:iconGravity="textStart"
+                    app:iconPadding="4dp" />
+
+                <!-- Présent -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnRdvPresent"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="42dp"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="6dp"
+                    android:text="Présent"
+                    android:textColor="@color/brand_teal"
+                    android:textSize="12sp"
+                    app:strokeColor="@color/brand_teal"
+                    app:strokeWidth="1.5dp"
+                    app:cornerRadius="21dp"
+                    app:rippleColor="@color/teal_50" />
+
+                <!-- Absent -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnRdvAbsent"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="42dp"
+                    android:layout_weight="1"
+                    android:text="Absent"
+                    android:textColor="@color/error"
+                    android:textSize="12sp"
+                    app:strokeColor="@color/error"
+                    app:strokeWidth="1.5dp"
+                    app:cornerRadius="21dp"
+                    app:rippleColor="@color/error_light" />
+            </LinearLayout>
+
+        </LinearLayout>
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>

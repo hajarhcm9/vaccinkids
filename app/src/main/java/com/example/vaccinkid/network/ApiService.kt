@@ -194,6 +194,12 @@ interface ApiService {
     @GET("carnet/bebe/{id}/croissance")
     suspend fun getCroissance(@Path("id") bebeId: Int): ApiResponse<List<CroissanceDto>>
 
+    @POST("carnet/bebe/{id}/croissance")
+    suspend fun addCroissance(
+        @Path("id") bebeId: Int,
+        @Body request: com.example.vaccinkid.model.AddCroissanceRequest
+    ): ApiResponse<CroissanceDto>
+
     @GET("file-attente/centre/{centreId}")
     suspend fun getCentreQueue(@Path("centreId") centreId: Int): ApiResponse<QueueListDto>
 

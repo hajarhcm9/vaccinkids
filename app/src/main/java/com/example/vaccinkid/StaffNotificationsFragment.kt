@@ -17,19 +17,63 @@ import kotlinx.coroutines.launch
 class StaffNotificationsFragment : Fragment(R.layout.fragment_staff_notifications) {
     private lateinit var rvNotifications: RecyclerView
     private lateinit var adapter: NotificationAdapter
+    private lateinit var tabToutes: TextView
+    private lateinit var tabNonLues: TextView
+    private lateinit var tabRdv: TextView
     private var loading = false
+    private var allNotifications: List<NotificationDto> = emptyList()
+    private var activeTab = "ALL"
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        
+
         rvNotifications = view.findViewById(R.id.rvNotifications)
         rvNotifications.layoutManager = LinearLayoutManager(requireContext())
         adapter = NotificationAdapter { markRead(it) }
         rvNotifications.adapter = adapter
-        
+
+        tabToutes = view.findViewById(R.id.tabNotifToutes)
+        tabNonLues = view.findViewById(R.id.tabNotifNonLues)
+        tabRdv = view.findViewById(R.id.tabNotifRdv)
+
+        tabToutes.setOnClickListener { selectTab("ALL") }
+        tabNonLues.setOnClickListener { selectTab("UNREAD") }
+        tabRdv.setOnClickListener { selectTab("RDV") }
+
         view.findViewById<View>(R.id.tvMarkAllAsRead).setOnClickListener { markAllRead() }
-        
+
         loadNotifications()
+    }
+
+    private fun selectTab(tab: String) {
+        activeTab = tab
+        val teal = requireContext().getColor(R.color.brand_teal)
+        val secondary = requireContext().getColor(R.color.text_secondary)
+        val white = requireContext().getColor(R.color.white)
+        listOf(tabToutes to "ALL", tabNonLues to "UNREAD", tabRdv to "RDV").forEach { (tv, t) ->
+            if (t == tab) {
+                tv.setBackgroundResource(R.drawable.bg_btn_teal_pill)
+                tv.setTextColor(white)
+                tv.setTypeface(null, android.graphics.Typeface.BOLD)
+            } else {
+                tv.background = null
+                tv.setTextColor(secondary)
+                tv.setTypeface(null, android.graphics.Typeface.NORMAL)
+            }
+        }
+        applyFilter()
+    }
+
+    private fun applyFilter() {
+        val filtered = when (activeTab) {
+            "UNREAD" -> allNotifications.filter { it.estLue != true }
+            "RDV" -> allNotifications.filter {
+                val t = (it.titre ?: "").lowercase()
+                t.contains("rdv") || t.contains("rendez") || t.contains("vaccin")
+            }
+            else -> allNotifications
+        }
+        adapter.submit(filtered)
     }
 
     private fun loadNotifications() {
@@ -39,7 +83,8 @@ class StaffNotificationsFragment : Fragment(R.layout.fragment_staff_notification
             try {
                 val response = ApiClient.apiService.getNotifications()
                 if (response.status == "success") {
-                    adapter.submit(response.data.orEmpty())
+                    allNotifications = response.data.orEmpty()
+                    applyFilter()
                 }
             } catch (_: Exception) {
             } finally {

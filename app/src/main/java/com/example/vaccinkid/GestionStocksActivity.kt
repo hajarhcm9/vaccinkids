@@ -41,7 +41,9 @@ class GestionStocksActivity : AppCompatActivity() {
         setContentView(R.layout.activity_gestion_stocks)
         viewModel = ViewModelProvider(this)[StockViewModel::class.java]
 
-        adapter = StockAdapter(onEdit = { showEditDialog(it) })
+        adapter = StockAdapter(onEdit = {
+            if (TokenManager.getUserRole() == "admin") showEditDialog(it) else showStockDetail(it)
+        })
         movementAdapter = StockMovementAdapter()
         findViewById<RecyclerView>(R.id.recyclerViewStocks).apply {
             layoutManager = LinearLayoutManager(this@GestionStocksActivity)
@@ -141,6 +143,22 @@ class GestionStocksActivity : AppCompatActivity() {
                     }
                 }
             }
+            .show()
+    }
+
+    private fun showStockDetail(stock: StockDto) {
+        val qte = stock.quantiteDisponible ?: 0
+        val seuil = stock.seuilAlerte ?: 0
+        val nom = stock.vaccinNom ?: stock.nom ?: "Vaccin #${stock.id}"
+        val statut = when {
+            seuil > 0 && qte == 0 -> "Rupture de stock"
+            seuil > 0 && qte <= seuil -> "Stock faible — alerte active"
+            else -> "Stock suffisant"
+        }
+        androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle(nom)
+            .setMessage("Quantité disponible : $qte flacons\nSeuil d'alerte : $seuil flacons\nÉtat : $statut")
+            .setPositiveButton("Fermer", null)
             .show()
     }
 

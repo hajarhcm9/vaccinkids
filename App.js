@@ -16,16 +16,10 @@ const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    checkAuthState();
+    // DEMO MODE: bypass login/OTP to test UI directly
+    setIsAuthenticated(true);
+    setIsLoading(false);
   }, []);
-
-  useEffect(
-    () =>
-      httpClient.onSessionExpired(() => {
-        setIsAuthenticated(false);
-      }),
-    [],
-  );
 
   useEffect(() => {
     if (!isAuthenticated) return undefined;
@@ -46,18 +40,6 @@ const App = () => {
     pushRegistrationService.getInitialNotification().then(openTarget).catch(() => {});
     return unsubscribe;
   }, [isAuthenticated]);
-
-  const checkAuthState = async () => {
-    try {
-      await httpClient.validateSession();
-      setIsAuthenticated(true);
-    } catch (error) {
-      await httpClient.logout().catch(() => {});
-      setIsAuthenticated(false);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const authContextValue = {
     signIn: () => setIsAuthenticated(true),

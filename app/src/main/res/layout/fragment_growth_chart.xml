@@ -15,7 +15,7 @@
         android:orientation="horizontal"
         android:paddingHorizontal="22dp"
         android:paddingTop="22dp"
-        android:paddingBottom="16dp"
+        android:paddingBottom="14dp"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
@@ -39,12 +39,12 @@
         <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginHorizontal="14dp"
+            android:layout_marginHorizontal="12dp"
             android:layout_weight="1"
             android:gravity="center"
             android:text="Courbe de croissance"
             android:textColor="@color/text_primary"
-            android:textSize="20sp"
+            android:textSize="19sp"
             android:textStyle="bold" />
 
         <View android:layout_width="40dp" android:layout_height="40dp" />
@@ -57,8 +57,8 @@
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="22dp"
         app:cardBackgroundColor="@color/white"
-        app:cardCornerRadius="20dp"
-        app:cardElevation="2dp"
+        app:cardCornerRadius="18dp"
+        app:cardElevation="3dp"
         app:strokeWidth="0dp"
         app:layout_constraintTop_toBottomOf="@id/rlGrowthHeader"
         app:layout_constraintStart_toStartOf="parent"
@@ -67,70 +67,60 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="14dp">
 
-            <!-- Left teal accent -->
-            <View
-                android:layout_width="5dp"
-                android:layout_height="match_parent"
-                android:background="@color/brand_teal" />
+            <!-- Avatar circle -->
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/ivGrowthAvatar"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_medical_staff"
+                app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Full"
+                app:strokeColor="@color/pearl_aqua"
+                app:strokeWidth="2.5dp" />
 
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="14dp"
                 android:layout_weight="1"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:padding="14dp">
-
-                <com.google.android.material.imageview.ShapeableImageView
-                    android:id="@+id/ivGrowthAvatar"
-                    android:layout_width="46dp"
-                    android:layout_height="46dp"
-                    android:contentDescription="@null"
-                    android:src="@drawable/ic_medical_staff"
-                    app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Full"
-                    app:strokeColor="@color/pearl_aqua"
-                    app:strokeWidth="2dp" />
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="14dp"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:id="@+id/tvGrowthPatientName"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Patient"
-                        android:textColor="@color/text_primary"
-                        android:textSize="16sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:id="@+id/tvGrowthPatientAge"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
-                        android:text="Âge"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="13sp" />
-                </LinearLayout>
+                android:orientation="vertical">
 
                 <TextView
-                    android:id="@+id/tvGrowthGender"
+                    android:id="@+id/tvGrowthPatientName"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:background="@drawable/bg_badge_info"
-                    android:paddingHorizontal="10dp"
-                    android:paddingVertical="5dp"
-                    android:text="Garçon"
-                    android:textColor="@color/info_dark"
-                    android:textSize="11sp"
+                    android:text="Patient"
+                    android:textColor="@color/text_primary"
+                    android:textSize="16sp"
                     android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvGrowthPatientAge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="Âge inconnu"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="13sp" />
             </LinearLayout>
+
+            <!-- Gender badge -->
+            <TextView
+                android:id="@+id/tvGrowthGender"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_badge_info"
+                android:paddingHorizontal="12dp"
+                android:paddingVertical="6dp"
+                android:text="Garçon"
+                android:textColor="@color/info_dark"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:visibility="gone" />
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 
@@ -138,9 +128,9 @@
     <LinearLayout
         android:id="@+id/llGrowthTabs"
         android:layout_width="match_parent"
-        android:layout_height="48dp"
+        android:layout_height="46dp"
         android:layout_marginHorizontal="22dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="14dp"
         android:background="@drawable/bg_segment_container"
         android:orientation="horizontal"
         android:padding="5dp"
@@ -171,6 +161,7 @@
             android:text="Taille"
             android:textColor="@color/text_secondary"
             android:textSize="13sp"
+            app:backgroundTint="@null"
             app:rippleColor="@color/teal_100" />
 
         <com.google.android.material.button.MaterialButton
@@ -182,6 +173,7 @@
             android:text="IMC"
             android:textColor="@color/text_secondary"
             android:textSize="13sp"
+            app:backgroundTint="@null"
             app:rippleColor="@color/teal_100" />
     </LinearLayout>
 
@@ -191,47 +183,60 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginHorizontal="22dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginBottom="8dp"
+        android:layout_marginTop="12dp"
+        android:layout_marginBottom="4dp"
+        android:background="@drawable/bg_kpi_card"
         android:orientation="vertical"
+        android:paddingTop="14dp"
+        android:paddingBottom="10dp"
+        android:paddingHorizontal="12dp"
         app:layout_constraintTop_toBottomOf="@id/llGrowthTabs"
         app:layout_constraintBottom_toTopOf="@id/llGrowthFooter"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <!-- Current value summary row -->
+        <!-- Current value row -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center_vertical"
             android:orientation="horizontal"
-            android:paddingHorizontal="2dp"
+            android:paddingHorizontal="4dp"
             android:paddingBottom="10dp">
 
             <TextView
+                android:id="@+id/tvGrowthAxisLabel"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Valeur actuelle"
+                android:text="Poids (kg)"
                 android:textColor="@color/text_secondary"
-                android:textSize="13sp" />
-
-            <TextView
-                android:id="@+id/tvCurrentValue"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="--"
-                android:textColor="@color/brand_teal"
-                android:textSize="22sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/tvGrowthEvolution"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:textColor="@color/success"
                 android:textSize="12sp" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/tvCurrentValue"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="--"
+                    android:textColor="@color/brand_teal"
+                    android:textSize="22sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvGrowthEvolution"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:textColor="@color/success"
+                    android:textSize="11sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
         </LinearLayout>
 
         <!-- MPAndroidChart -->
@@ -240,6 +245,86 @@
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1" />
+
+        <!-- Percentile legend -->
+        <LinearLayout
+            android:id="@+id/llPercentileLegend"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:paddingTop="10dp">
+
+            <!-- P3 -->
+            <View
+                android:layout_width="14dp"
+                android:layout_height="8dp"
+                android:layout_marginEnd="3dp"
+                android:background="@drawable/bg_legend_dot_gray" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="10dp"
+                android:text="P3"
+                android:textColor="@color/text_secondary"
+                android:textSize="10sp" />
+
+            <!-- P15 -->
+            <View
+                android:layout_width="14dp"
+                android:layout_height="8dp"
+                android:layout_marginEnd="3dp"
+                android:background="@drawable/bg_legend_dot_red" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="10dp"
+                android:text="P15"
+                android:textColor="@color/text_secondary"
+                android:textSize="10sp" />
+
+            <!-- P50 -->
+            <View
+                android:layout_width="14dp"
+                android:layout_height="8dp"
+                android:layout_marginEnd="3dp"
+                android:background="@drawable/bg_legend_dot_green" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="10dp"
+                android:text="P50"
+                android:textColor="@color/text_secondary"
+                android:textSize="10sp" />
+
+            <!-- P85 -->
+            <View
+                android:layout_width="14dp"
+                android:layout_height="8dp"
+                android:layout_marginEnd="3dp"
+                android:background="@drawable/bg_legend_dot_teal" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="10dp"
+                android:text="P85"
+                android:textColor="@color/text_secondary"
+                android:textSize="10sp" />
+
+            <!-- P97 -->
+            <View
+                android:layout_width="14dp"
+                android:layout_height="8dp"
+                android:layout_marginEnd="3dp"
+                android:background="@drawable/bg_legend_dot_orange" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="P97"
+                android:textColor="@color/text_secondary"
+                android:textSize="10sp" />
+        </LinearLayout>
+
     </LinearLayout>
 
     <!-- ══════ FOOTER ══════ -->
@@ -250,8 +335,8 @@
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingHorizontal="22dp"
-        android:paddingBottom="24dp"
-        android:paddingTop="12dp"
+        android:paddingBottom="20dp"
+        android:paddingTop="10dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
@@ -289,7 +374,8 @@
             android:src="@android:drawable/ic_input_add"
             app:backgroundTint="@color/brand_teal"
             app:tint="@color/white"
-            app:fabSize="normal" />
+            app:fabSize="normal"
+            app:elevation="6dp" />
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

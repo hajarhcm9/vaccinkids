@@ -87,7 +87,7 @@ class DashboardFragment : Fragment(R.layout.fragment_dashboard) {
         }
         
         view.findViewById<View>(R.id.dashboardOpenScan).setOnClickListener { selectNav(R.id.nav_scan) }
-        
+        view.findViewById<View>(R.id.tvVoirTout).setOnClickListener { selectNav(R.id.nav_rdv) }
         view.findViewById<View>(R.id.cvNextRdv).setOnClickListener { selectNav(R.id.nav_rdv) }
     }
 
@@ -138,7 +138,13 @@ class DashboardFragment : Fragment(R.layout.fragment_dashboard) {
             try {
                 val response = ApiClient.apiService.getTodaySessions()
                 if (response.status == "success") {
-                    sessionsCountView.text = (response.data?.size ?: 0).toString()
+                    val sessions = response.data.orEmpty()
+                    sessionsCountView.text = sessions.size.toString()
+                    val firstActive = sessions.firstOrNull { it.statut?.uppercase() in listOf("CONFIRMEE", "EN_COURS") }
+                        ?: sessions.firstOrNull()
+                    if (firstActive != null) {
+                        loadNextRdv(firstActive.id)
+                    }
                 }
             } catch (e: Exception) {
                 sessionsCountView.text = "0"
@@ -146,6 +152,27 @@ class DashboardFragment : Fragment(R.layout.fragment_dashboard) {
                 sessionsLoading = false
                 updateRefreshState()
             }
+        }
+    }
+
+    private fun loadNextRdv(sessionId: Int) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                val response = ApiClient.apiService.getSessionRendezVous(sessionId)
+                if (response.status == "success") {
+                    val upcoming = response.data.orEmpty()
+                        .filter { it.statut?.uppercase() in listOf("EN_ATTENTE", "CONFIRME") }
+                        .firstOrNull()
+                    if (upcoming != null) {
+                        nextRdvTime.text = upcoming.heureDebut?.take(5) ?: "--:--"
+                        nextRdvPatient.text = listOfNotNull(upcoming.bebePrenom, upcoming.bebeNom)
+                            .joinToString(" ").ifBlank { "Bébé #${upcoming.bebeId}" }
+                        nextRdvAge.text = listOfNotNull(upcoming.parentPrenom, upcoming.parentNom)
+                            .joinToString(" ").ifBlank { "Parent inconnu" }
+                        nextRdvType.text = upcoming.vaccinNom ?: "Vaccin"
+                    }
+                }
+            } catch (_: Exception) {}
         }
     }
 

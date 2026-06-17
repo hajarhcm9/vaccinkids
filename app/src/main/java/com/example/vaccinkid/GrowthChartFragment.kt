@@ -4,9 +4,14 @@ import android.content.res.ColorStateList
 import android.graphics.Color
 import android.os.Bundle
 import android.view.View
+import android.widget.EditText
+import android.widget.LinearLayout
 import android.widget.TextView
+import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import com.example.vaccinkid.model.AddCroissanceRequest
 import com.example.vaccinkid.model.CroissanceDto
 import com.example.vaccinkid.network.ApiClient
 import com.github.mikephil.charting.charts.LineChart
@@ -63,7 +68,11 @@ class GrowthChartFragment : Fragment(R.layout.fragment_growth_chart) {
         view.findViewById<View>(R.id.btnBackGrowth).setOnClickListener {
             parentFragmentManager.popBackStack()
         }
-        
+
+        view.findViewById<View>(R.id.fabAddMeasure).setOnClickListener {
+            showAddMeasureDialog()
+        }
+
         btnTabPoids.setOnClickListener { selectTab(0) }
         btnTabTaille.setOnClickListener { selectTab(1) }
         btnTabImc.setOnClickListener { selectTab(2) }
@@ -173,6 +182,45 @@ class GrowthChartFragment : Fragment(R.layout.fragment_growth_chart) {
         }
         chart.data = LineData(set)
         chart.invalidate()
+    }
+
+    private fun showAddMeasureDialog() {
+        if (bebeId <= 0) return
+        val root = LinearLayout(requireContext()).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(48, 24, 48, 8)
+        }
+        val etPoids = EditText(requireContext()).apply { hint = "Poids (kg) — ex: 7.5" }
+        val etTaille = EditText(requireContext()).apply { hint = "Taille (cm) — ex: 65.0" }
+        root.addView(etPoids)
+        root.addView(etTaille)
+
+        AlertDialog.Builder(requireContext())
+            .setTitle("Ajouter une mesure")
+            .setView(root)
+            .setNegativeButton("Annuler", null)
+            .setPositiveButton("Enregistrer") { _, _ ->
+                val poids = etPoids.text.toString().toDoubleOrNull()
+                val taille = etTaille.text.toString().toDoubleOrNull()
+                if (poids == null && taille == null) {
+                    Toast.makeText(requireContext(), "Entrez au moins poids ou taille", Toast.LENGTH_SHORT).show()
+                    return@setPositiveButton
+                }
+                viewLifecycleOwner.lifecycleScope.launch {
+                    try {
+                        val response = ApiClient.apiService.addCroissance(bebeId, AddCroissanceRequest(poids, taille))
+                        if (response.status == "success") {
+                            Toast.makeText(requireContext(), "Mesure enregistrée", Toast.LENGTH_SHORT).show()
+                            loadGrowth()
+                        } else {
+                            Toast.makeText(requireContext(), response.message ?: "Erreur", Toast.LENGTH_SHORT).show()
+                        }
+                    } catch (e: Exception) {
+                        Toast.makeText(requireContext(), "Erreur réseau : ${e.message}", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+            .show()
     }
 
     companion object {

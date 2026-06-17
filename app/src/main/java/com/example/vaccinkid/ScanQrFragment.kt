@@ -1,7 +1,6 @@
 package com.example.vaccinkid
 
 import android.Manifest
-import android.app.AlertDialog
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
@@ -9,7 +8,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
-import android.widget.EditText
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
@@ -18,6 +16,7 @@ import androidx.lifecycle.lifecycleScope
 import com.example.vaccinkid.model.BebeDto
 import com.example.vaccinkid.model.RendezVousDto
 import com.example.vaccinkid.network.ApiClient
+import com.google.gson.Gson
 import com.journeyapps.barcodescanner.ScanContract
 import com.journeyapps.barcodescanner.ScanIntentResult
 import com.journeyapps.barcodescanner.ScanOptions
@@ -62,7 +61,7 @@ class ScanQrFragment : Fragment() {
         }
 
         btnSaisieManuelle.setOnClickListener {
-            showManualInputDialog()
+            (activity as? MainInfirmierActivity)?.naviguerVers(RechercheManuelleFragment())
         }
 
         return view
@@ -102,7 +101,11 @@ class ScanQrFragment : Fragment() {
                 val response = ApiClient.apiService.getBebeByQr(code)
                 val bebe = response.data?.bebe
                 if (response.status == "success" && bebe != null) {
-                    showBabyFoundDialog(bebe, response.data?.eligibleAppointments.orEmpty())
+                    val rdvs = response.data?.eligibleAppointments.orEmpty()
+                    val hist = response.data?.lastVaccinations.orEmpty()
+                    (activity as? MainInfirmierActivity)?.naviguerVers(
+                        EnfantProfilFragment.newInstance(bebe, rdvs, hist)
+                    )
                 } else {
                     Toast.makeText(
                         requireContext(),
@@ -122,28 +125,6 @@ class ScanQrFragment : Fragment() {
         }
     }
 
-    private fun showManualInputDialog() {
-        val editText = EditText(requireContext()).apply {
-            hint = "Entrez le code QR sécurisé"
-            setPadding(48, 32, 48, 16)
-        }
-
-        AlertDialog.Builder(requireContext())
-            .setTitle("Saisie manuelle")
-            .setMessage("Entrez le code sécurisé affiché dans le carnet parent :")
-            .setView(editText)
-            .setPositiveButton("Valider") { _, _ ->
-                val input = editText.text.toString().trim()
-                if (input.isNotEmpty()) {
-                    handleQRResult(input)
-                } else {
-                    Toast.makeText(requireContext(), "Champ vide", Toast.LENGTH_SHORT).show()
-                }
-            }
-            .setNegativeButton("Annuler", null)
-            .show()
-    }
-
     private fun extractQrCode(rawContent: String): String {
         val trimmed = rawContent.trim()
         if (!trimmed.startsWith("http://") && !trimmed.startsWith("https://")) {
@@ -159,26 +140,6 @@ class ScanQrFragment : Fragment() {
         } catch (_: Exception) {
             trimmed
         }
-    }
-
-    private fun showBabyFoundDialog(bebe: BebeDto, appointments: List<RendezVousDto>) {
-        val fullName = listOfNotNull(bebe.prenom, bebe.nom)
-            .joinToString(" ")
-            .ifBlank { "Bébé #${bebe.id}" }
-        val eligible = appointments.joinToString("\n") {
-            "RDV #${it.id} - ${it.vaccinNom ?: "vaccination"} - ${it.statut ?: "statut inconnu"}"
-        }.ifBlank { "Aucun rendez-vous eligible" }
-        val message = """
-            Bébé : $fullName
-            Né(e) le : ${bebe.dateNaissance ?: "Non renseigné"}
-            $eligible
-        """.trimIndent()
-
-        AlertDialog.Builder(requireContext())
-            .setTitle("Carnet trouvé")
-            .setMessage(message)
-            .setNegativeButton("Rescanner", null)
-            .show()
     }
 
     private fun setLoading(isLoading: Boolean) {

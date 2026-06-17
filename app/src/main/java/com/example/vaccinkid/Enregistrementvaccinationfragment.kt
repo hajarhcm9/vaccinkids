@@ -85,8 +85,14 @@ class EnregistrementVaccinationFragment : Fragment(R.layout.fragment_enregistrem
                 onSuccess = {
                     submitted = true
                     submitButton.isEnabled = false
-                    Toast.makeText(requireContext(), "Vaccination enregistrée", Toast.LENGTH_LONG).show()
-                    parentFragmentManager.popBackStack()
+                    val nomBebe = arguments?.getString(ARG_NOM_BEBE) ?: "Patient"
+                    val selectedFlacon = flacons.getOrNull(flaconSpinner.selectedItemPosition)
+                    val flaconLabel = if (selectedFlacon != null) {
+                        "${selectedFlacon.numeroLot ?: "lot ${selectedFlacon.id}"} - ${selectedFlacon.fabricant ?: ""}"
+                    } else "—"
+                    (activity as? MainInfirmierActivity)?.naviguerVers(
+                        VaccinationSuccessFragment.newInstance(nomBebe, flaconLabel)
+                    )
                 },
                 onFailure = {
                     submitted = false
@@ -115,9 +121,13 @@ class EnregistrementVaccinationFragment : Fragment(R.layout.fragment_enregistrem
 
         val poids = etPoids.text.toString().toDoubleOrNull()
         val taille = etTaille.text.toString().toDoubleOrNull()
-        
-        if (poids == null || poids <= 0 || taille == null || taille <= 0) {
-            messageView.text = "Poids et taille invalides."
+
+        if (poids == null || poids < 0.5 || poids > 100) {
+            messageView.text = "Poids invalide. Entrez une valeur entre 0.5 et 100 kg."
+            return
+        }
+        if (taille == null || taille < 20 || taille > 220) {
+            messageView.text = "Taille invalide. Entrez une valeur entre 20 et 220 cm."
             return
         }
 
