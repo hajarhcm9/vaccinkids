@@ -50,7 +50,7 @@ export const AuthProvider = ({ children }) => {
       if (token) {
         try {
           const resp = await authService.getMe();
-          const freshUser = resp?.user || resp;
+          const freshUser = resp?.data?.user || resp?.user;
           setUserToken(token);
           setUser(freshUser);
           if (freshUser) await AsyncStorage.setItem('userData', JSON.stringify(freshUser));
