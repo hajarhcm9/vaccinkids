@@ -23,7 +23,7 @@ const TAB_ITEMS = [
 
 export default function AppNavigator() {
   const insets       = useSafeAreaInsets();
-  const [unreadCount, setUnreadCount] = useState(2);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     notificationService.getUnreadCount()

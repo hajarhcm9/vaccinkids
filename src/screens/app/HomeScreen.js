@@ -8,7 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AuthContext } from '../../context/AuthContext';
 import { Colors, Gradients, Radii, Spacing, Elevation, Typography } from '../../constants/theme';
-import { rdvService, notificationService } from '../../services';
+import { rdvService, notificationService, enfantService } from '../../services';
 
 const MOCK_ACTUS = [
   { id: '1', type: 'ALERTE',  titre: 'Campagne de rappel Rougeole',   description: 'Le centre lance une campagne de rattrapage pour le vaccin ROR. N\'hésitez pas à prendre rendez-vous.', date: 'Aujourd\'hui' },
@@ -36,26 +36,39 @@ export default function HomeScreen({ navigation }) {
   const { user } = useContext(AuthContext);
   const insets  = useSafeAreaInsets();
   const prenom  = user?.prenom || 'Parent';
-  const [refreshing, setRefreshing] = React.useState(false);
-  const [nextRdv, setNextRdv] = React.useState({ enfant: 'Salma', vaccin: 'DTP 2', date: 'Vendredi 20 Juin', heure: '09:30' });
-  const [unreadCount, setUnreadCount] = React.useState(2);
+  const [refreshing,  setRefreshing]  = React.useState(false);
+  const [nextRdv,     setNextRdv]     = React.useState(null);
+  const [unreadCount, setUnreadCount] = React.useState(0);
+  const [stats,       setStats]       = React.useState({ enfants: 0, rdvAVenir: 0, coverage: null });
 
   const loadData = React.useCallback(async () => {
     try {
-      const [rdvResp, notifResp] = await Promise.all([
+      const [rdvResp, notifResp, enfantsResp] = await Promise.all([
         rdvService.listRdv('A_VENIR').catch(() => null),
         notificationService.getUnreadCount().catch(() => null),
+        enfantService.listEnfants().catch(() => null),
       ]);
-      if (rdvResp?.length > 0) {
-        const r = rdvResp[0];
-        setNextRdv({
-          enfant: r.enfant_nom,
-          vaccin: r.vaccin,
-          date: new Date(r.date).toLocaleDateString('fr-FR', { weekday: 'long', day: '2-digit', month: 'long' }),
-          heure: r.heure,
-        });
+      if (rdvResp !== null) {
+        if (rdvResp?.length > 0) {
+          const r = rdvResp[0];
+          setNextRdv({
+            enfant: r.enfant_nom || r.enfant,
+            vaccin: r.vaccin,
+            date: new Date(r.date).toLocaleDateString('fr-FR', { weekday: 'long', day: '2-digit', month: 'long' }),
+            heure: r.heure,
+          });
+        } else {
+          setNextRdv(null);
+        }
       }
       if (notifResp?.count != null) setUnreadCount(notifResp.count);
+      if (enfantsResp !== null) {
+        const count = enfantsResp?.length || 0;
+        const totalVaccins = enfantsResp?.reduce((a, e) => a + (e.vaccins_total || 0), 0) || 0;
+        const doneVaccins  = enfantsResp?.reduce((a, e) => a + (e.vaccins_faits || 0), 0) || 0;
+        const coverage = totalVaccins > 0 ? Math.round((doneVaccins / totalVaccins) * 100) : null;
+        setStats({ enfants: count, rdvAVenir: rdvResp?.length || 0, coverage });
+      }
     } catch (e) {}
   }, []);
 
@@ -125,9 +138,9 @@ export default function HomeScreen({ navigation }) {
 
         {/* ── Stats row ── */}
         <View style={styles.statsRow}>
-          <StatChip icon="people-outline"   value="2" label="Enfants"   color={Colors.accentLight} />
-          <StatChip icon="calendar-outline" value="1" label="RDV prévu" color={Colors.accentLight} />
-          <StatChip icon="shield-checkmark-outline" value="83%" label="Couverture" color={Colors.accentLight} />
+          <StatChip icon="people-outline"   value={String(stats.enfants)}   label="Enfants"   color={Colors.accentLight} />
+          <StatChip icon="calendar-outline" value={String(stats.rdvAVenir)} label="RDV prévu" color={Colors.accentLight} />
+          <StatChip icon="shield-checkmark-outline" value={stats.coverage != null ? `${stats.coverage}%` : '—'} label="Couverture" color={Colors.accentLight} />
         </View>
       </LinearGradient>
 

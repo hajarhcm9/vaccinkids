@@ -1,18 +1,14 @@
 import React, { useState, useCallback } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
-  RefreshControl, StatusBar, Alert,
+  RefreshControl, StatusBar, Alert, Modal, TextInput,
+  ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, Gradients, Radii, Spacing, Elevation } from '../../constants/theme';
 import { enfantService } from '../../services';
-
-const MOCK_ENFANTS = [
-  { id: '1', nom: 'Badioui', prenom: 'Salma',  date_naissance: '25/08/2021', sexe: 'F', vaccins_faits: 7, vaccins_total: 9 },
-  { id: '2', nom: 'Badioui', prenom: 'Asmae',  date_naissance: '12/05/2023', sexe: 'F', vaccins_faits: 4, vaccins_total: 6 },
-];
 
 const AVATAR_GRADIENTS = [
   ['#6366F1', '#8B5CF6'],
@@ -54,13 +50,22 @@ const pills = StyleSheet.create({
 
 export default function EnfantsScreen({ navigation }) {
   const insets = useSafeAreaInsets();
-  const [enfants, setEnfants]       = useState(MOCK_ENFANTS);
+  const [enfants, setEnfants]       = useState([]);
   const [refreshing, setRefreshing] = useState(false);
+
+  // Add child modal state
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [addPrenom,    setAddPrenom]    = useState('');
+  const [addNom,       setAddNom]       = useState('');
+  const [addDate,      setAddDate]      = useState('');
+  const [addSexe,      setAddSexe]      = useState(null);
+  const [adding,       setAdding]       = useState(false);
+  const [addError,     setAddError]     = useState('');
 
   const loadEnfants = useCallback(async () => {
     try {
       const data = await enfantService.listEnfants();
-      if (data?.length) setEnfants(data);
+      if (data) setEnfants(data);
     } catch (e) {}
   }, []);
 
@@ -71,6 +76,43 @@ export default function EnfantsScreen({ navigation }) {
   }, [loadEnfants]);
 
   React.useEffect(() => { loadEnfants(); }, [loadEnfants]);
+
+  const resetAddModal = () => {
+    setAddPrenom('');
+    setAddNom('');
+    setAddDate('');
+    setAddSexe(null);
+    setAddError('');
+  };
+
+  const handleAddEnfant = async () => {
+    const prenom = addPrenom.trim();
+    const nom    = addNom.trim();
+    const date   = addDate.trim();
+    if (!prenom || !nom || !date || !addSexe) {
+      setAddError('Veuillez remplir tous les champs.');
+      return;
+    }
+    if (!/^\d{2}\/\d{2}\/\d{4}$/.test(date)) {
+      setAddError('Date invalide. Format attendu : JJ/MM/AAAA');
+      return;
+    }
+    setAdding(true);
+    setAddError('');
+    try {
+      const resp = await enfantService.addEnfant({ prenom, nom, date_naissance: date, sexe: addSexe });
+      const nouvelEnfant = resp?.enfant || resp;
+      if (nouvelEnfant) {
+        setEnfants((prev) => [...prev, nouvelEnfant]);
+      }
+      resetAddModal();
+      setShowAddModal(false);
+    } catch (e) {
+      setAddError(e?.message || 'Erreur inattendue. Réessayez.');
+    } finally {
+      setAdding(false);
+    }
+  };
 
   const renderItem = ({ item, index }) => {
     const gradient  = AVATAR_GRADIENTS[index % AVATAR_GRADIENTS.length];
@@ -136,7 +178,7 @@ export default function EnfantsScreen({ navigation }) {
 
       <FlatList
         data={enfants}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => String(item.id)}
         renderItem={renderItem}
         ListEmptyComponent={renderEmpty}
         contentContainerStyle={[styles.list, !enfants.length && { flexGrow: 1 }]}
@@ -150,12 +192,99 @@ export default function EnfantsScreen({ navigation }) {
       <TouchableOpacity
         style={styles.fab}
         activeOpacity={0.88}
-        onPress={() => Alert.alert('Ajouter un enfant', 'Cette fonctionnalité sera disponible prochainement.')}
+        onPress={() => { resetAddModal(); setShowAddModal(true); }}
       >
         <LinearGradient colors={Gradients.brand} style={styles.fabGradient}>
           <Ionicons name="add" size={28} color={Colors.white} />
         </LinearGradient>
       </TouchableOpacity>
+
+      {/* ── Add Child Modal ── */}
+      <Modal visible={showAddModal} transparent animationType="slide" onRequestClose={() => setShowAddModal(false)}>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalSheet}>
+              <View style={styles.modalHandle} />
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>Ajouter un enfant</Text>
+                <TouchableOpacity onPress={() => setShowAddModal(false)} style={styles.modalCloseBtn}>
+                  <Ionicons name="close" size={22} color={Colors.textSecondary} />
+                </TouchableOpacity>
+              </View>
+
+              <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+                {!!addError && (
+                  <View style={styles.errorBox}>
+                    <Ionicons name="alert-circle-outline" size={15} color={Colors.danger} />
+                    <Text style={styles.errorText}>{addError}</Text>
+                  </View>
+                )}
+
+                <Text style={styles.fieldLabel}>Prénom *</Text>
+                <TextInput
+                  style={styles.textInput}
+                  placeholder="Prénom de l'enfant"
+                  placeholderTextColor={Colors.textLight}
+                  value={addPrenom}
+                  onChangeText={(v) => { setAddPrenom(v); setAddError(''); }}
+                  autoCapitalize="words"
+                />
+
+                <Text style={styles.fieldLabel}>Nom *</Text>
+                <TextInput
+                  style={styles.textInput}
+                  placeholder="Nom de famille"
+                  placeholderTextColor={Colors.textLight}
+                  value={addNom}
+                  onChangeText={(v) => { setAddNom(v); setAddError(''); }}
+                  autoCapitalize="words"
+                />
+
+                <Text style={styles.fieldLabel}>Date de naissance *</Text>
+                <TextInput
+                  style={styles.textInput}
+                  placeholder="JJ/MM/AAAA"
+                  placeholderTextColor={Colors.textLight}
+                  value={addDate}
+                  onChangeText={(v) => { setAddDate(v); setAddError(''); }}
+                  keyboardType="numbers-and-punctuation"
+                  maxLength={10}
+                />
+
+                <Text style={styles.fieldLabel}>Sexe *</Text>
+                <View style={styles.sexeRow}>
+                  {[{ key: 'M', label: '♂  Garçon', color: Colors.primary }, { key: 'F', label: '♀  Fille', color: Colors.danger }].map(({ key, label, color }) => (
+                    <TouchableOpacity
+                      key={key}
+                      style={[styles.sexeChip, addSexe === key && { backgroundColor: color + '18', borderColor: color }]}
+                      onPress={() => { setAddSexe(key); setAddError(''); }}
+                    >
+                      <Text style={[styles.sexeChipText, addSexe === key && { color, fontWeight: '700' }]}>{label}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                <TouchableOpacity
+                  style={[styles.confirmBtn, (adding || !addPrenom || !addNom || !addDate || !addSexe) && { opacity: 0.55 }]}
+                  onPress={handleAddEnfant}
+                  disabled={adding || !addPrenom || !addNom || !addDate || !addSexe}
+                  activeOpacity={0.88}
+                >
+                  <LinearGradient colors={Gradients.brand} style={styles.confirmGrad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
+                    {adding
+                      ? <ActivityIndicator color={Colors.white} size="small" />
+                      : <>
+                          <Ionicons name="checkmark-circle-outline" size={20} color={Colors.white} />
+                          <Text style={styles.confirmBtnText}>Ajouter l'enfant</Text>
+                        </>
+                    }
+                  </LinearGradient>
+                </TouchableOpacity>
+              </ScrollView>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
     </View>
   );
 }
@@ -191,4 +320,26 @@ const styles = StyleSheet.create({
 
   fab:         { position: 'absolute', bottom: 28, right: 24, borderRadius: 32, overflow: 'hidden', ...Elevation.xl },
   fabGradient: { width: 60, height: 60, alignItems: 'center', justifyContent: 'center' },
+
+  // Modal
+  modalOverlay:  { flex: 1, backgroundColor: Colors.overlay, justifyContent: 'flex-end' },
+  modalSheet:    { backgroundColor: Colors.surface, borderTopLeftRadius: Radii['3xl'], borderTopRightRadius: Radii['3xl'], paddingHorizontal: Spacing.xl, paddingBottom: Spacing['3xl'], maxHeight: '90%' },
+  modalHandle:   { width: 44, height: 5, borderRadius: 3, backgroundColor: Colors.border, alignSelf: 'center', marginTop: Spacing.md, marginBottom: Spacing.sm },
+  modalHeader:   { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: Spacing.md, marginBottom: Spacing.sm },
+  modalTitle:    { fontSize: 20, fontWeight: '800', color: Colors.text },
+  modalCloseBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: Colors.surfaceMuted, alignItems: 'center', justifyContent: 'center' },
+
+  errorBox:   { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: Colors.dangerBg, borderRadius: Radii.md, padding: Spacing.sm, marginBottom: Spacing.md },
+  errorText:  { flex: 1, fontSize: 13, color: Colors.danger, fontWeight: '600' },
+
+  fieldLabel: { fontSize: 13, fontWeight: '700', color: Colors.textSecondary, marginBottom: 6, marginTop: Spacing.md },
+  textInput:  { backgroundColor: Colors.surfaceMuted, borderRadius: Radii.md, borderWidth: 1.5, borderColor: Colors.border, paddingHorizontal: Spacing.base, paddingVertical: 12, fontSize: 15, color: Colors.text },
+
+  sexeRow:      { flexDirection: 'row', gap: Spacing.md, marginBottom: Spacing.sm },
+  sexeChip:     { flex: 1, paddingVertical: 12, alignItems: 'center', borderRadius: Radii.md, backgroundColor: Colors.surfaceMuted, borderWidth: 1.5, borderColor: Colors.border },
+  sexeChipText: { fontSize: 14, fontWeight: '600', color: Colors.textSecondary },
+
+  confirmBtn:   { marginTop: Spacing.lg, borderRadius: Radii.xl, overflow: 'hidden' },
+  confirmGrad:  { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.sm, paddingVertical: Spacing.lg },
+  confirmBtnText: { fontSize: 16, fontWeight: '700', color: Colors.white },
 });

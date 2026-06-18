@@ -1,392 +1,206 @@
-import React, { useState, useEffect, useCallback, useContext } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  StatusBar,
-  ActivityIndicator,
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
+  View, Text, StyleSheet, TouchableOpacity, KeyboardAvoidingView, Platform, TextInput,
 } from 'react-native';
-import OtpInput from '../../components/OtpInput';
-import { authService } from '../../services/authService';
-import { colors, typography, spacing, borderRadius, shadows } from '../../theme';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
+import AppButton from '../../components/ui/AppButton';
+import { Colors, Gradients, Radii, Spacing, Elevation, Typography } from '../../constants/theme';
+import { authService, ApiError } from '../../services';
 import { AuthContext } from '../../context/AuthContext';
-import { accountCacheService } from '../../services/accountCacheService';
-import { secureTokenService } from '../../services/secureTokenService';
 
-const RESEND_DELAY = 60; // secondes
+const OTP_LENGTH = 6;
 
-const translations = {
-  fr: {
-    title: 'Vérification',
-    subtitle: (phone) => `Un code à 6 chiffres a été envoyé au\n${phone}`,
-    codeLabel: 'Code de vérification',
-    verifyBtn: 'Vérifier',
-    resendIn: (s) => `Renvoyer dans ${s}s`,
-    resendBtn: 'Renvoyer le code',
-    changeNumber: 'Changer de numéro',
-    verifying: 'Vérification...',
-    errorInvalid: 'Code incomplet. Entrez les 6 chiffres.',
-    hint: 'Vérifiez votre téléphone, y compris les SMS.',
-  },
-  ar: {
-    title: 'التحقق',
-    subtitle: (phone) => `تم إرسال رمز مكون من 6 أرقام إلى\n${phone}`,
-    codeLabel: 'رمز التحقق',
-    verifyBtn: 'تحقق',
-    resendIn: (s) => `إعادة الإرسال خلال ${s}ث`,
-    resendBtn: 'إعادة إرسال الرمز',
-    changeNumber: 'تغيير الرقم',
-    verifying: 'جارٍ التحقق...',
-    errorInvalid: 'الرمز غير مكتمل. أدخل الأرقام الستة.',
-    hint: 'تحقق من هاتفك، بما في ذلك الرسائل القصيرة.',
-  },
-};
+export default function OTPVerificationScreen({ route, navigation }) {
+  const { login } = React.useContext(AuthContext);
+  const cin = route.params?.cin || '';
+  const telephone = route.params?.telephone || '';
+  const fromRegister = route.params?.fromRegister || false;
 
-const OtpVerificationScreen = ({ navigation, route }) => {
-  const { phoneNumber, displayPhone, language = 'fr' } = route.params;
-  const t = translations[language];
-  const isRTL = language === 'ar';
-  const { signIn } = useContext(AuthContext);
+  const maskedPhone = telephone
+    ? telephone.replace(/^(\+212|0)/, '+212 ').replace(/(\d{2})(\d{2})(\d{2})(\d{2})/, '$1 ** ** $3 $4')
+    : 'votre téléphone';
 
-  const [otpCode, setOtpCode] = useState('');
+  const [digits, setDigits] = useState(Array(OTP_LENGTH).fill(''));
+  const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [hasError, setHasError] = useState(false);
-  const [resendTimer, setResendTimer] = useState(RESEND_DELAY);
-  const [resendLoading, setResendLoading] = useState(false);
+  const [resendIn, setResendIn] = useState(30);
+  const inputs = useRef([]);
 
-  // Compte à rebours pour le renvoi
   useEffect(() => {
-    if (resendTimer <= 0) return undefined;
-    const interval = setInterval(() => {
-      setResendTimer((prev) => {
-        if (prev <= 1) {
-          clearInterval(interval);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [resendTimer]);
+    if (resendIn <= 0) return;
+    const t = setTimeout(() => setResendIn(resendIn - 1), 1000);
+    return () => clearTimeout(t);
+  }, [resendIn]);
 
-  const handleVerify = useCallback(async () => {
-    if (otpCode.length < 6) {
-      setHasError(true);
-      Alert.alert('Erreur', t.errorInvalid);
-      return;
-    }
-
-    setHasError(false);
-    setLoading(true);
-
-    try {
-      const result = await authService.verifyOtp(phoneNumber, otpCode);
-
-      await accountCacheService.purge();
-      await secureTokenService.saveSession({
-        accessToken: result.token,
-        refreshToken: result.refreshToken,
-        user: result.user,
-      });
-      // Navigation vers l'écran suivant
-      if (result.user?.isNewUser) {
-        navigation.replace('AddBaby'); // Nouvel utilisateur → ajout bébé
-      } else {
-        signIn(); // Utilisateur existant → accueil
-      }
-    } catch (error) {
-      setHasError(true);
-      Alert.alert('Code incorrect', error.message || 'Vérifiez le code et réessayez.');
-      setOtpCode('');
-    } finally {
-      setLoading(false);
-    }
-  }, [otpCode, phoneNumber, navigation, signIn, t]);
-
-  // Auto-vérification quand les 6 chiffres sont saisis
-  useEffect(() => {
-    if (otpCode.length === 6 && !loading) {
-      handleVerify();
-    }
-  }, [otpCode]);
-
-  const handleResend = async () => {
-    if (resendTimer > 0) return;
-    setResendLoading(true);
-    try {
-      await authService.sendOtp(phoneNumber);
-      setResendTimer(RESEND_DELAY);
-      setOtpCode('');
-      setHasError(false);
-      Alert.alert('', 'Un nouveau code vous a été envoyé.', [{ text: 'OK' }]);
-    } catch (error) {
-      Alert.alert('Erreur', error.message);
-    } finally {
-      setResendLoading(false);
+  const handleChange = (text, idx) => {
+    if (!/^\d?$/.test(text)) return;
+    const next = [...digits];
+    next[idx] = text;
+    setDigits(next);
+    setError(null);
+    if (text && idx < OTP_LENGTH - 1) inputs.current[idx + 1]?.focus();
+    if (text && idx === OTP_LENGTH - 1 && next.every((d) => d !== '')) {
+      setTimeout(() => verifyCode(next.join('')), 150);
     }
   };
 
+  const handleKeyPress = (e, idx) => {
+    if (e.nativeEvent.key === 'Backspace' && !digits[idx] && idx > 0) {
+      inputs.current[idx - 1]?.focus();
+    }
+  };
+
+  const verifyCode = async (code) => {
+    if (code.length < OTP_LENGTH) {
+      setError(`Veuillez saisir les ${OTP_LENGTH} chiffres`);
+      return;
+    }
+    setLoading(true);
+    try {
+      const resp = await authService.verifyOTP(cin, code);
+      if (resp.token && resp.user) {
+        await login(resp.token, resp.user, resp.refreshToken);
+        if (resp.user.profileCompleted === false) {
+          navigation.replace('ProfileSetup', { cin, telephone });
+        }
+      } else {
+        navigation.replace('ProfileSetup', { cin, telephone });
+      }
+    } catch (e) {
+      if (e instanceof ApiError) {
+        if (e.isAuth) setError('Code incorrect ou expiré');
+        else if (e.isNetwork) setError('Vérifiez votre connexion internet');
+        else setError(e.message);
+      } else {
+        setError('Erreur inattendue. Réessayez.');
+      }
+      setDigits(Array(OTP_LENGTH).fill(''));
+      inputs.current[0]?.focus();
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerify = () => verifyCode(digits.join(''));
+
+  const handleResend = async () => {
+    try {
+      await authService.resendOTP(cin);
+      setResendIn(30);
+      setDigits(Array(OTP_LENGTH).fill(''));
+      setError(null);
+      inputs.current[0]?.focus();
+    } catch (e) {
+      setError('Impossible de renvoyer le code. Réessayez plus tard.');
+    }
+  };
+
+  const codeComplete = digits.every((d) => d !== '');
+
   return (
-    <KeyboardAvoidingView
-      style={styles.root}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <StatusBar barStyle="light-content" backgroundColor={colors.primary} />
-
-      <ScrollView
-        contentContainerStyle={styles.scroll}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
+    <LinearGradient colors={Gradients.auth} style={styles.container}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={{ flex: 1 }}
+        keyboardVerticalOffset={20}
       >
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity
-            style={styles.backBtn}
-            onPress={() => navigation.goBack()}
-            accessibilityLabel="Retour"
-          >
-            <Text style={styles.backBtnText}>← Retour</Text>
-          </TouchableOpacity>
-
-          <View style={styles.iconContainer}>
-            <Text style={styles.icon}>📱</Text>
+        <View style={styles.inner}>
+          <View style={styles.iconWrap}>
+            <Ionicons name="shield-checkmark" size={48} color={Colors.surface} />
           </View>
-          <Text style={styles.appName}>VacciniKids</Text>
-        </View>
 
-        {/* Card */}
-        <View style={styles.card}>
-          <Text style={[styles.title, isRTL && styles.textRTL]}>{t.title}</Text>
-          <Text style={[styles.subtitle, isRTL && styles.textRTL]}>
-            {t.subtitle(displayPhone || phoneNumber)}
+          <Text style={styles.title}>Vérification</Text>
+          <Text style={styles.description}>
+            {fromRegister
+              ? 'Pour finaliser votre inscription, un code à 6 chiffres a été envoyé par SMS au :'
+              : 'Pour sécuriser votre connexion, un code à 6 chiffres a été envoyé par SMS au :'}
           </Text>
+          <Text style={styles.maskedPhone}>{maskedPhone}</Text>
 
-          {/* Saisie OTP */}
-          <Text style={[styles.fieldLabel, isRTL && styles.textRTL]}>{t.codeLabel}</Text>
-          <OtpInput
-            value={otpCode}
-            onChange={(code) => {
-              setOtpCode(code);
-              setHasError(false);
-            }}
-            hasError={hasError}
-          />
+          <View style={styles.otpRow}>
+            {digits.map((d, i) => (
+              <TextInput
+                key={i}
+                ref={(r) => (inputs.current[i] = r)}
+                style={[
+                  styles.otpBox,
+                  d ? styles.otpFilled : null,
+                  error ? styles.otpError : null,
+                ]}
+                value={d}
+                onChangeText={(t) => handleChange(t, i)}
+                onKeyPress={(e) => handleKeyPress(e, i)}
+                keyboardType="number-pad"
+                maxLength={1}
+                accessibilityLabel={`Chiffre ${i + 1} sur ${OTP_LENGTH}`}
+                textContentType="oneTimeCode"
+              />
+            ))}
+          </View>
 
-          {/* Indicateur d'erreur */}
-          {hasError && (
-            <View style={styles.errorBox}>
-              <Text style={styles.errorText}>✕ Code incorrect. Vérifiez et réessayez.</Text>
+          {error && (
+            <View style={styles.errorRow}>
+              <Ionicons name="alert-circle" size={16} color={Colors.danger} />
+              <Text style={styles.errorText}>{error}</Text>
             </View>
           )}
 
-          {/* Bouton vérifier */}
-          <TouchableOpacity
-            style={[styles.btn, (loading || otpCode.length < 6) && styles.btnDisabled]}
+          <AppButton
+            title="Vérifier"
             onPress={handleVerify}
-            disabled={loading || otpCode.length < 6}
-            accessibilityRole="button"
-          >
-            {loading ? (
-              <View style={styles.btnLoadingRow}>
-                <ActivityIndicator color={colors.white} size="small" />
-                <Text style={styles.btnText}>{t.verifying}</Text>
-              </View>
+            loading={loading}
+            disabled={!codeComplete || loading}
+            icon="checkmark-circle-outline"
+            iconPosition="right"
+            style={{ marginTop: Spacing.lg }}
+          />
+
+          <View style={styles.resendRow}>
+            {resendIn > 0 ? (
+              <Text style={styles.resendDisabled}>Renvoyer le code dans {resendIn}s</Text>
             ) : (
-              <Text style={styles.btnText}>{t.verifyBtn}</Text>
+              <TouchableOpacity onPress={handleResend}>
+                <Text style={styles.resendLink}>Renvoyer le code</Text>
+              </TouchableOpacity>
             )}
-          </TouchableOpacity>
-
-          {/* Renvoi du code */}
-          <TouchableOpacity
-            style={[styles.resendBtn, resendTimer > 0 && styles.resendBtnDisabled]}
-            onPress={handleResend}
-            disabled={resendTimer > 0 || resendLoading}
-          >
-            {resendLoading ? (
-              <ActivityIndicator color={colors.primary} size="small" />
-            ) : (
-              <Text style={[styles.resendText, resendTimer > 0 && styles.resendTextDisabled]}>
-                {resendTimer > 0 ? t.resendIn(resendTimer) : t.resendBtn}
-              </Text>
-            )}
-          </TouchableOpacity>
-
-          {/* Changer de numéro */}
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.changeNumberBtn}>
-            <Text style={styles.changeNumberText}>{t.changeNumber}</Text>
-          </TouchableOpacity>
-
-          {/* Aide */}
-          <View style={styles.hintBox}>
-            <Text style={styles.hintText}>💡 {t.hint}</Text>
           </View>
         </View>
-
-        <Text style={styles.footer}>Service parental VacciniKids</Text>
-      </ScrollView>
-    </KeyboardAvoidingView>
+      </KeyboardAvoidingView>
+    </LinearGradient>
   );
-};
+}
 
 const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    backgroundColor: colors.primary,
+  container: { flex: 1 },
+  inner: { flex: 1, justifyContent: 'center', padding: Spacing.xl },
+  iconWrap: {
+    width: 88, height: 88, borderRadius: 44,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    alignItems: 'center', justifyContent: 'center',
+    alignSelf: 'center',
+    marginBottom: Spacing.xl,
   },
-  scroll: {
-    flexGrow: 1,
-    paddingBottom: spacing.xxxl,
-  },
-  header: {
-    alignItems: 'center',
-    paddingTop: spacing.xl,
-    paddingBottom: spacing.xxxl,
-    paddingHorizontal: spacing.xl,
-  },
-  backBtn: {
-    alignSelf: 'flex-start',
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.xs,
-    marginBottom: spacing.lg,
-  },
-  backBtnText: {
-    color: 'rgba(255,255,255,0.85)',
-    fontSize: typography.fontSizes.md,
-    fontWeight: typography.fontWeights.medium,
-  },
-  iconContainer: {
-    width: 72,
-    height: 72,
-    borderRadius: borderRadius.xl,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.4)',
-    marginBottom: spacing.lg,
-  },
-  icon: {
-    fontSize: 34,
-  },
-  appName: {
-    fontSize: typography.fontSizes.xxl,
-    fontWeight: typography.fontWeights.bold,
-    color: colors.white,
-    letterSpacing: -0.5,
-  },
-  card: {
-    marginHorizontal: spacing.lg,
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.xl,
-    padding: spacing.xl,
-    ...shadows.card,
-  },
-  title: {
-    fontSize: typography.fontSizes.xxl,
-    fontWeight: typography.fontWeights.bold,
-    color: colors.textPrimary,
-    marginBottom: spacing.sm,
-  },
-  subtitle: {
-    fontSize: typography.fontSizes.sm,
-    color: colors.textSecondary,
-    lineHeight: typography.fontSizes.sm * typography.lineHeights.relaxed,
-    marginBottom: spacing.xl,
-  },
-  fieldLabel: {
-    fontSize: typography.fontSizes.sm,
-    fontWeight: typography.fontWeights.medium,
-    color: colors.textSecondary,
-    marginBottom: spacing.md,
-  },
-  errorBox: {
-    backgroundColor: colors.dangerLight,
-    borderRadius: borderRadius.sm,
-    padding: spacing.md,
-    marginTop: spacing.md,
-    borderLeftWidth: 3,
-    borderLeftColor: colors.danger,
-  },
-  errorText: {
-    color: colors.danger,
-    fontSize: typography.fontSizes.sm,
-    fontWeight: typography.fontWeights.medium,
-  },
-  btn: {
-    backgroundColor: colors.primary,
-    borderRadius: borderRadius.md,
-    height: 52,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: spacing.xl,
-    ...shadows.button,
-  },
-  btnDisabled: {
-    opacity: 0.45,
-  },
-  btnLoadingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  btnText: {
-    color: colors.white,
-    fontSize: typography.fontSizes.md,
-    fontWeight: typography.fontWeights.semibold,
-    letterSpacing: 0.3,
-  },
-  resendBtn: {
-    alignItems: 'center',
-    paddingVertical: spacing.md,
-    marginTop: spacing.md,
-  },
-  resendBtnDisabled: {
-    opacity: 0.6,
-  },
-  resendText: {
-    color: colors.primary,
-    fontSize: typography.fontSizes.sm,
-    fontWeight: typography.fontWeights.medium,
-    textDecorationLine: 'underline',
-  },
-  resendTextDisabled: {
-    color: colors.textHint,
-    textDecorationLine: 'none',
-  },
-  changeNumberBtn: {
-    alignItems: 'center',
-    paddingVertical: spacing.sm,
-  },
-  changeNumberText: {
-    color: colors.textSecondary,
-    fontSize: typography.fontSizes.sm,
-  },
-  hintBox: {
-    backgroundColor: colors.primaryLight,
-    borderRadius: borderRadius.sm,
-    padding: spacing.md,
-    marginTop: spacing.lg,
-  },
-  hintText: {
-    color: colors.primaryDark,
-    fontSize: typography.fontSizes.xs,
-    lineHeight: typography.fontSizes.xs * typography.lineHeights.relaxed,
-  },
-  textRTL: {
-    textAlign: 'right',
-    writingDirection: 'rtl',
-  },
-  footer: {
+  title: { ...Typography.display, color: Colors.textInverse, textAlign: 'center', marginBottom: Spacing.sm },
+  description: { fontSize: 14, color: 'rgba(255,255,255,0.9)', textAlign: 'center', lineHeight: 20, maxWidth: 320, alignSelf: 'center' },
+  maskedPhone: { fontSize: 16, fontWeight: '700', color: Colors.accent, textAlign: 'center', marginTop: 8, marginBottom: Spacing.xl },
+  otpRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: Spacing.md },
+  otpBox: {
+    width: 48, height: 56,
+    borderRadius: Radii.sm,
+    backgroundColor: 'rgba(255,255,255,0.95)',
+    borderWidth: 1.5,
+    borderColor: Colors.border,
+    fontSize: 24, fontWeight: '700',
+    color: Colors.text,
     textAlign: 'center',
-    marginTop: spacing.xl,
-    fontSize: typography.fontSizes.xs,
-    color: 'rgba(255,255,255,0.5)',
+    padding: 0,
   },
+  otpFilled: { borderColor: Colors.primary, backgroundColor: Colors.surface },
+  otpError: { borderColor: Colors.danger },
+  errorRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: Spacing.md, gap: 6 },
+  errorText: { color: Colors.surface, fontSize: 13, fontWeight: '500' },
+  resendRow: { alignItems: 'center', marginTop: Spacing.lg },
+  resendDisabled: { color: 'rgba(255,255,255,0.7)', fontSize: 13 },
+  resendLink: { color: Colors.accent, fontSize: 14, fontWeight: '700' },
 });
-
-export default OtpVerificationScreen;

@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, Alert,
   ScrollView, StatusBar,
@@ -8,6 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, Gradients, Radii, Spacing, Elevation } from '../../constants/theme';
 import { AuthContext } from '../../context/AuthContext';
+import { enfantService, rdvService } from '../../services';
 
 const AVATAR_GRADIENT = ['#006FEE', '#338EF7'];
 
@@ -36,6 +37,21 @@ export default function ProfileScreen({ navigation }) {
   const insets   = useSafeAreaInsets();
   const initials = `${user?.prenom?.[0] || ''}${user?.nom?.[0] || ''}`.toUpperCase() || 'U';
   const fullName = [user?.prenom, user?.nom].filter(Boolean).join(' ') || 'Utilisateur';
+  const [profileStats, setProfileStats] = useState({ enfants: 0, rdvAVenir: 0, coverage: null });
+
+  useEffect(() => {
+    Promise.all([
+      enfantService.listEnfants().catch(() => null),
+      rdvService.listRdv('A_VENIR').catch(() => null),
+    ]).then(([enfantsResp, rdvResp]) => {
+      const count = enfantsResp?.length || 0;
+      const rdvCount = rdvResp?.length || 0;
+      const totalV = enfantsResp?.reduce((a, e) => a + (e.vaccins_total || 0), 0) || 0;
+      const doneV  = enfantsResp?.reduce((a, e) => a + (e.vaccins_faits || 0), 0) || 0;
+      const coverage = totalV > 0 ? Math.round((doneV / totalV) * 100) : null;
+      setProfileStats({ enfants: count, rdvAVenir: rdvCount, coverage });
+    });
+  }, []);
 
   const handleLogout = () => {
     Alert.alert(
@@ -68,17 +84,17 @@ export default function ProfileScreen({ navigation }) {
 
           <View style={styles.statsRow}>
             <View style={styles.statBlock}>
-              <Text style={styles.statNum}>2</Text>
+              <Text style={styles.statNum}>{profileStats.enfants}</Text>
               <Text style={styles.statLbl}>Enfants</Text>
             </View>
             <View style={styles.statSep} />
             <View style={styles.statBlock}>
-              <Text style={styles.statNum}>1</Text>
+              <Text style={styles.statNum}>{profileStats.rdvAVenir}</Text>
               <Text style={styles.statLbl}>RDV à venir</Text>
             </View>
             <View style={styles.statSep} />
             <View style={styles.statBlock}>
-              <Text style={styles.statNum}>83%</Text>
+              <Text style={styles.statNum}>{profileStats.coverage != null ? `${profileStats.coverage}%` : '—'}</Text>
               <Text style={styles.statLbl}>Couverture</Text>
             </View>
           </View>

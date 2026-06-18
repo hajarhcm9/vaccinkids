@@ -9,33 +9,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, Gradients, Radii, Spacing, Elevation } from '../../constants/theme';
 import { vaccinService, enfantService } from '../../services';
 
-const MOCK_ENFANTS = [
-  { id: '1', prenom: 'Salma' },
-  { id: '2', prenom: 'Asmae' },
-];
-
-const MOCK_VACCINS = {
-  '1': [
-    { id: 'v1',  nom: 'BCG',                  date_prevue: 'Naissance',     statut: 'FAIT',      dose: '1/1' },
-    { id: 'v2',  nom: 'Hépatite B',            date_prevue: 'Naissance',     statut: 'FAIT',      dose: '1/3' },
-    { id: 'v3',  nom: 'Pentavalent (DTP-Hib)', date_prevue: '2 mois',        statut: 'FAIT',      dose: '1/3' },
-    { id: 'v4',  nom: 'Pneumocoque',            date_prevue: '2 mois',        statut: 'FAIT',      dose: '1/3' },
-    { id: 'v5',  nom: 'Rotavirus',              date_prevue: '2 mois',        statut: 'FAIT',      dose: '1/2' },
-    { id: 'v6',  nom: 'ROR',                    date_prevue: '12 mois',       statut: 'A_VENIR',   dose: '1/2' },
-    { id: 'v7',  nom: 'Varicelle',              date_prevue: '12 mois',       statut: 'A_VENIR',   dose: '1/2' },
-    { id: 'v8',  nom: 'Rappel DTP',             date_prevue: '18 mois',       statut: 'EN_RETARD', dose: 'R1' },
-    { id: 'v9',  nom: 'Méningite A+C',          date_prevue: '24 mois',       statut: 'A_VENIR',   dose: '1/1' },
-  ],
-  '2': [
-    { id: 'v10', nom: 'BCG',                   date_prevue: 'Naissance',     statut: 'FAIT',      dose: '1/1' },
-    { id: 'v11', nom: 'Hépatite B',             date_prevue: 'Naissance',     statut: 'FAIT',      dose: '1/3' },
-    { id: 'v12', nom: 'Pentavalent (DTP-Hib)', date_prevue: '2 mois',        statut: 'FAIT',      dose: '1/3' },
-    { id: 'v13', nom: 'Pneumocoque',            date_prevue: '2 mois',        statut: 'FAIT',      dose: '1/3' },
-    { id: 'v14', nom: 'Rotavirus',              date_prevue: '2 mois',        statut: 'A_VENIR',   dose: '1/2' },
-    { id: 'v15', nom: 'ROR',                    date_prevue: '12 mois',       statut: 'A_VENIR',   dose: '1/2' },
-  ],
-};
-
 const STATUS_META = {
   FAIT:      { color: Colors.success,       bg: Colors.successBg,  icon: 'checkmark-circle', label: 'Fait' },
   A_VENIR:   { color: Colors.primary,       bg: Colors.primaryTint, icon: 'time-outline',    label: 'À venir' },
@@ -50,40 +23,43 @@ const AVATAR_GRADIENTS = [
   ['#10B981', '#06B6D4'],
 ];
 
-export default function CalendrierScreen({ navigation }) {
+export default function CalendrierScreen({ route, navigation }) {
   const insets = useSafeAreaInsets();
-  const [enfants,         setEnfants]         = useState(MOCK_ENFANTS);
-  const [selectedEnfant,  setSelectedEnfant]  = useState(MOCK_ENFANTS[0]);
-  const [vaccins,         setVaccins]         = useState(MOCK_VACCINS['1'] || []);
+  const initialEnfantId = route?.params?.enfantId ?? null;
+  const [enfants,         setEnfants]         = useState([]);
+  const [selectedEnfant,  setSelectedEnfant]  = useState(null);
+  const [vaccins,         setVaccins]         = useState([]);
 
   const loadEnfants = useCallback(async () => {
     try {
       const data = await enfantService.listEnfants();
       if (data?.length) {
         setEnfants(data);
-        setSelectedEnfant(data[0]);
+        const target = initialEnfantId
+          ? (data.find((e) => String(e.id) === String(initialEnfantId)) || data[0])
+          : data[0];
+        setSelectedEnfant(target);
       }
     } catch (e) {}
-  }, []);
+  }, [initialEnfantId]);
 
   const loadVaccins = useCallback(async (enfantId) => {
     try {
-      const data = await vaccinService.getVaccins(enfantId);
-      if (data?.length) setVaccins(data);
-      else setVaccins(MOCK_VACCINS[enfantId] || []);
+      const data = await vaccinService.getCalendrierEnfant(enfantId);
+      setVaccins(data || []);
     } catch (e) {
-      setVaccins(MOCK_VACCINS[enfantId] || []);
+      setVaccins([]);
     }
   }, []);
 
-  React.useEffect(() => { loadEnfants(); }, []);
+  React.useEffect(() => { loadEnfants(); }, [loadEnfants]);
   React.useEffect(() => {
     if (selectedEnfant?.id) loadVaccins(selectedEnfant.id);
-  }, [selectedEnfant]);
+  }, [selectedEnfant, loadVaccins]);
 
   const handleSelectEnfant = (enfant) => {
     setSelectedEnfant(enfant);
-    setVaccins(MOCK_VACCINS[enfant.id] || []);
+    setVaccins([]);
   };
 
   const total  = vaccins.length;

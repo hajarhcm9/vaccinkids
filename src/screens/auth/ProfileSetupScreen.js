@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, TouchableOpacity,
+  View, Text, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, TouchableOpacity, Alert,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -139,7 +139,13 @@ export default function ProfileSetupScreen({ route, navigation }) {
                     helper="9 chiffres"
                   />
 
-                  <TouchableOpacity style={styles.helpRow}>
+                  <TouchableOpacity
+                    style={styles.helpRow}
+                    onPress={() => Alert.alert(
+                      'Code centre',
+                      'Ce code de 9 chiffres figure sur le carnet de vaccination de votre enfant, remis par le centre de santé lors de l\'enregistrement de votre enfant.'
+                    )}
+                  >
                     <Ionicons name="information-circle-outline" size={16} color={Colors.primary} />
                     <Text style={styles.helpLink}>Où trouver mon code ?</Text>
                   </TouchableOpacity>

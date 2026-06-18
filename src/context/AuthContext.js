@@ -48,8 +48,20 @@ export const AuthProvider = ({ children }) => {
       const token = await AsyncStorage.getItem('jwtToken');
       const storedUserData = await AsyncStorage.getItem('userData');
       if (token) {
-        setUserToken(token);
-        if (storedUserData) setUser(JSON.parse(storedUserData));
+        try {
+          const resp = await authService.getMe();
+          const freshUser = resp?.user || resp;
+          setUserToken(token);
+          setUser(freshUser);
+          if (freshUser) await AsyncStorage.setItem('userData', JSON.stringify(freshUser));
+        } catch (e) {
+          if (e?.isAuth || e?.status === 401) {
+            await AsyncStorage.multiRemove(['jwtToken', 'refreshToken', 'userData']);
+          } else {
+            setUserToken(token);
+            if (storedUserData) setUser(JSON.parse(storedUserData));
+          }
+        }
       }
     } catch (e) {
       console.warn('Erreur lecture token/data', e);

@@ -9,14 +9,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, Gradients, Radii, Spacing, Elevation } from '../../constants/theme';
 import { notificationService } from '../../services';
 
-const MOCK_NOTIFS = [
-  { id: '1', type: 'RAPPEL',       titre: 'Rappel : RDV demain',      message: 'N\'oubliez pas votre rendez-vous pour le vaccin DTP de Salma demain à 09h30.', date: 'Il y a 2 heures', lu: false },
-  { id: '2', type: 'RETARD',       titre: 'Vaccin en retard',          message: 'Le vaccin Rougeole 1 d\'Asmae est en retard. Veuillez prendre rendez-vous rapidement.', date: 'Hier', lu: false },
-  { id: '3', type: 'CONFIRMATION', titre: 'RDV confirmé',              message: 'Votre rendez-vous pour le BCG a bien été enregistré au centre de santé Maârif.', date: 'Il y a 3 jours', lu: true },
-  { id: '4', type: 'INFO',         titre: 'Nouveau centre disponible', message: 'Un nouveau centre de vaccination a ouvert dans votre secteur.', date: 'Il y a 1 semaine', lu: true },
-  { id: '5', type: 'ALERTE',       titre: 'Mise à jour calendrier',    message: 'Le calendrier vaccinal 2026 a été mis à jour. Consultez les nouvelles recommandations.', date: 'Il y a 2 semaines', lu: true },
-];
-
 const TYPE_META = {
   RAPPEL:       { icon: 'alarm',                    color: Colors.primary,  bg: Colors.primaryTint,  label: 'Rappel' },
   RETARD:       { icon: 'alert-circle',              color: Colors.danger,   bg: Colors.dangerBg,     label: 'Retard' },
@@ -26,13 +18,13 @@ const TYPE_META = {
 };
 
 export default function NotificationsScreen() {
-  const [notifications, setNotifications] = useState(MOCK_NOTIFS);
+  const [notifications, setNotifications] = useState([]);
   const [refreshing,    setRefreshing]    = useState(false);
 
   const loadNotifications = useCallback(async () => {
     try {
-      const data = await notificationService.getNotifications();
-      if (data?.length) setNotifications(data);
+      const data = await notificationService.listNotifications();
+      if (data) setNotifications(data);
     } catch (e) {}
   }, []);
 

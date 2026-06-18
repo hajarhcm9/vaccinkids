@@ -1,105 +1,156 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity, Modal,
-  ScrollView, StatusBar, Alert,
+  ScrollView, StatusBar, Alert, RefreshControl, ActivityIndicator,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, Gradients, Radii, Spacing, Elevation } from '../../constants/theme';
-import { rdvService } from '../../services';
+import { rdvService, enfantService } from '../../services';
 
-const MOCK_DATA = {
-  A_VENIR: [
-    { id: 'r1', enfant: 'Salma',  enfant_nom: 'Salma', vaccin: 'DTP 2',    date: '2026-06-20', heure: '09:30', centre: 'Centre de Santé Maârif', statut: 'A_VENIR' },
-    { id: 'r2', enfant: 'Asmae',  enfant_nom: 'Asmae', vaccin: 'BCG',      date: '2026-06-25', heure: '10:00', centre: 'Polyclinique Sidi Moumen', statut: 'A_VENIR' },
-  ],
-  FAIT: [
-    { id: 'r3', enfant: 'Salma',  enfant_nom: 'Salma', vaccin: 'Pentavalent 1', date: '2025-12-10', heure: '09:00', centre: 'Centre de Santé Maârif', statut: 'FAIT' },
-    { id: 'r4', enfant: 'Salma',  enfant_nom: 'Salma', vaccin: 'BCG',           date: '2025-09-01', heure: '08:30', centre: 'Maternité Al Farabi', statut: 'FAIT' },
-  ],
-  ANNULE: [
-    { id: 'r5', enfant: 'Asmae',  enfant_nom: 'Asmae', vaccin: 'ROR 1',    date: '2025-11-05', heure: '11:00', centre: 'Centre de Santé Maârif', statut: 'ANNULE', motif: 'Enfant malade' },
-  ],
-};
+const VACCINS_LIST = ['BCG', 'Hépatite B', 'Pentavalent (DTP-Hib)', 'Pneumocoque', 'Rotavirus', 'ROR', 'Varicelle', 'Rappel DTP', 'Méningite A+C'];
+const SLOTS_LIST   = ['08:30', '09:00', '09:30', '10:00', '10:30', '11:00'];
 
 const SEGMENTS = [
-  { key: 'A_VENIR', label: 'À venir',  icon: 'time-outline',          color: Colors.primary  },
-  { key: 'FAIT',    label: 'Effectués', icon: 'checkmark-circle-outline', color: Colors.success },
-  { key: 'ANNULE',  label: 'Annulés',   icon: 'close-circle-outline',  color: Colors.danger   },
+  { key: 'A_VENIR', label: 'À venir',   icon: 'time-outline',             color: Colors.primary  },
+  { key: 'FAIT',    label: 'Effectués', icon: 'checkmark-circle-outline', color: Colors.success  },
+  { key: 'ANNULE',  label: 'Annulés',   icon: 'close-circle-outline',     color: Colors.danger   },
 ];
 
 const STATUS_META = {
-  A_VENIR: { color: Colors.primary,  bg: Colors.primaryTint,  icon: 'time-outline',           label: 'À venir'   },
-  FAIT:    { color: Colors.success,  bg: Colors.successBg,    icon: 'checkmark-circle',        label: 'Effectué'  },
-  ANNULE:  { color: Colors.danger,   bg: Colors.dangerBg,     icon: 'close-circle',            label: 'Annulé'    },
+  A_VENIR: { color: Colors.primary,  bg: Colors.primaryTint, icon: 'time-outline',    label: 'À venir'  },
+  FAIT:    { color: Colors.success,  bg: Colors.successBg,   icon: 'checkmark-circle', label: 'Effectué' },
+  ANNULE:  { color: Colors.danger,   bg: Colors.dangerBg,    icon: 'close-circle',    label: 'Annulé'   },
 };
-
-const MOCK_ENFANTS = [
-  { id: '1', prenom: 'Salma' },
-  { id: '2', prenom: 'Asmae' },
-];
-const MOCK_VACCINS  = ['BCG', 'DTP 1', 'DTP 2', 'Pentavalent 1', 'ROR 1', 'Hépatite B'];
-const MOCK_CENTRES  = ['Centre de Santé Maârif', 'Polyclinique Sidi Moumen', 'Maternité Al Farabi', 'CHU Ibn Rochd'];
-const MOCK_SLOTS    = ['08:30', '09:00', '09:30', '10:00', '10:30', '11:00'];
 
 function formatDate(iso) {
   if (!iso) return '—';
   return new Date(iso).toLocaleDateString('fr-FR', { weekday: 'short', day: '2-digit', month: 'long', year: 'numeric' });
 }
 
+const centreName = (c) => (c && typeof c === 'object' ? c.nom : c) || '';
+const centreId   = (c) => (c && typeof c === 'object' ? c.id  : c) || null;
+
 export default function RdvScreen({ navigation }) {
   const insets = useSafeAreaInsets();
-  const [segment,    setSegment]   = useState('A_VENIR');
-  const [rdvs,       setRdvs]      = useState({ ...MOCK_DATA });
-  const [showModal,  setShowModal] = useState(false);
+  const [segment,     setSegment]    = useState('A_VENIR');
+  const [rdvs,        setRdvs]       = useState({ A_VENIR: [], FAIT: [], ANNULE: [] });
+  const [loading,     setLoading]    = useState(true);
+  const [refreshing,  setRefreshing] = useState(false);
+  const [showModal,   setShowModal]  = useState(false);
+  const [confirming,  setConfirming] = useState(false);
 
-  const [selEnfant,  setSelEnfant] = useState(null);
-  const [selVaccin,  setSelVaccin] = useState(null);
-  const [selCentre,  setSelCentre] = useState(null);
-  const [selSlot,    setSelSlot]   = useState(null);
+  const [enfantsList, setEnfantsList] = useState([]);
+  const [centresList, setCentresList] = useState([]);
+
+  const [selEnfant, setSelEnfant] = useState(null);
+  const [selVaccin, setSelVaccin] = useState(null);
+  const [selCentre, setSelCentre] = useState(null);
+  const [selSlot,   setSelSlot]   = useState(null);
+
+  const loadAllRdvs = useCallback(async () => {
+    try {
+      const [aVenir, faits, annules] = await Promise.all([
+        rdvService.listRdv('A_VENIR').catch(() => []),
+        rdvService.listRdv('FAIT').catch(() => []),
+        rdvService.listRdv('ANNULE').catch(() => []),
+      ]);
+      setRdvs({
+        A_VENIR: aVenir  || [],
+        FAIT:    faits   || [],
+        ANNULE:  annules || [],
+      });
+    } catch (e) {}
+  }, []);
+
+  const loadModalData = useCallback(async () => {
+    try {
+      const [enfants, centres] = await Promise.all([
+        enfantService.listEnfants().catch(() => []),
+        rdvService.listCentres().catch(() => []),
+      ]);
+      if (enfants?.length)  setEnfantsList(enfants);
+      if (centres?.length)  setCentresList(centres);
+    } catch (e) {}
+  }, []);
+
+  useEffect(() => {
+    Promise.all([loadAllRdvs(), loadModalData()]).finally(() => setLoading(false));
+  }, [loadAllRdvs, loadModalData]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await loadAllRdvs();
+    setRefreshing(false);
+  }, [loadAllRdvs]);
+
+  const resetModal = () => {
+    setSelEnfant(null);
+    setSelVaccin(null);
+    setSelCentre(null);
+    setSelSlot(null);
+  };
 
   const handleCancel = (item) => {
     Alert.alert(
       'Annuler ce rendez-vous',
-      `Confirmer l'annulation du RDV de ${item.enfant} pour le ${item.vaccin} ?`,
+      `Confirmer l'annulation du RDV de ${item.enfant_nom || item.enfant} pour le ${item.vaccin} ?`,
       [
         { text: 'Non', style: 'cancel' },
         {
           text: 'Oui, annuler', style: 'destructive',
           onPress: async () => {
-            try { await rdvService.cancelRdv(item.id); } catch (e) {}
-            setRdvs((prev) => {
-              const nextAVenir  = prev.A_VENIR.filter((r) => r.id !== item.id);
-              const nextAnnule  = [{ ...item, statut: 'ANNULE', motif: 'Annulation utilisateur' }, ...prev.ANNULE];
-              return { ...prev, A_VENIR: nextAVenir, ANNULE: nextAnnule };
-            });
+            try {
+              await rdvService.cancelRdv(item.id, 'Annulation par le parent');
+            } catch (e) {}
+            setRdvs((prev) => ({
+              ...prev,
+              A_VENIR: prev.A_VENIR.filter((r) => r.id !== item.id),
+              ANNULE:  [{ ...item, statut: 'ANNULE', motif: 'Annulation par le parent' }, ...prev.ANNULE],
+            }));
           },
         },
       ]
     );
   };
 
-  const handleConfirmRdv = () => {
+  const handleConfirmRdv = async () => {
     if (!selEnfant || !selVaccin || !selCentre || !selSlot) {
       Alert.alert('Champs manquants', 'Veuillez compléter tous les champs.');
       return;
     }
-    const now = new Date();
-    const newRdv = {
-      id: `r_${Date.now()}`,
-      enfant: selEnfant.prenom,
-      enfant_nom: selEnfant.prenom,
-      vaccin: selVaccin,
-      date: now.toISOString().slice(0, 10),
-      heure: selSlot,
-      centre: selCentre,
-      statut: 'A_VENIR',
-    };
-    setRdvs((prev) => ({ ...prev, A_VENIR: [newRdv, ...prev.A_VENIR] }));
-    setShowModal(false);
-    setSelEnfant(null); setSelVaccin(null); setSelCentre(null); setSelSlot(null);
-    setSegment('A_VENIR');
+    setConfirming(true);
+    try {
+      const today = new Date().toISOString().slice(0, 10);
+      const payload = {
+        enfant_id:  selEnfant.id,
+        vaccin:     selVaccin,
+        centre_id:  centreId(selCentre),
+        centre:     centreName(selCentre),
+        date:       today,
+        heure:      selSlot,
+      };
+      const resp = await rdvService.takeRdv(payload);
+      const newRdv = resp?.rdv || resp?.data || {
+        id:         `r_${Date.now()}`,
+        enfant:     selEnfant.prenom,
+        enfant_nom: selEnfant.prenom,
+        vaccin:     selVaccin,
+        date:       today,
+        heure:      selSlot,
+        centre:     centreName(selCentre),
+        statut:     'A_VENIR',
+      };
+      setRdvs((prev) => ({ ...prev, A_VENIR: [newRdv, ...prev.A_VENIR] }));
+      setShowModal(false);
+      resetModal();
+      setSegment('A_VENIR');
+    } catch (e) {
+      Alert.alert('Erreur', e?.message || 'Impossible de créer ce rendez-vous. Réessayez.');
+    } finally {
+      setConfirming(false);
+    }
   };
 
   const currentList = rdvs[segment] || [];
@@ -116,7 +167,7 @@ export default function RdvScreen({ navigation }) {
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.vaccinNom}>{item.vaccin}</Text>
-              <Text style={styles.enfantLabel}>Pour {item.enfant}</Text>
+              <Text style={styles.enfantLabel}>Pour {item.enfant_nom || item.enfant}</Text>
             </View>
             <View style={[styles.badge, { backgroundColor: m.bg }]}>
               <Ionicons name={m.icon} size={11} color={m.color} />
@@ -176,7 +227,6 @@ export default function RdvScreen({ navigation }) {
         <Text style={styles.headerSub}>Suivi médical</Text>
         <Text style={styles.headerTitle}>Mes rendez-vous</Text>
 
-        {/* Segment */}
         <View style={styles.segmentBar}>
           {SEGMENTS.map((s) => {
             const active = segment === s.key;
@@ -200,17 +250,25 @@ export default function RdvScreen({ navigation }) {
         </View>
       </LinearGradient>
 
-      <FlatList
-        data={currentList}
-        keyExtractor={(item) => item.id}
-        renderItem={renderCard}
-        ListEmptyComponent={renderEmpty}
-        contentContainerStyle={[styles.list, !currentList.length && { flexGrow: 1 }]}
-        showsVerticalScrollIndicator={false}
-      />
+      {loading ? (
+        <ActivityIndicator style={{ marginTop: Spacing['3xl'] }} color={Colors.primary} size="large" />
+      ) : (
+        <FlatList
+          data={currentList}
+          keyExtractor={(item) => String(item.id)}
+          renderItem={renderCard}
+          ListEmptyComponent={renderEmpty}
+          contentContainerStyle={[styles.list, !currentList.length && { flexGrow: 1 }]}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh}
+              colors={[Colors.primary]} tintColor={Colors.primary} />
+          }
+        />
+      )}
 
       {/* FAB */}
-      <TouchableOpacity style={styles.fab} onPress={() => setShowModal(true)} activeOpacity={0.88}>
+      <TouchableOpacity style={styles.fab} onPress={() => { resetModal(); setShowModal(true); }} activeOpacity={0.88}>
         <LinearGradient colors={Gradients.brand} style={styles.fabGradient}>
           <Ionicons name="add" size={28} color={Colors.white} />
         </LinearGradient>
@@ -228,23 +286,29 @@ export default function RdvScreen({ navigation }) {
               </TouchableOpacity>
             </View>
             <ScrollView showsVerticalScrollIndicator={false}>
+              {/* Enfant */}
               <PickerSection label="Enfant" icon="person-outline" color={Colors.primary}>
-                <View style={styles.chipRow}>
-                  {MOCK_ENFANTS.map((e) => (
-                    <TouchableOpacity
-                      key={e.id}
-                      style={[styles.chip, selEnfant?.id === e.id && styles.chipActive]}
-                      onPress={() => setSelEnfant(e)}
-                    >
-                      <Text style={[styles.chipText, selEnfant?.id === e.id && styles.chipTextActive]}>{e.prenom}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
+                {enfantsList.length === 0 ? (
+                  <Text style={styles.noDataText}>Aucun enfant enregistré. Ajoutez d'abord un enfant.</Text>
+                ) : (
+                  <View style={styles.chipRow}>
+                    {enfantsList.map((e) => (
+                      <TouchableOpacity
+                        key={String(e.id)}
+                        style={[styles.chip, selEnfant?.id === e.id && styles.chipActive]}
+                        onPress={() => setSelEnfant(e)}
+                      >
+                        <Text style={[styles.chipText, selEnfant?.id === e.id && styles.chipTextActive]}>{e.prenom}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                )}
               </PickerSection>
 
+              {/* Vaccin */}
               <PickerSection label="Vaccin" icon="medkit-outline" color="#7C3AED">
                 <View style={styles.chipRow}>
-                  {MOCK_VACCINS.map((v) => (
+                  {VACCINS_LIST.map((v) => (
                     <TouchableOpacity
                       key={v}
                       style={[styles.chip, selVaccin === v && styles.chipActive]}
@@ -256,25 +320,35 @@ export default function RdvScreen({ navigation }) {
                 </View>
               </PickerSection>
 
+              {/* Centre */}
               <PickerSection label="Centre de santé" icon="location-outline" color={Colors.success}>
-                <View style={styles.chipCol}>
-                  {MOCK_CENTRES.map((c) => (
-                    <TouchableOpacity
-                      key={c}
-                      style={[styles.centreRow, selCentre === c && styles.centreRowActive]}
-                      onPress={() => setSelCentre(c)}
-                    >
-                      <Ionicons name="business-outline" size={15} color={selCentre === c ? Colors.primary : Colors.textLight} />
-                      <Text style={[styles.centreText, selCentre === c && { color: Colors.primary, fontWeight: '700' }]}>{c}</Text>
-                      {selCentre === c && <Ionicons name="checkmark-circle" size={17} color={Colors.primary} style={{ marginLeft: 'auto' }} />}
-                    </TouchableOpacity>
-                  ))}
-                </View>
+                {centresList.length === 0 ? (
+                  <Text style={styles.noDataText}>Aucun centre disponible.</Text>
+                ) : (
+                  <View style={styles.chipCol}>
+                    {centresList.map((c, idx) => {
+                      const nom      = centreName(c);
+                      const selected = centreName(selCentre) === nom;
+                      return (
+                        <TouchableOpacity
+                          key={String(centreId(c) || idx)}
+                          style={[styles.centreRow, selected && styles.centreRowActive]}
+                          onPress={() => setSelCentre(c)}
+                        >
+                          <Ionicons name="business-outline" size={15} color={selected ? Colors.primary : Colors.textLight} />
+                          <Text style={[styles.centreText, selected && { color: Colors.primary, fontWeight: '700' }]}>{nom}</Text>
+                          {selected && <Ionicons name="checkmark-circle" size={17} color={Colors.primary} style={{ marginLeft: 'auto' }} />}
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                )}
               </PickerSection>
 
+              {/* Créneau */}
               <PickerSection label="Créneau horaire" icon="time-outline" color={Colors.accent}>
                 <View style={styles.chipRow}>
-                  {MOCK_SLOTS.map((s) => (
+                  {SLOTS_LIST.map((s) => (
                     <TouchableOpacity
                       key={s}
                       style={[styles.chip, selSlot === s && styles.chipActive]}
@@ -286,10 +360,20 @@ export default function RdvScreen({ navigation }) {
                 </View>
               </PickerSection>
 
-              <TouchableOpacity style={styles.confirmBtn} onPress={handleConfirmRdv} activeOpacity={0.88}>
+              <TouchableOpacity
+                style={[styles.confirmBtn, (confirming || !selEnfant || !selVaccin || !selCentre || !selSlot) && { opacity: 0.55 }]}
+                onPress={handleConfirmRdv}
+                disabled={confirming || !selEnfant || !selVaccin || !selCentre || !selSlot}
+                activeOpacity={0.88}
+              >
                 <LinearGradient colors={Gradients.brand} style={styles.confirmGrad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
-                  <Ionicons name="checkmark-circle-outline" size={20} color={Colors.white} />
-                  <Text style={styles.confirmBtnText}>Confirmer le rendez-vous</Text>
+                  {confirming
+                    ? <ActivityIndicator color={Colors.white} size="small" />
+                    : <>
+                        <Ionicons name="checkmark-circle-outline" size={20} color={Colors.white} />
+                        <Text style={styles.confirmBtnText}>Confirmer le rendez-vous</Text>
+                      </>
+                  }
                 </LinearGradient>
               </TouchableOpacity>
             </ScrollView>
@@ -372,17 +456,19 @@ const styles = StyleSheet.create({
   fabGradient:   { width: 60, height: 60, alignItems: 'center', justifyContent: 'center' },
 
   // Modal
-  modalOverlay:  { flex: 1, backgroundColor: Colors.overlay, justifyContent: 'flex-end' },
-  modalSheet:    { backgroundColor: Colors.surface, borderTopLeftRadius: Radii['3xl'], borderTopRightRadius: Radii['3xl'], paddingHorizontal: Spacing.xl, paddingBottom: Spacing['3xl'], maxHeight: '92%' },
-  modalHandle:   { width: 44, height: 5, borderRadius: 3, backgroundColor: Colors.border, alignSelf: 'center', marginTop: Spacing.md, marginBottom: Spacing.sm },
-  modalHeader:   { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: Spacing.md, marginBottom: Spacing.sm },
-  modalTitle:    { fontSize: 20, fontWeight: '800', color: Colors.text },
-  modalCloseBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: Colors.surfaceMuted, alignItems: 'center', justifyContent: 'center' },
+  modalOverlay:   { flex: 1, backgroundColor: Colors.overlay, justifyContent: 'flex-end' },
+  modalSheet:     { backgroundColor: Colors.surface, borderTopLeftRadius: Radii['3xl'], borderTopRightRadius: Radii['3xl'], paddingHorizontal: Spacing.xl, paddingBottom: Spacing['3xl'], maxHeight: '92%' },
+  modalHandle:    { width: 44, height: 5, borderRadius: 3, backgroundColor: Colors.border, alignSelf: 'center', marginTop: Spacing.md, marginBottom: Spacing.sm },
+  modalHeader:    { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: Spacing.md, marginBottom: Spacing.sm },
+  modalTitle:     { fontSize: 20, fontWeight: '800', color: Colors.text },
+  modalCloseBtn:  { width: 36, height: 36, borderRadius: 18, backgroundColor: Colors.surfaceMuted, alignItems: 'center', justifyContent: 'center' },
 
-  pickerSection: { marginBottom: Spacing.lg },
-  pickerLabel:   { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, marginBottom: Spacing.md },
-  pickerIconWrap:{ width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
-  pickerLabelText:{ fontSize: 14, fontWeight: '700', color: Colors.text },
+  noDataText:    { fontSize: 13, color: Colors.textSecondary, fontStyle: 'italic', paddingVertical: Spacing.sm },
+
+  pickerSection:    { marginBottom: Spacing.lg },
+  pickerLabel:      { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, marginBottom: Spacing.md },
+  pickerIconWrap:   { width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
+  pickerLabelText:  { fontSize: 14, fontWeight: '700', color: Colors.text },
 
   chipRow:       { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm },
   chipCol:       { gap: Spacing.sm },
@@ -391,11 +477,11 @@ const styles = StyleSheet.create({
   chipText:      { fontSize: 13, fontWeight: '600', color: Colors.textSecondary },
   chipTextActive:{ color: Colors.primary, fontWeight: '700' },
 
-  centreRow:     { flexDirection: 'row', alignItems: 'center', gap: Spacing.md, paddingVertical: Spacing.md, paddingHorizontal: Spacing.base, backgroundColor: Colors.surfaceMuted, borderRadius: Radii.md, borderWidth: 1.5, borderColor: 'transparent' },
+  centreRow:      { flexDirection: 'row', alignItems: 'center', gap: Spacing.md, paddingVertical: Spacing.md, paddingHorizontal: Spacing.base, backgroundColor: Colors.surfaceMuted, borderRadius: Radii.md, borderWidth: 1.5, borderColor: 'transparent' },
   centreRowActive:{ backgroundColor: Colors.primaryTint, borderColor: Colors.primary },
-  centreText:    { fontSize: 14, color: Colors.textSecondary, flex: 1 },
+  centreText:     { fontSize: 14, color: Colors.textSecondary, flex: 1 },
 
-  confirmBtn:    { marginTop: Spacing.lg, borderRadius: Radii.xl, overflow: 'hidden' },
-  confirmGrad:   { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.sm, paddingVertical: Spacing.lg },
-  confirmBtnText:{ fontSize: 16, fontWeight: '700', color: Colors.white },
+  confirmBtn:     { marginTop: Spacing.lg, borderRadius: Radii.xl, overflow: 'hidden' },
+  confirmGrad:    { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.sm, paddingVertical: Spacing.lg },
+  confirmBtnText: { fontSize: 16, fontWeight: '700', color: Colors.white },
 });
