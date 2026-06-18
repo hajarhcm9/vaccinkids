@@ -9,6 +9,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, Gradients, Radii, Spacing, Elevation } from '../../constants/theme';
 import { notificationService } from '../../services';
 
+function formatNotifDate(ts) {
+  if (!ts) return '';
+  const d = new Date(ts);
+  return d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' }) +
+         ' ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+}
+
 const TYPE_META = {
   RAPPEL:       { icon: 'alarm',                    color: Colors.primary,  bg: Colors.primaryTint,  label: 'Rappel' },
   RETARD:       { icon: 'alert-circle',              color: Colors.danger,   bg: Colors.dangerBg,     label: 'Retard' },
@@ -37,7 +44,10 @@ export default function NotificationsScreen() {
   React.useEffect(() => { loadNotifications(); }, [loadNotifications]);
 
   const insets      = useSafeAreaInsets();
-  const markAllRead = () => setNotifications((prev) => prev.map((n) => ({ ...n, lu: true })));
+  const markAllRead = () => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, lu: true })));
+    notificationService.markAllAsRead().catch(() => {});
+  };
   const unreadCount = notifications.filter((n) => !n.lu).length;
 
   const renderItem = ({ item }) => {
@@ -46,7 +56,10 @@ export default function NotificationsScreen() {
       <TouchableOpacity
         style={[styles.card, !item.lu && styles.cardUnread]}
         activeOpacity={0.82}
-        onPress={() => setNotifications((prev) => prev.map((n) => n.id === item.id ? { ...n, lu: true } : n))}
+        onPress={() => {
+          setNotifications((prev) => prev.map((n) => n.id === item.id ? { ...n, lu: true } : n));
+          if (!item.lu) notificationService.markAsRead(item.id).catch(() => {});
+        }}
       >
         {!item.lu && <View style={styles.unreadDot} />}
         <View style={[styles.iconWrap, { backgroundColor: m.bg }]}>
@@ -60,7 +73,7 @@ export default function NotificationsScreen() {
             </View>
           </View>
           <Text style={styles.cardMessage} numberOfLines={2}>{item.message}</Text>
-          <Text style={styles.cardDate}>{item.date}</Text>
+          <Text style={styles.cardDate}>{formatNotifDate(item.date_envoi || item.created_at)}</Text>
         </View>
       </TouchableOpacity>
     );

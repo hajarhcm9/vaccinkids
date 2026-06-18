@@ -42,10 +42,12 @@ export default function ProfileScreen({ navigation }) {
   useEffect(() => {
     Promise.all([
       enfantService.listEnfants().catch(() => null),
-      rdvService.listRdv('A_VENIR').catch(() => null),
+      rdvService.listRdv().catch(() => null),
     ]).then(([enfantsResp, rdvResp]) => {
-      const count = enfantsResp?.length || 0;
-      const rdvCount = rdvResp?.length || 0;
+      const count = (enfantsResp || []).length;
+      const rdvCount = (rdvResp || []).filter((r) =>
+        ['EN_ATTENTE', 'CONFIRME', 'EN_LISTE_ATTENTE'].includes(r.statut)
+      ).length;
       const totalV = enfantsResp?.reduce((a, e) => a + (e.vaccins_total || 0), 0) || 0;
       const doneV  = enfantsResp?.reduce((a, e) => a + (e.vaccins_faits || 0), 0) || 0;
       const coverage = totalV > 0 ? Math.round((doneV / totalV) * 100) : null;
@@ -80,7 +82,7 @@ export default function ProfileScreen({ navigation }) {
             </LinearGradient>
           </View>
           <Text style={styles.userName}>{fullName}</Text>
-          <Text style={styles.userEmail}>{user?.email || '—'}</Text>
+          <Text style={styles.userEmail}>{user?.telephone || '—'}</Text>
 
           <View style={styles.statsRow}>
             <View style={styles.statBlock}>

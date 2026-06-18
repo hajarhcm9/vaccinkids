@@ -303,6 +303,29 @@ const AuthController = {
     return success(res, 200, 'Logged out from all devices successfully');
   }),
 
+  updateProfile: catchAsync(async (req, res, next) => {
+    if (req.user.role !== 'parent')
+      return next(ApiError.forbidden('Only parents can update their profile this way'));
+    const { nom, prenom, langue_preferee } = req.body;
+    if (!nom || !prenom) return next(ApiError.badRequest('Nom and prenom are required'));
+    const updatedParent = await Parent.update(req.user.id, {
+      nom,
+      prenom,
+      langue_preferee: langue_preferee || 'fr',
+    });
+    if (!updatedParent) return next(ApiError.notFound('Parent not found'));
+    return success(res, 200, 'Profile updated successfully', {
+      user: {
+        id: updatedParent.id,
+        telephone: updatedParent.telephone,
+        nom: updatedParent.nom,
+        prenom: updatedParent.prenom,
+        langue_preferee: updatedParent.langue_preferee,
+        role: 'parent',
+      },
+    });
+  }),
+
   getMe: catchAsync(async (req, res, next) => {
     let user = null;
     if (req.user.role === 'parent') user = await Parent.findById(req.user.id);

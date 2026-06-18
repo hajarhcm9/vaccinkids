@@ -8,6 +8,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { Colors, Gradients, Radii, Spacing, Elevation } from '../../constants/theme';
 import { vaccinService } from '../../services';
 
+function formatDate(iso) {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
+}
+
 function statusMeta(status) {
   switch (status) {
     case 'FAIT':      return { color: Colors.success,  bg: Colors.successBg,  icon: 'checkmark-circle', label: 'Administré',  gradient: ['#12A150', '#17C964'] };
@@ -24,10 +29,11 @@ export default function VaccinDetailScreen({ route, navigation }) {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (initial?.id) {
+    const numericId = Number(initial?.id);
+    if (Number.isInteger(numericId) && numericId > 0) {
       setLoading(true);
-      vaccinService.getVaccinDetail(initial.id)
-        .then((data) => { if (data) setVaccin({ ...initial, ...data }); })
+      vaccinService.getVaccinDetail(numericId)
+        .then((data) => { if (data) setVaccin((v) => ({ ...v, ...data })); })
         .catch(() => {})
         .finally(() => setLoading(false));
     }
@@ -67,10 +73,10 @@ export default function VaccinDetailScreen({ route, navigation }) {
         <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Détails</Text>
-            <InfoRow icon="calendar-outline"  label="Date prévue"    value={vaccin?.date_prevue || '—'} />
-            {vaccin?.dose   && <InfoRow icon="medical-outline"       label="Dose"           value={vaccin.dose} />}
+            <InfoRow icon="calendar-outline"  label="Date prévue"    value={formatDate(vaccin?.date_prevue)} />
+            {vaccin?.dose   && <InfoRow icon="medical-outline"       label="Dose"           value={String(vaccin.dose)} />}
             {vaccin?.date_administree && (
-              <InfoRow icon="checkmark-done-outline" label="Date administrée" value={vaccin.date_administree} />
+              <InfoRow icon="checkmark-done-outline" label="Date administrée" value={formatDate(vaccin.date_administree)} />
             )}
             {vaccin?.centre && <InfoRow icon="location-outline"     label="Centre"         value={vaccin.centre} />}
             {vaccin?.lot    && <InfoRow icon="barcode-outline"       label="N° de lot"      value={vaccin.lot} />}

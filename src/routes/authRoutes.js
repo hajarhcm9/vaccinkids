@@ -45,6 +45,12 @@ router.post(
   validate(schemas.registerParent),
   AuthController.registerParent,
 );
+router.patch(
+  '/parent/profile',
+  authenticate,
+  validate(schemas.updateProfile),
+  AuthController.updateProfile,
+);
 router.put(
   '/parent/fcm-token',
   authenticate,

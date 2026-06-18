@@ -13,10 +13,8 @@ import { Colors, Radii, Spacing, Elevation, Typography } from '../../constants/t
 import { authService, ApiError } from '../../services';
 
 const ProfileSchema = Yup.object().shape({
-  nom:       Yup.string().required('Le nom est obligatoire'),
-  prenom:    Yup.string().required('Le prénom est obligatoire'),
-  email:     Yup.string().email('Email invalide').required('L\'email est obligatoire'),
-  telephone: Yup.string().min(9, 'Numéro invalide'),
+  nom:    Yup.string().min(2, 'Nom trop court').required('Le nom est obligatoire'),
+  prenom: Yup.string().min(2, 'Prénom trop court').required('Le prénom est obligatoire'),
 });
 
 export default function EditProfileScreen({ navigation }) {
@@ -24,8 +22,11 @@ export default function EditProfileScreen({ navigation }) {
 
   const handleSave = async (values, { setSubmitting, setErrors }) => {
     try {
-      const updated = await authService.updateProfile(values);
-      await updateUser(updated?.user || values);
+      const resp = await authService.updateProfile({
+        nom:    values.nom.trim(),
+        prenom: values.prenom.trim(),
+      });
+      await updateUser(resp?.user || { ...user, ...values });
       navigation.goBack();
     } catch (e) {
       if (e instanceof ApiError && e.isValidation && e.details?.fields) {
@@ -53,13 +54,19 @@ export default function EditProfileScreen({ navigation }) {
         style={{ flex: 1 }}
       >
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
+          <View style={styles.phoneInfo}>
+            <Ionicons name="call-outline" size={16} color={Colors.primary} />
+            <Text style={styles.phoneInfoText}>
+              Numéro : {user?.telephone || '—'}{'  '}
+              <Text style={styles.phoneHint}>(non modifiable)</Text>
+            </Text>
+          </View>
+
           <View style={styles.card}>
             <Formik
               initialValues={{
-                nom:       user?.nom       || '',
-                prenom:    user?.prenom    || '',
-                email:     user?.email     || '',
-                telephone: user?.telephone || '',
+                nom:    user?.nom    || '',
+                prenom: user?.prenom || '',
               }}
               validationSchema={ProfileSchema}
               onSubmit={handleSave}
@@ -68,13 +75,14 @@ export default function EditProfileScreen({ navigation }) {
                 <>
                   <AppInput
                     label="Nom *"
-                    placeholder="Votre nom"
+                    placeholder="Votre nom de famille"
                     value={values.nom}
                     onChangeText={handleChange('nom')}
                     onBlur={handleBlur('nom')}
                     error={errors.nom}
                     touched={touched.nom}
                     icon="person-outline"
+                    autoCapitalize="words"
                   />
                   <AppInput
                     label="Prénom *"
@@ -84,28 +92,7 @@ export default function EditProfileScreen({ navigation }) {
                     onBlur={handleBlur('prenom')}
                     error={errors.prenom}
                     touched={touched.prenom}
-                  />
-                  <AppInput
-                    label="Email *"
-                    placeholder="votre@email.com"
-                    value={values.email}
-                    onChangeText={handleChange('email')}
-                    onBlur={handleBlur('email')}
-                    error={errors.email}
-                    touched={touched.email}
-                    icon="mail-outline"
-                    keyboardType="email-address"
-                  />
-                  <AppInput
-                    label="Téléphone"
-                    placeholder="06 XX XX XX XX"
-                    value={values.telephone}
-                    onChangeText={handleChange('telephone')}
-                    onBlur={handleBlur('telephone')}
-                    error={errors.telephone}
-                    touched={touched.telephone}
-                    icon="call-outline"
-                    keyboardType="phone-pad"
+                    autoCapitalize="words"
                   />
                   <AppButton
                     title={isSubmitting ? 'Enregistrement…' : 'Enregistrer'}
@@ -114,6 +101,7 @@ export default function EditProfileScreen({ navigation }) {
                     disabled={isSubmitting}
                     icon="checkmark-outline"
                     iconPosition="right"
+                    style={{ marginTop: Spacing.sm }}
                   />
                 </>
               )}
@@ -126,10 +114,13 @@ export default function EditProfileScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
-  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: Spacing.lg, paddingVertical: Spacing.md, paddingTop: Spacing['3xl'], backgroundColor: Colors.surface, ...Elevation.sm },
-  backBtn: { padding: 4, marginRight: Spacing.sm },
-  headerTitle: { flex: 1, ...Typography.subtitle },
-  scroll: { padding: Spacing.lg },
-  card: { backgroundColor: Colors.surface, borderRadius: Radii.lg, padding: Spacing.lg, ...Elevation.sm },
+  container:    { flex: 1, backgroundColor: Colors.background },
+  header:       { flexDirection: 'row', alignItems: 'center', paddingHorizontal: Spacing.lg, paddingVertical: Spacing.md, paddingTop: Spacing['3xl'], backgroundColor: Colors.surface, ...Elevation.sm },
+  backBtn:      { padding: 4, marginRight: Spacing.sm },
+  headerTitle:  { flex: 1, ...Typography.subtitle },
+  scroll:       { padding: Spacing.lg },
+  phoneInfo:    { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, backgroundColor: Colors.primaryTint, borderRadius: Radii.md, padding: Spacing.base, marginBottom: Spacing.md },
+  phoneInfoText:{ fontSize: 14, color: Colors.primary, fontWeight: '600', flex: 1 },
+  phoneHint:    { fontSize: 12, color: Colors.textSecondary, fontWeight: '400' },
+  card:         { backgroundColor: Colors.surface, borderRadius: Radii.lg, padding: Spacing.lg, ...Elevation.sm },
 });

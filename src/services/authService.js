@@ -12,6 +12,10 @@ export async function completeProfile({ nom, prenom, langue_preferee = 'fr' }) {
   return apiClient.post('/auth/parent/register', { nom, prenom, langue_preferee });
 }
 
+export async function updateProfile({ nom, prenom, langue_preferee = 'fr' }) {
+  return apiClient.patch('/auth/parent/profile', { nom, prenom, langue_preferee });
+}
+
 export async function logout() {
   return apiClient.post('/auth/logout');
 }

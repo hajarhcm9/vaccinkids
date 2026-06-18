@@ -10,10 +10,13 @@ import { rdvService } from '../../services';
 
 function statusMeta(status) {
   switch (status) {
-    case 'A_VENIR': return { color: Colors.primary,  bg: Colors.primaryTint, icon: 'time-outline',    label: 'À venir',   gradient: Gradients.brand };
-    case 'FAIT':    return { color: Colors.success,  bg: Colors.successBg,   icon: 'checkmark-circle', label: 'Effectué', gradient: Gradients.success };
-    case 'ANNULE':  return { color: Colors.danger,   bg: Colors.dangerBg,    icon: 'close-circle',    label: 'Annulé',   gradient: Gradients.danger };
-    default:        return { color: Colors.textSecondary, bg: Colors.surfaceMuted, icon: 'ellipse-outline', label: status, gradient: Gradients.brand };
+    case 'EN_ATTENTE':       return { color: Colors.primary,  bg: Colors.primaryTint, icon: 'time-outline',      label: 'En attente',   gradient: Gradients.brand };
+    case 'EN_LISTE_ATTENTE': return { color: Colors.accent,   bg: Colors.accentLight, icon: 'hourglass-outline', label: 'Liste d\'attente', gradient: Gradients.brand };
+    case 'CONFIRME':         return { color: Colors.info,     bg: Colors.infoBg,      icon: 'checkmark-circle',  label: 'Confirmé',     gradient: Gradients.brand };
+    case 'PRESENT':          return { color: Colors.success,  bg: Colors.successBg,   icon: 'checkmark-circle',  label: 'Effectué',     gradient: Gradients.success };
+    case 'ABSENT':           return { color: Colors.danger,   bg: Colors.dangerBg,    icon: 'close-circle',      label: 'Absent',       gradient: Gradients.danger };
+    case 'ANNULE':           return { color: Colors.danger,   bg: Colors.dangerBg,    icon: 'close-circle',      label: 'Annulé',       gradient: Gradients.danger };
+    default:                 return { color: Colors.textSecondary, bg: Colors.surfaceMuted, icon: 'ellipse-outline', label: status || '—', gradient: Gradients.brand };
   }
 }
 
@@ -85,8 +88,8 @@ export default function RdvDetailScreen({ route, navigation }) {
             <View style={styles.heroIconWrap}>
               <Ionicons name="medkit" size={34} color={Colors.white} />
             </View>
-            <Text style={styles.heroVaccin}>{rdv.vaccin}</Text>
-            <Text style={styles.heroEnfant}>Pour {rdv.enfant_nom || rdv.enfant}</Text>
+            <Text style={styles.heroVaccin}>{rdv.vaccin_nom || '—'}</Text>
+            <Text style={styles.heroEnfant}>Pour {rdv.bebe_prenom || rdv.bebe_nom || '—'}</Text>
             <View style={[styles.statusBadge, { backgroundColor: 'rgba(255,255,255,0.20)', borderColor: 'rgba(255,255,255,0.30)' }]}>
               <Ionicons name={s.icon} size={14} color={Colors.white} />
               <Text style={styles.statusText}>{s.label}</Text>
@@ -99,15 +102,15 @@ export default function RdvDetailScreen({ route, navigation }) {
         <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Informations</Text>
-            <InfoRow icon="calendar-outline"  label="Date"     value={formatDate(rdv.date)} />
-            <InfoRow icon="time-outline"      label="Heure"    value={rdv.heure || '—'} />
-            <InfoRow icon="location-outline"  label="Centre"   value={rdv.centre || '—'} />
+            <InfoRow icon="calendar-outline"  label="Date"     value={formatDate(rdv.date_session)} />
+            <InfoRow icon="time-outline"      label="Heure"    value={rdv.heure_debut || '—'} />
+            <InfoRow icon="location-outline"  label="Centre"   value={rdv.centre_nom || '—'} />
             {rdv.motif && (
               <InfoRow icon="document-text-outline" label="Motif d'annulation" value={rdv.motif} danger />
             )}
           </View>
 
-          {rdv.statut === 'A_VENIR' && (
+          {['EN_ATTENTE', 'CONFIRME', 'EN_LISTE_ATTENTE'].includes(rdv.statut) && (
             <TouchableOpacity
               style={styles.cancelCard}
               onPress={handleCancel}

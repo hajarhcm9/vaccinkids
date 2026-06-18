@@ -30,7 +30,7 @@ export default function ProfileSetupScreen({ route }) {
         nom:    values.nom.trim(),
         prenom: values.prenom.trim(),
       });
-      const updatedUser = resp?.data?.user || { ...userFromOtp, ...values };
+      const updatedUser = resp?.user || { ...userFromOtp, ...values };
       await login(token, updatedUser, refreshToken);
     } catch (e) {
       if (e instanceof ApiError) {

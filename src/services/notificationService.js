@@ -1,16 +1,15 @@
 import apiClient from './apiClient';
 
-export async function listNotifications(type) {
-  const params = type ? { type } : {};
-  return apiClient.get('/notifications', { params });
+export async function listNotifications() {
+  return apiClient.get('/notifications/me');
 }
 
 export async function markAsRead(id) {
-  return apiClient.post(`/notifications/${id}/read`);
+  return apiClient.patch(`/notifications/${id}/read`);
 }
 
 export async function markAllAsRead() {
-  return apiClient.post('/notifications/read-all');
+  return apiClient.patch('/notifications/read-all');
 }
 
 export async function deleteNotification(id) {
@@ -21,14 +20,10 @@ export async function getUnreadCount() {
   return apiClient.get('/notifications/unread-count');
 }
 
-export async function updatePreferences(prefs) {
-  return apiClient.put('/notifications/preferences', prefs);
-}
-
 export async function getPreferences() {
-  return apiClient.get('/notifications/preferences');
+  return null;
 }
 
-export async function registerPushToken(pushToken) {
-  return apiClient.post('/notifications/push-token', { token: pushToken });
+export async function updatePreferences() {
+  return null;
 }

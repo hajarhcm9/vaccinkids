@@ -297,7 +297,10 @@ class GrowthChartFragment : Fragment(R.layout.fragment_growth_chart) {
     }
 
     private fun showAddMeasureDialog() {
-        if (bebeId <= 0) return
+        if (bebeId <= 0) {
+            Toast.makeText(requireContext(), "Identifiant bébé invalide", Toast.LENGTH_SHORT).show()
+            return
+        }
         val root = LinearLayout(requireContext()).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(64, 32, 64, 8)

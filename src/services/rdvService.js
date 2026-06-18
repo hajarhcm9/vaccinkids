@@ -1,34 +1,25 @@
 import apiClient from './apiClient';
 
-export async function listRdv(statut) {
-  const params = statut ? { statut } : {};
-  return apiClient.get('/rdv', { params });
+export async function listRdv() {
+  return apiClient.get('/rendez-vous/me');
 }
 
 export async function getRdv(id) {
-  return apiClient.get(`/rdv/${id}`);
+  return apiClient.get(`/rendez-vous/${id}`);
 }
 
-export async function takeRdv(payload) {
-  return apiClient.post('/rdv', payload);
+export async function cancelRdv(id) {
+  return apiClient.patch(`/rendez-vous/${id}`, { statut: 'ANNULE' });
 }
 
-export async function getCreneaux({ centre_id, vaccin, from, to }) {
-  return apiClient.get('/rdv/creneaux', { params: { centre_id, vaccin, from, to } });
+export async function listSessions(params = {}) {
+  return apiClient.get('/sessions', { params });
 }
 
-export async function cancelRdv(id, motif) {
-  return apiClient.post(`/rdv/${id}/cancel`, { motif });
+export async function inscribeSession(sessionId, bebe_id) {
+  return apiClient.post(`/sessions/${sessionId}/inscrire`, { bebe_id });
 }
 
-export async function rescheduleRdv(id, { date, heure }) {
-  return apiClient.post(`/rdv/${id}/reschedule`, { date, heure });
-}
-
-export async function markAsDone(id) {
-  return apiClient.post(`/rdv/${id}/done`);
-}
-
-export async function listCentres() {
-  return apiClient.get('/centres');
+export async function joinWaitlist(sessionId, bebe_id) {
+  return apiClient.post(`/sessions/${sessionId}/waitlist`, { bebe_id });
 }

@@ -129,7 +129,10 @@ const config = {
     profiles: {
       api: {
         windowMs: parsePositiveInt(process.env.RATE_LIMIT_API_WINDOW_MS, 15 * 60 * 1000),
-        max: parsePositiveInt(process.env.RATE_LIMIT_API_MAX, 300),
+        max: parsePositiveInt(
+          process.env.RATE_LIMIT_API_MAX,
+          process.env.NODE_ENV === 'production' ? 300 : 2000,
+        ),
       },
       otp: {
         windowMs: parsePositiveInt(process.env.RATE_LIMIT_OTP_WINDOW_MS, 15 * 60 * 1000),
@@ -145,11 +148,17 @@ const config = {
       },
       exports: {
         windowMs: parsePositiveInt(process.env.RATE_LIMIT_EXPORT_WINDOW_MS, 60 * 60 * 1000),
-        max: parsePositiveInt(process.env.RATE_LIMIT_EXPORT_MAX, 20),
+        max: parsePositiveInt(
+          process.env.RATE_LIMIT_EXPORT_MAX,
+          process.env.NODE_ENV === 'production' ? 20 : 200,
+        ),
       },
       kiosk: {
         windowMs: parsePositiveInt(process.env.RATE_LIMIT_KIOSK_WINDOW_MS, 60 * 1000),
-        max: parsePositiveInt(process.env.RATE_LIMIT_KIOSK_MAX, 120),
+        max: parsePositiveInt(
+          process.env.RATE_LIMIT_KIOSK_MAX,
+          process.env.NODE_ENV === 'production' ? 120 : 600,
+        ),
       },
     },
   },

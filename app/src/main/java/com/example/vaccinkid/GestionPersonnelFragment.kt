@@ -1,13 +1,11 @@
 package com.example.vaccinkid
 
-import android.app.AlertDialog
 import android.graphics.Color
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
-import android.widget.EditText
-import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.Spinner
 import android.widget.TextView
@@ -21,6 +19,8 @@ import com.example.vaccinkid.model.AdminPersonnelDto
 import com.example.vaccinkid.model.AdminPersonnelRequest
 import com.example.vaccinkid.model.AdminRefCentreDto
 import com.example.vaccinkid.network.ApiClient
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.textfield.TextInputEditText
 import kotlinx.coroutines.launch
 
 class GestionPersonnelFragment : Fragment(R.layout.fragment_gestion_personnel) {
@@ -125,45 +125,66 @@ class GestionPersonnelFragment : Fragment(R.layout.fragment_gestion_personnel) {
     }
 
     private fun showForm(item: AdminPersonnelDto?) {
-        val root = LinearLayout(requireContext()).apply {
-            orientation = LinearLayout.VERTICAL; setPadding(64, 32, 64, 8)
-        }
-        fun et(hint: String, value: String = "") = EditText(requireContext()).apply {
-            this.hint = hint; setText(value)
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT
-            ).also { it.bottomMargin = 16 }
-        }
-        val cin = et("CIN", item?.cin ?: "")
-        val nom = et("Nom", item?.nom ?: "")
-        val prenom = et("Prénom", item?.prenom ?: "")
-        val pwd = et(if (item == null) "Mot de passe" else "Mot de passe (laisser vide)")
-        val roleSpinner = Spinner(requireContext()).apply {
-            adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, listOf("infirmier", "admin"))
-            setSelection(if (item?.role == "admin") 1 else 0)
-        }
-        val centreSpinner = Spinner(requireContext()).apply {
-            adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item,
-                centres.map { it.nom ?: "Centre #${it.id}" })
-            val idx = centres.indexOfFirst { it.id == item?.centreId }
-            setSelection(if (idx >= 0) idx else 0)
-        }
-        if (item == null) root.addView(cin)
-        listOf(nom, prenom, roleSpinner, centreSpinner, pwd).forEach { root.addView(it) }
+        val isNew = item == null
+        val dialogView = LayoutInflater.from(requireContext())
+            .inflate(R.layout.dialog_add_personnel, null)
 
-        AlertDialog.Builder(requireContext())
-            .setTitle(if (item == null) "Ajouter personnel" else "Modifier personnel")
-            .setView(root)
+        val layoutCin = dialogView.findViewById<View>(R.id.layoutCin)
+        val etCin = dialogView.findViewById<TextInputEditText>(R.id.etCin)
+        val etNom = dialogView.findViewById<TextInputEditText>(R.id.etNom)
+        val etPrenom = dialogView.findViewById<TextInputEditText>(R.id.etPrenom)
+        val etPwd = dialogView.findViewById<TextInputEditText>(R.id.etPassword)
+        val roleSpinner = dialogView.findViewById<Spinner>(R.id.spinnerRole)
+        val centreSpinner = dialogView.findViewById<Spinner>(R.id.spinnerCentre)
+        val tvPwdHint = dialogView.findViewById<TextView>(R.id.tvPasswordHint)
+
+        layoutCin.visibility = if (isNew) View.VISIBLE else View.GONE
+        tvPwdHint.visibility = if (isNew) View.GONE else View.VISIBLE
+
+        if (!isNew) {
+            etCin.setText(item?.cin ?: "")
+            etNom.setText(item?.nom ?: "")
+            etPrenom.setText(item?.prenom ?: "")
+        }
+
+        roleSpinner.adapter = ArrayAdapter(
+            requireContext(),
+            android.R.layout.simple_spinner_dropdown_item,
+            listOf("infirmier", "admin")
+        )
+        roleSpinner.setSelection(if (item?.role == "admin") 1 else 0)
+
+        centreSpinner.adapter = ArrayAdapter(
+            requireContext(),
+            android.R.layout.simple_spinner_dropdown_item,
+            if (centres.isEmpty()) listOf("Chargement…")
+            else centres.map { it.nom ?: "Centre #${it.id}" }
+        )
+        val centreIdx = centres.indexOfFirst { it.id == item?.centreId }
+        centreSpinner.setSelection(if (centreIdx >= 0) centreIdx else 0)
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(if (isNew) "Ajouter un membre du personnel" else "Modifier le profil")
+            .setView(dialogView)
             .setNegativeButton("Annuler", null)
-            .setPositiveButton("Valider") { _, _ ->
-                savePersonnel(item?.id, AdminPersonnelRequest(
-                    cin = if (item == null) cin.text.toString().trim() else null,
-                    nom = nom.text.toString().trim(),
-                    prenom = prenom.text.toString().trim(),
-                    role = roleSpinner.selectedItem.toString(),
-                    centreId = centres.getOrNull(centreSpinner.selectedItemPosition)?.id,
-                    motDePasse = pwd.text.toString().trim().ifBlank { null }
-                ))
+            .setPositiveButton(if (isNew) "Créer le compte" else "Enregistrer") { _, _ ->
+                val nomVal = etNom.text?.toString()?.trim() ?: ""
+                val prenomVal = etPrenom.text?.toString()?.trim() ?: ""
+                if (nomVal.length < 2 || prenomVal.length < 2) {
+                    Toast.makeText(requireContext(), "Nom et prénom requis (min. 2 caractères)", Toast.LENGTH_SHORT).show()
+                    return@setPositiveButton
+                }
+                savePersonnel(
+                    item?.id,
+                    AdminPersonnelRequest(
+                        cin = if (isNew) etCin.text?.toString()?.trim()?.ifBlank { null } else null,
+                        nom = nomVal,
+                        prenom = prenomVal,
+                        role = roleSpinner.selectedItem.toString(),
+                        centreId = centres.getOrNull(centreSpinner.selectedItemPosition)?.id,
+                        motDePasse = etPwd.text?.toString()?.trim()?.ifBlank { null }
+                    )
+                )
             }
             .show()
     }
@@ -183,9 +204,9 @@ class GestionPersonnelFragment : Fragment(R.layout.fragment_gestion_personnel) {
     }
 
     private fun togglePersonnel(item: AdminPersonnelDto) {
-        AlertDialog.Builder(requireContext())
-            .setTitle(if (item.estActif == true) "Désactiver" else "Réactiver")
-            .setMessage("${item.prenom ?: ""} ${item.nom ?: ""}")
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(if (item.estActif == true) "Désactiver le compte" else "Réactiver le compte")
+            .setMessage("${item.prenom ?: ""} ${item.nom ?: ""} — êtes-vous sûr ?")
             .setNegativeButton("Annuler", null)
             .setPositiveButton("Confirmer") { _, _ ->
                 viewLifecycleOwner.lifecycleScope.launch {

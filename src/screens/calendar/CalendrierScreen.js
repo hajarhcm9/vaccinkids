@@ -9,6 +9,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, Gradients, Radii, Spacing, Elevation } from '../../constants/theme';
 import { vaccinService, enfantService } from '../../services';
 
+function formatDate(iso) {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
+}
+
 const STATUS_META = {
   FAIT:      { color: Colors.success,       bg: Colors.successBg,  icon: 'checkmark-circle', label: 'Fait' },
   A_VENIR:   { color: Colors.primary,       bg: Colors.primaryTint, icon: 'time-outline',    label: 'À venir' },
@@ -94,7 +99,7 @@ export default function CalendrierScreen({ route, navigation }) {
           <View style={styles.vaccinMeta}>
             <View style={styles.metaChip}>
               <Ionicons name="calendar-outline" size={11} color={Colors.textLight} />
-              <Text style={styles.metaText}>{item.date_prevue}</Text>
+              <Text style={styles.metaText}>{item.date_prevue ? formatDate(item.date_prevue) : '—'}</Text>
             </View>
             {item.dose && (
               <View style={styles.metaChip}>

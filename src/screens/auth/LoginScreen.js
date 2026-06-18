@@ -75,9 +75,9 @@ export default function LoginScreen({ navigation }) {
     setVerifying(true);
     try {
       const resp = await authService.verifyOTP(normalizePhone(telephone), code);
-      const user         = resp?.data?.user;
-      const token        = resp?.data?.tokens?.accessToken;
-      const refreshToken = resp?.data?.tokens?.refreshToken;
+      const user         = resp?.user;
+      const token        = resp?.tokens?.accessToken;
+      const refreshToken = resp?.tokens?.refreshToken;
 
       if (!token) throw new Error('Réponse invalide du serveur');
 

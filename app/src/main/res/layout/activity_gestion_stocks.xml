@@ -4,61 +4,235 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="16dp"
-    android:background="@color/staff_background">
+    android:background="@color/bg_screen">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Gestion des stocks"
-        android:textSize="22sp"
-        android:textStyle="bold"
-        android:textColor="@color/staff_ink"
-        android:layout_marginBottom="16dp"/>
-
-    <Spinner
-        android:id="@+id/inputCentreStock"
-        android:layout_width="match_parent"
-        android:layout_height="52dp"
-        android:layout_marginBottom="8dp"
-        android:background="@drawable/bg_input_outlined"
-        android:paddingHorizontal="12dp" />
-
-    <Button
-        android:id="@+id/btnChargerStock"
+    <!-- ═══ HEADER ═══ -->
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Charger stock et historique" />
+        android:orientation="vertical"
+        android:paddingHorizontal="20dp"
+        android:paddingTop="20dp"
+        android:paddingBottom="14dp"
+        android:background="@color/bg_screen">
 
-    <Button
-        android:id="@+id/btnAjouterEntreeStock"
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Gestion des stocks"
+            android:textSize="26sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_primary"
+            android:letterSpacing="-0.01" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Vaccins disponibles et historique des mouvements"
+            android:textSize="13sp"
+            android:textColor="@color/text_secondary"
+            android:layout_marginTop="2dp" />
+    </LinearLayout>
+
+    <!-- ═══ CENTRE SELECTOR CARD ═══ -->
+    <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Enregistrer une entree"
-        android:backgroundTint="@color/staff_primary"
-        android:textColor="@color/white"
-        android:layout_marginBottom="16dp"/>
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginBottom="12dp"
+        app:cardBackgroundColor="@color/white"
+        app:cardCornerRadius="18dp"
+        app:cardElevation="3dp"
+        app:strokeWidth="0dp">
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclerViewStocks"
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- Teal accent bar -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="4dp"
+                android:background="@color/brand_teal" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingStart="16dp"
+                android:paddingEnd="12dp"
+                android:paddingTop="10dp"
+                android:paddingBottom="4dp">
+
+                <LinearLayout
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:background="@drawable/bg_badge_teal"
+                    android:gravity="center">
+                    <ImageView
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
+                        android:src="@drawable/ic_medical_staff"
+                        android:contentDescription="@null"
+                        app:tint="@color/brand_teal" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:layout_marginStart="12dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="CENTRE DE SANTÉ"
+                        android:textSize="10sp"
+                        android:textColor="@color/brand_teal"
+                        android:textStyle="bold"
+                        android:letterSpacing="0.05" />
+
+                    <Spinner
+                        android:id="@+id/inputCentreStock"
+                        android:layout_width="match_parent"
+                        android:layout_height="42dp"
+                        android:background="@null" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Action buttons row -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingStart="14dp"
+                android:paddingEnd="14dp"
+                android:paddingBottom="14dp"
+                android:paddingTop="4dp">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnChargerStock"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="8dp"
+                    android:text="Charger le stock"
+                    android:textSize="13sp"
+                    android:textColor="@color/white"
+                    android:textStyle="bold"
+                    app:backgroundTint="@color/brand_teal"
+                    app:cornerRadius="20dp"
+                    app:icon="@drawable/ic_dashboard"
+                    app:iconTint="@color/white"
+                    app:iconSize="16dp"
+                    app:iconPadding="4dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnAjouterEntreeStock"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:text="Ajouter stock"
+                    android:textSize="13sp"
+                    android:textColor="@color/brand_teal"
+                    android:textStyle="bold"
+                    app:backgroundTint="@color/teal_50"
+                    app:strokeColor="@color/brand_teal"
+                    app:strokeWidth="1.5dp"
+                    app:cornerRadius="20dp"
+                    app:icon="@drawable/ic_package"
+                    app:iconTint="@color/brand_teal"
+                    app:iconSize="16dp"
+                    app:iconPadding="4dp"
+                    android:visibility="gone" />
+            </LinearLayout>
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- ═══ SCROLLABLE CONTENT ═══ -->
+    <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:clipToPadding="false"/>
+        android:clipToPadding="false"
+        android:paddingBottom="20dp">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Historique des mouvements"
-        android:textSize="18sp"
-        android:textStyle="bold"
-        android:layout_marginTop="12dp" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclerViewStockMovements"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:clipToPadding="false"/>
+            <!-- Stock section label -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="VACCINS EN STOCK"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:textColor="@color/text_secondary"
+                android:letterSpacing="0.08"
+                android:paddingHorizontal="20dp"
+                android:paddingTop="4dp"
+                android:paddingBottom="8dp" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerViewStocks"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:clipToPadding="false"
+                android:paddingHorizontal="16dp"
+                android:nestedScrollingEnabled="false" />
+
+            <!-- Movements section -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardMovements"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginTop="16dp"
+                app:cardBackgroundColor="@color/white"
+                app:cardCornerRadius="18dp"
+                app:cardElevation="2dp"
+                app:strokeWidth="0dp"
+                android:visibility="gone">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="4dp"
+                        android:background="@color/brand_blue" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="HISTORIQUE DES MOUVEMENTS"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/brand_blue"
+                        android:letterSpacing="0.08"
+                        android:paddingHorizontal="16dp"
+                        android:paddingTop="14dp"
+                        android:paddingBottom="8dp" />
+
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/recyclerViewStockMovements"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:clipToPadding="false"
+                        android:paddingHorizontal="16dp"
+                        android:paddingBottom="12dp"
+                        android:nestedScrollingEnabled="false" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
 
 </LinearLayout>

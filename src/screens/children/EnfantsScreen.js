@@ -20,13 +20,19 @@ const AVATAR_GRADIENTS = [
 
 function getAge(dob) {
   if (!dob) return '';
-  const [d, m, y] = dob.split('/');
-  const birth  = new Date(`${y}-${m}-${d}`);
-  const now    = new Date();
+  const birth = new Date(dob.includes('/') ? dob.split('/').reverse().join('-') : dob);
+  const now   = new Date();
   const years  = now.getFullYear() - birth.getFullYear();
   const months = (now.getFullYear() * 12 + now.getMonth()) - (birth.getFullYear() * 12 + birth.getMonth());
   if (years >= 1) return `${years} an${years > 1 ? 's' : ''}`;
   return `${months} mois`;
+}
+
+function formatDateDisplay(iso) {
+  if (!iso) return '';
+  if (iso.includes('/')) return iso;
+  const [y, m, d] = iso.split('-');
+  return `${d}/${m}/${y}`;
 }
 
 function ProgressPill({ done, total }) {
@@ -65,7 +71,7 @@ export default function EnfantsScreen({ navigation }) {
   const loadEnfants = useCallback(async () => {
     try {
       const data = await enfantService.listEnfants();
-      if (data) setEnfants(data);
+      setEnfants(data || []);
     } catch (e) {}
   }, []);
 
@@ -100,8 +106,9 @@ export default function EnfantsScreen({ navigation }) {
     setAdding(true);
     setAddError('');
     try {
-      const resp = await enfantService.addEnfant({ prenom, nom, date_naissance: date, sexe: addSexe });
-      const nouvelEnfant = resp?.enfant || resp;
+      const [dd, mm, yyyy] = date.split('/');
+      const resp = await enfantService.addEnfant({ prenom, nom, date_naissance: `${yyyy}-${mm}-${dd}`, sexe: addSexe });
+      const nouvelEnfant = resp;
       if (nouvelEnfant) {
         setEnfants((prev) => [...prev, nouvelEnfant]);
       }
@@ -137,7 +144,7 @@ export default function EnfantsScreen({ navigation }) {
               <Text style={[styles.sexeText, { color: sexeColor }]}>{sexeLabel}</Text>
             </View>
           </View>
-          <Text style={styles.enfantAge}>{getAge(item.date_naissance)}  ·  {item.date_naissance}</Text>
+          <Text style={styles.enfantAge}>{getAge(item.date_naissance)}  ·  {formatDateDisplay(item.date_naissance)}</Text>
           {item.vaccins_total != null && (
             <ProgressPill done={item.vaccins_faits} total={item.vaccins_total} />
           )}

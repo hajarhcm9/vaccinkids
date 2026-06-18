@@ -9,9 +9,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, Gradients, Radii, Spacing, Elevation } from '../../constants/theme';
 import { rdvService, enfantService } from '../../services';
 
-const VACCINS_LIST = ['BCG', 'Hépatite B', 'Pentavalent (DTP-Hib)', 'Pneumocoque', 'Rotavirus', 'ROR', 'Varicelle', 'Rappel DTP', 'Méningite A+C'];
-const SLOTS_LIST   = ['08:30', '09:00', '09:30', '10:00', '10:30', '11:00'];
-
 const SEGMENTS = [
   { key: 'A_VENIR', label: 'À venir',   icon: 'time-outline',             color: Colors.primary  },
   { key: 'FAIT',    label: 'Effectués', icon: 'checkmark-circle-outline', color: Colors.success  },
@@ -19,144 +16,132 @@ const SEGMENTS = [
 ];
 
 const STATUS_META = {
-  A_VENIR: { color: Colors.primary,  bg: Colors.primaryTint, icon: 'time-outline',    label: 'À venir'  },
-  FAIT:    { color: Colors.success,  bg: Colors.successBg,   icon: 'checkmark-circle', label: 'Effectué' },
-  ANNULE:  { color: Colors.danger,   bg: Colors.dangerBg,    icon: 'close-circle',    label: 'Annulé'   },
+  EN_ATTENTE:       { color: Colors.primary,  bg: Colors.primaryTint, icon: 'time-outline',      label: 'En attente'     },
+  EN_LISTE_ATTENTE: { color: Colors.accent,   bg: Colors.accentLight, icon: 'hourglass-outline', label: 'Liste d\'attente' },
+  CONFIRME:         { color: Colors.info,     bg: Colors.infoBg,      icon: 'checkmark-circle',  label: 'Confirmé'       },
+  PRESENT:          { color: Colors.success,  bg: Colors.successBg,   icon: 'checkmark-circle',  label: 'Effectué'       },
+  ABSENT:           { color: Colors.danger,   bg: Colors.dangerBg,    icon: 'close-circle',      label: 'Absent'         },
+  ANNULE:           { color: Colors.danger,   bg: Colors.dangerBg,    icon: 'close-circle',      label: 'Annulé'         },
 };
+
+const UPCOMING_STATUTS = ['EN_ATTENTE', 'CONFIRME', 'EN_LISTE_ATTENTE'];
+const DONE_STATUTS     = ['PRESENT', 'ABSENT'];
 
 function formatDate(iso) {
   if (!iso) return '—';
   return new Date(iso).toLocaleDateString('fr-FR', { weekday: 'short', day: '2-digit', month: 'long', year: 'numeric' });
 }
 
-const centreName = (c) => (c && typeof c === 'object' ? c.nom : c) || '';
-const centreId   = (c) => (c && typeof c === 'object' ? c.id  : c) || null;
-
 export default function RdvScreen({ navigation }) {
   const insets = useSafeAreaInsets();
   const [segment,     setSegment]    = useState('A_VENIR');
-  const [rdvs,        setRdvs]       = useState({ A_VENIR: [], FAIT: [], ANNULE: [] });
+  const [allRdvs,     setAllRdvs]    = useState([]);
+  const [sessions,    setSessions]   = useState([]);
+  const [enfantsList, setEnfantsList] = useState([]);
   const [loading,     setLoading]    = useState(true);
   const [refreshing,  setRefreshing] = useState(false);
   const [showModal,   setShowModal]  = useState(false);
   const [confirming,  setConfirming] = useState(false);
+  const [selEnfant,   setSelEnfant]  = useState(null);
+  const [selSession,  setSelSession] = useState(null);
 
-  const [enfantsList, setEnfantsList] = useState([]);
-  const [centresList, setCentresList] = useState([]);
+  const rdvsBySegment = {
+    A_VENIR: allRdvs.filter((r) => UPCOMING_STATUTS.includes(r.statut)),
+    FAIT:    allRdvs.filter((r) => DONE_STATUTS.includes(r.statut)),
+    ANNULE:  allRdvs.filter((r) => r.statut === 'ANNULE'),
+  };
 
-  const [selEnfant, setSelEnfant] = useState(null);
-  const [selVaccin, setSelVaccin] = useState(null);
-  const [selCentre, setSelCentre] = useState(null);
-  const [selSlot,   setSelSlot]   = useState(null);
-
-  const loadAllRdvs = useCallback(async () => {
+  const loadData = useCallback(async () => {
     try {
-      const [aVenir, faits, annules] = await Promise.all([
-        rdvService.listRdv('A_VENIR').catch(() => []),
-        rdvService.listRdv('FAIT').catch(() => []),
-        rdvService.listRdv('ANNULE').catch(() => []),
-      ]);
-      setRdvs({
-        A_VENIR: aVenir  || [],
-        FAIT:    faits   || [],
-        ANNULE:  annules || [],
-      });
-    } catch (e) {}
-  }, []);
-
-  const loadModalData = useCallback(async () => {
-    try {
-      const [enfants, centres] = await Promise.all([
+      const [rdvData, sessionData, enfantData] = await Promise.all([
+        rdvService.listRdv().catch(() => []),
+        rdvService.listSessions().catch(() => []),
         enfantService.listEnfants().catch(() => []),
-        rdvService.listCentres().catch(() => []),
       ]);
-      if (enfants?.length)  setEnfantsList(enfants);
-      if (centres?.length)  setCentresList(centres);
+      setAllRdvs(rdvData || []);
+      setSessions(sessionData || []);
+      setEnfantsList(enfantData || []);
     } catch (e) {}
   }, []);
 
-  useEffect(() => {
-    Promise.all([loadAllRdvs(), loadModalData()]).finally(() => setLoading(false));
-  }, [loadAllRdvs, loadModalData]);
+  useEffect(() => { loadData().finally(() => setLoading(false)); }, [loadData]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await loadAllRdvs();
+    await loadData();
     setRefreshing(false);
-  }, [loadAllRdvs]);
+  }, [loadData]);
 
   const resetModal = () => {
     setSelEnfant(null);
-    setSelVaccin(null);
-    setSelCentre(null);
-    setSelSlot(null);
+    setSelSession(null);
   };
 
   const handleCancel = (item) => {
     Alert.alert(
       'Annuler ce rendez-vous',
-      `Confirmer l'annulation du RDV de ${item.enfant_nom || item.enfant} pour le ${item.vaccin} ?`,
+      `Annuler le RDV de ${item.bebe_prenom || '—'} pour ${item.vaccin_nom || '—'} ?`,
       [
         { text: 'Non', style: 'cancel' },
         {
           text: 'Oui, annuler', style: 'destructive',
           onPress: async () => {
             try {
-              await rdvService.cancelRdv(item.id, 'Annulation par le parent');
-            } catch (e) {}
-            setRdvs((prev) => ({
-              ...prev,
-              A_VENIR: prev.A_VENIR.filter((r) => r.id !== item.id),
-              ANNULE:  [{ ...item, statut: 'ANNULE', motif: 'Annulation par le parent' }, ...prev.ANNULE],
-            }));
+              await rdvService.cancelRdv(item.id);
+              setAllRdvs((prev) =>
+                prev.map((r) => r.id === item.id ? { ...r, statut: 'ANNULE' } : r)
+              );
+            } catch (e) {
+              Alert.alert('Erreur', 'Impossible d\'annuler ce rendez-vous.');
+            }
           },
         },
       ]
     );
   };
 
-  const handleConfirmRdv = async () => {
-    if (!selEnfant || !selVaccin || !selCentre || !selSlot) {
-      Alert.alert('Champs manquants', 'Veuillez compléter tous les champs.');
+  const handleBook = async () => {
+    if (!selEnfant || !selSession) {
+      Alert.alert('Champs manquants', 'Choisissez un enfant et une session.');
       return;
     }
     setConfirming(true);
     try {
-      const today = new Date().toISOString().slice(0, 10);
-      const payload = {
-        enfant_id:  selEnfant.id,
-        vaccin:     selVaccin,
-        centre_id:  centreId(selCentre),
-        centre:     centreName(selCentre),
-        date:       today,
-        heure:      selSlot,
+      const available = selSession.max_inscriptions - (selSession.inscrits || 0);
+      const isFull = available <= 0;
+      const resp = isFull
+        ? await rdvService.joinWaitlist(selSession.id, selEnfant.id)
+        : await rdvService.inscribeSession(selSession.id, selEnfant.id);
+
+      const newRdv = resp?.id ? resp : {
+        id: `r_${Date.now()}`,
+        statut: isFull ? 'EN_LISTE_ATTENTE' : 'EN_ATTENTE',
+        vaccin_nom:  selSession.vaccin_nom,
+        bebe_prenom: selEnfant.prenom,
+        bebe_nom:    selEnfant.nom,
+        date_session: selSession.date_session,
+        heure_debut:  selSession.heure_debut,
+        centre_nom:   selSession.centre_nom,
       };
-      const resp = await rdvService.takeRdv(payload);
-      const newRdv = resp?.rdv || resp?.data || {
-        id:         `r_${Date.now()}`,
-        enfant:     selEnfant.prenom,
-        enfant_nom: selEnfant.prenom,
-        vaccin:     selVaccin,
-        date:       today,
-        heure:      selSlot,
-        centre:     centreName(selCentre),
-        statut:     'A_VENIR',
-      };
-      setRdvs((prev) => ({ ...prev, A_VENIR: [newRdv, ...prev.A_VENIR] }));
+      setAllRdvs((prev) => [newRdv, ...prev]);
       setShowModal(false);
       resetModal();
       setSegment('A_VENIR');
+      if (isFull) {
+        Alert.alert('Liste d\'attente', 'La session est complète. Vous avez été ajouté à la liste d\'attente.');
+      }
     } catch (e) {
-      Alert.alert('Erreur', e?.message || 'Impossible de créer ce rendez-vous. Réessayez.');
+      Alert.alert('Erreur', e?.message || 'Impossible de prendre ce rendez-vous. Réessayez.');
     } finally {
       setConfirming(false);
     }
   };
 
-  const currentList = rdvs[segment] || [];
+  const currentList = rdvsBySegment[segment] || [];
 
   const renderCard = ({ item }) => {
-    const m = STATUS_META[item.statut] || STATUS_META.A_VENIR;
+    const m = STATUS_META[item.statut] || STATUS_META.EN_ATTENTE;
+    const canCancel = UPCOMING_STATUTS.includes(item.statut);
     return (
       <View style={styles.card}>
         <View style={[styles.cardAccent, { backgroundColor: m.color }]} />
@@ -166,8 +151,8 @@ export default function RdvScreen({ navigation }) {
               <Ionicons name="medkit" size={20} color={m.color} />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.vaccinNom}>{item.vaccin}</Text>
-              <Text style={styles.enfantLabel}>Pour {item.enfant_nom || item.enfant}</Text>
+              <Text style={styles.vaccinNom}>{item.vaccin_nom || '—'}</Text>
+              <Text style={styles.enfantLabel}>Pour {item.bebe_prenom || item.bebe_nom || '—'}</Text>
             </View>
             <View style={[styles.badge, { backgroundColor: m.bg }]}>
               <Ionicons name={m.icon} size={11} color={m.color} />
@@ -176,19 +161,12 @@ export default function RdvScreen({ navigation }) {
           </View>
 
           <View style={styles.cardMeta}>
-            <MetaItem icon="calendar-outline" value={formatDate(item.date)} />
-            <MetaItem icon="time-outline"     value={item.heure} />
-            <MetaItem icon="location-outline" value={item.centre} />
+            <MetaItem icon="calendar-outline" value={formatDate(item.date_session)} />
+            <MetaItem icon="time-outline"     value={item.heure_debut || '—'} />
+            <MetaItem icon="location-outline" value={item.centre_nom || '—'} />
           </View>
 
-          {item.motif && (
-            <View style={styles.motifRow}>
-              <Ionicons name="information-circle-outline" size={13} color={Colors.danger} />
-              <Text style={styles.motifText}>{item.motif}</Text>
-            </View>
-          )}
-
-          {item.statut === 'A_VENIR' && (
+          {canCancel && (
             <View style={styles.cardActions}>
               <TouchableOpacity
                 style={styles.detailBtn}
@@ -230,7 +208,7 @@ export default function RdvScreen({ navigation }) {
         <View style={styles.segmentBar}>
           {SEGMENTS.map((s) => {
             const active = segment === s.key;
-            const count  = (rdvs[s.key] || []).length;
+            const count  = (rdvsBySegment[s.key] || []).length;
             return (
               <TouchableOpacity
                 key={s.key}
@@ -268,13 +246,17 @@ export default function RdvScreen({ navigation }) {
       )}
 
       {/* FAB */}
-      <TouchableOpacity style={styles.fab} onPress={() => { resetModal(); setShowModal(true); }} activeOpacity={0.88}>
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={() => { resetModal(); setShowModal(true); }}
+        activeOpacity={0.88}
+      >
         <LinearGradient colors={Gradients.brand} style={styles.fabGradient}>
           <Ionicons name="add" size={28} color={Colors.white} />
         </LinearGradient>
       </TouchableOpacity>
 
-      {/* ── Take RDV Modal ── */}
+      {/* ── Book RDV Modal ── */}
       <Modal visible={showModal} transparent animationType="slide" onRequestClose={() => setShowModal(false)}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalSheet}>
@@ -286,7 +268,8 @@ export default function RdvScreen({ navigation }) {
               </TouchableOpacity>
             </View>
             <ScrollView showsVerticalScrollIndicator={false}>
-              {/* Enfant */}
+
+              {/* Enfant picker */}
               <PickerSection label="Enfant" icon="person-outline" color={Colors.primary}>
                 {enfantsList.length === 0 ? (
                   <Text style={styles.noDataText}>Aucun enfant enregistré. Ajoutez d'abord un enfant.</Text>
@@ -298,46 +281,51 @@ export default function RdvScreen({ navigation }) {
                         style={[styles.chip, selEnfant?.id === e.id && styles.chipActive]}
                         onPress={() => setSelEnfant(e)}
                       >
-                        <Text style={[styles.chipText, selEnfant?.id === e.id && styles.chipTextActive]}>{e.prenom}</Text>
+                        <Text style={[styles.chipText, selEnfant?.id === e.id && styles.chipTextActive]}>
+                          {e.prenom}
+                        </Text>
                       </TouchableOpacity>
                     ))}
                   </View>
                 )}
               </PickerSection>
 
-              {/* Vaccin */}
-              <PickerSection label="Vaccin" icon="medkit-outline" color="#7C3AED">
-                <View style={styles.chipRow}>
-                  {VACCINS_LIST.map((v) => (
-                    <TouchableOpacity
-                      key={v}
-                      style={[styles.chip, selVaccin === v && styles.chipActive]}
-                      onPress={() => setSelVaccin(v)}
-                    >
-                      <Text style={[styles.chipText, selVaccin === v && styles.chipTextActive]}>{v}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </PickerSection>
-
-              {/* Centre */}
-              <PickerSection label="Centre de santé" icon="location-outline" color={Colors.success}>
-                {centresList.length === 0 ? (
-                  <Text style={styles.noDataText}>Aucun centre disponible.</Text>
+              {/* Session picker */}
+              <PickerSection label="Session de vaccination" icon="calendar-outline" color={Colors.success}>
+                {sessions.length === 0 ? (
+                  <Text style={styles.noDataText}>Aucune session disponible pour le moment.</Text>
                 ) : (
-                  <View style={styles.chipCol}>
-                    {centresList.map((c, idx) => {
-                      const nom      = centreName(c);
-                      const selected = centreName(selCentre) === nom;
+                  <View style={styles.sessionList}>
+                    {sessions.map((s) => {
+                      const available = s.max_inscriptions - (s.inscrits || 0);
+                      const isFull    = available <= 0;
+                      const selected  = selSession?.id === s.id;
                       return (
                         <TouchableOpacity
-                          key={String(centreId(c) || idx)}
-                          style={[styles.centreRow, selected && styles.centreRowActive]}
-                          onPress={() => setSelCentre(c)}
+                          key={String(s.id)}
+                          style={[styles.sessionRow, selected && styles.sessionRowActive]}
+                          onPress={() => setSelSession(s)}
+                          activeOpacity={0.8}
                         >
-                          <Ionicons name="business-outline" size={15} color={selected ? Colors.primary : Colors.textLight} />
-                          <Text style={[styles.centreText, selected && { color: Colors.primary, fontWeight: '700' }]}>{nom}</Text>
-                          {selected && <Ionicons name="checkmark-circle" size={17} color={Colors.primary} style={{ marginLeft: 'auto' }} />}
+                          <View style={styles.sessionLeft}>
+                            <Text style={styles.sessionVaccin}>{s.vaccin_nom}</Text>
+                            <Text style={styles.sessionCentre}>{s.centre_nom}</Text>
+                            <Text style={styles.sessionMeta}>
+                              {formatDate(s.date_session)}{'  ·  '}{s.heure_debut} – {s.heure_fin}
+                            </Text>
+                          </View>
+                          <View style={styles.sessionRight}>
+                            {isFull ? (
+                              <Text style={styles.sessionFull}>Liste d'attente</Text>
+                            ) : (
+                              <Text style={styles.sessionPlaces}>
+                                {available} place{available > 1 ? 's' : ''}
+                              </Text>
+                            )}
+                            {selected && (
+                              <Ionicons name="checkmark-circle" size={20} color={Colors.primary} style={{ marginTop: 4 }} />
+                            )}
+                          </View>
                         </TouchableOpacity>
                       );
                     })}
@@ -345,25 +333,10 @@ export default function RdvScreen({ navigation }) {
                 )}
               </PickerSection>
 
-              {/* Créneau */}
-              <PickerSection label="Créneau horaire" icon="time-outline" color={Colors.accent}>
-                <View style={styles.chipRow}>
-                  {SLOTS_LIST.map((s) => (
-                    <TouchableOpacity
-                      key={s}
-                      style={[styles.chip, selSlot === s && styles.chipActive]}
-                      onPress={() => setSelSlot(s)}
-                    >
-                      <Text style={[styles.chipText, selSlot === s && styles.chipTextActive]}>{s}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </PickerSection>
-
               <TouchableOpacity
-                style={[styles.confirmBtn, (confirming || !selEnfant || !selVaccin || !selCentre || !selSlot) && { opacity: 0.55 }]}
-                onPress={handleConfirmRdv}
-                disabled={confirming || !selEnfant || !selVaccin || !selCentre || !selSlot}
+                style={[styles.confirmBtn, (confirming || !selEnfant || !selSession) && { opacity: 0.55 }]}
+                onPress={handleBook}
+                disabled={confirming || !selEnfant || !selSession}
                 activeOpacity={0.88}
               >
                 <LinearGradient colors={Gradients.brand} style={styles.confirmGrad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
@@ -371,7 +344,11 @@ export default function RdvScreen({ navigation }) {
                     ? <ActivityIndicator color={Colors.white} size="small" />
                     : <>
                         <Ionicons name="checkmark-circle-outline" size={20} color={Colors.white} />
-                        <Text style={styles.confirmBtnText}>Confirmer le rendez-vous</Text>
+                        <Text style={styles.confirmBtnText}>
+                          {selSession && selSession.max_inscriptions - (selSession.inscrits || 0) <= 0
+                            ? 'Rejoindre la liste d\'attente'
+                            : 'Confirmer le rendez-vous'}
+                        </Text>
                       </>
                   }
                 </LinearGradient>
@@ -438,9 +415,6 @@ const styles = StyleSheet.create({
   metaItem:      { flexDirection: 'row', alignItems: 'center', gap: 4 },
   metaText:      { fontSize: 12, color: Colors.textSecondary },
 
-  motifRow:      { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: Colors.dangerBg, padding: Spacing.sm, borderRadius: Radii.sm },
-  motifText:     { fontSize: 12, color: Colors.danger, flex: 1 },
-
   cardActions:   { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: Spacing.sm, borderTopWidth: 1, borderTopColor: Colors.border },
   detailBtn:     { flexDirection: 'row', alignItems: 'center', gap: 4 },
   detailBtnText: { fontSize: 13, fontWeight: '700', color: Colors.primary },
@@ -471,15 +445,21 @@ const styles = StyleSheet.create({
   pickerLabelText:  { fontSize: 14, fontWeight: '700', color: Colors.text },
 
   chipRow:       { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm },
-  chipCol:       { gap: Spacing.sm },
   chip:          { paddingHorizontal: Spacing.base, paddingVertical: 8, borderRadius: Radii.pill, backgroundColor: Colors.surfaceMuted, borderWidth: 1.5, borderColor: Colors.border },
   chipActive:    { backgroundColor: Colors.primaryTint, borderColor: Colors.primary },
   chipText:      { fontSize: 13, fontWeight: '600', color: Colors.textSecondary },
   chipTextActive:{ color: Colors.primary, fontWeight: '700' },
 
-  centreRow:      { flexDirection: 'row', alignItems: 'center', gap: Spacing.md, paddingVertical: Spacing.md, paddingHorizontal: Spacing.base, backgroundColor: Colors.surfaceMuted, borderRadius: Radii.md, borderWidth: 1.5, borderColor: 'transparent' },
-  centreRowActive:{ backgroundColor: Colors.primaryTint, borderColor: Colors.primary },
-  centreText:     { fontSize: 14, color: Colors.textSecondary, flex: 1 },
+  sessionList:     { gap: Spacing.sm },
+  sessionRow:      { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', padding: Spacing.base, backgroundColor: Colors.surfaceMuted, borderRadius: Radii.lg, borderWidth: 1.5, borderColor: 'transparent' },
+  sessionRowActive:{ backgroundColor: Colors.primaryTint, borderColor: Colors.primary },
+  sessionLeft:     { flex: 1, gap: 3 },
+  sessionVaccin:   { fontSize: 14, fontWeight: '700', color: Colors.text },
+  sessionCentre:   { fontSize: 12, color: Colors.textSecondary, fontWeight: '600' },
+  sessionMeta:     { fontSize: 11, color: Colors.textLight },
+  sessionRight:    { alignItems: 'flex-end', marginLeft: Spacing.sm },
+  sessionPlaces:   { fontSize: 12, fontWeight: '700', color: Colors.success },
+  sessionFull:     { fontSize: 11, fontWeight: '700', color: Colors.accent },
 
   confirmBtn:     { marginTop: Spacing.lg, borderRadius: Radii.xl, overflow: 'hidden' },
   confirmGrad:    { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.sm, paddingVertical: Spacing.lg },

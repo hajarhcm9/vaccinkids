@@ -97,6 +97,11 @@ const schemas = {
     prenom: { type: 'string', required: true, minLength: 2, maxLength: 100 },
     langue_preferee: { type: 'string', enum: ['fr', 'ar'], default: 'fr' },
   },
+  updateProfile: {
+    nom: { type: 'string', required: true, minLength: 2, maxLength: 100 },
+    prenom: { type: 'string', required: true, minLength: 2, maxLength: 100 },
+    langue_preferee: { type: 'string', enum: ['fr', 'ar'], default: 'fr' },
+  },
   updateFcmToken: {
     fcm_token: { type: 'string', required: true, minLength: 10, maxLength: 4096 },
   },

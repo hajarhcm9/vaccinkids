@@ -19,7 +19,7 @@ router.get(
   StockController.getLowStock,
 );
 
-router.get('/movements', authenticate, authorize('admin'), StockController.getMovements);
+router.get('/movements', authenticate, authorize('infirmier', 'admin'), StockController.getMovements);
 
 router.post(
   '/',

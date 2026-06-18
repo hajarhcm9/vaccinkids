@@ -6,17 +6,22 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Gradients, Radii, Spacing, Elevation } from '../../constants/theme';
-import { enfantService } from '../../services';
 
 function getAge(dob) {
   if (!dob) return '';
-  const [d, m, y] = dob.split('/');
-  const birth  = new Date(`${y}-${m}-${d}`);
-  const now    = new Date();
+  const birth = new Date(dob.includes('/') ? dob.split('/').reverse().join('-') : dob);
+  const now   = new Date();
   const years  = now.getFullYear() - birth.getFullYear();
   const months = (now.getFullYear() * 12 + now.getMonth()) - (birth.getFullYear() * 12 + birth.getMonth());
   if (years >= 1) return `${years} an${years > 1 ? 's' : ''}`;
   return `${months} mois`;
+}
+
+function formatDateDisplay(iso) {
+  if (!iso) return '—';
+  if (iso.includes('/')) return iso;
+  const [y, m, d] = iso.split('-');
+  return `${d}/${m}/${y}`;
 }
 
 export default function EnfantDetailScreen({ route, navigation }) {
@@ -31,22 +36,9 @@ export default function EnfantDetailScreen({ route, navigation }) {
 
   const handleDelete = () => {
     Alert.alert(
-      'Supprimer cet enfant',
-      `Voulez-vous vraiment supprimer ${enfant.prenom} de votre compte ?`,
-      [
-        { text: 'Annuler', style: 'cancel' },
-        {
-          text: 'Supprimer', style: 'destructive',
-          onPress: async () => {
-            try {
-              await enfantService.deleteEnfant(enfant.id);
-              navigation.goBack();
-            } catch (e) {
-              Alert.alert('Erreur', 'Impossible de supprimer cet enfant.');
-            }
-          },
-        },
-      ]
+      'Supprimer un enfant',
+      'Pour retirer un enfant de votre compte, veuillez contacter votre centre de santé.',
+      [{ text: 'OK', style: 'default' }]
     );
   };
 
@@ -88,7 +80,7 @@ export default function EnfantDetailScreen({ route, navigation }) {
         {/* Info card */}
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Informations</Text>
-          <InfoRow icon="calendar-outline" label="Date de naissance" value={enfant.date_naissance || '—'} />
+          <InfoRow icon="calendar-outline" label="Date de naissance" value={formatDateDisplay(enfant.date_naissance)} />
           <InfoRow icon="body-outline"     label="Sexe"              value={sexeLabel}                    />
           <InfoRow icon="card-outline"     label="Identifiant"       value={`#${enfant.id}`}              />
         </View>

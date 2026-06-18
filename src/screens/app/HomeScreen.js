@@ -44,30 +44,33 @@ export default function HomeScreen({ navigation }) {
   const loadData = React.useCallback(async () => {
     try {
       const [rdvResp, notifResp, enfantsResp] = await Promise.all([
-        rdvService.listRdv('A_VENIR').catch(() => null),
+        rdvService.listRdv().catch(() => null),
         notificationService.getUnreadCount().catch(() => null),
         enfantService.listEnfants().catch(() => null),
       ]);
-      if (rdvResp !== null) {
-        if (rdvResp?.length > 0) {
-          const r = rdvResp[0];
-          setNextRdv({
-            enfant: r.enfant_nom || r.enfant,
-            vaccin: r.vaccin,
-            date: new Date(r.date).toLocaleDateString('fr-FR', { weekday: 'long', day: '2-digit', month: 'long' }),
-            heure: r.heure,
-          });
-        } else {
-          setNextRdv(null);
-        }
+      const upcoming = (rdvResp || []).filter((r) =>
+        ['EN_ATTENTE', 'CONFIRME', 'EN_LISTE_ATTENTE'].includes(r.statut)
+      );
+      if (upcoming.length > 0) {
+        const r = upcoming[0];
+        setNextRdv({
+          enfant: r.bebe_prenom || r.bebe_nom || '—',
+          vaccin: r.vaccin_nom || '—',
+          date: r.date_session
+            ? new Date(r.date_session).toLocaleDateString('fr-FR', { weekday: 'long', day: '2-digit', month: 'long' })
+            : '—',
+          heure: r.heure_debut || '—',
+        });
+      } else {
+        setNextRdv(null);
       }
       if (notifResp?.count != null) setUnreadCount(notifResp.count);
       if (enfantsResp !== null) {
-        const count = enfantsResp?.length || 0;
-        const totalVaccins = enfantsResp?.reduce((a, e) => a + (e.vaccins_total || 0), 0) || 0;
-        const doneVaccins  = enfantsResp?.reduce((a, e) => a + (e.vaccins_faits || 0), 0) || 0;
+        const count = (enfantsResp || []).length;
+        const totalVaccins = (enfantsResp || []).reduce((a, e) => a + (e.vaccins_total || 0), 0);
+        const doneVaccins  = (enfantsResp || []).reduce((a, e) => a + (e.vaccins_faits || 0), 0);
         const coverage = totalVaccins > 0 ? Math.round((doneVaccins / totalVaccins) * 100) : null;
-        setStats({ enfants: count, rdvAVenir: rdvResp?.length || 0, coverage });
+        setStats({ enfants: count, rdvAVenir: upcoming.length, coverage });
       }
     } catch (e) {}
   }, []);

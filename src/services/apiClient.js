@@ -24,7 +24,10 @@ apiClient.interceptors.request.use(
 );
 
 apiClient.interceptors.response.use(
-  (response) => response.data,
+  (response) => {
+    const body = response.data;
+    return (body !== null && body !== undefined && 'data' in body) ? body.data : body;
+  },
   async (error) => {
     const originalRequest = error.config;
     if (
@@ -37,7 +40,11 @@ apiClient.interceptors.response.use(
         const refreshToken = await AsyncStorage.getItem(REFRESH_TOKEN_KEY);
         if (!refreshToken) throw new Error('No refresh token');
         const refreshResponse = await axios.post(`${BASE_URL}/auth/refresh`, { refreshToken });
-        const { token, refreshToken: newRefresh } = refreshResponse.data;
+        const body = refreshResponse.data;
+        const inner = (body !== null && body !== undefined && 'data' in body) ? body.data : body;
+        const token = inner?.tokens?.accessToken || inner?.token;
+        const newRefresh = inner?.tokens?.refreshToken || inner?.refreshToken;
+        if (!token) throw new Error('No access token in refresh response');
         await AsyncStorage.setItem(TOKEN_KEY, token);
         if (newRefresh) await AsyncStorage.setItem(REFRESH_TOKEN_KEY, newRefresh);
         originalRequest.headers.Authorization = `Bearer ${token}`;
