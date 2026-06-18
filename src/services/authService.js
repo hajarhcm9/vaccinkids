@@ -1,41 +1,49 @@
-import { httpClient } from './httpClient';
+import apiClient from './apiClient';
 
-function unwrapAuthPayload(data) {
-  const payload = data.data || data;
-  const tokens = payload.tokens || {};
-  return {
-    success: data.status === 'success',
-    token: tokens.accessToken || payload.accessToken || payload.token,
-    refreshToken: tokens.refreshToken || payload.refreshToken,
-    expiresIn: tokens.expiresIn,
-    user: payload.user || payload.parent,
-  };
+export async function login(cin, password) {
+  return apiClient.post('/auth/login', { cin, password });
 }
 
-export const authService = {
-  sendOtp: async (phoneNumber) => {
-    const data = await httpClient.publicRequest('/auth/parent/send-otp', {
-      method: 'POST',
-      body: JSON.stringify({ telephone: phoneNumber }),
-    });
-    return { success: true, message: data.message || 'OTP envoyé avec succès' };
-  },
+export async function register(payload) {
+  return apiClient.post('/auth/register', payload);
+}
 
-  verifyOtp: async (phoneNumber, otpCode) => {
-    const data = await httpClient.publicRequest('/auth/parent/verify-otp', {
-      method: 'POST',
-      body: JSON.stringify({ telephone: phoneNumber, code: otpCode }),
-    });
-    return unwrapAuthPayload(data);
-  },
+export async function verifyOTP(cin, code) {
+  return apiClient.post('/auth/verify-otp', { cin, code });
+}
 
-  registerFcmToken: async (authToken, fcmToken) => {
-    if (!authToken) return { success: false, skipped: true };
-    const payload = await httpClient.request('/auth/parent/fcm-token', {
-      method: fcmToken ? 'PUT' : 'DELETE',
-      body: fcmToken ? JSON.stringify({ fcm_token: fcmToken }) : undefined,
-      headers: { Authorization: `Bearer ${authToken}` },
-    });
-    return { success: true, data: payload.data };
-  },
-};
+export async function resendOTP(cin) {
+  return apiClient.post('/auth/resend-otp', { cin });
+}
+
+export async function completeProfile(payload) {
+  return apiClient.post('/auth/complete-profile', payload);
+}
+
+export async function logout() {
+  return apiClient.post('/auth/logout');
+}
+
+export async function forgotPassword(cin) {
+  return apiClient.post('/auth/forgot-password', { cin });
+}
+
+export async function resetPassword({ cin, otp, password }) {
+  return apiClient.post('/auth/reset-password', { cin, otp, password });
+}
+
+export async function getMe() {
+  return apiClient.get('/auth/me');
+}
+
+export async function updateProfile(payload) {
+  return apiClient.put('/auth/profile', payload);
+}
+
+export async function updateProfilePhoto(photoUri) {
+  const formData = new FormData();
+  formData.append('photo', { uri: photoUri, type: 'image/jpeg', name: 'profile.jpg' });
+  return apiClient.put('/auth/profile/photo', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+}

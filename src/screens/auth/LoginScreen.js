@@ -1,328 +1,182 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useState, useContext } from 'react';
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  StatusBar,
-  ActivityIndicator,
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
+  View, Text, StyleSheet, ScrollView, TouchableOpacity,
+  KeyboardAvoidingView, Platform, StatusBar,
 } from 'react-native';
-import PhoneInput from '../../components/PhoneInput';
-import { authService } from '../../services/authService';
-import { preferencesService } from '../../services/preferencesService';
-import { colors, typography, spacing, borderRadius, shadows } from '../../theme';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import AppButton from '../../components/ui/AppButton';
+import AppInput from '../../components/ui/AppInput';
+import { Colors, Gradients, Radii, Spacing, Elevation } from '../../constants/theme';
+import { authService, ApiError } from '../../services';
+import { AuthContext } from '../../context/AuthContext';
 
-const LANGUAGES = [
-  { code: 'fr', label: 'Français', isRTL: false },
-  { code: 'ar', label: 'العربية', isRTL: true },
-];
+export default function LoginScreen({ navigation }) {
+  const { loginDemo }    = useContext(AuthContext);
+  const insets           = useSafeAreaInsets();
+  const [cin, setCin]    = useState('');
+  const [password, setPassword] = useState('');
+  const [errors, setErrors]     = useState({});
+  const [loading, setLoading]   = useState(false);
 
-const translations = {
-  fr: {
-    appName: 'VacciniKids',
-    tagline: 'Suivi vaccinal de votre enfant',
-    welcome: 'Bienvenue',
-    subtitle: 'Entrez votre numéro de téléphone pour continuer',
-    phoneLabel: 'Numéro de téléphone',
-    continueBtn: 'Continuer',
-    termsText: 'En continuant, vous acceptez nos',
-    termsLink: "Conditions d'utilisation",
-    andText: 'et notre',
-    privacyLink: 'Politique de confidentialité',
-    phoneRequired: 'Veuillez entrer votre numéro de téléphone.',
-    phoneInvalid: 'Numéro de téléphone invalide (9 à 10 chiffres requis).',
-  },
-  ar: {
-    appName: 'VacciniKids',
-    tagline: 'متابعة تطعيم طفلك',
-    welcome: 'مرحباً بك',
-    subtitle: 'أدخل رقم هاتفك للمتابعة',
-    phoneLabel: 'رقم الهاتف',
-    continueBtn: 'متابعة',
-    termsText: 'بالمتابعة، أنت توافق على',
-    termsLink: 'شروط الاستخدام',
-    andText: 'و',
-    privacyLink: 'سياسة الخصوصية',
-    phoneRequired: 'يرجى إدخال رقم الهاتف.',
-    phoneInvalid: 'رقم الهاتف غير صالح (9 إلى 10 أرقام مطلوبة).',
-  },
-};
-
-const LoginScreen = ({ navigation }) => {
-  const [language, setLanguage] = useState('fr');
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [loading, setLoading] = useState(false);
-  const phoneInputRef = useRef(null);
-
-  const isRTL = LANGUAGES.find((l) => l.code === language)?.isRTL || false;
-  const t = translations[language];
-
-  useEffect(() => {
-    preferencesService
-      .getLanguage()
-      .then(setLanguage)
-      .catch(() => {});
-  }, []);
-
-  const validatePhone = () => {
-    if (!phoneNumber.trim()) {
-      Alert.alert('Erreur', t.phoneRequired);
-      return false;
-    }
-    if (phoneNumber.length < 9 || phoneNumber.length > 10) {
-      Alert.alert('Erreur', t.phoneInvalid);
-      return false;
-    }
-    return true;
+  const validate = () => {
+    const e = {};
+    if (!cin.trim()) e.cin = 'Veuillez saisir votre CIN';
+    else if (cin.replace(/\s/g, '').length < 6) e.cin = 'CIN invalide (6 caractères minimum)';
+    if (!password) e.password = 'Veuillez saisir votre mot de passe';
+    setErrors(e);
+    return Object.keys(e).length === 0;
   };
 
-  const handleSendOtp = async () => {
-    if (!validatePhone()) return;
-
+  const handleLogin = async () => {
+    if (!validate()) return;
     setLoading(true);
     try {
-      const fullNumber = `+212${phoneNumber.startsWith('0') ? phoneNumber.slice(1) : phoneNumber}`;
-      await authService.sendOtp(fullNumber);
-
-      navigation.navigate('OtpVerification', {
-        phoneNumber: fullNumber,
-        displayPhone: phoneNumber,
-        language,
+      const resp = await authService.login(cin.replace(/\s/g, ''), password);
+      navigation.navigate('OTPVerification', {
+        cin: cin.replace(/\s/g, ''),
+        otpSentTo: resp.otpSentTo,
+        fromRegister: false,
       });
-    } catch (error) {
-      Alert.alert('Erreur', error.message || 'Une erreur est survenue.');
+    } catch (e) {
+      if (e instanceof ApiError) {
+        if (e.isAuth)    setErrors({ password: 'CIN ou mot de passe incorrect' });
+        else if (e.isNetwork) setErrors({ cin: 'Vérifiez votre connexion internet' });
+        else             setErrors({ password: e.message });
+      } else {
+        setErrors({ password: 'Erreur inattendue. Réessayez.' });
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  const switchLanguage = async (code) => {
-    setLanguage(code);
-    await preferencesService.setLanguage(code).catch(() => {});
-  };
-
   return (
-    <KeyboardAvoidingView
-      style={styles.root}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <StatusBar barStyle="light-content" backgroundColor={colors.primary} />
+    <View style={styles.root}>
+      <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+      <LinearGradient colors={Gradients.auth} style={StyleSheet.absoluteFillObject} />
 
-      <ScrollView
-        contentContainerStyle={styles.scroll}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
       >
-        {/* Header avec logo */}
-        <View style={styles.header}>
-          <View style={styles.logoContainer}>
-            <View style={styles.logoIcon}>
-              <Text style={styles.logoEmoji}>💉</Text>
+        <ScrollView
+          contentContainerStyle={[
+            styles.scroll,
+            { paddingTop: insets.top + Spacing['2xl'], paddingBottom: insets.bottom + Spacing.xl },
+          ]}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="always"
+          bounces={false}
+        >
+          {/* ── Logo block ── */}
+          <View style={styles.logoBlock}>
+            <View style={styles.iconRing}>
+              <View style={styles.iconInner}>
+                <Ionicons name="shield-checkmark" size={32} color={Colors.white} />
+              </View>
             </View>
-          </View>
-          <Text style={styles.appName}>{t.appName}</Text>
-          <Text style={styles.tagline}>{t.tagline}</Text>
-        </View>
-
-        {/* Card principale */}
-        <View style={styles.card}>
-          {/* Sélecteur de langue */}
-          <View style={styles.langRow}>
-            {LANGUAGES.map((lang) => (
-              <TouchableOpacity
-                key={lang.code}
-                style={[styles.langBtn, language === lang.code && styles.langBtnActive]}
-                onPress={() => switchLanguage(lang.code)}
-                accessibilityLabel={`Changer la langue en ${lang.label}`}
-              >
-                <Text
-                  style={[styles.langBtnText, language === lang.code && styles.langBtnTextActive]}
-                >
-                  {lang.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
+            <Text style={styles.appName}>VacciKids</Text>
+            <Text style={styles.tagline}>Suivi vaccinal pédiatrique</Text>
           </View>
 
-          <Text style={[styles.welcome, isRTL && styles.textRTL]}>{t.welcome}</Text>
-          <Text style={[styles.subtitle, isRTL && styles.textRTL]}>{t.subtitle}</Text>
+          {/* ── Form card ── */}
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Bon retour 👋</Text>
+            <Text style={styles.cardSub}>
+              Connectez-vous avec votre Carte d'Identité Nationale
+            </Text>
 
-          {/* Champ téléphone */}
-          <Text style={[styles.fieldLabel, isRTL && styles.textRTL]}>{t.phoneLabel}</Text>
-          <PhoneInput
-            value={phoneNumber}
-            onChangeText={setPhoneNumber}
-            onSubmitEditing={handleSendOtp}
-            inputRef={phoneInputRef}
-            isRTL={isRTL}
-          />
+            <AppInput
+              label="CIN"
+              placeholder="Ex : AB123456"
+              value={cin}
+              onChangeText={(v) => { setCin(v); if (errors.cin) setErrors({ ...errors, cin: null }); }}
+              error={errors.cin}
+              touched={!!errors.cin}
+              icon="card-outline"
+              autoCapitalize="characters"
+            />
+            <AppInput
+              label="Mot de passe"
+              placeholder="••••••••"
+              value={password}
+              onChangeText={(v) => { setPassword(v); if (errors.password) setErrors({ ...errors, password: null }); }}
+              error={errors.password}
+              touched={!!errors.password}
+              secureTextEntry
+              icon="lock-closed-outline"
+            />
 
-          {/* Bouton continuer */}
+            <TouchableOpacity
+              onPress={() => navigation.navigate('ForgotPassword')}
+              style={styles.forgotRow}
+              hitSlop={{ top: 8, bottom: 8 }}
+            >
+              <Text style={styles.forgotText}>Mot de passe oublié ?</Text>
+            </TouchableOpacity>
+
+            <AppButton
+              title="Se connecter"
+              onPress={handleLogin}
+              loading={loading}
+              disabled={!cin.trim() || !password}
+              icon="arrow-forward"
+              iconPosition="right"
+            />
+          </View>
+
+          {/* ── Demo access ── */}
           <TouchableOpacity
-            style={[styles.btn, loading && styles.btnDisabled]}
-            onPress={handleSendOtp}
-            disabled={loading}
-            accessibilityRole="button"
-            accessibilityLabel={t.continueBtn}
+            style={styles.demoBtn}
+            onPress={loginDemo}
+            activeOpacity={0.8}
+            hitSlop={{ top: 4, bottom: 4 }}
           >
-            {loading ? (
-              <ActivityIndicator color={colors.white} size="small" />
-            ) : (
-              <Text style={styles.btnText}>{t.continueBtn}</Text>
-            )}
+            <View style={styles.demoBadge}>
+              <Ionicons name="eye-outline" size={14} color={Colors.accent} />
+            </View>
+            <Text style={styles.demoText}>Accès démo — explorer sans compte</Text>
+            <Ionicons name="chevron-forward" size={14} color="rgba(255,255,255,0.5)" />
           </TouchableOpacity>
 
-          {/* CGU */}
-          <Text style={[styles.terms, isRTL && styles.textRTL]}>
-            {t.termsText} <Text style={styles.link}>{t.termsLink}</Text> {t.andText}{' '}
-            <Text style={styles.link}>{t.privacyLink}</Text>
-          </Text>
-        </View>
-
-        {/* Footer */}
-        <Text style={styles.footer}>Service parental VacciniKids</Text>
-      </ScrollView>
-    </KeyboardAvoidingView>
+          {/* ── Sign up ── */}
+          <View style={styles.signupRow}>
+            <Text style={styles.signupLabel}>Pas encore de compte ?</Text>
+            <TouchableOpacity onPress={() => navigation.navigate('Register')}>
+              <Text style={styles.signupLink}> Créer un compte →</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    backgroundColor: colors.primary,
-  },
-  scroll: {
-    flexGrow: 1,
-    paddingBottom: spacing.xxxl,
-  },
-  header: {
-    alignItems: 'center',
-    paddingTop: spacing.xxxl + spacing.xl,
-    paddingBottom: spacing.xxxl,
-    paddingHorizontal: spacing.xl,
-  },
-  logoContainer: {
-    marginBottom: spacing.lg,
-  },
-  logoIcon: {
-    width: 72,
-    height: 72,
-    borderRadius: borderRadius.xl,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.4)',
-  },
-  logoEmoji: {
-    fontSize: 34,
-  },
-  appName: {
-    fontSize: typography.fontSizes.xxxl,
-    fontWeight: typography.fontWeights.bold,
-    color: colors.white,
-    letterSpacing: -0.5,
-    marginBottom: spacing.xs,
-  },
-  tagline: {
-    fontSize: typography.fontSizes.md,
-    color: 'rgba(255,255,255,0.8)',
-    fontWeight: typography.fontWeights.regular,
-  },
-  card: {
-    marginHorizontal: spacing.lg,
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.xl,
-    padding: spacing.xl,
-    ...shadows.card,
-  },
-  langRow: {
-    flexDirection: 'row',
-    backgroundColor: colors.background,
-    borderRadius: borderRadius.md,
-    padding: 3,
-    marginBottom: spacing.xl,
-  },
-  langBtn: {
-    flex: 1,
-    paddingVertical: spacing.sm,
-    alignItems: 'center',
-    borderRadius: borderRadius.sm,
-  },
-  langBtnActive: {
-    backgroundColor: colors.white,
-    ...shadows.card,
-  },
-  langBtnText: {
-    fontSize: typography.fontSizes.sm,
-    fontWeight: typography.fontWeights.medium,
-    color: colors.textSecondary,
-  },
-  langBtnTextActive: {
-    color: colors.primary,
-    fontWeight: typography.fontWeights.semibold,
-  },
-  welcome: {
-    fontSize: typography.fontSizes.xxl,
-    fontWeight: typography.fontWeights.bold,
-    color: colors.textPrimary,
-    marginBottom: spacing.xs,
-  },
-  subtitle: {
-    fontSize: typography.fontSizes.sm,
-    color: colors.textSecondary,
-    lineHeight: typography.fontSizes.sm * typography.lineHeights.relaxed,
-    marginBottom: spacing.xl,
-  },
-  fieldLabel: {
-    fontSize: typography.fontSizes.sm,
-    fontWeight: typography.fontWeights.medium,
-    color: colors.textSecondary,
-    marginBottom: spacing.sm,
-  },
-  btn: {
-    backgroundColor: colors.primary,
-    borderRadius: borderRadius.md,
-    height: 52,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: spacing.xl,
-    ...shadows.button,
-  },
-  btnDisabled: {
-    opacity: 0.65,
-  },
-  btnText: {
-    color: colors.white,
-    fontSize: typography.fontSizes.md,
-    fontWeight: typography.fontWeights.semibold,
-    letterSpacing: 0.3,
-  },
-  terms: {
-    fontSize: typography.fontSizes.xs,
-    color: colors.textHint,
-    textAlign: 'center',
-    marginTop: spacing.lg,
-    lineHeight: typography.fontSizes.xs * typography.lineHeights.relaxed,
-  },
-  link: {
-    color: colors.primary,
-    textDecorationLine: 'underline',
-  },
-  textRTL: {
-    textAlign: 'right',
-    writingDirection: 'rtl',
-  },
-  footer: {
-    textAlign: 'center',
-    marginTop: spacing.xl,
-    fontSize: typography.fontSizes.xs,
-    color: 'rgba(255,255,255,0.5)',
-  },
-});
+  root:   { flex: 1, backgroundColor: Colors.primaryDeep },
+  scroll: { flexGrow: 1, paddingHorizontal: Spacing.xl },
 
-export default LoginScreen;
+  logoBlock: { alignItems: 'center', marginBottom: Spacing['2xl'] },
+  iconRing:  { width: 88, height: 88, borderRadius: 44, backgroundColor: Colors.glass, borderWidth: 2, borderColor: Colors.glassBorder, alignItems: 'center', justifyContent: 'center', marginBottom: Spacing.md },
+  iconInner: { width: 66, height: 66, borderRadius: 33, backgroundColor: Colors.primaryLight, alignItems: 'center', justifyContent: 'center' },
+  appName:   { fontSize: 34, fontWeight: '800', color: Colors.white, letterSpacing: -0.5, marginBottom: 4 },
+  tagline:   { fontSize: 13, color: 'rgba(255,255,255,0.70)', letterSpacing: 0.3 },
+
+  card:      { backgroundColor: Colors.surface, borderRadius: Radii['2xl'], padding: Spacing.xl, ...Elevation.xl, marginBottom: Spacing.lg },
+  cardTitle: { fontSize: 22, fontWeight: '700', color: Colors.text, marginBottom: 6 },
+  cardSub:   { fontSize: 13, color: Colors.textSecondary, marginBottom: Spacing.lg, lineHeight: 20 },
+
+  forgotRow:  { alignSelf: 'flex-end', marginBottom: Spacing.base, marginTop: -4 },
+  forgotText: { color: Colors.primary, fontSize: 13, fontWeight: '600' },
+
+  demoBtn:   { flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.glass, borderWidth: 1.5, borderColor: Colors.glassBorder, borderRadius: Radii.xl, paddingHorizontal: Spacing.base, paddingVertical: Spacing.md, marginBottom: Spacing.lg, gap: Spacing.sm },
+  demoBadge: { width: 28, height: 28, borderRadius: 14, backgroundColor: 'rgba(245,165,36,0.2)', alignItems: 'center', justifyContent: 'center' },
+  demoText:  { flex: 1, color: 'rgba(255,255,255,0.85)', fontSize: 13, fontWeight: '600' },
+
+  signupRow:  { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', flexWrap: 'wrap' },
+  signupLabel:{ color: 'rgba(255,255,255,0.65)', fontSize: 14 },
+  signupLink: { color: Colors.accentLight, fontSize: 14, fontWeight: '700' },
+});
