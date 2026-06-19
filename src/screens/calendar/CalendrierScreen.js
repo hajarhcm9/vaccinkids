@@ -45,7 +45,9 @@ export default function CalendrierScreen({ route, navigation }) {
           : data[0];
         setSelectedEnfant(target);
       }
-    } catch (e) {}
+    } catch (e) {
+      if (__DEV__) console.warn('[CalendrierScreen] loadEnfants:', e?.message);
+    }
   }, [initialEnfantId]);
 
   const loadVaccins = useCallback(async (enfantId) => {

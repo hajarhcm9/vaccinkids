@@ -72,7 +72,9 @@ export default function EnfantsScreen({ navigation }) {
     try {
       const data = await enfantService.listEnfants();
       setEnfants(data || []);
-    } catch (e) {}
+    } catch (e) {
+      if (__DEV__) console.warn('[EnfantsScreen] loadEnfants:', e?.message);
+    }
   }, []);
 
   const onRefresh = useCallback(async () => {

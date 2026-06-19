@@ -1,12 +1,11 @@
 package com.example.vaccinkid
 
-import android.app.AlertDialog
 import android.graphics.Color
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
-import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
@@ -18,6 +17,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.vaccinkid.model.AdminCentreDto
 import com.example.vaccinkid.model.AdminCentreRequest
 import com.example.vaccinkid.network.ApiClient
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.textfield.TextInputEditText
 import kotlinx.coroutines.launch
 
 class GestionCentresFragment : Fragment(R.layout.fragment_gestion_centres) {
@@ -69,33 +70,29 @@ class GestionCentresFragment : Fragment(R.layout.fragment_gestion_centres) {
     }
 
     private fun showForm(item: AdminCentreDto?) {
-        val root = LinearLayout(requireContext()).apply {
-            orientation = LinearLayout.VERTICAL; setPadding(64, 32, 64, 8)
-        }
-        fun et(hint: String, value: String = "") = EditText(requireContext()).apply {
-            this.hint = hint; setText(value)
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT
-            ).also { it.bottomMargin = 16 }
-        }
-        val nom = et("Nom du centre", item?.nom ?: "")
-        val adresse = et("Adresse", item?.adresse ?: "")
-        val telephone = et("Téléphone", item?.telephone ?: "")
-        val gpsLat = et("GPS lat", item?.gpsLat?.toString() ?: "")
-        val gpsLng = et("GPS lng", item?.gpsLng?.toString() ?: "")
-        listOf(nom, adresse, telephone, gpsLat, gpsLng).forEach { root.addView(it) }
+        val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_create_centre, null)
+        val nomEt = dialogView.findViewById<TextInputEditText>(R.id.etCentreNom)
+        val adresseEt = dialogView.findViewById<TextInputEditText>(R.id.etCentreAdresse)
+        val telEt = dialogView.findViewById<TextInputEditText>(R.id.etCentreTelephone)
+        val latEt = dialogView.findViewById<TextInputEditText>(R.id.etCentreGpsLat)
+        val lngEt = dialogView.findViewById<TextInputEditText>(R.id.etCentreGpsLng)
+        nomEt.setText(item?.nom ?: "")
+        adresseEt.setText(item?.adresse ?: "")
+        telEt.setText(item?.telephone ?: "")
+        latEt.setText(item?.gpsLat?.toString() ?: "")
+        lngEt.setText(item?.gpsLng?.toString() ?: "")
 
-        AlertDialog.Builder(requireContext())
+        MaterialAlertDialogBuilder(requireContext())
             .setTitle(if (item == null) "Ajouter centre" else "Modifier centre")
-            .setView(root)
+            .setView(dialogView)
             .setNegativeButton("Annuler", null)
             .setPositiveButton("Valider") { _, _ ->
                 saveCentre(item?.id, AdminCentreRequest(
-                    nom = nom.text.toString().trim(),
-                    adresse = adresse.text.toString().trim(),
-                    telephone = telephone.text.toString().trim(),
-                    gpsLat = gpsLat.text.toString().trim().toDoubleOrNull(),
-                    gpsLng = gpsLng.text.toString().trim().toDoubleOrNull()
+                    nom = nomEt.text.toString().trim(),
+                    adresse = adresseEt.text.toString().trim(),
+                    telephone = telEt.text.toString().trim(),
+                    gpsLat = latEt.text.toString().trim().toDoubleOrNull(),
+                    gpsLng = lngEt.text.toString().trim().toDoubleOrNull()
                 ))
             }
             .show()
@@ -120,7 +117,7 @@ class GestionCentresFragment : Fragment(R.layout.fragment_gestion_centres) {
     }
 
     private fun toggleCentre(item: AdminCentreDto) {
-        AlertDialog.Builder(requireContext())
+        MaterialAlertDialogBuilder(requireContext())
             .setTitle(if (item.estActif == true) "Désactiver le centre" else "Réactiver le centre")
             .setMessage(item.nom ?: "Centre #${item.id}")
             .setNegativeButton("Annuler", null)

@@ -8,8 +8,12 @@ import android.widget.EditText
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
+import com.example.vaccinkid.network.ApiDiagnostics
 import com.example.vaccinkid.viewmodel.InfirmierAuthViewModel
 import com.google.android.material.button.MaterialButton
+import java.net.ConnectException
+import java.net.SocketTimeoutException
+import java.net.UnknownHostException
 
 abstract class BaseLoginActivity : AppCompatActivity() {
 
@@ -65,7 +69,7 @@ abstract class BaseLoginActivity : AppCompatActivity() {
                     finish()
                 },
                 onFailure = { error ->
-                    tvPasswordError.text = error.message ?: getString(R.string.error_invalid_credentials)
+                    tvPasswordError.text = networkErrorMessage(error)
                     tvPasswordError.visibility = View.VISIBLE
                 }
             )
@@ -95,6 +99,25 @@ abstract class BaseLoginActivity : AppCompatActivity() {
             getColor(if (selected) R.color.brand_teal else android.R.color.transparent)
         )
         button.setTextColor(getColor(if (selected) R.color.white else R.color.text_secondary))
+    }
+
+    private fun networkErrorMessage(error: Throwable): String {
+        val cause = error.cause ?: error
+        return when {
+            cause is ConnectException || cause is UnknownHostException -> {
+                if (BuildConfig.DEBUG)
+                    "Impossible de joindre le serveur.\n${ApiDiagnostics.apiBaseUrl}"
+                else
+                    getString(R.string.error_network_unreachable)
+            }
+            cause is SocketTimeoutException -> {
+                if (BuildConfig.DEBUG)
+                    "Délai d'attente dépassé.\n${ApiDiagnostics.apiBaseUrl}"
+                else
+                    getString(R.string.error_network_timeout)
+            }
+            else -> error.message ?: getString(R.string.error_invalid_credentials)
+        }
     }
 
     protected fun handleLogin() {

@@ -3,12 +3,10 @@ package com.example.vaccinkid
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
-import android.widget.EditText
-import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.example.vaccinkid.model.AddCroissanceRequest
@@ -21,6 +19,8 @@ import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.formatter.ValueFormatter
 import com.google.android.material.button.MaterialButton
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.textfield.TextInputEditText
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 
@@ -301,24 +301,13 @@ class GrowthChartFragment : Fragment(R.layout.fragment_growth_chart) {
             Toast.makeText(requireContext(), "Identifiant bébé invalide", Toast.LENGTH_SHORT).show()
             return
         }
-        val root = LinearLayout(requireContext()).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(64, 32, 64, 8)
-        }
-        val etPoids = EditText(requireContext()).apply {
-            hint = "Poids (kg) — ex: 7.5"
-            inputType = android.text.InputType.TYPE_CLASS_NUMBER or android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL
-        }
-        val etTaille = EditText(requireContext()).apply {
-            hint = "Taille (cm) — ex: 65.0"
-            inputType = android.text.InputType.TYPE_CLASS_NUMBER or android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL
-        }
-        root.addView(etPoids)
-        root.addView(etTaille)
+        val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_add_measure, null)
+        val etPoids = dialogView.findViewById<TextInputEditText>(R.id.etMeasurePoids)
+        val etTaille = dialogView.findViewById<TextInputEditText>(R.id.etMeasureTaille)
 
-        AlertDialog.Builder(requireContext())
+        MaterialAlertDialogBuilder(requireContext())
             .setTitle("Ajouter une mesure")
-            .setView(root)
+            .setView(dialogView)
             .setNegativeButton("Annuler", null)
             .setPositiveButton("Enregistrer") { _, _ ->
                 val poids = etPoids.text.toString().replace(',', '.').toDoubleOrNull()

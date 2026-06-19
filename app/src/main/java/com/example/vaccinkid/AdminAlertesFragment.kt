@@ -2,10 +2,8 @@ package com.example.vaccinkid
 
 import android.graphics.Color
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
@@ -15,78 +13,49 @@ import com.example.vaccinkid.model.NotificationDto
 import com.example.vaccinkid.network.ApiClient
 import kotlinx.coroutines.launch
 
-class AdminAlertesFragment : Fragment() {
+class AdminAlertesFragment : Fragment(R.layout.fragment_admin_alertes) {
+
     private lateinit var adapter: AlertesAdminAdapter
     private var allItems: List<NotificationDto> = emptyList()
     private var activeTab = "TOUTES"
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        return LinearLayout(requireContext()).apply {
-            orientation = LinearLayout.VERTICAL
-            setBackgroundColor(requireContext().getColor(R.color.bg_screen))
-
-            // Header
-            addView(LinearLayout(requireContext()).apply {
-                orientation = LinearLayout.VERTICAL
-                setPadding(56, 56, 56, 36)
-                addView(TextView(requireContext()).apply {
-                    text = "Alertes"
-                    textSize = 26f
-                    setTextColor(requireContext().getColor(R.color.text_primary))
-                    setTypeface(null, android.graphics.Typeface.BOLD)
-                })
-                addView(TextView(requireContext()).apply {
-                    text = "Surveillance du système"
-                    textSize = 13f
-                    setTextColor(requireContext().getColor(R.color.text_secondary))
-                })
-            })
-
-            // Tabs
-            val tabTout = makeTab("Toutes", true)
-            val tabAlerte = makeTab("Alertes", false)
-            val tabInfo = makeTab("Infos", false)
-            val tabRow = LinearLayout(requireContext()).apply {
-                orientation = LinearLayout.HORIZONTAL
-                setPadding(44, 0, 44, 20)
-                addView(tabTout, LinearLayout.LayoutParams(0, 90, 1f))
-                addView(tabAlerte, LinearLayout.LayoutParams(0, 90, 1f))
-                addView(tabInfo, LinearLayout.LayoutParams(0, 90, 1f))
-            }
-            addView(tabRow)
-
-            fun selectTab(tab: String) {
-                activeTab = tab
-                listOf(tabTout to "TOUTES", tabAlerte to "ALERTES", tabInfo to "INFOS").forEach { (tv, key) ->
-                    if (key == tab) {
-                        tv.setBackgroundResource(R.drawable.bg_btn_teal_pill)
-                        tv.setTextColor(requireContext().getColor(R.color.white))
-                    } else {
-                        tv.background = null
-                        tv.setTextColor(requireContext().getColor(R.color.text_secondary))
-                    }
-                }
-                applyFilter()
-            }
-            tabTout.setOnClickListener { selectTab("TOUTES") }
-            tabAlerte.setOnClickListener { selectTab("ALERTES") }
-            tabInfo.setOnClickListener { selectTab("INFOS") }
-
-            // List
-            val rv = RecyclerView(requireContext()).apply {
-                layoutManager = LinearLayoutManager(requireContext())
-                clipToPadding = false
-                setPadding(44, 0, 44, 60)
-            }
-            adapter = AlertesAdminAdapter()
-            rv.adapter = adapter
-            addView(rv, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f))
-        }
-    }
+    private lateinit var tabAll: TextView
+    private lateinit var tabAlertes: TextView
+    private lateinit var tabInfos: TextView
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        tabAll = view.findViewById(R.id.tabAlertesAll)
+        tabAlertes = view.findViewById(R.id.tabAlertesAlertes)
+        tabInfos = view.findViewById(R.id.tabAlertesInfos)
+
+        adapter = AlertesAdminAdapter()
+        view.findViewById<RecyclerView>(R.id.rvAlertes).apply {
+            layoutManager = LinearLayoutManager(requireContext())
+            adapter = this@AdminAlertesFragment.adapter
+        }
+
+        tabAll.setOnClickListener { selectTab("TOUTES") }
+        tabAlertes.setOnClickListener { selectTab("ALERTES") }
+        tabInfos.setOnClickListener { selectTab("INFOS") }
+
         loadAlertes()
+    }
+
+    private fun selectTab(tab: String) {
+        activeTab = tab
+        val tabs = listOf(tabAll to "TOUTES", tabAlertes to "ALERTES", tabInfos to "INFOS")
+        tabs.forEach { (tv, key) ->
+            if (key == tab) {
+                tv.setBackgroundResource(R.drawable.bg_btn_teal_pill)
+                tv.setTextColor(requireContext().getColor(R.color.white))
+            } else {
+                tv.setBackgroundResource(R.drawable.bg_chip_inactive)
+                tv.setTextColor(requireContext().getColor(R.color.text_secondary))
+            }
+        }
+        applyFilter()
     }
 
     private fun applyFilter() {
@@ -113,18 +82,6 @@ class AdminAlertesFragment : Fragment() {
                     applyFilter()
                 }
             } catch (_: Exception) {}
-        }
-    }
-
-    private fun makeTab(label: String, active: Boolean) = TextView(requireContext()).apply {
-        text = label; gravity = android.view.Gravity.CENTER
-        textSize = 13f
-        if (active) {
-            setBackgroundResource(R.drawable.bg_btn_teal_pill)
-            setTextColor(requireContext().getColor(R.color.white))
-            setTypeface(null, android.graphics.Typeface.BOLD)
-        } else {
-            setTextColor(requireContext().getColor(R.color.text_secondary))
         }
     }
 }

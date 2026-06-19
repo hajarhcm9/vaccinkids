@@ -97,6 +97,21 @@ export default function VaccinDetailScreen({ route, navigation }) {
               </Text>
             </View>
           )}
+
+          {(vaccin?.statut === 'EN_RETARD' || vaccin?.statut === 'A_VENIR') && (
+            <TouchableOpacity
+              style={styles.rdvCta}
+              onPress={() => navigation.navigate('Tabs', { screen: 'RDV' })}
+              activeOpacity={0.85}
+            >
+              <LinearGradient colors={vaccin.statut === 'EN_RETARD' ? Gradients.danger : Gradients.brand} style={styles.rdvCtaGrad}>
+                <Ionicons name="calendar-outline" size={20} color={Colors.white} />
+                <Text style={styles.rdvCtaText}>
+                  {vaccin.statut === 'EN_RETARD' ? 'Rattraper ce vaccin — Prendre RDV' : 'Planifier ce vaccin — Prendre RDV'}
+                </Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          )}
         </ScrollView>
       )}
     </View>
@@ -147,4 +162,8 @@ const styles = StyleSheet.create({
 
   infoBox:     { flexDirection: 'row', gap: Spacing.md, alignItems: 'flex-start' },
   infoBoxText: { flex: 1, fontSize: 14, color: Colors.textSecondary, lineHeight: 21 },
+
+  rdvCta:      { borderRadius: Radii.xl, overflow: 'hidden', ...Elevation.card },
+  rdvCtaGrad:  { flexDirection: 'row', alignItems: 'center', gap: Spacing.md, paddingVertical: Spacing.lg, paddingHorizontal: Spacing.xl },
+  rdvCtaText:  { flex: 1, fontSize: 15, fontWeight: '700', color: Colors.white },
 });

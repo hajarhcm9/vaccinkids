@@ -101,7 +101,7 @@
         android:layout_gravity="bottom|end"
         android:layout_margin="22dp"
         android:contentDescription="Créer session"
-        android:src="@android:drawable/ic_input_add"
+        android:src="@drawable/ic_calendar_event"
         app:backgroundTint="@color/brand_teal"
         app:tint="@color/white"
         app:elevation="8dp" />

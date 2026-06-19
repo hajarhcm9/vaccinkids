@@ -43,6 +43,7 @@ data class UserDto(
     val prenom: String? = null,
     val role: String,
     @SerializedName("centre_id") val centreId: Int? = null,
+    @SerializedName("centre_nom") val centreNom: String? = null,
     val telephone: String? = null
 )
 

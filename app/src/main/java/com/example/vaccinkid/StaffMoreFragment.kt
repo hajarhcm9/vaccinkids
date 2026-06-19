@@ -9,6 +9,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import com.example.vaccinkid.network.ApiClient
 import com.example.vaccinkid.viewmodel.InfirmierAuthViewModel
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.launch
 
 class StaffMoreFragment : Fragment(R.layout.fragment_staff_more) {
@@ -64,66 +65,17 @@ class StaffMoreFragment : Fragment(R.layout.fragment_staff_more) {
     }
 
     private fun confirmLogout() {
-        val sheet = com.google.android.material.bottomsheet.BottomSheetDialog(requireContext())
-        val root = android.widget.LinearLayout(requireContext()).apply {
-            orientation = android.widget.LinearLayout.VERTICAL
-            setPadding(56, 40, 56, 48)
-        }
-
-        val icon = android.widget.TextView(requireContext()).apply {
-            text = "👋"
-            textSize = 40f
-            gravity = android.view.Gravity.CENTER
-        }
-        val title = android.widget.TextView(requireContext()).apply {
-            text = "Se déconnecter ?"
-            textSize = 20f
-            setTypeface(null, android.graphics.Typeface.BOLD)
-            setTextColor(requireContext().getColor(R.color.text_primary))
-            gravity = android.view.Gravity.CENTER
-            setPadding(0, 16, 0, 8)
-        }
-        val subtitle = android.widget.TextView(requireContext()).apply {
-            text = "Vous devrez vous reconnecter pour accéder à l'application."
-            textSize = 14f
-            setTextColor(requireContext().getColor(R.color.text_secondary))
-            gravity = android.view.Gravity.CENTER
-            setPadding(0, 0, 0, 32)
-        }
-
-        val btnConfirm = com.google.android.material.button.MaterialButton(requireContext()).apply {
-            text = "Se déconnecter"
-            backgroundTintList = android.content.res.ColorStateList.valueOf(requireContext().getColor(R.color.error))
-            setTextColor(requireContext().getColor(R.color.white))
-            textSize = 15f
-            layoutParams = android.widget.LinearLayout.LayoutParams(
-                android.widget.LinearLayout.LayoutParams.MATCH_PARENT, 140
-            ).also { it.bottomMargin = 16 }
-            setOnClickListener {
-                sheet.dismiss()
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Se déconnecter ?")
+            .setMessage("Vous devrez vous reconnecter pour accéder à l'application.")
+            .setNegativeButton("Annuler", null)
+            .setPositiveButton("Se déconnecter") { _, _ ->
                 authViewModel.logout {
                     startActivity(Intent(requireContext(), LoginInfirmierActivity::class.java).apply {
                         flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                     })
                 }
             }
-        }
-        val btnCancel = com.google.android.material.button.MaterialButton(
-            requireContext(),
-            null,
-            com.google.android.material.R.attr.materialButtonOutlinedStyle
-        ).apply {
-            text = "Annuler"
-            setTextColor(requireContext().getColor(R.color.text_primary))
-            textSize = 15f
-            layoutParams = android.widget.LinearLayout.LayoutParams(
-                android.widget.LinearLayout.LayoutParams.MATCH_PARENT, 140
-            )
-            setOnClickListener { sheet.dismiss() }
-        }
-
-        listOf(icon, title, subtitle, btnConfirm, btnCancel).forEach { root.addView(it) }
-        sheet.setContentView(root)
-        sheet.show()
+            .show()
     }
 }

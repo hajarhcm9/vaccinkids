@@ -1,14 +1,10 @@
 package com.example.vaccinkid
 
-import android.app.AlertDialog
 import android.graphics.Color
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
-import android.widget.EditText
-import android.widget.LinearLayout
-import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
@@ -19,6 +15,8 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.example.vaccinkid.model.StockDto
 import com.example.vaccinkid.model.UpsertStockRequest
 import com.example.vaccinkid.network.ApiClient
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.textfield.TextInputEditText
 import kotlinx.coroutines.launch
 
 class AdminStocksFragment : Fragment(R.layout.fragment_gestion_stocks_admin) {
@@ -56,36 +54,17 @@ class AdminStocksFragment : Fragment(R.layout.fragment_gestion_stocks_admin) {
     }
 
     private fun showAdjustDialog(stock: StockDto) {
-        val root = LinearLayout(requireContext()).apply {
-            orientation = LinearLayout.VERTICAL; setPadding(64, 32, 64, 8)
-        }
-        fun et(hint: String, value: String) = EditText(requireContext()).apply {
-            this.hint = hint; setText(value)
-            inputType = android.text.InputType.TYPE_CLASS_NUMBER
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT
-            ).also { it.bottomMargin = 16 }
-        }
         val nom = stock.vaccinNom ?: stock.nom ?: "Vaccin #${stock.id}"
-        root.addView(TextView(requireContext()).apply {
-            text = nom; textSize = 14f
-            setTextColor(requireContext().getColor(R.color.text_secondary))
-        })
-        val qteInput = et("Quantité disponible", (stock.quantiteDisponible ?: 0).toString())
-        val seuilInput = et("Seuil d'alerte", (stock.seuilAlerte ?: 0).toString())
-        val motifInput = EditText(requireContext()).apply {
-            hint = "Motif (optionnel)"
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT
-            )
-        }
-        root.addView(qteInput)
-        root.addView(seuilInput)
-        root.addView(motifInput)
+        val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_edit_stock, null)
+        val qteInput = dialogView.findViewById<TextInputEditText>(R.id.editEtQuantite)
+        val seuilInput = dialogView.findViewById<TextInputEditText>(R.id.editEtSeuil)
+        val motifInput = dialogView.findViewById<TextInputEditText>(R.id.editEtMotif)
+        qteInput.setText((stock.quantiteDisponible ?: 0).toString())
+        seuilInput.setText((stock.seuilAlerte ?: 0).toString())
 
-        AlertDialog.Builder(requireContext())
-            .setTitle("Ajuster le stock")
-            .setView(root)
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Ajuster le stock — $nom")
+            .setView(dialogView)
             .setNegativeButton("Annuler", null)
             .setPositiveButton("Enregistrer") { _, _ ->
                 val qte = qteInput.text.toString().toIntOrNull()

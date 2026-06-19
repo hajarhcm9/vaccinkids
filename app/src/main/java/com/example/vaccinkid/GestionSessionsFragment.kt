@@ -1,13 +1,12 @@
 package com.example.vaccinkid
 
-import android.app.AlertDialog
 import android.graphics.Color
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.Button
-import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.Spinner
@@ -22,6 +21,8 @@ import com.example.vaccinkid.model.AdminRefVaccinDto
 import com.example.vaccinkid.model.SessionDto
 import com.example.vaccinkid.model.SessionRequest
 import com.example.vaccinkid.network.ApiClient
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.textfield.TextInputEditText
 import kotlinx.coroutines.launch
 
 class GestionSessionsFragment : Fragment(R.layout.fragment_gestion_sessions_admin) {
@@ -119,42 +120,35 @@ class GestionSessionsFragment : Fragment(R.layout.fragment_gestion_sessions_admi
 
     private fun showForm(item: SessionDto?) {
         if (centres.isEmpty() || vaccins.isEmpty()) { loadReferences(); return }
-        val root = LinearLayout(requireContext()).apply {
-            orientation = LinearLayout.VERTICAL; setPadding(64, 32, 64, 8)
-        }
-        fun et(hint: String, value: String = "") = EditText(requireContext()).apply {
-            this.hint = hint; setText(value)
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT
-            ).also { it.bottomMargin = 14 }
-        }
-        fun sp(labels: List<String>, sel: Int = 0) = Spinner(requireContext()).apply {
-            adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, labels)
-            setSelection(sel.coerceAtLeast(0))
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT
-            ).also { it.bottomMargin = 14 }
-        }
-        val cSp = sp(centres.map { it.nom ?: "Centre #${it.id}" }, centres.indexOfFirst { it.id == item?.centreId })
-        val vSp = sp(vaccins.map { it.nom ?: "Vaccin #${it.id}" }, vaccins.indexOfFirst { it.id == item?.vaccinId })
-        val date = et("Date YYYY-MM-DD", item?.dateSession?.take(10) ?: "")
-        val debut = et("Heure début HH:MM", item?.heureDebut?.take(5) ?: "")
-        val fin = et("Heure fin HH:MM", item?.heureFin?.take(5) ?: "")
-        val cap = et("Capacité max", item?.maxInscriptions?.toString() ?: "")
-        listOf(cSp, vSp, date, debut, fin, cap).forEach { root.addView(it) }
+        val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_create_session, null)
+        val cSp = dialogView.findViewById<Spinner>(R.id.spinnerSessionCentre)
+        val vSp = dialogView.findViewById<Spinner>(R.id.spinnerSessionVaccin)
+        val dateEt = dialogView.findViewById<TextInputEditText>(R.id.etSessionDate)
+        val debutEt = dialogView.findViewById<TextInputEditText>(R.id.etSessionDebut)
+        val finEt = dialogView.findViewById<TextInputEditText>(R.id.etSessionFin)
+        val capEt = dialogView.findViewById<TextInputEditText>(R.id.etSessionCapacite)
 
-        AlertDialog.Builder(requireContext())
+        cSp.adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, centres.map { it.nom ?: "Centre #${it.id}" })
+        vSp.adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, vaccins.map { it.nom ?: "Vaccin #${it.id}" })
+        cSp.setSelection(centres.indexOfFirst { it.id == item?.centreId }.coerceAtLeast(0))
+        vSp.setSelection(vaccins.indexOfFirst { it.id == item?.vaccinId }.coerceAtLeast(0))
+        dateEt.setText(item?.dateSession?.take(10) ?: "")
+        debutEt.setText(item?.heureDebut?.take(5) ?: "")
+        finEt.setText(item?.heureFin?.take(5) ?: "")
+        capEt.setText(item?.maxInscriptions?.toString() ?: "")
+
+        MaterialAlertDialogBuilder(requireContext())
             .setTitle(if (item == null) "Créer une session" else "Modifier la session")
-            .setView(root)
+            .setView(dialogView)
             .setNegativeButton("Annuler", null)
             .setPositiveButton("Valider") { _, _ ->
                 saveSession(item?.id, SessionRequest(
                     centreId = centres.getOrNull(cSp.selectedItemPosition)?.id,
                     vaccinId = vaccins.getOrNull(vSp.selectedItemPosition)?.id,
-                    dateSession = date.text.toString().trim(),
-                    heureDebut = debut.text.toString().trim(),
-                    heureFin = fin.text.toString().trim(),
-                    maxInscriptions = cap.text.toString().trim().toIntOrNull()
+                    dateSession = dateEt.text.toString().trim(),
+                    heureDebut = debutEt.text.toString().trim(),
+                    heureFin = finEt.text.toString().trim(),
+                    maxInscriptions = capEt.text.toString().trim().toIntOrNull()
                 ))
             }
             .show()

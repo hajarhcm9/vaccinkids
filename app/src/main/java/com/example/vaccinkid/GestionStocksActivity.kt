@@ -269,13 +269,11 @@ class GestionStocksActivity : AppCompatActivity() {
     }
 
     private fun setupInfirmierCentre(centreId: Int) {
-        // Try to get the real centre name from references
         lifecycleScope.launch {
-            var centreName = "Mon centre"
+            var centreName = "Centre #$centreId"
             try {
                 val me = ApiClient.apiService.getMe()
-                // Best-effort name from cached data
-                centreName = "Centre #$centreId"
+                centreName = me.data?.user?.centreNom?.takeIf { it.isNotBlank() } ?: centreName
             } catch (_: Exception) {}
 
             centres = listOf(AdminRefCentreDto(id = centreId, nom = centreName))

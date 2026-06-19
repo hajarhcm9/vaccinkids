@@ -1,154 +1,134 @@
 package com.example.vaccinkid
 
+import android.graphics.Color
+import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
-import android.widget.EditText
-import android.widget.LinearLayout
+import android.widget.ProgressBar
 import android.widget.TextView
-import androidx.core.view.setPadding
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.vaccinkid.model.AdminAuditLogDto
 import com.example.vaccinkid.network.ApiClient
+import com.google.android.material.button.MaterialButton
+import com.google.android.material.textfield.TextInputEditText
 import kotlinx.coroutines.launch
 
-class AdminAuditLogFragment : Fragment() {
-    private lateinit var messageView: TextView
-    private lateinit var actionFilter: EditText
-    private lateinit var tableFilter: EditText
-    private lateinit var userFilter: EditText
-    private lateinit var startFilter: EditText
-    private lateinit var endFilter: EditText
-    private lateinit var adapter: AuditAdapter
-    private lateinit var previousButton: Button
-    private lateinit var nextButton: Button
-    private var page = 1
+class AdminAuditLogFragment : Fragment(R.layout.fragment_audit_log) {
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        adapter = AuditAdapter()
-        return LinearLayout(requireContext()).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(20)
-            addView(TextView(requireContext()).apply {
-                text = "Audit log"
-                textSize = 22f
-                setTypeface(typeface, android.graphics.Typeface.BOLD)
-            })
-            actionFilter = EditText(requireContext()).apply { hint = "Action: READ, INSERT, UPDATE..." }
-            tableFilter = EditText(requireContext()).apply { hint = "Table: personnel, centre..." }
-            userFilter = EditText(requireContext()).apply { hint = "Utilisateur ID optionnel" }
-            startFilter = EditText(requireContext()).apply { hint = "Date debut YYYY-MM-DD" }
-            endFilter = EditText(requireContext()).apply { hint = "Date fin YYYY-MM-DD" }
-            addView(actionFilter)
-            addView(tableFilter)
-            addView(userFilter)
-            addView(startFilter)
-            addView(endFilter)
-            val row = LinearLayout(requireContext()).apply { orientation = LinearLayout.HORIZONTAL }
-            row.addView(Button(requireContext()).apply {
-                text = "Filtrer"
-                setOnClickListener {
-                    page = 1
-                    loadAudit()
-                }
-            }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
-            previousButton = Button(requireContext()).apply {
-                text = "Precedent"
-                visibility = View.GONE
-                setOnClickListener {
-                    if (page > 1) {
-                        page -= 1
-                        loadAudit()
-                    }
-                }
-            }
-            nextButton = Button(requireContext()).apply {
-                text = "Suivant"
-                visibility = View.GONE
-                setOnClickListener {
-                    page += 1
-                    loadAudit()
-                }
-            }
-            row.addView(previousButton, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
-            row.addView(nextButton, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
-            addView(row)
-            messageView = TextView(requireContext()).apply { setPadding(0, 8, 0, 8) }
-            addView(messageView)
-            addView(RecyclerView(requireContext()).apply {
-                layoutManager = LinearLayoutManager(requireContext())
-                adapter = this@AdminAuditLogFragment.adapter
-            }, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f))
-        }
-    }
+    private lateinit var etAction: TextInputEditText
+    private lateinit var etTable: TextInputEditText
+    private lateinit var etUserId: TextInputEditText
+    private lateinit var etDateStart: TextInputEditText
+    private lateinit var etDateEnd: TextInputEditText
+    private lateinit var btnFilter: MaterialButton
+    private lateinit var btnPrev: MaterialButton
+    private lateinit var btnNext: MaterialButton
+    private lateinit var tvPageInfo: TextView
+    private lateinit var auditProgress: ProgressBar
+    private lateinit var adapter: AuditAdapter
+
+    private var page = 1
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        StaffUi.decorateScreen(view)
+
+        etAction = view.findViewById(R.id.etAuditAction)
+        etTable = view.findViewById(R.id.etAuditTable)
+        etUserId = view.findViewById(R.id.etAuditUserId)
+        etDateStart = view.findViewById(R.id.etAuditDateStart)
+        etDateEnd = view.findViewById(R.id.etAuditDateEnd)
+        btnFilter = view.findViewById(R.id.btnAuditFilter)
+        btnPrev = view.findViewById(R.id.btnAuditPrev)
+        btnNext = view.findViewById(R.id.btnAuditNext)
+        tvPageInfo = view.findViewById(R.id.tvAuditPageInfo)
+        auditProgress = view.findViewById(R.id.auditProgress)
+
+        adapter = AuditAdapter()
+        view.findViewById<RecyclerView>(R.id.rvAuditLog).apply {
+            layoutManager = LinearLayoutManager(requireContext())
+            adapter = this@AdminAuditLogFragment.adapter
+        }
+
+        btnFilter.setOnClickListener { page = 1; loadAudit() }
+        btnPrev.setOnClickListener { if (page > 1) { page--; loadAudit() } }
+        btnNext.setOnClickListener { page++; loadAudit() }
+
         loadAudit()
     }
 
     private fun loadAudit() {
-        messageView.text = "Chargement..."
+        auditProgress.visibility = View.VISIBLE
+        tvPageInfo.text = "Chargement…"
         viewLifecycleOwner.lifecycleScope.launch {
             try {
                 val response = ApiClient.apiService.getAdminAuditLog(
                     page = page,
-                    action = actionFilter.text.toString().trim().ifBlank { null },
-                    tableName = tableFilter.text.toString().trim().ifBlank { null },
-                    userId = userFilter.text.toString().trim().toIntOrNull(),
-                    startDate = startFilter.text.toString().trim().ifBlank { null },
-                    endDate = endFilter.text.toString().trim().ifBlank { null }
+                    action = etAction.text?.toString()?.trim()?.ifBlank { null },
+                    tableName = etTable.text?.toString()?.trim()?.ifBlank { null },
+                    userId = etUserId.text?.toString()?.trim()?.toIntOrNull(),
+                    startDate = etDateStart.text?.toString()?.trim()?.ifBlank { null },
+                    endDate = etDateEnd.text?.toString()?.trim()?.ifBlank { null }
                 )
                 val data = response.data
-                if (response.status != "success" || data == null) throw Exception(response.message ?: "Audit indisponible")
+                if (response.status != "success" || data == null)
+                    throw Exception(response.message ?: "Audit indisponible")
+
                 adapter.submit(data.entries)
-                messageView.text = "Page ${data.page}/${data.totalPages} - ${data.total} entree(s)"
-                previousButton.visibility = if (data.page > 1) View.VISIBLE else View.GONE
-                nextButton.visibility = if (data.page < data.totalPages) View.VISIBLE else View.GONE
+                tvPageInfo.text = "Page ${data.page} / ${data.totalPages}  ·  ${data.total} entrée(s)"
+                btnPrev.visibility = if (data.page > 1) View.VISIBLE else View.GONE
+                btnNext.visibility = if (data.page < data.totalPages) View.VISIBLE else View.GONE
             } catch (e: Exception) {
                 adapter.submit(emptyList())
-                messageView.text = e.message ?: "Erreur reseau"
-                previousButton.visibility = if (page > 1) View.VISIBLE else View.GONE
-                nextButton.visibility = View.GONE
+                tvPageInfo.text = e.message ?: "Erreur réseau"
+                btnPrev.visibility = if (page > 1) View.VISIBLE else View.GONE
+                btnNext.visibility = View.GONE
+            } finally {
+                auditProgress.visibility = View.GONE
             }
         }
     }
 }
 
-private class AuditAdapter : RecyclerView.Adapter<AuditAdapter.ViewHolder>() {
+private class AuditAdapter : RecyclerView.Adapter<AuditAdapter.VH>() {
     private var items: List<AdminAuditLogDto> = emptyList()
-    fun submit(next: List<AdminAuditLogDto>) {
-        items = next
-        notifyDataSetChanged()
-    }
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        return ViewHolder(LinearLayout(parent.context).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(16)
-        })
-    }
+    fun submit(next: List<AdminAuditLogDto>) { items = next; notifyDataSetChanged() }
     override fun getItemCount() = items.size
-    override fun onBindViewHolder(holder: ViewHolder, position: Int) = holder.bind(items[position])
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH =
+        VH(LayoutInflater.from(parent.context).inflate(R.layout.item_audit_log, parent, false))
+    override fun onBindViewHolder(h: VH, pos: Int) = h.bind(items[pos])
 
-    class ViewHolder(private val root: LinearLayout) : RecyclerView.ViewHolder(root) {
+    class VH(v: View) : RecyclerView.ViewHolder(v) {
+        private val tvAction: TextView = v.findViewById(R.id.tvAuditAction)
+        private val tvTarget: TextView = v.findViewById(R.id.tvAuditTarget)
+        private val tvTimestamp: TextView = v.findViewById(R.id.tvAuditTimestamp)
+        private val tvUser: TextView = v.findViewById(R.id.tvAuditUser)
+
         fun bind(item: AdminAuditLogDto) {
-            root.removeAllViews()
-            StaffUi.styleCard(root)
-            root.addView(TextView(root.context).apply {
-                text = "${item.action ?: "-"} ${item.tableName ?: "-"} #${item.recordId ?: 0}"
-                textSize = 15f
-                setTypeface(typeface, android.graphics.Typeface.BOLD)
-            })
-            root.addView(TextView(root.context).apply {
-                text = "User ${item.userRole ?: "-"}:${item.userId ?: "-"} | ${item.timestamp ?: "-"}"
-            })
-            StaffUi.decorateTree(root)
+            val action = item.action ?: "—"
+            tvAction.text = action
+
+            // Color-code action badges
+            val (bgColor, textColor) = when (action.uppercase()) {
+                "INSERT", "CREATE" -> "#DCFCE7" to "#166534"
+                "UPDATE" -> "#FEF3C7" to "#92400E"
+                "DELETE" -> "#FEE2E2" to "#991B1B"
+                "READ" -> "#EFF6FF" to "#1E40AF"
+                else -> "#F3F4F6" to "#374151"
+            }
+            tvAction.background = GradientDrawable().apply {
+                setColor(Color.parseColor(bgColor))
+                cornerRadius = tvAction.resources.displayMetrics.density * 8
+            }
+            tvAction.setTextColor(Color.parseColor(textColor))
+
+            tvTarget.text = "${item.tableName ?: "?"} #${item.recordId ?: 0}"
+            tvTimestamp.text = item.timestamp?.take(16)?.replace("T", " ") ?: "—"
+            tvUser.text = "${item.userRole ?: "?"} · ID ${item.userId ?: "?"}"
         }
     }
 }

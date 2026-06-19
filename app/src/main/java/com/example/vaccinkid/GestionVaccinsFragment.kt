@@ -1,12 +1,11 @@
 package com.example.vaccinkid
 
-import android.app.AlertDialog
 import android.graphics.Color
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
-import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
@@ -18,6 +17,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.vaccinkid.model.VaccinDto
 import com.example.vaccinkid.model.VaccinRequest
 import com.example.vaccinkid.network.ApiClient
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.textfield.TextInputEditText
 import kotlinx.coroutines.launch
 
 class GestionVaccinsFragment : Fragment(R.layout.fragment_gestion_vaccins) {
@@ -101,31 +102,26 @@ class GestionVaccinsFragment : Fragment(R.layout.fragment_gestion_vaccins) {
     }
 
     private fun showForm(item: VaccinDto?) {
-        val root = LinearLayout(requireContext()).apply {
-            orientation = LinearLayout.VERTICAL; setPadding(64, 32, 64, 8)
-        }
-        fun et(hint: String, value: String = "") = EditText(requireContext()).apply {
-            this.hint = hint; setText(value)
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT
-            ).also { it.bottomMargin = 16 }
-        }
-        val nom = et("Nom du vaccin", item?.nom ?: "")
-        val doses = et("Doses par flacon", item?.dosesParFlacon?.toString() ?: "")
-        val age = et("Âge cible (semaines)", item?.ageCibleSemaines?.toString() ?: "")
-        val maladies = et("Maladies ciblées", item?.maladiesCiblees ?: "")
-        listOf(nom, doses, age, maladies).forEach { root.addView(it) }
+        val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_create_vaccin, null)
+        val nomEt = dialogView.findViewById<TextInputEditText>(R.id.etVaccinNom)
+        val dosesEt = dialogView.findViewById<TextInputEditText>(R.id.etVaccinDoses)
+        val ageEt = dialogView.findViewById<TextInputEditText>(R.id.etVaccinAge)
+        val maladiesEt = dialogView.findViewById<TextInputEditText>(R.id.etVaccinMaladies)
+        nomEt.setText(item?.nom ?: "")
+        dosesEt.setText(item?.dosesParFlacon?.toString() ?: "")
+        ageEt.setText(item?.ageCibleSemaines?.toString() ?: "")
+        maladiesEt.setText(item?.maladiesCiblees ?: "")
 
-        AlertDialog.Builder(requireContext())
+        MaterialAlertDialogBuilder(requireContext())
             .setTitle(if (item == null) "Ajouter vaccin" else "Modifier vaccin")
-            .setView(root)
+            .setView(dialogView)
             .setNegativeButton("Annuler", null)
             .setPositiveButton("Valider") { _, _ ->
                 saveVaccin(item?.id, VaccinRequest(
-                    nom = nom.text.toString().trim(),
-                    dosesParFlacon = doses.text.toString().trim().toIntOrNull(),
-                    ageCibleSemaines = age.text.toString().trim().toIntOrNull(),
-                    maladiesCiblees = maladies.text.toString().trim()
+                    nom = nomEt.text.toString().trim(),
+                    dosesParFlacon = dosesEt.text.toString().trim().toIntOrNull(),
+                    ageCibleSemaines = ageEt.text.toString().trim().toIntOrNull(),
+                    maladiesCiblees = maladiesEt.text.toString().trim()
                 ))
             }
             .show()
@@ -150,7 +146,7 @@ class GestionVaccinsFragment : Fragment(R.layout.fragment_gestion_vaccins) {
     }
 
     private fun deactivate(item: VaccinDto) {
-        AlertDialog.Builder(requireContext())
+        MaterialAlertDialogBuilder(requireContext())
             .setTitle("Désactiver vaccin")
             .setMessage(item.nom ?: "Vaccin #${item.id}")
             .setNegativeButton("Annuler", null)
@@ -169,7 +165,7 @@ class GestionVaccinsFragment : Fragment(R.layout.fragment_gestion_vaccins) {
     }
 
     private fun reactivate(item: VaccinDto) {
-        AlertDialog.Builder(requireContext())
+        MaterialAlertDialogBuilder(requireContext())
             .setTitle("Réactiver vaccin")
             .setMessage(item.nom ?: "Vaccin #${item.id}")
             .setNegativeButton("Annuler", null)

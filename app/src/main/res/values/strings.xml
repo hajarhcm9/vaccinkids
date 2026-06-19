@@ -25,4 +25,6 @@
     <string name="error_admin_only">Utilisez l\'espace Admin pour ce compte.</string>
     <string name="role_nurse">Infirmier</string>
     <string name="role_admin">Admin</string>
+    <string name="error_network_unreachable">Impossible de joindre le serveur. Vérifiez votre connexion réseau.</string>
+    <string name="error_network_timeout">Le serveur ne répond pas. Vérifiez l\'adresse IP ou la connexion réseau.</string>
 </resources>

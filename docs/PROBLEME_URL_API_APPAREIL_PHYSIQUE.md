@@ -1,13 +1,14 @@
 # Probleme connu - URL API incorrecte sur appareil physique
 
 **Date observee :** 14 juin 2026  
+**Date resolue :** 19 juin 2026  
 **Application concernee :** Android staff/admin/infirmier  
-**Statut :** A corriger durablement
+**Statut :** Resolu
 
-## Symptome
+## Symptome initial
 
 Apres reconstruction et installation de l'APK debug sur un telephone physique, la
-connexion staff echoue apres environ 30 secondes avec :
+connexion staff echouait apres environ 30 secondes avec :
 
 ```text
 failed to connect to /10.0.2.2 (port 3000) from /192.168.1.2 (...) after 30000ms
@@ -15,56 +16,45 @@ failed to connect to /10.0.2.2 (port 3000) from /192.168.1.2 (...) after 30000ms
 
 ## Cause
 
-`app/build.gradle.kts` utilise `http://10.0.2.2:3000/api/` comme valeur debug par
+`app/build.gradle.kts` utilisait `http://10.0.2.2:3000/api/` comme valeur debug par
 defaut. Cette adresse fonctionne uniquement depuis un emulateur Android.
 
-Lorsqu'un APK est reconstruit sans definir `STAFF_API_BASE_URL`, il remplace l'APK
-precedemment configure pour le telephone physique. Le telephone tente alors de
-contacter `10.0.2.2` au lieu de l'adresse LAN du Mac.
+## Resolution implementee
 
-## Impact
+Deux variantes de build distinctes ont ete introduites dans `app/build.gradle.kts` :
 
-- Login Admin et Infirmier impossible sur appareil physique.
-- Timeout de 30 secondes donnant l'impression que l'application est bloquee.
-- Recette visuelle et fonctionnelle interrompue.
-- Risque de faux diagnostic backend ou reseau.
+| Variante | URL par defaut | Utilisation |
+| --- | --- | --- |
+| `debugEmulator` | `http://10.0.2.2:3000/api/` | Emulateur Android uniquement |
+| `debugDevice` | Exige `STAFF_API_BASE_URL` | Telephone physique ; echec de build si absent |
 
-## Reproduction
+La variante `debugDevice` refuse de compiler si `STAFF_API_BASE_URL` n'est pas definie,
+ce qui elimine le risque silencieux d'installer un APK telephone avec l'adresse emulateur.
+
+Un ecran de diagnostic (`ApiDiagnosticsActivity`) affiche `BuildConfig.API_BASE_URL` et
+`BuildConfig.BUILD_TYPE` en mode debug, accessible depuis l'ecran de bienvenue.
+
+Des messages d'erreur reseau comprehensibles ont ete ajoutes dans `BaseLoginActivity` :
+- `error_network_unreachable` — quand le serveur est injoignable
+- `error_network_timeout` — quand la connexion expire
+
+## Utilisation correcte
+
+Voir la section 5-6 de `GUIDE_DEMARRAGE_CONTRIBUTEUR_STAFF.md` pour les commandes
+de build et d'installation.
 
 ```bash
-JAVA_HOME=$(/usr/libexec/java_home -v 17) ./gradlew :app:assembleDebug
-adb install -r app/build/outputs/apk/debug/app-debug.apk
-```
+# Emulateur
+JAVA_HOME=$(/usr/libexec/java_home -v 17) ./gradlew :app:assembleDebugEmulator
 
-L'APK genere utilise alors l'adresse debug par defaut `10.0.2.2`.
-
-## Contournement actuel
-
-Pour un telephone physique connecte au meme Wi-Fi que le Mac :
-
-```bash
-MAC_IP=$(ipconfig getifaddr en0)
-STAFF_API_BASE_URL="http://$MAC_IP:3000/api" \
+# Telephone physique
+IP_MAC=$(ipconfig getifaddr en0)
+STAFF_API_BASE_URL="http://$IP_MAC:3000/api" \
 JAVA_HOME=$(/usr/libexec/java_home -v 17) \
-./gradlew :app:assembleDebug
-
-adb install -r app/build/outputs/apk/debug/app-debug.apk
+./gradlew :app:assembleDebugDevice
 ```
 
-Verifier egalement que le backend ecoute sur le reseau local et que le telephone
-peut joindre le Mac.
-
-## Correction durable a faire
-
-- Ajouter des variantes explicites `debugEmulator` et `debugDevice`, ou une
-  configuration d'environnement versionnee sans secret.
-- Afficher l'URL API active dans un ecran diagnostic disponible uniquement en debug.
-- Faire echouer la commande de build appareil si `STAFF_API_BASE_URL` est absente.
-- Ajouter une commande projet unique, par exemple `npm run staff:device`.
-- Reduire le timeout de connexion debug et afficher une erreur indiquant l'URL cible.
-- Ajouter ce scenario a la recette contributeur et a la CI de build debug.
-
-## Critere de cloture
+## Critere de cloture (atteint)
 
 Un contributeur peut construire et installer l'application sur emulateur ou telephone
 physique avec une commande explicite, sans risque silencieux d'utiliser la mauvaise URL.

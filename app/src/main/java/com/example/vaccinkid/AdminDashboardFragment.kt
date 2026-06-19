@@ -3,11 +3,10 @@ package com.example.vaccinkid
 import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.TextView
-import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
@@ -15,6 +14,7 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.example.vaccinkid.network.ApiClient
 import com.example.vaccinkid.viewmodel.InfirmierAuthViewModel
 import com.github.mikephil.charting.charts.BarChart
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.github.mikephil.charting.data.BarData
 import com.github.mikephil.charting.data.BarDataSet
 import com.github.mikephil.charting.data.BarEntry
@@ -96,7 +96,7 @@ class AdminDashboardFragment : Fragment(R.layout.fragment_admin_dashboard) {
 
     private fun renderRecentActivity(stats: com.example.vaccinkid.model.DashboardStatsDto) {
         activityContainer.removeAllViews()
-        val ctx = requireContext()
+        val inflater = LayoutInflater.from(requireContext())
         val rows = listOfNotNull(
             if ((stats.rdvPresents ?: 0) > 0) "Patients présents aujourd'hui" to "${stats.rdvPresents}" else null,
             if ((stats.rdvConfirmes ?: 0) > 0) "RDV confirmés en attente" to "${stats.rdvConfirmes}" else null,
@@ -107,36 +107,19 @@ class AdminDashboardFragment : Fragment(R.layout.fragment_admin_dashboard) {
             "Total parents inscrits" to "${stats.totalParents ?: 0}"
         )
         rows.forEach { (label, value) ->
-            val row = LinearLayout(ctx).apply {
-                orientation = LinearLayout.HORIZONTAL
-                setPadding(0, 10, 0, 10)
-            }
-            row.addView(TextView(ctx).apply {
-                text = label
-                textSize = 14f
-                setTextColor(ctx.getColor(R.color.text_secondary))
-                layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
-            })
-            row.addView(TextView(ctx).apply {
-                text = value
-                textSize = 14f
-                setTypeface(null, android.graphics.Typeface.BOLD)
-                setTextColor(ctx.getColor(R.color.text_primary))
-            })
-            activityContainer.addView(row)
-            val line = View(ctx)
-            line.layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 1)
-            line.setBackgroundColor(ctx.getColor(R.color.outline))
-            activityContainer.addView(line)
+            val rowView = inflater.inflate(R.layout.item_dashboard_stat_row, activityContainer, false)
+            rowView.findViewById<TextView>(R.id.tvStatRowLabel).text = label
+            rowView.findViewById<TextView>(R.id.tvStatRowValue).text = value
+            activityContainer.addView(rowView)
         }
     }
 
     private fun confirmLogout() {
-        AlertDialog.Builder(requireContext())
-            .setTitle("Deconnexion")
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Déconnexion")
             .setMessage("Voulez-vous fermer la session administrateur ?")
             .setNegativeButton("Annuler", null)
-            .setPositiveButton("Deconnexion") { _, _ ->
+            .setPositiveButton("Déconnexion") { _, _ ->
                 authViewModel.logout {
                     startActivity(Intent(requireContext(), AdminLoginActivity::class.java).apply {
                         flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK

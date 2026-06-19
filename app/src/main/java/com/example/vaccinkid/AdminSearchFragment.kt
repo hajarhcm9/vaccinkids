@@ -3,89 +3,57 @@ package com.example.vaccinkid
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
-import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.EditText
-import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.vaccinkid.network.ApiClient
+import com.google.android.material.textfield.TextInputEditText
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-class AdminSearchFragment : Fragment() {
+class AdminSearchFragment : Fragment(R.layout.fragment_admin_search) {
+
     private lateinit var adapter: SearchResultAdapter
     private lateinit var statusView: TextView
     private var searchJob: Job? = null
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        statusView = view.findViewById(R.id.tvSearchStatus)
+
         adapter = SearchResultAdapter()
-        return LinearLayout(requireContext()).apply {
-            orientation = LinearLayout.VERTICAL
-            setBackgroundColor(requireContext().getColor(R.color.bg_screen))
-
-            addView(LinearLayout(requireContext()).apply {
-                orientation = LinearLayout.VERTICAL
-                setPadding(56, 56, 56, 16)
-                addView(TextView(requireContext()).apply {
-                    text = "Recherche globale"
-                    textSize = 24f
-                    setTextColor(requireContext().getColor(R.color.text_primary))
-                    setTypeface(null, android.graphics.Typeface.BOLD)
-                })
-            })
-
-            val searchInput = EditText(requireContext()).apply {
-                hint = "Rechercher parents, bébés, sessions, vaccins..."
-                textSize = 15f
-                setBackgroundResource(R.drawable.bg_card_rounded)
-                setPadding(32, 28, 32, 28)
-                layoutParams = LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT
-                ).also { it.setMargins(44, 0, 44, 16) }
-                addTextChangedListener(object : TextWatcher {
-                    override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-                    override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
-                    override fun afterTextChanged(s: Editable?) {
-                        val q = s?.toString()?.trim() ?: ""
-                        searchJob?.cancel()
-                        if (q.length < 2) { adapter.submit(emptyList()); statusView.text = ""; return }
-                        searchJob = viewLifecycleOwner.lifecycleScope.launch {
-                            delay(400)
-                            performSearch(q)
-                        }
-                    }
-                })
-            }
-            addView(searchInput)
-
-            statusView = TextView(requireContext()).apply {
-                setPadding(56, 0, 56, 8)
-                setTextColor(requireContext().getColor(R.color.text_secondary))
-            }
-            addView(statusView)
-
-            addView(RecyclerView(requireContext()).apply {
-                layoutManager = LinearLayoutManager(requireContext())
-                adapter = this@AdminSearchFragment.adapter
-                clipToPadding = false
-                setPadding(44, 0, 44, 60)
-            }, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f))
+        view.findViewById<RecyclerView>(R.id.rvSearchResults).apply {
+            layoutManager = LinearLayoutManager(requireContext())
+            adapter = this@AdminSearchFragment.adapter
         }
+
+        view.findViewById<TextInputEditText>(R.id.etSearch).addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: Editable?) {
+                val q = s?.toString()?.trim() ?: ""
+                searchJob?.cancel()
+                if (q.length < 2) { adapter.submit(emptyList()); statusView.text = ""; return }
+                searchJob = viewLifecycleOwner.lifecycleScope.launch {
+                    delay(400)
+                    performSearch(q)
+                }
+            }
+        })
     }
 
     private suspend fun performSearch(query: String) {
-        statusView.text = "Recherche..."
+        statusView.text = "Recherche…"
         try {
             val resp = ApiClient.apiService.searchGlobal(query)
             if (resp.status != "success") throw Exception(resp.message ?: "Erreur")
-            val raw = resp.data.orEmpty()
-            val results = raw.map { m ->
+            val results = resp.data.orEmpty().map { m ->
                 val type = m["type"]?.toString() ?: ""
                 val label = when (type) {
                     "parent" -> "${m["prenom"]} ${m["nom"]} (${m["telephone"] ?: "-"})"
@@ -101,7 +69,7 @@ class AdminSearchFragment : Fragment() {
                     "vaccin" -> "Vaccin"
                     else -> type.replaceFirstChar { it.uppercase() }
                 }
-                Pair(label, detail)
+                Triple(label, detail, type)
             }
             adapter.submit(results)
             statusView.text = if (results.isEmpty()) "Aucun résultat pour \"$query\"" else "${results.size} résultat(s)"
@@ -112,37 +80,22 @@ class AdminSearchFragment : Fragment() {
 }
 
 private class SearchResultAdapter : RecyclerView.Adapter<SearchResultAdapter.VH>() {
-    private var items: List<Pair<String, String>> = emptyList()
-    fun submit(next: List<Pair<String, String>>) { items = next; notifyDataSetChanged() }
+    private var items: List<Triple<String, String, String>> = emptyList()
+    fun submit(next: List<Triple<String, String, String>>) { items = next; notifyDataSetChanged() }
     override fun getItemCount() = items.size
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
-        val card = LinearLayout(parent.context).apply {
-            orientation = LinearLayout.VERTICAL
-            setBackgroundResource(R.drawable.bg_card_rounded)
-            layoutParams = RecyclerView.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
-            ).also { it.bottomMargin = 12 }
-            setPadding(28, 20, 28, 16)
-        }
-        return VH(card)
-    }
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH =
+        VH(android.view.LayoutInflater.from(parent.context).inflate(R.layout.item_search_result, parent, false))
     override fun onBindViewHolder(h: VH, pos: Int) = h.bind(items[pos])
 
-    class VH(private val root: LinearLayout) : RecyclerView.ViewHolder(root) {
-        fun bind(item: Pair<String, String>) {
-            root.removeAllViews()
-            root.addView(TextView(root.context).apply {
-                text = item.first
-                textSize = 14f
-                setTypeface(null, android.graphics.Typeface.BOLD)
-                setTextColor(root.context.getColor(R.color.text_primary))
-            })
-            root.addView(TextView(root.context).apply {
-                text = item.second
-                textSize = 12f
-                setTextColor(root.context.getColor(R.color.text_secondary))
-                setPadding(0, 4, 0, 0)
-            })
+    class VH(v: View) : RecyclerView.ViewHolder(v) {
+        private val tvType: TextView = v.findViewById(R.id.tvSearchType)
+        private val tvLabel: TextView = v.findViewById(R.id.tvSearchLabel)
+        private val tvDetail: TextView = v.findViewById(R.id.tvSearchDetail)
+
+        fun bind(item: Triple<String, String, String>) {
+            tvLabel.text = item.first
+            tvDetail.text = item.second
+            tvType.text = item.second.uppercase()
         }
     }
 }

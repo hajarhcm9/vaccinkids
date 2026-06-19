@@ -1,12 +1,9 @@
 package com.example.vaccinkid
 
-import android.app.AlertDialog
 import android.graphics.Color
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
@@ -16,102 +13,65 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.example.vaccinkid.model.RendezVousDto
 import com.example.vaccinkid.network.ApiClient
+import com.google.android.material.button.MaterialButton
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.launch
 
-class AdminRendezVousFragment : Fragment() {
+class AdminRendezVousFragment : Fragment(R.layout.fragment_admin_rdv) {
+
     private lateinit var adapter: RdvAdminAdapter
-    private lateinit var messageView: TextView
+    private lateinit var tvMessage: TextView
     private lateinit var refreshLayout: SwipeRefreshLayout
+    private lateinit var tabTous: TextView
+    private lateinit var tabPresents: TextView
+    private lateinit var tabAbsents: TextView
+    private lateinit var tabAttente: TextView
     private var allRdv: List<RendezVousDto> = emptyList()
     private var activeFilter = "TOUS"
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        tvMessage = view.findViewById(R.id.tvRdvMessage)
+        refreshLayout = view.findViewById(R.id.rdvAdminRefresh)
+        tabTous = view.findViewById(R.id.tabRdvTous)
+        tabPresents = view.findViewById(R.id.tabRdvPresents)
+        tabAbsents = view.findViewById(R.id.tabRdvAbsents)
+        tabAttente = view.findViewById(R.id.tabRdvAttente)
+
         adapter = RdvAdminAdapter(onDelete = { confirmDelete(it) })
-
-        val root = LinearLayout(requireContext()).apply {
-            orientation = LinearLayout.VERTICAL
-            setBackgroundColor(requireContext().getColor(R.color.bg_screen))
+        view.findViewById<RecyclerView>(R.id.rvRdvAdmin).apply {
+            layoutManager = LinearLayoutManager(requireContext())
+            adapter = this@AdminRendezVousFragment.adapter
         }
 
-        root.addView(LinearLayout(requireContext()).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(56, 56, 56, 24)
-            addView(TextView(requireContext()).apply {
-                text = "Rendez-vous"
-                textSize = 24f
-                setTextColor(requireContext().getColor(R.color.text_primary))
-                setTypeface(null, android.graphics.Typeface.BOLD)
-            })
-            addView(TextView(requireContext()).apply {
-                text = "Gestion de tous les RDV"
-                textSize = 13f
-                setTextColor(requireContext().getColor(R.color.text_secondary))
-                setPadding(0, 4, 0, 0)
-            })
-        })
-
-        // Filter tabs
-        val tabTous = makeTab("Tous", true)
-        val tabPresents = makeTab("Présents", false)
-        val tabAbsents = makeTab("Absents", false)
-        val tabAttente = makeTab("En attente", false)
-        val tabRow = LinearLayout(requireContext()).apply {
-            orientation = LinearLayout.HORIZONTAL
-            setPadding(44, 0, 44, 20)
-            addView(tabTous, LinearLayout.LayoutParams(0, 90, 1f))
-            addView(tabPresents, LinearLayout.LayoutParams(0, 90, 1f))
-            addView(tabAbsents, LinearLayout.LayoutParams(0, 90, 1f))
-            addView(tabAttente, LinearLayout.LayoutParams(0, 90, 1f))
-        }
-        root.addView(tabRow)
-
-        fun selectTab(filter: String) {
-            activeFilter = filter
-            mapOf(tabTous to "TOUS", tabPresents to "PRESENT", tabAbsents to "ABSENT", tabAttente to "EN_ATTENTE").forEach { (tv, key) ->
-                if (key == filter) {
-                    tv.setBackgroundResource(R.drawable.bg_btn_teal_pill)
-                    tv.setTextColor(requireContext().getColor(R.color.white))
-                    tv.setTypeface(null, android.graphics.Typeface.BOLD)
-                } else {
-                    tv.setBackgroundResource(R.drawable.bg_chip_inactive)
-                    tv.setTextColor(requireContext().getColor(R.color.text_secondary))
-                    tv.setTypeface(null, android.graphics.Typeface.NORMAL)
-                }
-            }
-            applyFilter()
-        }
         tabTous.setOnClickListener { selectTab("TOUS") }
         tabPresents.setOnClickListener { selectTab("PRESENT") }
         tabAbsents.setOnClickListener { selectTab("ABSENT") }
         tabAttente.setOnClickListener { selectTab("EN_ATTENTE") }
 
-        messageView = TextView(requireContext()).apply {
-            setPadding(56, 0, 56, 8)
-            setTextColor(requireContext().getColor(R.color.text_secondary))
-        }
-        root.addView(messageView)
-
-        val rv = RecyclerView(requireContext()).apply {
-            layoutManager = LinearLayoutManager(requireContext())
-            adapter = this@AdminRendezVousFragment.adapter
-            clipToPadding = false
-            setPadding(44, 0, 44, 60)
-        }
-
-        refreshLayout = SwipeRefreshLayout(requireContext()).apply {
-            addView(rv)
-        }
-        root.addView(refreshLayout, LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f
-        ))
-
         refreshLayout.setOnRefreshListener { loadRdv() }
-        return root
+        loadRdv()
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        loadRdv()
+    private fun selectTab(filter: String) {
+        activeFilter = filter
+        val tabs = mapOf(
+            tabTous to "TOUS",
+            tabPresents to "PRESENT",
+            tabAbsents to "ABSENT",
+            tabAttente to "EN_ATTENTE"
+        )
+        tabs.forEach { (tv, key) ->
+            if (key == filter) {
+                tv.setBackgroundResource(R.drawable.bg_btn_teal_pill)
+                tv.setTextColor(requireContext().getColor(R.color.white))
+            } else {
+                tv.setBackgroundResource(R.drawable.bg_chip_inactive)
+                tv.setTextColor(requireContext().getColor(R.color.text_secondary))
+            }
+        }
+        applyFilter()
     }
 
     private fun loadRdv() {
@@ -123,7 +83,7 @@ class AdminRendezVousFragment : Fragment() {
                 allRdv = resp.data.orEmpty()
                 applyFilter()
             } catch (e: Exception) {
-                messageView.text = e.message ?: "Erreur réseau"
+                tvMessage.text = e.message ?: "Erreur réseau"
             } finally {
                 refreshLayout.isRefreshing = false
             }
@@ -134,11 +94,11 @@ class AdminRendezVousFragment : Fragment() {
         val filtered = if (activeFilter == "TOUS") allRdv
         else allRdv.filter { it.statut?.uppercase() == activeFilter }
         adapter.submit(filtered)
-        messageView.text = "${filtered.size} RDV"
+        tvMessage.text = "${filtered.size} RDV"
     }
 
     private fun confirmDelete(rdv: RendezVousDto) {
-        AlertDialog.Builder(requireContext())
+        MaterialAlertDialogBuilder(requireContext())
             .setTitle("Supprimer ce RDV ?")
             .setMessage("RDV #${rdv.id} — ${rdv.statut ?: "-"}")
             .setNegativeButton("Annuler", null)
@@ -156,21 +116,6 @@ class AdminRendezVousFragment : Fragment() {
             }
             .show()
     }
-
-    private fun makeTab(label: String, active: Boolean) = TextView(requireContext()).apply {
-        text = label
-        gravity = android.view.Gravity.CENTER
-        textSize = 11f
-        if (active) {
-            setBackgroundResource(R.drawable.bg_btn_teal_pill)
-            setTextColor(requireContext().getColor(R.color.white))
-            setTypeface(null, android.graphics.Typeface.BOLD)
-        } else {
-            setBackgroundResource(R.drawable.bg_chip_inactive)
-            setTextColor(requireContext().getColor(R.color.text_secondary))
-        }
-        isClickable = true; isFocusable = true
-    }
 }
 
 private class RdvAdminAdapter(
@@ -179,91 +124,44 @@ private class RdvAdminAdapter(
     private var items: List<RendezVousDto> = emptyList()
     fun submit(next: List<RendezVousDto>) { items = next; notifyDataSetChanged() }
     override fun getItemCount() = items.size
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
-        val card = LinearLayout(parent.context).apply {
-            orientation = LinearLayout.VERTICAL
-            setBackgroundResource(R.drawable.bg_card_rounded)
-            layoutParams = RecyclerView.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
-            ).also { it.bottomMargin = 16 }
-            setPadding(28, 20, 28, 16)
-        }
-        return VH(card, onDelete)
-    }
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH =
+        VH(android.view.LayoutInflater.from(parent.context).inflate(R.layout.item_admin_rdv, parent, false), onDelete)
     override fun onBindViewHolder(h: VH, pos: Int) = h.bind(items[pos])
 
     class VH(
-        private val root: LinearLayout,
+        v: View,
         private val onDelete: (RendezVousDto) -> Unit
-    ) : RecyclerView.ViewHolder(root) {
+    ) : RecyclerView.ViewHolder(v) {
+        private val accentBar: View = v.findViewById(R.id.viewRdvAccent)
+        private val tvId: TextView = v.findViewById(R.id.tvRdvId)
+        private val tvHeure: TextView = v.findViewById(R.id.tvRdvHeure)
+        private val tvStatut: TextView = v.findViewById(R.id.tvRdvStatut)
+        private val tvParent: TextView = v.findViewById(R.id.tvRdvParent)
+        private val tvVaccin: TextView = v.findViewById(R.id.tvRdvVaccin)
+        private val btnDelete: MaterialButton = v.findViewById(R.id.btnRdvDelete)
+
         fun bind(rdv: RendezVousDto) {
-            root.removeAllViews()
-            val ctx = root.context
             val statut = rdv.statut?.uppercase() ?: "INCONNU"
-            val statusColor = when (statut) {
-                "PRESENT" -> Color.parseColor("#10B981")
-                "ABSENT" -> Color.parseColor("#EF4444")
-                "EN_ATTENTE" -> Color.parseColor("#F59E0B")
-                "CONFIRME" -> Color.parseColor("#3B82F6")
-                else -> Color.GRAY
+            val accentColor = when (statut) {
+                "PRESENT" -> "#10B981"
+                "ABSENT" -> "#EF4444"
+                "EN_ATTENTE" -> "#F59E0B"
+                "CONFIRME" -> "#3B82F6"
+                else -> "#9CA3AF"
             }
+            accentBar.setBackgroundColor(Color.parseColor(accentColor))
+            tvStatut.setBackgroundColor(Color.parseColor(accentColor))
 
-            root.addView(LinearLayout(ctx).apply {
-                orientation = LinearLayout.HORIZONTAL
-                gravity = android.view.Gravity.CENTER_VERTICAL
-                addView(LinearLayout(ctx).apply {
-                    orientation = LinearLayout.VERTICAL
-                    layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
-                    addView(TextView(ctx).apply {
-                        text = "RDV #${rdv.id}"
-                        textSize = 15f
-                        setTypeface(null, android.graphics.Typeface.BOLD)
-                        setTextColor(ctx.getColor(R.color.text_primary))
-                    })
-                    addView(TextView(ctx).apply {
-                        text = rdv.heureDebut?.take(5)?.let { "Heure : $it" } ?: "Heure non définie"
-                        textSize = 12f
-                        setTextColor(ctx.getColor(R.color.text_secondary))
-                        setPadding(0, 2, 0, 0)
-                    })
-                })
-                addView(TextView(ctx).apply {
-                    text = statut.replace("_", " ")
-                    textSize = 11f
-                    setPadding(16, 6, 16, 6)
-                    setBackgroundColor(statusColor)
-                    setTextColor(Color.WHITE)
-                })
-            })
+            tvId.text = "RDV #${rdv.id}"
+            tvHeure.text = rdv.heureDebut?.take(5)?.let { "Heure : $it" } ?: "Heure non définie"
+            tvStatut.text = statut.replace("_", " ")
 
-            rdv.parentNom?.let { nom ->
-                root.addView(TextView(ctx).apply {
-                    text = "Parent : $nom"
-                    textSize = 12f
-                    setTextColor(ctx.getColor(R.color.text_secondary))
-                    setPadding(0, 8, 0, 0)
-                })
-            }
+            tvParent.text = listOfNotNull(rdv.parentPrenom, rdv.parentNom)
+                .joinToString(" ").let { if (it.isNotBlank()) "Parent : $it" else "" }
+            tvVaccin.text = rdv.vaccinNom?.let { "Vaccin : $it" } ?: ""
+            tvVaccin.visibility = if (rdv.vaccinNom != null) View.VISIBLE else View.GONE
 
-            rdv.vaccinNom?.let { vaccin ->
-                root.addView(TextView(ctx).apply {
-                    text = "Vaccin : $vaccin"
-                    textSize = 12f
-                    setTextColor(ctx.getColor(R.color.text_secondary))
-                    setPadding(0, 2, 0, 0)
-                })
-            }
-
-            root.addView(android.widget.Button(ctx).apply {
-                text = "Supprimer"
-                setTextColor(Color.WHITE)
-                backgroundTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#EF4444"))
-                textSize = 11f
-                layoutParams = LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.WRAP_CONTENT, 72
-                ).also { it.topMargin = 12 }
-                setOnClickListener { onDelete(rdv) }
-            })
+            btnDelete.setOnClickListener { onDelete(rdv) }
         }
     }
 }

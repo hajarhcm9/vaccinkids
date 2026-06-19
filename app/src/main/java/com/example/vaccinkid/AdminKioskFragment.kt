@@ -1,15 +1,15 @@
 package com.example.vaccinkid
 
-import android.app.AlertDialog
+import android.graphics.Bitmap
 import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
-import android.widget.Button
-import android.widget.EditText
+import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.ProgressBar
 import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
@@ -21,74 +21,46 @@ import com.example.vaccinkid.model.AdminRefCentreDto
 import com.example.vaccinkid.model.CreateKioskRequest
 import com.example.vaccinkid.model.KioskDto
 import com.example.vaccinkid.network.ApiClient
+import com.google.android.material.button.MaterialButton
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.textfield.TextInputEditText
+import com.google.zxing.BarcodeFormat
+import com.google.zxing.EncodeHintType
+import com.google.zxing.qrcode.QRCodeWriter
 import kotlinx.coroutines.launch
 
-class AdminKioskFragment : Fragment() {
+class AdminKioskFragment : Fragment(R.layout.fragment_admin_kiosk) {
+
+    private lateinit var kioskProgress: ProgressBar
+    private lateinit var tvMessage: TextView
     private lateinit var adapter: KioskAdapter
-    private lateinit var messageView: TextView
     private var centres: List<AdminRefCentreDto> = emptyList()
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        kioskProgress = view.findViewById(R.id.kioskProgress)
+        tvMessage = view.findViewById(R.id.tvKioskMessage)
+
         adapter = KioskAdapter(
             onRotate = { confirmAction("Renouveler le secret de", it) { rotateKiosk(it) } },
             onRevoke = { confirmAction("Révoquer le kiosk", it) { revokeKiosk(it) } }
         )
-        return LinearLayout(requireContext()).apply {
-            orientation = LinearLayout.VERTICAL
-            setBackgroundColor(requireContext().getColor(R.color.bg_screen))
-
-            addView(LinearLayout(requireContext()).apply {
-                orientation = LinearLayout.VERTICAL
-                setPadding(56, 56, 56, 24)
-                addView(TextView(requireContext()).apply {
-                    text = "Kiosks de salle d'attente"
-                    textSize = 24f
-                    setTextColor(requireContext().getColor(R.color.text_primary))
-                    setTypeface(null, android.graphics.Typeface.BOLD)
-                })
-                addView(TextView(requireContext()).apply {
-                    text = "Terminaux autonomes connectés aux centres"
-                    textSize = 13f
-                    setTextColor(requireContext().getColor(R.color.text_secondary))
-                    setPadding(0, 4, 0, 0)
-                })
-            })
-
-            addView(com.google.android.material.button.MaterialButton(requireContext()).apply {
-                text = "+ Créer un kiosk"
-                backgroundTintList = android.content.res.ColorStateList.valueOf(
-                    requireContext().getColor(R.color.teal_500)
-                )
-                setTextColor(requireContext().getColor(R.color.white))
-                textSize = 14f
-                layoutParams = LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT
-                ).also { it.setMargins(44, 0, 44, 20) }
-                setOnClickListener { showCreateDialog() }
-            })
-
-            messageView = TextView(requireContext()).apply {
-                setPadding(56, 0, 56, 8)
-                setTextColor(requireContext().getColor(R.color.text_secondary))
-            }
-            addView(messageView)
-
-            addView(RecyclerView(requireContext()).apply {
-                layoutManager = LinearLayoutManager(requireContext())
-                adapter = this@AdminKioskFragment.adapter
-                clipToPadding = false
-                setPadding(44, 0, 44, 60)
-            }, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f))
+        view.findViewById<RecyclerView>(R.id.rvKiosks).apply {
+            layoutManager = LinearLayoutManager(requireContext())
+            adapter = this@AdminKioskFragment.adapter
         }
-    }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
+        view.findViewById<MaterialButton>(R.id.btnCreateKiosk).setOnClickListener {
+            showCreateDialog()
+        }
+
         loadAll()
     }
 
     private fun loadAll() {
-        messageView.text = "Chargement..."
+        kioskProgress.visibility = View.VISIBLE
+        tvMessage.text = "Chargement…"
         viewLifecycleOwner.lifecycleScope.launch {
             try {
                 val refs = ApiClient.apiService.getAdminReferences()
@@ -97,45 +69,40 @@ class AdminKioskFragment : Fragment() {
                 if (resp.status != "success") throw Exception(resp.message ?: "Erreur")
                 val list = resp.data.orEmpty()
                 adapter.submit(list)
-                messageView.text = "${list.size} kiosk(s) enregistré(s)"
+                tvMessage.text = "${list.size} kiosk(s) enregistré(s)"
             } catch (e: Exception) {
-                messageView.text = e.message ?: "Erreur réseau"
+                tvMessage.text = e.message ?: "Erreur réseau"
+            } finally {
+                kioskProgress.visibility = View.GONE
             }
         }
     }
 
     private fun showCreateDialog() {
-        val root = LinearLayout(requireContext()).apply {
-            orientation = LinearLayout.VERTICAL; setPadding(64, 32, 64, 8)
-        }
-        val codeInput = EditText(requireContext()).apply {
-            hint = "Code unique (ex: KIOSK-01)"
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT
-            ).also { it.bottomMargin = 16 }
-        }
-        val centreSpinner = Spinner(requireContext()).apply {
-            adapter = ArrayAdapter(
-                requireContext(), android.R.layout.simple_spinner_dropdown_item,
-                centres.map { it.nom ?: "Centre #${it.id}" }
-            )
-        }
-        root.addView(codeInput)
-        root.addView(TextView(requireContext()).apply {
-            text = "Centre"; textSize = 13f
-            setTextColor(requireContext().getColor(R.color.text_secondary))
-        })
-        root.addView(centreSpinner)
+        val dialogView = LayoutInflater.from(requireContext())
+            .inflate(R.layout.dialog_create_kiosk, null)
+        val etCode = dialogView.findViewById<TextInputEditText>(R.id.etKioskCode)
+        val spinner = dialogView.findViewById<Spinner>(R.id.spinnerKioskCentre)
+        spinner.adapter = ArrayAdapter(
+            requireContext(), android.R.layout.simple_spinner_dropdown_item,
+            centres.map { it.nom ?: "Centre #${it.id}" }
+        )
 
-        AlertDialog.Builder(requireContext())
+        MaterialAlertDialogBuilder(requireContext())
             .setTitle("Créer un kiosk")
-            .setView(root)
+            .setView(dialogView)
             .setNegativeButton("Annuler", null)
             .setPositiveButton("Créer") { _, _ ->
-                val code = codeInput.text.toString().trim()
-                if (code.isBlank()) { Toast.makeText(requireContext(), "Code requis", Toast.LENGTH_SHORT).show(); return@setPositiveButton }
-                val centre = centres.getOrNull(centreSpinner.selectedItemPosition)
-                if (centre == null) { Toast.makeText(requireContext(), "Sélectionnez un centre", Toast.LENGTH_SHORT).show(); return@setPositiveButton }
+                val code = etCode.text?.toString()?.trim().orEmpty()
+                if (code.isBlank()) {
+                    Toast.makeText(requireContext(), "Code requis", Toast.LENGTH_SHORT).show()
+                    return@setPositiveButton
+                }
+                val centre = centres.getOrNull(spinner.selectedItemPosition)
+                if (centre == null) {
+                    Toast.makeText(requireContext(), "Sélectionnez un centre", Toast.LENGTH_SHORT).show()
+                    return@setPositiveButton
+                }
                 createKiosk(code, centre.id)
             }
             .show()
@@ -146,20 +113,72 @@ class AdminKioskFragment : Fragment() {
             try {
                 val r = ApiClient.apiService.createKiosk(CreateKioskRequest(code = code, centreId = centreId))
                 if (r.status != "success") throw Exception(r.message ?: "Refusé")
-                AlertDialog.Builder(requireContext())
-                    .setTitle("Kiosk créé")
-                    .setMessage("Code : ${r.data?.code}\nNotez le secret maintenant — il ne sera plus affiché.")
-                    .setPositiveButton("OK", null)
-                    .show()
+                val kioskCode = r.data?.code ?: code
                 loadAll()
+                showQrDialog(kioskCode)
             } catch (e: Exception) {
                 Toast.makeText(requireContext(), e.message ?: "Erreur réseau", Toast.LENGTH_SHORT).show()
             }
         }
     }
 
+    private fun showQrDialog(code: String) {
+        val qrBitmap = generateQr(code, 600)
+
+        val dialogContent = LinearLayout(requireContext()).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(48, 32, 48, 16)
+
+            addView(TextView(requireContext()).apply {
+                text = "Kiosk créé avec succès"
+                textSize = 16f
+                setTypeface(null, android.graphics.Typeface.BOLD)
+                setTextColor(requireContext().getColor(R.color.text_primary))
+                gravity = android.view.Gravity.CENTER
+            })
+            addView(TextView(requireContext()).apply {
+                text = "Code : $code"
+                textSize = 14f
+                setTextColor(requireContext().getColor(R.color.brand_teal))
+                gravity = android.view.Gravity.CENTER
+                setPadding(0, 8, 0, 16)
+            })
+            if (qrBitmap != null) {
+                addView(ImageView(requireContext()).apply {
+                    setImageBitmap(qrBitmap)
+                    val size = (resources.displayMetrics.widthPixels * 0.55).toInt()
+                    layoutParams = LinearLayout.LayoutParams(size, size).also {
+                        it.gravity = android.view.Gravity.CENTER_HORIZONTAL
+                        it.bottomMargin = 12
+                    }
+                    scaleType = ImageView.ScaleType.FIT_CENTER
+                })
+            }
+            addView(TextView(requireContext()).apply {
+                text = "Scannez ce QR code sur le terminal kiosk pour le connecter au centre."
+                textSize = 12f
+                setTextColor(requireContext().getColor(R.color.text_secondary))
+                gravity = android.view.Gravity.CENTER
+            })
+        }
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setView(dialogContent)
+            .setPositiveButton("Fermer", null)
+            .show()
+    }
+
+    private fun generateQr(content: String, sizePx: Int): Bitmap? = try {
+        val hints = mapOf(EncodeHintType.MARGIN to 1)
+        val bits = QRCodeWriter().encode(content, BarcodeFormat.QR_CODE, sizePx, sizePx, hints)
+        val bmp = Bitmap.createBitmap(sizePx, sizePx, Bitmap.Config.RGB_565)
+        for (x in 0 until sizePx) for (y in 0 until sizePx)
+            bmp.setPixel(x, y, if (bits[x, y]) Color.BLACK else Color.WHITE)
+        bmp
+    } catch (_: Exception) { null }
+
     private fun confirmAction(prefix: String, kiosk: KioskDto, action: () -> Unit) {
-        AlertDialog.Builder(requireContext())
+        MaterialAlertDialogBuilder(requireContext())
             .setTitle("$prefix ${kiosk.code}")
             .setMessage("Cette action est irréversible pour le terminal actuel.")
             .setNegativeButton("Annuler", null)
@@ -172,8 +191,9 @@ class AdminKioskFragment : Fragment() {
             try {
                 val r = ApiClient.apiService.rotateKiosk(kiosk.id)
                 if (r.status != "success") throw Exception(r.message)
-                Toast.makeText(requireContext(), "Secret renouvelé pour ${kiosk.code}", Toast.LENGTH_SHORT).show()
+                val newCode = r.data?.code ?: kiosk.code ?: ""
                 loadAll()
+                showQrDialog(newCode)
             } catch (e: Exception) {
                 Toast.makeText(requireContext(), e.message ?: "Erreur réseau", Toast.LENGTH_SHORT).show()
             }
@@ -201,82 +221,46 @@ private class KioskAdapter(
     private var items: List<KioskDto> = emptyList()
     fun submit(next: List<KioskDto>) { items = next; notifyDataSetChanged() }
     override fun getItemCount() = items.size
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
-        val card = LinearLayout(parent.context).apply {
-            orientation = LinearLayout.VERTICAL
-            setBackgroundResource(R.drawable.bg_card_rounded)
-            layoutParams = RecyclerView.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
-            ).also { it.bottomMargin = 20 }
-            setPadding(36, 28, 36, 20)
-        }
-        return VH(card, onRotate, onRevoke)
-    }
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH =
+        VH(LayoutInflater.from(parent.context).inflate(R.layout.item_admin_kiosk, parent, false), onRotate, onRevoke)
     override fun onBindViewHolder(h: VH, pos: Int) = h.bind(items[pos])
 
     class VH(
-        private val root: LinearLayout,
+        v: View,
         private val onRotate: (KioskDto) -> Unit,
         private val onRevoke: (KioskDto) -> Unit
-    ) : RecyclerView.ViewHolder(root) {
+    ) : RecyclerView.ViewHolder(v) {
+        private val accentBar: View = v.findViewById(R.id.viewKioskAccent)
+        private val tvCode: TextView = v.findViewById(R.id.tvKioskCode)
+        private val tvCentre: TextView = v.findViewById(R.id.tvKioskCentre)
+        private val tvStatus: TextView = v.findViewById(R.id.tvKioskStatus)
+        private val tvDate: TextView = v.findViewById(R.id.tvKioskDate)
+        private val llActions: LinearLayout = v.findViewById(R.id.llKioskActions)
+        private val btnRotate: MaterialButton = v.findViewById(R.id.btnKioskRotate)
+        private val btnRevoke: MaterialButton = v.findViewById(R.id.btnKioskRevoke)
+
         fun bind(k: KioskDto) {
-            root.removeAllViews()
             val actif = k.estActif != false
-            val ctx = root.context
-
-            root.addView(LinearLayout(ctx).apply {
-                orientation = LinearLayout.HORIZONTAL
-                gravity = android.view.Gravity.CENTER_VERTICAL
-                addView(TextView(ctx).apply {
-                    text = k.code ?: "Kiosk #${k.id}"
-                    textSize = 16f
-                    setTypeface(null, android.graphics.Typeface.BOLD)
-                    setTextColor(ctx.getColor(R.color.text_primary))
-                    layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
-                })
-                addView(TextView(ctx).apply {
-                    text = if (actif) "Actif" else "Révoqué"
-                    textSize = 11f
-                    setPadding(16, 6, 16, 6)
-                    setBackgroundResource(if (actif) R.drawable.bg_badge_success else R.drawable.bg_badge_error)
-                    setTextColor(if (actif) Color.parseColor("#065F46") else Color.parseColor("#991B1B"))
-                })
-            })
-
-            root.addView(TextView(ctx).apply {
-                text = k.centreNom ?: "Centre #${k.centreId}"
-                textSize = 13f
-                setTextColor(ctx.getColor(R.color.text_secondary))
-                setPadding(0, 6, 0, 4)
-            })
-
-            if (k.rotatedAt != null) {
-                root.addView(TextView(ctx).apply {
-                    text = "Renouvelé : ${k.rotatedAt.take(10)}"
-                    textSize = 12f
-                    setTextColor(ctx.getColor(R.color.text_secondary))
-                })
-            }
+            tvCode.text = k.code ?: "Kiosk #${k.id}"
+            tvCentre.text = k.centreNom ?: "Centre #${k.centreId}"
+            tvDate.text = if (k.rotatedAt != null) "Renouvelé : ${k.rotatedAt.take(10)}"
+                          else "Créé : ${k.createdAt?.take(10) ?: "—"}"
 
             if (actif) {
-                val btnRow = LinearLayout(ctx).apply {
-                    orientation = LinearLayout.HORIZONTAL
-                    setPadding(0, 16, 0, 0)
-                }
-                fun btn(label: String, color: Int, click: () -> Unit) {
-                    btnRow.addView(Button(ctx).apply {
-                        text = label
-                        setTextColor(Color.WHITE)
-                        backgroundTintList = android.content.res.ColorStateList.valueOf(color)
-                        textSize = 11f
-                        layoutParams = LinearLayout.LayoutParams(0, 80).also { it.weight = 1f; it.marginEnd = 8 }
-                        setOnClickListener { click() }
-                    })
-                }
-                btn("Renouveler secret", Color.parseColor("#3B82F6")) { onRotate(k) }
-                btn("Révoquer", Color.parseColor("#EF4444")) { onRevoke(k) }
-                root.addView(btnRow)
+                accentBar.setBackgroundColor(Color.parseColor("#1A9099"))
+                tvStatus.text = "Actif"
+                tvStatus.setBackgroundResource(R.drawable.bg_badge_success)
+                tvStatus.setTextColor(Color.parseColor("#065F46"))
+            } else {
+                accentBar.setBackgroundColor(Color.parseColor("#9CA3AF"))
+                tvStatus.text = "Révoqué"
+                tvStatus.setBackgroundResource(R.drawable.bg_badge_error)
+                tvStatus.setTextColor(Color.parseColor("#991B1B"))
             }
+
+            llActions.visibility = if (actif) View.VISIBLE else View.GONE
+            btnRotate.setOnClickListener { onRotate(k) }
+            btnRevoke.setOnClickListener { onRevoke(k) }
         }
     }
 }
