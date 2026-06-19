@@ -1,9 +1,11 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const BASE_URL = __DEV__
-  ? 'http://10.0.2.2:8080/api'
-  : 'https://api.vaccinkids.ma/api';
+export const SERVER_BASE_URL = __DEV__
+  ? 'http://10.0.2.2:8080'
+  : 'https://api.vaccinkids.ma';
+
+const BASE_URL = `${SERVER_BASE_URL}/api`;
 
 const TOKEN_KEY = 'jwtToken';
 const REFRESH_TOKEN_KEY = 'refreshToken';

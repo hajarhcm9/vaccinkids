@@ -5,7 +5,7 @@ import android.os.Bundle
 class LoginInfirmierActivity : BaseLoginActivity() {
 
     override val expectedRole = "infirmier"
-    override val errorWrongRole = R.string.error_admin_only
+    override val errorWrongRole = R.string.error_nurse_only
     override val destinationActivity = MainInfirmierActivity::class.java
     override val isAdminTab = false
 

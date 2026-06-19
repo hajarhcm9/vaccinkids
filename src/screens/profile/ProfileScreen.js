@@ -1,14 +1,15 @@
 import React, { useState, useContext, useEffect } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, Alert,
-  ScrollView, StatusBar,
+  ScrollView, StatusBar, Image, ActivityIndicator,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import * as ImagePicker from 'expo-image-picker';
 import { Colors, Gradients, Radii, Spacing, Elevation } from '../../constants/theme';
 import { AuthContext } from '../../context/AuthContext';
-import { enfantService, rdvService } from '../../services';
+import { enfantService, rdvService, authService, SERVER_BASE_URL } from '../../services';
 
 const AVATAR_GRADIENT = ['#006FEE', '#338EF7'];
 
@@ -33,11 +34,13 @@ function SectionHeader({ title }) {
 }
 
 export default function ProfileScreen({ navigation }) {
-  const { user, logout } = useContext(AuthContext);
-  const insets   = useSafeAreaInsets();
-  const initials = `${user?.prenom?.[0] || ''}${user?.nom?.[0] || ''}`.toUpperCase() || 'U';
-  const fullName = [user?.prenom, user?.nom].filter(Boolean).join(' ') || 'Utilisateur';
+  const { user, logout, updateUser } = useContext(AuthContext);
+  const insets    = useSafeAreaInsets();
+  const initials  = `${user?.prenom?.[0] || ''}${user?.nom?.[0] || ''}`.toUpperCase() || 'U';
+  const fullName  = [user?.prenom, user?.nom].filter(Boolean).join(' ') || 'Utilisateur';
+  const photoUri  = user?.photo_url ? `${SERVER_BASE_URL}${user.photo_url}` : null;
   const [profileStats, setProfileStats] = useState({ enfants: 0, rdvAVenir: 0, coverage: null });
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -54,6 +57,31 @@ export default function ProfileScreen({ navigation }) {
       setProfileStats({ enfants: count, rdvAVenir: rdvCount, coverage });
     });
   }, []);
+
+  const handlePickPhoto = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission refusée', 'Autorisez l\'accès à la galerie dans les réglages.');
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+    if (result.canceled) return;
+    const uri = result.assets[0].uri;
+    setUploadingPhoto(true);
+    try {
+      const data = await authService.uploadPhoto(uri);
+      await updateUser({ photo_url: data?.photo_url });
+    } catch (e) {
+      Alert.alert('Erreur', e?.message || 'Impossible de mettre à jour la photo.');
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
 
   const handleLogout = () => {
     Alert.alert(
@@ -76,11 +104,21 @@ export default function ProfileScreen({ navigation }) {
           <View style={styles.decCircle1} />
           <View style={styles.decCircle2} />
 
-          <View style={styles.avatarWrap}>
-            <LinearGradient colors={AVATAR_GRADIENT} style={styles.avatarGrad}>
-              <Text style={styles.avatarText}>{initials}</Text>
-            </LinearGradient>
-          </View>
+          <TouchableOpacity style={styles.avatarWrap} onPress={handlePickPhoto} activeOpacity={0.85} disabled={uploadingPhoto}>
+            {photoUri ? (
+              <Image source={{ uri: photoUri }} style={styles.avatarImg} />
+            ) : (
+              <LinearGradient colors={AVATAR_GRADIENT} style={styles.avatarGrad}>
+                <Text style={styles.avatarText}>{initials}</Text>
+              </LinearGradient>
+            )}
+            <View style={styles.cameraBtn}>
+              {uploadingPhoto
+                ? <ActivityIndicator size="small" color={Colors.white} />
+                : <Ionicons name="camera" size={14} color={Colors.white} />
+              }
+            </View>
+          </TouchableOpacity>
           <Text style={styles.userName}>{fullName}</Text>
           <Text style={styles.userEmail}>{user?.telephone || '—'}</Text>
 
@@ -199,9 +237,11 @@ const styles = StyleSheet.create({
   decCircle1:   { position: 'absolute', width: 220, height: 220, borderRadius: 110, backgroundColor: Colors.glass, top: -80, right: -80 },
   decCircle2:   { position: 'absolute', width: 130, height: 130, borderRadius: 65,  backgroundColor: Colors.glass, bottom: -30, left: -30 },
 
-  avatarWrap:   { marginBottom: Spacing.md, padding: 4, borderRadius: 46, backgroundColor: Colors.glass, borderWidth: 2, borderColor: Colors.glassBorder },
+  avatarWrap:   { marginBottom: Spacing.md, padding: 4, borderRadius: 46, backgroundColor: Colors.glass, borderWidth: 2, borderColor: Colors.glassBorder, position: 'relative' },
   avatarGrad:   { width: 80, height: 80, borderRadius: 40, alignItems: 'center', justifyContent: 'center' },
+  avatarImg:    { width: 80, height: 80, borderRadius: 40 },
   avatarText:   { fontSize: 30, fontWeight: '800', color: Colors.white },
+  cameraBtn:    { position: 'absolute', bottom: 2, right: 2, width: 26, height: 26, borderRadius: 13, backgroundColor: Colors.primary, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: Colors.white },
   userName:     { fontSize: 22, fontWeight: '800', color: Colors.white, letterSpacing: -0.3, marginBottom: 4 },
   userEmail:    { fontSize: 13, color: 'rgba(255,255,255,0.70)', marginBottom: Spacing.xl },
 

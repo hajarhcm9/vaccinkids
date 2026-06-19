@@ -4,15 +4,6 @@ import { authService } from '../services';
 
 export const AuthContext = createContext();
 
-const DEMO_USER = {
-  prenom: 'Asmaa',
-  nom: 'Badioui',
-  email: 'asmaa.badioui@email.com',
-  cin: 'AB123456',
-  telephone: '0612345678',
-  profileCompleted: true,
-};
-
 export const AuthProvider = ({ children }) => {
   const [userToken, setUserToken] = useState(null);
   const [user, setUser] = useState(null);
@@ -64,7 +55,7 @@ export const AuthProvider = ({ children }) => {
         }
       }
     } catch (e) {
-      console.warn('Erreur lecture token/data', e);
+      if (__DEV__) console.warn('[AuthContext] Erreur lecture token/data', e);
     } finally {
       setIsLoading(false);
     }
@@ -72,13 +63,8 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => { checkLoggedIn(); }, []);
 
-  const loginDemo = () => {
-    setUserToken('DEMO_TOKEN');
-    setUser(DEMO_USER);
-  };
-
   return (
-    <AuthContext.Provider value={{ userToken, isLoading, user, login, logout, updateUser, loginDemo }}>
+    <AuthContext.Provider value={{ userToken, isLoading, user, login, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   );

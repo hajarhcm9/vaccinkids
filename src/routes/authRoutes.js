@@ -7,6 +7,7 @@ const { checkAccountLock } = require('../middleware/bruteForceProtection');
 const { passwordStrengthCheck } = require('../middleware/passwordStrengthMiddleware');
 const requireWebCsrf = require('../middleware/webCsrf');
 const { requireWebAdminSurface } = require('../middleware/surfaceAvailability');
+const upload = require('../middleware/upload');
 
 // PUBLIC
 router.post('/parent/send-otp', validate(schemas.sendOTP), AuthController.sendOTP);
@@ -58,6 +59,7 @@ router.put(
   AuthController.updateFcmToken,
 );
 router.delete('/parent/fcm-token', authenticate, AuthController.removeFcmToken);
+router.post('/parent/photo', authenticate, upload.single('photo'), AuthController.uploadPhoto);
 router.get('/me', authenticate, AuthController.getMe);
 router.post('/logout', authenticate, AuthController.logout);
 router.post('/logout-all', authenticate, AuthController.logoutAll);

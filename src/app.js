@@ -68,7 +68,6 @@ app.use('/api/', require('./middleware/auditMiddleware'));
 // ============================================
 if (config.swaggerEnabled) {
   app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(specOpenAPI));
-  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specOpenAPI));
 }
 
 // ============================================
@@ -110,6 +109,7 @@ if (config.surfaces.webAdminEnabled) {
 if (config.surfaces.waitingRoomEnabled) {
   app.use('/waiting-room', express.static(path.join(__dirname, '..', 'public', 'waiting-room')));
 }
+app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
 // ============================================
 // 9. API ROUTES

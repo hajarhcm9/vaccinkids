@@ -141,7 +141,7 @@ async function generateSessionsExcel(ci, dd, df) {
 }
 
 var AS =
-  "SELECT rdv.date_creation,b.nom as bebe_nom,b.prenom as bebe_prenom,s.date_session,v.nom as vaccin_nom,c.nom as centre_nom,rdv.statut FROM rendez_vous rdv JOIN bebe b ON rdv.bebe_id=b.id JOIN session s ON rdv.session_id=s.id JOIN vaccin v ON s.vaccin_id=v.id LEFT JOIN centre c ON s.centre_id=c.id WHERE rdv.statut IN('absent','annule')";
+  "SELECT rdv.date_creation,b.nom as bebe_nom,b.prenom as bebe_prenom,s.date_session,v.nom as vaccin_nom,c.nom as centre_nom,rdv.statut FROM rendez_vous rdv JOIN bebe b ON rdv.bebe_id=b.id JOIN session s ON rdv.session_id=s.id JOIN vaccin v ON s.vaccin_id=v.id LEFT JOIN centre c ON s.centre_id=c.id WHERE rdv.statut IN('ABSENT','ANNULE')";
 var AC = [
   'date_creation',
   'bebe_nom',

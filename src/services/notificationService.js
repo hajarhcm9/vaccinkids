@@ -1,29 +1,65 @@
-import apiClient from './apiClient';
+const Notification = require('../models/Notification');
 
-export async function getMyNotifications(limit = 20) {
-  return apiClient.get('/notifications/me', { params: { limit } });
+async function sendNotification({
+  destinataire_id,
+  destinataire_type = 'parent',
+  type,
+  canal = 'in_app',
+  titre,
+  message,
+  reference_id = null,
+  reference_type = null,
+}) {
+  return Notification.create({
+    destinataire_id,
+    destinataire_type,
+    type,
+    canal,
+    titre,
+    message,
+    reference_id,
+    reference_type,
+  });
 }
 
-export async function listNotifications() {
-  return getMyNotifications(50);
+async function sendRappelRdv(rdv) {
+  return sendNotification({
+    destinataire_id: rdv.parent_id,
+    destinataire_type: 'parent',
+    type: 'RAPPEL',
+    titre: 'Rappel rendez-vous',
+    message: `Rappel : rendez-vous vaccinal prévu demain${rdv.bebe_prenom ? ` pour ${rdv.bebe_prenom}` : ''}.`,
+    reference_id: rdv.id,
+    reference_type: 'rendez_vous',
+  });
 }
 
-export async function getUnreadCount() {
-  return apiClient.get('/notifications/unread-count');
+async function sendRappelSession(sessionId) {
+  return sendNotification({
+    destinataire_id: sessionId,
+    destinataire_type: 'personnel',
+    type: 'RAPPEL',
+    titre: 'Rappel session',
+    message: 'Une session de vaccination est prévue aujourd\'hui.',
+    reference_id: sessionId,
+    reference_type: 'session',
+  });
 }
 
-export async function markAsRead(id) {
-  return apiClient.patch(`/notifications/${id}/read`, {});
+async function sendAlerteStock(centreId, vaccinNom, quantite) {
+  return sendNotification({
+    destinataire_id: centreId,
+    destinataire_type: 'personnel',
+    type: 'ALERTE',
+    titre: 'Stock bas',
+    message: `Stock critique pour ${vaccinNom} : ${quantite} dose(s) restante(s).`,
+    reference_type: 'stock',
+  });
 }
 
-export async function markAllAsRead() {
-  return apiClient.patch('/notifications/read-all', {});
-}
-
-export async function getPreferences() {
-  return null;
-}
-
-export async function updatePreferences(_prefs) {
-  return null;
-}
+module.exports = {
+  sendNotification,
+  sendRappelRdv,
+  sendRappelSession,
+  sendAlerteStock,
+};

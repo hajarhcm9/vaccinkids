@@ -12,7 +12,7 @@ const searchGlobal = catchAsync(async (req, res) => {
       vaccins: [],
     });
   }
-  const userId = req.user.centre_id;
+  const userId = req.user.id;
   const role = req.user.role;
   const data = await Recherche.searchGlobal(q.trim(), userId, role);
   return success(res, 200, 'Search results', data);

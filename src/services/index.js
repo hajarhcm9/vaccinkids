@@ -1,6 +1,9 @@
-export { default as apiClient, ApiError } from './apiClient';
-export * as authService        from './authService';
-export * as enfantService      from './enfantService';
-export * as rdvService         from './rdvService';
-export * as vaccinService      from './vaccinService';
-export * as notificationService from './notificationService';
+import apiClient, { ApiError, SERVER_BASE_URL } from './apiClient';
+import * as authService from './authService';
+import * as enfantService from './enfantService';
+import * as rdvService from './rdvService';
+import * as vaccinService from './vaccinService';
+import * as notificationService from './notificationClientService';
+
+export { apiClient, ApiError, SERVER_BASE_URL };
+export { authService, enfantService, rdvService, vaccinService, notificationService };

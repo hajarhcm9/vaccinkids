@@ -354,6 +354,17 @@ const AuthController = {
     await TokenService.revokeAllUserTokens(req.user.id, req.user.role);
     return success(res, 200, 'Password changed successfully');
   }),
+
+  uploadPhoto: catchAsync(async (req, res, next) => {
+    if (req.user.role !== 'parent')
+      return next(ApiError.forbidden('Only parents can update their photo'));
+    if (!req.file)
+      return next(ApiError.badRequest('Aucun fichier reçu'));
+    const photo_url = `/uploads/avatars/${req.file.filename}`;
+    const updated = await Parent.update(req.user.id, { photo_url });
+    if (!updated) return next(ApiError.notFound('Parent not found'));
+    return success(res, 200, 'Photo mise à jour', { photo_url });
+  }),
 };
 
 module.exports = AuthController;

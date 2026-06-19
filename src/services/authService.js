@@ -24,6 +24,16 @@ export async function getMe() {
   return apiClient.get('/auth/me');
 }
 
+export async function uploadPhoto(uri) {
+  const ext = uri.split('.').pop().toLowerCase().replace(/\?.*$/, '') || 'jpg';
+  const type = ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : 'image/jpeg';
+  const formData = new FormData();
+  formData.append('photo', { uri, name: `avatar.${ext}`, type });
+  return apiClient.post('/auth/parent/photo', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+}
+
 export async function updateFcmToken(fcm_token) {
   return apiClient.put('/auth/parent/fcm-token', { fcm_token });
 }

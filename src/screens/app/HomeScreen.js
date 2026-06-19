@@ -10,11 +10,6 @@ import { AuthContext } from '../../context/AuthContext';
 import { Colors, Gradients, Radii, Spacing, Elevation, Typography } from '../../constants/theme';
 import { rdvService, notificationService, enfantService } from '../../services';
 
-const MOCK_ACTUS = [
-  { id: '1', type: 'ALERTE',  titre: 'Campagne de rappel Rougeole',   description: 'Le centre lance une campagne de rattrapage pour le vaccin ROR. N\'hésitez pas à prendre rendez-vous.', date: 'Aujourd\'hui' },
-  { id: '2', type: 'CONSEIL', titre: 'Préparer votre enfant au vaccin', description: 'Expliquez à voix douce à quoi sert le vaccin pour diminuer l\'anxiété et favoriser la coopération.', date: 'Hier' },
-  { id: '3', type: 'INFO',    titre: 'Nouveaux horaires du centre',    description: 'Le centre ouvrira exceptionnellement le samedi matin de 9h à 12h à partir du mois prochain.', date: 'Il y a 3 jours' },
-];
 
 const TYPE_META = {
   ALERTE:  { color: Colors.danger,   bg: Colors.dangerBg,  icon: 'warning',               label: 'Alerte' },
@@ -214,7 +209,7 @@ export default function HomeScreen({ navigation }) {
       <View style={[styles.section, { marginBottom: Spacing['4xl'] }]}>
         <Text style={styles.sectionLabel}>Consignes & actualités</Text>
         <FlatList
-          data={actus.length > 0 ? actus : MOCK_ACTUS}
+          data={actus}
           keyExtractor={(item) => item.id}
           renderItem={renderActu}
           scrollEnabled={false}
