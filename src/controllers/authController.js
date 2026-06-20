@@ -6,7 +6,7 @@ const SmsService = require('../services/smsService');
 const TokenService = require('../services/tokenService');
 const Parent = require('../models/Parent');
 const Personnel = require('../models/Personnel');
-const { getClient } = require('../config/database');
+const { getClient, query } = require('../config/database');
 const ApiError = require('../utils/ApiError');
 const catchAsync = require('../utils/catchAsync');
 const { isValidMoroccanPhone, normalizePhone, isValidCIN } = require('../utils/validator');
@@ -138,15 +138,111 @@ const AuthController = {
     }
   }),
 
-  registerParent: catchAsync(async (req, res, next) => {
-    const { nom, prenom, langue_preferee } = req.body;
-    if (!nom || !prenom) return next(ApiError.badRequest('Nom and prenom are required'));
+  // ---- PARENT CIN LOGIN (no OTP) ----
 
-    const updatedParent = await Parent.update(req.user.id, {
+  loginWithCIN: catchAsync(async (req, res, next) => {
+    const { telephone, cin } = req.body;
+    if (!telephone || !cin) return next(ApiError.badRequest('Numéro de téléphone et CIN requis'));
+
+    const normalizedPhone = normalizePhone(telephone);
+    if (!isValidMoroccanPhone(normalizedPhone))
+      return next(ApiError.badRequest('Numéro de téléphone invalide'));
+
+    const client = await getClient();
+    let transactionClosed = false;
+
+    try {
+      await client.query('BEGIN');
+
+      const existing = await client.query(
+        'SELECT * FROM parent WHERE telephone = $1',
+        [normalizedPhone],
+      );
+
+      let parent;
+      let isNewUser = false;
+
+      if (existing.rows.length > 0) {
+        parent = existing.rows[0];
+        if (!parent.est_actif) {
+          await client.query('COMMIT');
+          transactionClosed = true;
+          return next(ApiError.forbidden('Votre compte a été désactivé.'));
+        }
+        if (parent.cin && parent.cin.toUpperCase() !== cin.toUpperCase()) {
+          await client.query('COMMIT');
+          transactionClosed = true;
+          return next(ApiError.unauthorized('CIN incorrect.'));
+        }
+        if (!parent.cin) {
+          const updated = await client.query(
+            'UPDATE parent SET cin = $1, updated_at = NOW() WHERE id = $2 RETURNING *',
+            [cin.toUpperCase(), parent.id],
+          );
+          parent = updated.rows[0];
+        }
+        isNewUser = parent.is_new_user || parent.nom === 'Nouveau';
+      } else {
+        const inserted = await client.query(
+          `INSERT INTO parent (telephone, cin, nom, prenom, is_new_user, langue_preferee)
+           VALUES ($1, $2, 'Nouveau', 'Parent', TRUE, 'fr') RETURNING *`,
+          [normalizedPhone, cin.toUpperCase()],
+        );
+        parent = inserted.rows[0];
+        isNewUser = true;
+      }
+
+      const tokens = await TokenService.generateAuthTokens(
+        { id: parent.id, role: 'parent', telephone: parent.telephone },
+        { client },
+      );
+
+      await client.query('COMMIT');
+      transactionClosed = true;
+
+      return created(res, 'Authentification réussie', {
+        user: {
+          id: parent.id,
+          telephone: parent.telephone,
+          nom: parent.nom,
+          prenom: parent.prenom,
+          email: parent.email || null,
+          cin: parent.cin,
+          centre_id: parent.centre_id || null,
+          langue_preferee: parent.langue_preferee,
+          role: 'parent',
+          isNewUser,
+        },
+        tokens: {
+          accessToken: tokens.accessToken,
+          refreshToken: tokens.refreshToken,
+          expiresIn: tokens.accessTokenExpiry,
+        },
+      });
+    } catch (error) {
+      if (!transactionClosed) await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
+  }),
+
+  registerParent: catchAsync(async (req, res, next) => {
+    const { nom, prenom, cin, email, centre_id, langue_preferee } = req.body;
+    if (!nom || !prenom) return next(ApiError.badRequest('Nom and prenom are required'));
+    if (!centre_id)      return next(ApiError.badRequest('Veuillez choisir votre centre de santé'));
+
+    const updateData = {
       nom,
       prenom,
+      centre_id: Number(centre_id),
       langue_preferee: langue_preferee || 'fr',
-    });
+      is_new_user: false,
+    };
+    if (cin) updateData.cin = cin.toUpperCase();
+    if (email) updateData.email = email.toLowerCase().trim();
+
+    const updatedParent = await Parent.update(req.user.id, updateData);
     if (!updatedParent) return next(ApiError.notFound('Parent not found'));
 
     return success(res, 200, 'Profile updated successfully', {
@@ -155,6 +251,9 @@ const AuthController = {
         telephone: updatedParent.telephone,
         nom: updatedParent.nom,
         prenom: updatedParent.prenom,
+        email: updatedParent.email || null,
+        cin: updatedParent.cin || null,
+        centre_id: updatedParent.centre_id || null,
         langue_preferee: updatedParent.langue_preferee,
         role: 'parent',
       },
@@ -306,32 +405,59 @@ const AuthController = {
   updateProfile: catchAsync(async (req, res, next) => {
     if (req.user.role !== 'parent')
       return next(ApiError.forbidden('Only parents can update their profile this way'));
-    const { nom, prenom, langue_preferee } = req.body;
-    if (!nom || !prenom) return next(ApiError.badRequest('Nom and prenom are required'));
-    const updatedParent = await Parent.update(req.user.id, {
-      nom,
-      prenom,
-      langue_preferee: langue_preferee || 'fr',
-    });
+
+    const { nom, prenom, langue_preferee, centre_id } = req.body;
+
+    // centre_id can only be set once — locked after first assignment
+    if (centre_id && req.user.centre_id && req.user.centre_id !== Number(centre_id)) {
+      return next(ApiError.forbidden('Le centre ne peut pas être modifié une fois fixé'));
+    }
+
+    const fields = { nom, prenom, langue_preferee: langue_preferee || 'fr' };
+    if (centre_id && !req.user.centre_id) fields.centre_id = Number(centre_id);
+
+    const updatedParent = await Parent.update(req.user.id, fields);
     if (!updatedParent) return next(ApiError.notFound('Parent not found'));
+
+    // Fetch centre name if centre was just assigned
+    let centre_nom = null;
+    if (fields.centre_id) {
+      const { query: dbQuery } = require('../config/database');
+      const cr = await dbQuery('SELECT nom FROM centre WHERE id = $1', [fields.centre_id]);
+      centre_nom = cr.rows[0]?.nom || null;
+    }
+
     return success(res, 200, 'Profile updated successfully', {
       user: {
-        id: updatedParent.id,
-        telephone: updatedParent.telephone,
-        nom: updatedParent.nom,
-        prenom: updatedParent.prenom,
+        id:              updatedParent.id,
+        telephone:       updatedParent.telephone,
+        nom:             updatedParent.nom,
+        prenom:          updatedParent.prenom,
         langue_preferee: updatedParent.langue_preferee,
-        role: 'parent',
+        centre_id:       updatedParent.centre_id || null,
+        centre_nom,
+        role:            'parent',
       },
     });
   }),
 
   getMe: catchAsync(async (req, res, next) => {
     let user = null;
-    if (req.user.role === 'parent') user = await Parent.findById(req.user.id);
-    else user = await Personnel.findById(req.user.id);
-    if (!user) return next(ApiError.notFound('User not found'));
-    return success(res, 200, 'User profile retrieved', { user: { ...user, role: req.user.role } });
+    if (req.user.role === 'parent') {
+      const parent = await Parent.findById(req.user.id);
+      if (!parent) return next(ApiError.notFound('User not found'));
+      let centre_nom = null;
+      if (parent.centre_id) {
+        const centreRes = await query('SELECT nom FROM centre WHERE id = $1', [parent.centre_id]);
+        centre_nom = centreRes.rows[0]?.nom || null;
+      }
+      user = { ...parent, role: 'parent', centre_nom };
+    } else {
+      user = await Personnel.findById(req.user.id);
+      if (!user) return next(ApiError.notFound('User not found'));
+      user = { ...user, role: req.user.role };
+    }
+    return success(res, 200, 'User profile retrieved', { user });
   }),
 
   changePassword: catchAsync(async (req, res, next) => {

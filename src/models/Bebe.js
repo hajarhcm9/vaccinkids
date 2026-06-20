@@ -1,16 +1,43 @@
-const { query } = require('../config/database');
+const { query, pool } = require('../config/database');
 const { createQrCode } = require('../utils/qrCode');
 
 const Bebe = {
-  async create(data) {
-    const { parent_id, prenom, nom, date_naissance, sexe, photo_url } = data;
-    const code_qr = createQrCode();
-    const result = await query(
-      `INSERT INTO bebe (parent_id, prenom, nom, date_naissance, sexe, photo_url, code_qr)
-       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
-      [parent_id, prenom, nom, date_naissance, sexe, photo_url, code_qr],
-    );
-    return result.rows[0];
+  async create(data, clientArg = null) {
+    const { parent_id, prenom, nom, date_naissance, sexe, photo_url, is_newborn = false, centre_id } = data;
+    const code_qr     = createQrCode();
+    const finalPrenom = is_newborn && !prenom ? 'Nouveau-né' : (prenom || 'Nouveau-né');
+    const finalNom    = nom || '';
+
+    // If no external client, open our own transaction for the atomic counter increment
+    const ownTx = !clientArg;
+    const client = clientArg || await pool.connect();
+    try {
+      if (ownTx) await client.query('BEGIN');
+
+      let numero_centre = null;
+      if (centre_id) {
+        // Atomically increment the centre's counter and get the new value
+        const counterRes = await client.query(
+          `UPDATE centre SET bebe_counter = bebe_counter + 1 WHERE id = $1 RETURNING bebe_counter`,
+          [centre_id],
+        );
+        numero_centre = counterRes.rows[0]?.bebe_counter ?? null;
+      }
+
+      const result = await client.query(
+        `INSERT INTO bebe (parent_id, prenom, nom, date_naissance, sexe, photo_url, code_qr, is_newborn, centre_id, numero_centre)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *`,
+        [parent_id, finalPrenom, finalNom, date_naissance, sexe, photo_url, code_qr, is_newborn, centre_id || null, numero_centre],
+      );
+
+      if (ownTx) await client.query('COMMIT');
+      return result.rows[0];
+    } catch (e) {
+      if (ownTx) await client.query('ROLLBACK');
+      throw e;
+    } finally {
+      if (ownTx) client.release();
+    }
   },
 
   async findById(id) {

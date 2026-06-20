@@ -5,11 +5,13 @@ const { authenticate } = require('../middleware/authMiddleware');
 const { authorize } = require('../middleware/rbacMiddleware');
 const { validate, schemas } = require('../middleware/validationMiddleware');
 
+router.get('/smart-match', authenticate, authorize('parent'), SessionController.smartMatch);
 router.get('/', authenticate, SessionController.getAvailable);
 router.get('/today', authenticate, authorize('infirmier', 'admin'), SessionController.getToday);
 router.get('/:id', authenticate, SessionController.getOne);
 router.post('/:id/inscrire', authenticate, authorize('parent'), SessionController.inscrire);
 router.post('/:id/waitlist', authenticate, authorize('parent'), SessionController.joinWaitlist);
+router.post('/propose', authenticate, authorize('parent'), SessionController.proposeByParent);
 router.post(
   '/',
   authenticate,

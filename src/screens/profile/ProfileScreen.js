@@ -140,8 +140,8 @@ export default function ProfileScreen({ navigation }) {
           </View>
         </LinearGradient>
 
-        {/* ── Completion banner ── */}
-        {!user?.profileCompleted && (
+        {/* ── Completion banner — shown only when nom/prenom missing ── */}
+        {(!user?.nom || !user?.prenom) && (
           <View style={styles.incompleteBanner}>
             <Ionicons name="warning-outline" size={18} color={Colors.warning} />
             <Text style={styles.incompleteText}>Complétez votre profil pour accéder à toutes les fonctionnalités.</Text>
@@ -162,12 +162,21 @@ export default function ProfileScreen({ navigation }) {
             />
             <View style={styles.rowDivider} />
             <SettingRow
-              icon="card-outline"
-              label="CIN enregistrée"
-              value={user?.cin || '—'}
+              icon="call-outline"
+              label="Numéro de téléphone"
+              value={user?.telephone || '—'}
               onPress={() => {}}
               showChevron={false}
               color="#7C3AED"
+            />
+            <View style={styles.rowDivider} />
+            <SettingRow
+              icon="medical-outline"
+              label="Centre de santé"
+              value={user?.centre_nom || (user?.centre_id ? `Centre #${user.centre_id}` : 'Non défini')}
+              onPress={() => {}}
+              showChevron={false}
+              color={Colors.success}
             />
           </View>
 

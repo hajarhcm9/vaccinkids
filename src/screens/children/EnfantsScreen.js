@@ -1,8 +1,9 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
   RefreshControl, StatusBar, Alert, Modal, TextInput,
-  ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView,
+  ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, Switch,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -65,6 +66,7 @@ export default function EnfantsScreen({ navigation }) {
   const [addNom,       setAddNom]       = useState('');
   const [addDate,      setAddDate]      = useState('');
   const [addSexe,      setAddSexe]      = useState(null);
+  const [addNewborn,   setAddNewborn]   = useState(false);
   const [adding,       setAdding]       = useState(false);
   const [addError,     setAddError]     = useState('');
 
@@ -73,7 +75,7 @@ export default function EnfantsScreen({ navigation }) {
       const data = await enfantService.listEnfants();
       setEnfants(data || []);
     } catch (e) {
-      if (__DEV__) console.warn('[EnfantsScreen] loadEnfants:', e?.message);
+      if (__DEV__) console.log('[EnfantsScreen] loadEnfants:', e?.message);
     }
   }, []);
 
@@ -83,37 +85,64 @@ export default function EnfantsScreen({ navigation }) {
     setRefreshing(false);
   }, [loadEnfants]);
 
-  React.useEffect(() => { loadEnfants(); }, [loadEnfants]);
+  useEffect(() => { loadEnfants(); }, [loadEnfants]);
+
+  // Auto-open add modal when coming from fresh registration
+  useEffect(() => {
+    AsyncStorage.getItem('new_parent_registration').then((val) => {
+      if (val === 'true') {
+        AsyncStorage.removeItem('new_parent_registration');
+        setShowAddModal(true);
+        setAddNewborn(true);  // new parent likely has a newborn → pre-toggle ON
+      }
+    });
+  }, []);
 
   const resetAddModal = () => {
     setAddPrenom('');
     setAddNom('');
     setAddDate('');
     setAddSexe(null);
+    setAddNewborn(false);
     setAddError('');
   };
 
   const handleAddEnfant = async () => {
     const prenom = addPrenom.trim();
     const nom    = addNom.trim();
-    const date   = addDate.trim();
-    if (!prenom || !nom || !date || !addSexe) {
-      setAddError('Veuillez remplir tous les champs.');
-      return;
-    }
-    if (!/^\d{2}\/\d{2}\/\d{4}$/.test(date)) {
-      setAddError('Date invalide. Format attendu : JJ/MM/AAAA');
-      return;
-    }
-    setAdding(true);
     setAddError('');
-    try {
-      const [dd, mm, yyyy] = date.split('/');
-      const resp = await enfantService.addEnfant({ prenom, nom, date_naissance: `${yyyy}-${mm}-${dd}`, sexe: addSexe });
-      const nouvelEnfant = resp;
-      if (nouvelEnfant) {
-        setEnfants((prev) => [...prev, nouvelEnfant]);
+
+    if (!addNewborn) {
+      if (!prenom || !nom || !addDate.trim() || !addSexe) {
+        setAddError('Veuillez remplir tous les champs.');
+        return;
       }
+      if (!/^\d{2}\/\d{2}\/\d{4}$/.test(addDate.trim())) {
+        setAddError('Date invalide. Format attendu : JJ/MM/AAAA');
+        return;
+      }
+    } else {
+      if (!addSexe) {
+        setAddError('Veuillez indiquer le sexe.');
+        return;
+      }
+    }
+
+    setAdding(true);
+    try {
+      const today = new Date();
+      const dateNaissance = addNewborn
+        ? `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`
+        : (() => { const [dd,mm,yyyy] = addDate.trim().split('/'); return `${yyyy}-${mm}-${dd}`; })();
+
+      const resp = await enfantService.addEnfant({
+        prenom:          addNewborn ? (prenom || 'Nouveau-né') : prenom,
+        nom:             addNewborn ? (nom || '') : nom,
+        date_naissance:  dateNaissance,
+        sexe:            addSexe,
+        is_newborn:      addNewborn,
+      });
+      if (resp) setEnfants((prev) => [...prev, resp]);
       resetAddModal();
       setShowAddModal(false);
     } catch (e) {
@@ -141,12 +170,24 @@ export default function EnfantsScreen({ navigation }) {
 
         <View style={{ flex: 1 }}>
           <View style={styles.nameRow}>
-            <Text style={styles.enfantName}>{item.prenom} {item.nom}</Text>
-            <View style={[styles.sexeBadge, { backgroundColor: sexeColor + '18' }]}>
-              <Text style={[styles.sexeText, { color: sexeColor }]}>{sexeLabel}</Text>
-            </View>
+            <Text style={styles.enfantName}>{item.prenom || 'Nouveau-né'} {item.nom}</Text>
+            {item.is_newborn && (
+              <View style={styles.newbornBadge}>
+                <Text style={styles.newbornBadgeText}>👶 Nouveau-né</Text>
+              </View>
+            )}
+            {!item.is_newborn && (
+              <View style={[styles.sexeBadge, { backgroundColor: sexeColor + '18' }]}>
+                <Text style={[styles.sexeText, { color: sexeColor }]}>{sexeLabel}</Text>
+              </View>
+            )}
           </View>
-          <Text style={styles.enfantAge}>{getAge(item.date_naissance)}  ·  {formatDateDisplay(item.date_naissance)}</Text>
+          <Text style={styles.enfantAge}>
+            {item.numero_centre ? `N° ${item.numero_centre}  ·  ` : ''}{getAge(item.date_naissance)}  ·  {formatDateDisplay(item.date_naissance)}
+          </Text>
+          {item.is_newborn && (
+            <Text style={styles.newbornHint}>Complétez le profil dès l'obtention du nom</Text>
+          )}
           {item.vaccins_total != null && (
             <ProgressPill done={item.vaccins_faits} total={item.vaccins_total} />
           )}
@@ -222,6 +263,38 @@ export default function EnfantsScreen({ navigation }) {
               </View>
 
               <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+                {/* Newborn toggle */}
+                <TouchableOpacity
+                  style={[styles.newbornToggle, addNewborn && styles.newbornToggleActive]}
+                  onPress={() => { setAddNewborn(!addNewborn); setAddError(''); }}
+                  activeOpacity={0.8}
+                >
+                  <View style={styles.newbornLeft}>
+                    <Text style={styles.newbornEmoji}>👶</Text>
+                    <View>
+                      <Text style={[styles.newbornLabel, addNewborn && { color: Colors.primary }]}>
+                        Mon bébé vient de naître
+                      </Text>
+                      <Text style={styles.newbornSub}>Moins de 48h — pas encore de prénom officiel</Text>
+                    </View>
+                  </View>
+                  <Switch
+                    value={addNewborn}
+                    onValueChange={(v) => { setAddNewborn(v); setAddError(''); }}
+                    trackColor={{ false: Colors.border, true: Colors.primary + '60' }}
+                    thumbColor={addNewborn ? Colors.primary : Colors.textLight}
+                  />
+                </TouchableOpacity>
+
+                {addNewborn && (
+                  <View style={styles.newbornNote}>
+                    <Ionicons name="information-circle-outline" size={15} color={Colors.primary} />
+                    <Text style={styles.newbornNoteText}>
+                      La date d'aujourd'hui sera utilisée. Vous pourrez compléter le prénom plus tard.
+                    </Text>
+                  </View>
+                )}
+
                 {!!addError && (
                   <View style={styles.errorBox}>
                     <Ionicons name="alert-circle-outline" size={15} color={Colors.danger} />
@@ -229,36 +302,54 @@ export default function EnfantsScreen({ navigation }) {
                   </View>
                 )}
 
-                <Text style={styles.fieldLabel}>Prénom *</Text>
-                <TextInput
-                  style={styles.textInput}
-                  placeholder="Prénom de l'enfant"
-                  placeholderTextColor={Colors.textLight}
-                  value={addPrenom}
-                  onChangeText={(v) => { setAddPrenom(v); setAddError(''); }}
-                  autoCapitalize="words"
-                />
+                {!addNewborn && (
+                  <>
+                    <Text style={styles.fieldLabel}>Prénom *</Text>
+                    <TextInput
+                      style={styles.textInput}
+                      placeholder="Prénom de l'enfant"
+                      placeholderTextColor={Colors.textLight}
+                      value={addPrenom}
+                      onChangeText={(v) => { setAddPrenom(v); setAddError(''); }}
+                      autoCapitalize="words"
+                    />
 
-                <Text style={styles.fieldLabel}>Nom *</Text>
-                <TextInput
-                  style={styles.textInput}
-                  placeholder="Nom de famille"
-                  placeholderTextColor={Colors.textLight}
-                  value={addNom}
-                  onChangeText={(v) => { setAddNom(v); setAddError(''); }}
-                  autoCapitalize="words"
-                />
+                    <Text style={styles.fieldLabel}>Nom *</Text>
+                    <TextInput
+                      style={styles.textInput}
+                      placeholder="Nom de famille"
+                      placeholderTextColor={Colors.textLight}
+                      value={addNom}
+                      onChangeText={(v) => { setAddNom(v); setAddError(''); }}
+                      autoCapitalize="words"
+                    />
 
-                <Text style={styles.fieldLabel}>Date de naissance *</Text>
-                <TextInput
-                  style={styles.textInput}
-                  placeholder="JJ/MM/AAAA"
-                  placeholderTextColor={Colors.textLight}
-                  value={addDate}
-                  onChangeText={(v) => { setAddDate(v); setAddError(''); }}
-                  keyboardType="numbers-and-punctuation"
-                  maxLength={10}
-                />
+                    <Text style={styles.fieldLabel}>Date de naissance *</Text>
+                    <TextInput
+                      style={styles.textInput}
+                      placeholder="JJ/MM/AAAA"
+                      placeholderTextColor={Colors.textLight}
+                      value={addDate}
+                      onChangeText={(v) => { setAddDate(v); setAddError(''); }}
+                      keyboardType="numbers-and-punctuation"
+                      maxLength={10}
+                    />
+                  </>
+                )}
+
+                {addNewborn && (
+                  <>
+                    <Text style={styles.fieldLabel}>Prénom (facultatif)</Text>
+                    <TextInput
+                      style={styles.textInput}
+                      placeholder="Si déjà connu"
+                      placeholderTextColor={Colors.textLight}
+                      value={addPrenom}
+                      onChangeText={(v) => { setAddPrenom(v); setAddError(''); }}
+                      autoCapitalize="words"
+                    />
+                  </>
+                )}
 
                 <Text style={styles.fieldLabel}>Sexe *</Text>
                 <View style={styles.sexeRow}>
@@ -337,6 +428,18 @@ const styles = StyleSheet.create({
   modalHeader:   { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: Spacing.md, marginBottom: Spacing.sm },
   modalTitle:    { fontSize: 20, fontWeight: '800', color: Colors.text },
   modalCloseBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: Colors.surfaceMuted, alignItems: 'center', justifyContent: 'center' },
+
+  newbornToggle:       { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: Colors.surfaceMuted, borderRadius: Radii.lg, borderWidth: 1.5, borderColor: Colors.border, padding: Spacing.base, marginBottom: Spacing.sm },
+  newbornToggleActive: { backgroundColor: Colors.primaryTint, borderColor: Colors.primary },
+  newbornLeft:         { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, flex: 1 },
+  newbornEmoji:        { fontSize: 26 },
+  newbornLabel:        { fontSize: 14, fontWeight: '700', color: Colors.text },
+  newbornSub:          { fontSize: 11, color: Colors.textSecondary, marginTop: 2 },
+  newbornNote:         { flexDirection: 'row', alignItems: 'flex-start', gap: 6, backgroundColor: Colors.primaryTint, borderRadius: Radii.md, padding: Spacing.sm, marginBottom: Spacing.md },
+  newbornNoteText:     { flex: 1, fontSize: 12, color: Colors.primary, lineHeight: 17 },
+  newbornBadge:        { backgroundColor: '#FFF3CD', borderRadius: Radii.sm, paddingHorizontal: 6, paddingVertical: 2 },
+  newbornBadgeText:    { fontSize: 10, fontWeight: '700', color: '#856404' },
+  newbornHint:         { fontSize: 11, color: Colors.accent, marginTop: 2, fontStyle: 'italic' },
 
   errorBox:   { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: Colors.dangerBg, borderRadius: Radii.md, padding: Spacing.sm, marginBottom: Spacing.md },
   errorText:  { flex: 1, fontSize: 13, color: Colors.danger, fontWeight: '600' },

@@ -15,7 +15,7 @@ async function verifyDatabaseConnection() {
   for (let attempt = 1; attempt <= DB_RETRY_ATTEMPTS; attempt++) {
     try {
       await pool.query('SELECT NOW()');
-      console.warn('✅ Database connection verified');
+      console.log('✅ Database connection verified');
       return;
     } catch (error) {
       const isLastAttempt = attempt === DB_RETRY_ATTEMPTS;
@@ -45,7 +45,7 @@ async function startServer() {
     // 2. Start Express server
     const PORT = config.port;
     const server = app.listen(PORT, () => {
-      console.warn(`
+      console.log(`
   ╔══════════════════════════════════════════╗
   ║     🌱 VacciniKids API Server           ║
   ║     Running on http://localhost:${PORT}    ║
@@ -56,14 +56,14 @@ async function startServer() {
 
     // 3. Graceful shutdown
     const shutdown = async (signal) => {
-      console.warn(`\n⛔ ${signal} received. Shutting down gracefully...`);
+      console.log(`\n⛔ ${signal} received. Shutting down gracefully...`);
       server.close(() => {
-        console.warn('✅ HTTP server closed');
+        console.log('✅ HTTP server closed');
       });
       await pool.end();
-      console.warn('✅ Database pool closed');
+      console.log('✅ Database pool closed');
       await closeRedis();
-      console.warn('✅ Redis connection closed');
+      console.log('✅ Redis connection closed');
       process.exit(0);
     };
 

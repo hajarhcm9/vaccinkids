@@ -21,9 +21,9 @@ export async function markAllAsRead() {
 }
 
 export async function getPreferences() {
-  return null;
+  return apiClient.get('/notifications/preferences');
 }
 
-export async function updatePreferences(_prefs) {
-  return null;
+export async function updatePreferences(prefs) {
+  return apiClient.patch('/notifications/preferences', prefs);
 }

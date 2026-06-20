@@ -12,21 +12,21 @@ const SESSION_SELECT =
 const SESSION_GROUP_BY = ' GROUP BY s.id, c.nom, c.adresse, c.gps_lat, c.gps_lng, v.nom';
 
 const Session = {
-  async create(data) {
-    const { centre_id, vaccin_id, date_session, heure_debut, heure_fin, max_inscriptions, statut } =
-      data;
-    const result = await query(
+  async create(data, clientArg = null) {
+    const { centre_id, vaccin_id, date_session, heure_debut, heure_fin, statut } = data;
+    let { max_inscriptions } = data;
+
+    const run = clientArg ? (sql, vals) => clientArg.query(sql, vals) : query;
+
+    if (!max_inscriptions && vaccin_id) {
+      const vaccinRes = await run('SELECT doses_par_flacon FROM vaccin WHERE id = $1', [vaccin_id]);
+      max_inscriptions = vaccinRes.rows[0]?.doses_par_flacon ?? 10;
+    }
+
+    const result = await run(
       `INSERT INTO session (centre_id, vaccin_id, date_session, heure_debut, heure_fin, max_inscriptions, statut)
        VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
-      [
-        centre_id,
-        vaccin_id,
-        date_session,
-        heure_debut,
-        heure_fin,
-        max_inscriptions,
-        statut || 'EN_FORMATION',
-      ],
+      [centre_id, vaccin_id, date_session, heure_debut, heure_fin, max_inscriptions, statut || 'EN_FORMATION'],
     );
     return result.rows[0];
   },
@@ -64,6 +64,40 @@ const Session = {
     const result = await query(
       SESSION_SELECT + whereClause + SESSION_GROUP_BY + ' ORDER BY s.date_session, s.heure_debut',
       values,
+    );
+    return result.rows;
+  },
+
+  // Returns sessions for a given vaccine, sorted by fill rate DESC (closest to full first).
+  // EN_FORMATION sessions come before CONFIRMEE (waitlist).
+  async findSmartMatch({ centreId, vaccinId }) {
+    const result = await query(
+      `SELECT s.*, c.nom AS centre_nom, v.nom AS vaccin_nom,
+              v.doses_par_flacon,
+              COUNT(rdv.id) FILTER (WHERE rdv.statut NOT IN ('ANNULE','EN_LISTE_ATTENTE'))::int AS inscrits,
+              ROUND(
+                COUNT(rdv.id) FILTER (WHERE rdv.statut NOT IN ('ANNULE','EN_LISTE_ATTENTE'))::numeric
+                / NULLIF(s.max_inscriptions, 0) * 100
+              )::int AS fill_pct
+       FROM session s
+       LEFT JOIN centre c        ON c.id = s.centre_id
+       LEFT JOIN vaccin v        ON v.id = s.vaccin_id
+       LEFT JOIN rendez_vous rdv ON rdv.session_id = s.id
+       WHERE s.centre_id = $1
+         AND s.vaccin_id = $2
+         AND s.date_session >= CURRENT_DATE
+         AND s.statut IN ('EN_FORMATION','PLANIFIEE','CONFIRMEE')
+       GROUP BY s.id, c.nom, v.nom, v.doses_par_flacon
+       ORDER BY
+         CASE s.statut
+           WHEN 'EN_FORMATION' THEN 0
+           WHEN 'PLANIFIEE'    THEN 1
+           WHEN 'CONFIRMEE'    THEN 2
+           ELSE 3
+         END,
+         fill_pct DESC,
+         s.date_session ASC`,
+      [centreId, vaccinId],
     );
     return result.rows;
   },

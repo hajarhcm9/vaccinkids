@@ -15,6 +15,7 @@ import { authService, ApiError } from '../../services';
 const ProfileSchema = Yup.object().shape({
   nom:    Yup.string().min(2, 'Nom trop court').required('Le nom est obligatoire'),
   prenom: Yup.string().min(2, 'Prénom trop court').required('Le prénom est obligatoire'),
+  email:  Yup.string().email('Email invalide').notRequired(),
 });
 
 export default function EditProfileScreen({ navigation }) {
@@ -25,6 +26,7 @@ export default function EditProfileScreen({ navigation }) {
       const resp = await authService.updateProfile({
         nom:    values.nom.trim(),
         prenom: values.prenom.trim(),
+        email:  values.email?.trim() || undefined,
       });
       await updateUser(resp?.user || { ...user, ...values });
       navigation.goBack();
@@ -67,6 +69,7 @@ export default function EditProfileScreen({ navigation }) {
               initialValues={{
                 nom:    user?.nom    || '',
                 prenom: user?.prenom || '',
+                email:  user?.email  || '',
               }}
               validationSchema={ProfileSchema}
               onSubmit={handleSave}
@@ -93,6 +96,21 @@ export default function EditProfileScreen({ navigation }) {
                     error={errors.prenom}
                     touched={touched.prenom}
                     autoCapitalize="words"
+                  />
+                  <AppInput
+                    label="Email (facultatif)"
+                    placeholder="votre@gmail.com"
+                    value={values.email}
+                    onChangeText={handleChange('email')}
+                    onBlur={handleBlur('email')}
+                    error={errors.email}
+                    touched={touched.email}
+                    icon="mail-outline"
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    autoComplete="email"
+                    textContentType="emailAddress"
                   />
                   <AppButton
                     title={isSubmitting ? 'Enregistrement…' : 'Enregistrer'}

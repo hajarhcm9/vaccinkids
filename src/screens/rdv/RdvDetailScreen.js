@@ -39,6 +39,13 @@ export default function RdvDetailScreen({ route, navigation }) {
       .finally(() => setLoading(false));
   }, [rdvId]);
 
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('beforeRemove', () => {
+      navigation.getParent()?.setParams({ rdvListRefresh: Date.now() });
+    });
+    return unsubscribe;
+  }, [navigation]);
+
   const handleCancel = () => {
     Alert.alert('Annuler le RDV', 'Confirmer l\'annulation de ce rendez-vous ?', [
       { text: 'Non', style: 'cancel' },
@@ -102,9 +109,12 @@ export default function RdvDetailScreen({ route, navigation }) {
         <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Informations</Text>
-            <InfoRow icon="calendar-outline"  label="Date"     value={formatDate(rdv.date_session)} />
-            <InfoRow icon="time-outline"      label="Heure"    value={rdv.heure_debut || '—'} />
-            <InfoRow icon="location-outline"  label="Centre"   value={rdv.centre_nom || '—'} />
+            <InfoRow icon="calendar-outline"  label="Date"          value={formatDate(rdv.date_session)} />
+            <InfoRow icon="time-outline"      label="Heure"         value={rdv.heure_debut || '—'} />
+            <InfoRow icon="location-outline"  label="Centre"        value={rdv.centre_nom || '—'} />
+            {rdv.bebe_numero_centre != null && (
+              <InfoRow icon="card-outline"    label="N° au centre"  value={String(rdv.bebe_numero_centre)} />
+            )}
             {rdv.motif && (
               <InfoRow icon="document-text-outline" label="Motif d'annulation" value={rdv.motif} danger />
             )}

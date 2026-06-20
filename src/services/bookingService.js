@@ -1,5 +1,6 @@
-const { getClient } = require('../config/database');
+const { getClient, pool } = require('../config/database');
 const ApiError = require('../utils/ApiError');
+const notificationService = require('./notificationService');
 
 const OPEN_STATUSES = ['EN_FORMATION', 'CONFIRMEE'];
 
@@ -45,11 +46,32 @@ const register = async ({
     if (waitlist && !full) throw ApiError.badRequest('Session still has available spots');
     if (!waitlist && full) throw ApiError.conflict('Session is full');
 
+    const rdvStatut = waitlist ? 'EN_LISTE_ATTENTE' : 'EN_ATTENTE';
     const result = await client.query(
       'INSERT INTO rendez_vous (session_id, parent_id, bebe_id, statut) VALUES ($1, $2, $3, $4) RETURNING *',
-      [sessionId, parentId, bebeId, waitlist ? 'EN_LISTE_ATTENTE' : 'EN_ATTENTE'],
+      [sessionId, parentId, bebeId, rdvStatut],
     );
+
+    // Auto-confirm session when all spots are now taken
+    let sessionConfirmed = false;
+    if (!waitlist) {
+      const newCount = countResult.rows[0].total + 1;
+      if (newCount >= session.max_inscriptions && session.statut === 'EN_FORMATION') {
+        await client.query(
+          "UPDATE session SET statut = 'CONFIRMEE', updated_at = NOW() WHERE id = $1",
+          [sessionId],
+        );
+        sessionConfirmed = true;
+      }
+    }
+
     await client.query('COMMIT');
+
+    // Notify all participants after commit (non-blocking)
+    if (sessionConfirmed) {
+      notificationService.sendSessionConfirmee(sessionId, { pool }).catch(() => {});
+    }
+
     return result.rows[0];
   } catch (error) {
     await client.query('ROLLBACK');

@@ -16,7 +16,7 @@ const Parent = {
 
   async findById(id) {
     const result = await query(
-      'SELECT id, telephone, nom, prenom, langue_preferee, nb_absences_consecutives, est_actif, photo_url, created_at FROM parent WHERE id = $1',
+      'SELECT id, telephone, nom, prenom, email, cin, centre_id, langue_preferee, nb_absences_consecutives, is_new_user, est_actif, photo_url, created_at FROM parent WHERE id = $1',
       [id],
     );
     return result.rows[0];
@@ -85,7 +85,7 @@ const Parent = {
     const fields = [];
     const values = [id];
     let paramIndex = 2;
-    const allowedFields = ['nom', 'prenom', 'langue_preferee', 'est_actif', 'photo_url'];
+    const allowedFields = ['nom', 'prenom', 'langue_preferee', 'est_actif', 'photo_url', 'email', 'cin', 'centre_id', 'is_new_user'];
     for (const field of allowedFields) {
       if (data[field] !== undefined) {
         fields.push(`${field} = $${paramIndex}`);
@@ -95,7 +95,8 @@ const Parent = {
     }
     if (fields.length === 0) return null;
     const result = await query(
-      `UPDATE parent SET ${fields.join(', ')}, updated_at = NOW() WHERE id = $1 RETURNING id, telephone, nom, prenom, langue_preferee, est_actif, photo_url`,
+      `UPDATE parent SET ${fields.join(', ')}, updated_at = NOW() WHERE id = $1
+       RETURNING id, telephone, nom, prenom, email, cin, centre_id, langue_preferee, is_new_user, est_actif, photo_url`,
       values,
     );
     return result.rows[0];

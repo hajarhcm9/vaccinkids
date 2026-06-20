@@ -158,6 +158,19 @@ export default function HomeScreen({ navigation }) {
         </View>
       </LinearGradient>
 
+      {/* ── Email banner (shown once when email missing) ── */}
+      {!user?.email && (
+        <View style={styles.emailBanner}>
+          <Ionicons name="mail-outline" size={18} color={Colors.primary} />
+          <Text style={styles.emailBannerText}>
+            Ajoutez votre email pour recevoir vos rappels de vaccination.
+          </Text>
+          <TouchableOpacity onPress={() => navigation.navigate('EditProfile')}>
+            <Text style={styles.emailBannerCta}>Ajouter →</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
       {/* ── Prochain RDV card ── */}
       <View style={styles.section}>
         <Text style={styles.sectionLabel}>Prochain rendez-vous</Text>
@@ -273,6 +286,11 @@ const styles = StyleSheet.create({
   qaWrap:       { alignItems: 'center', gap: Spacing.sm },
   qaIcon:       { width: 60, height: 60, borderRadius: Radii.lg, alignItems: 'center', justifyContent: 'center', ...Elevation.sm },
   qaLabel:      { fontSize: 11, fontWeight: '600', color: Colors.textSecondary },
+
+  // Email banner
+  emailBanner:     { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, marginHorizontal: Spacing.lg, marginTop: Spacing.lg, padding: Spacing.base, backgroundColor: Colors.primaryTint, borderRadius: Radii.lg, borderWidth: 1, borderColor: Colors.primary + '30' },
+  emailBannerText: { flex: 1, fontSize: 12, color: Colors.primary, fontWeight: '500', lineHeight: 17 },
+  emailBannerCta:  { fontSize: 12, fontWeight: '800', color: Colors.primary },
 
   // Actus
   actuCard:     { flexDirection: 'row', gap: Spacing.md, backgroundColor: Colors.surface, borderRadius: Radii.xl, padding: Spacing.base, marginBottom: Spacing.sm, borderLeftWidth: 4, ...Elevation.sm },

@@ -22,7 +22,7 @@ async function getExecutedMigrations(client) {
 async function runMigrations() {
   const client = await getClient();
   try {
-    console.warn('🔄 Checking for pending migrations...');
+    console.log('🔄 Checking for pending migrations...');
     await ensureMigrationTable(client);
     const executed = await getExecutedMigrations(client);
     const files = fs
@@ -31,21 +31,21 @@ async function runMigrations() {
       .sort();
 
     if (files.length === 0) {
-      console.warn('⚠️  No migration files found');
+      console.log('⚠️  No migration files found');
       return;
     }
 
     let executedCount = 0;
     for (const file of files) {
       if (executed.includes(file)) continue;
-      console.warn(`📋 Running migration: ${file}`);
+      console.log(`📋 Running migration: ${file}`);
       const sql = fs.readFileSync(path.join(MIGRATIONS_DIR, file), 'utf8');
       await client.query('BEGIN');
       try {
         await client.query(sql);
         await client.query('INSERT INTO _migrations (filename) VALUES ($1)', [file]);
         await client.query('COMMIT');
-        console.warn(`✅ Migration ${file} executed successfully`);
+        console.log(`✅ Migration ${file} executed successfully`);
         executedCount++;
       } catch (error) {
         await client.query('ROLLBACK');
@@ -55,9 +55,9 @@ async function runMigrations() {
     }
 
     if (executedCount === 0) {
-      console.warn('✅ All migrations are up to date');
+      console.log('✅ All migrations are up to date');
     } else {
-      console.warn(`✅ ${executedCount} migration(s) executed successfully`);
+      console.log(`✅ ${executedCount} migration(s) executed successfully`);
     }
   } catch (error) {
     console.error('❌ Migration failed:', error.message);

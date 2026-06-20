@@ -8,12 +8,32 @@ export async function verifyOTP(telephone, code) {
   return apiClient.post('/auth/parent/verify-otp', { telephone, code });
 }
 
-export async function completeProfile({ nom, prenom, langue_preferee = 'fr' }) {
-  return apiClient.post('/auth/parent/register', { nom, prenom, langue_preferee });
+export async function loginWithCIN(telephone, cin) {
+  return apiClient.post('/auth/parent/login-cin', { telephone, cin });
 }
 
-export async function updateProfile({ nom, prenom, langue_preferee = 'fr' }) {
-  return apiClient.patch('/auth/parent/profile', { nom, prenom, langue_preferee });
+export async function completeProfile({ nom, prenom, cin, email, centre_id, langue_preferee = 'fr' }) {
+  return apiClient.post('/auth/parent/register', { nom, prenom, cin, email, centre_id, langue_preferee });
+}
+
+export async function listPublicCentres() {
+  return apiClient.get('/guest-rdv/centres');
+}
+
+export async function updateProfile({ nom, prenom, email, langue_preferee = 'fr', centre_id } = {}) {
+  return apiClient.patch('/auth/parent/profile', { nom, prenom, email, langue_preferee, centre_id });
+}
+
+export async function listGuestSessions({ newborn = false, centre_id } = {}) {
+  const params = new URLSearchParams();
+  if (newborn)   params.append('newborn', 'true');
+  if (centre_id) params.append('centre_id', centre_id);
+  const qs = params.toString();
+  return apiClient.get(`/guest-rdv/sessions${qs ? `?${qs}` : ''}`);
+}
+
+export async function createGuestRdv(data) {
+  return apiClient.post('/guest-rdv', data);
 }
 
 export async function logout() {

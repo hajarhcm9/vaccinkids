@@ -1,5 +1,6 @@
 const { Pool } = require('pg');
 require('dotenv').config({ quiet: true });
+const requireEnv = require('../utils/requireEnv');
 
 const describeDbError = (error) => {
   if (Array.isArray(error.errors) && error.errors.length > 0) {
@@ -14,22 +15,6 @@ const describeDbError = (error) => {
   ].filter(Boolean);
 
   return details.length > 0 ? details.join(' ') : 'Unknown PostgreSQL error';
-};
-
-const requireEnv = (key) => {
-  const value = process.env[key];
-  if (!value) {
-    console.error(`FATAL: ${key} must be set in environment`);
-    process.exit(1);
-  }
-  if (process.env.NODE_ENV === 'production' && value.indexOf('dev-only-') === 0) {
-    console.error(`FATAL: ${key} must not use dev-only values in production`);
-    process.exit(1);
-  }
-  if (process.env.NODE_ENV !== 'production' && value.indexOf('dev-only-') === 0) {
-    console.warn(`WARNING: ${key} uses a dev-only value. Change it before production.`);
-  }
-  return value;
 };
 
 const getSslConfig = () => {
@@ -79,7 +64,7 @@ const pool = new Pool(poolConfig);
 // Connection events
 pool.on('connect', () => {
   if (process.env.NODE_ENV !== 'test') {
-    console.warn('✅ PostgreSQL connected successfully');
+    console.log('✅ PostgreSQL connected successfully');
   }
 });
 
@@ -105,7 +90,7 @@ const query = async (text, params) => {
     const res = await pool.query(text, params);
     const duration = Date.now() - start;
     if (process.env.NODE_ENV === 'development') {
-      console.warn(`📊 Query executed in ${duration}ms: ${text.substring(0, 80)}...`);
+      console.log(`📊 Query executed in ${duration}ms: ${text.substring(0, 80)}...`);
     }
     return res;
   } catch (error) {

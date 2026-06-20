@@ -46,7 +46,7 @@ export default function CalendrierScreen({ route, navigation }) {
         setSelectedEnfant(target);
       }
     } catch (e) {
-      if (__DEV__) console.warn('[CalendrierScreen] loadEnfants:', e?.message);
+      if (__DEV__) console.log('[CalendrierScreen] loadEnfants:', e?.message);
     }
   }, [initialEnfantId]);
 

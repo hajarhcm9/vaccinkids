@@ -12,6 +12,7 @@ const upload = require('../middleware/upload');
 // PUBLIC
 router.post('/parent/send-otp', validate(schemas.sendOTP), AuthController.sendOTP);
 router.post('/parent/verify-otp', validate(schemas.verifyOTP), AuthController.verifyOTP);
+router.post('/parent/login-cin', AuthController.loginWithCIN);
 router.post(
   '/personnel/login',
   checkAccountLock,

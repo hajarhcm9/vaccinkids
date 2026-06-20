@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { View, Platform } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Platform, AppState } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -25,11 +25,23 @@ export default function AppNavigator() {
   const insets       = useSafeAreaInsets();
   const [unreadCount, setUnreadCount] = useState(0);
 
-  useEffect(() => {
+  const refreshBadge = useCallback(() => {
     notificationService.getUnreadCount()
       .then((resp) => { if (resp?.count != null) setUnreadCount(resp.count); })
       .catch(() => {});
   }, []);
+
+  useEffect(() => {
+    refreshBadge();
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') refreshBadge();
+    });
+    const interval = setInterval(refreshBadge, 30000);
+    return () => {
+      sub.remove();
+      clearInterval(interval);
+    };
+  }, [refreshBadge]);
 
   const tabBarHeight = 56 + insets.bottom;
 

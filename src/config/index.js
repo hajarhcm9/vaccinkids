@@ -1,4 +1,5 @@
 require('dotenv').config({ quiet: true });
+const requireEnv = require('../utils/requireEnv');
 
 function parsePositiveInt(value, fallback) {
   const parsed = parseInt(value, 10);
@@ -12,22 +13,6 @@ function parseTrustProxy(value) {
     .split(',')
     .map((entry) => entry.trim())
     .filter(Boolean);
-}
-
-function requireEnv(key) {
-  var value = process.env[key];
-  if (!value) {
-    console.error('FATAL: ' + key + ' must be set in environment');
-    process.exit(1);
-  }
-  if (process.env.NODE_ENV === 'production' && value.indexOf('dev-only-') === 0) {
-    console.error('FATAL: ' + key + ' must not use dev-only values in production');
-    process.exit(1);
-  }
-  if (process.env.NODE_ENV !== 'production' && value.indexOf('dev-only-') === 0) {
-    console.warn('WARNING: ' + key + ' uses a dev-only value. Change it before production.');
-  }
-  return value;
 }
 
 function getOtpHashSecret() {

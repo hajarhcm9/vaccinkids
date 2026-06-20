@@ -28,7 +28,7 @@ const RendezVous = {
       'SELECT rdv.*, s.centre_id, s.date_session, s.heure_debut, s.heure_fin, s.statut AS session_statut, ' +
         'v.nom AS vaccin_nom, c.nom AS centre_nom, c.adresse AS centre_adresse, ' +
         'c.gps_lat AS centre_gps_lat, c.gps_lng AS centre_gps_lng, ' +
-        'b.prenom AS bebe_prenom, b.nom AS bebe_nom ' +
+        'b.prenom AS bebe_prenom, b.nom AS bebe_nom, b.numero_centre AS bebe_numero_centre ' +
         'FROM rendez_vous rdv ' +
         'JOIN session s ON s.id = rdv.session_id ' +
         'JOIN vaccin v ON v.id = s.vaccin_id ' +
@@ -42,7 +42,7 @@ const RendezVous = {
 
   async findBySession(sessionId) {
     const result = await query(
-      'SELECT rdv.*, b.prenom AS bebe_prenom, b.nom AS bebe_nom, ' +
+      'SELECT rdv.*, b.prenom AS bebe_prenom, b.nom AS bebe_nom, b.numero_centre AS bebe_numero_centre, ' +
         'p.nom AS parent_nom, p.prenom AS parent_prenom, p.telephone AS parent_telephone ' +
         'FROM rendez_vous rdv ' +
         'JOIN bebe b ON b.id = rdv.bebe_id ' +

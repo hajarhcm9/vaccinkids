@@ -21,10 +21,11 @@ const auditQrRefusal = (req, reason) =>
 
 const CarnetController = {
   addBebe: catchAsync(async (req, res, next) => {
-    const parentId = req.user.id;
-    const existing = await Bebe.findDuplicate(parentId, req.body);
+    const parentId  = req.user.id;
+    const centre_id = req.user.centre_id || null;
+    const existing  = await Bebe.findDuplicate(parentId, req.body);
     if (existing) return next(ApiError.conflict('This baby already exists for this parent'));
-    const bebe = await Bebe.create({ ...req.body, parent_id: parentId });
+    const bebe = await Bebe.create({ ...req.body, parent_id: parentId, centre_id });
     return created(res, 'Baby added successfully', bebe);
   }),
 

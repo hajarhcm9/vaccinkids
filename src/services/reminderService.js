@@ -1,6 +1,7 @@
 const { pool } = require('../config/database');
 const ns = require('./notificationService');
-class RS {
+
+class ReminderService {
   constructor() {
     this.timers = [];
     this.running = false;
@@ -8,20 +9,20 @@ class RS {
   start() {
     if (this.running) return;
     this.running = true;
-    console.warn('[ReminderService] Starting...');
+    console.log('[ReminderService] Starting...');
     this.timers.push(
       setInterval(() => {
-        this.checkUpcomingAppointments().catch((e) => console.error('[RS] apt:', e.message));
+        this.checkUpcomingAppointments().catch((e) => console.error('[ReminderService] apt:', e.message));
       }, 3600000),
     );
     this.timers.push(
       setInterval(() => {
-        this.checkTodaySessions().catch((e) => console.error('[RS] sess:', e.message));
+        this.checkTodaySessions().catch((e) => console.error('[ReminderService] sess:', e.message));
       }, 3600000),
     );
     this.timers.push(
       setInterval(() => {
-        this.checkLowStock().catch((e) => console.error('[RS] stock:', e.message));
+        this.checkLowStock().catch((e) => console.error('[ReminderService] stock:', e.message));
       }, 3600000),
     );
     this.checkUpcomingAppointments().catch(() => {});
@@ -33,11 +34,23 @@ class RS {
     for (const t of this.timers) clearInterval(t);
     this.timers = [];
     this.running = false;
-    console.warn('[ReminderService] Stopped');
+    console.log('[ReminderService] Stopped');
   }
   async checkUpcomingAppointments() {
     const { rows } = await pool.query(
-      "SELECT rv.*, p.telephone AS parent_telephone, s.date_session, s.heure_debut FROM rendez_vous rv JOIN parent p ON p.id = rv.parent_id JOIN session s ON s.id = rv.session_id WHERE rv.statut = 'EN_ATTENTE' AND s.date_session BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL '1 day'",
+      `SELECT rv.*, p.telephone AS parent_telephone, s.date_session, s.heure_debut
+       FROM rendez_vous rv
+       JOIN parent p ON p.id = rv.parent_id
+       JOIN session s ON s.id = rv.session_id
+       WHERE rv.statut = 'EN_ATTENTE'
+         AND s.date_session BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL '1 day'
+         AND NOT EXISTS (
+           SELECT 1 FROM notification n
+           WHERE n.reference_id = rv.id
+             AND n.reference_type = 'rendez_vous'
+             AND n.type = 'RAPPEL'
+             AND n.created_at >= NOW() - INTERVAL '20 hours'
+         )`,
     );
     if (!rows.length) return [];
     const n = [];
@@ -45,7 +58,7 @@ class RS {
       try {
         n.push(await ns.sendRappelRdv(rv));
       } catch (e) {
-        console.error('[RS] RDV#' + rv.id + ':', e.message);
+        console.error('[ReminderService] RDV#' + rv.id + ':', e.message);
       }
     }
     return n;
@@ -75,10 +88,10 @@ class RS {
         const r = await ns.sendAlerteStock(i.centre_id, i.vaccin_nom, i.quantite_disponible);
         n.push(...r);
       } catch (e) {
-        console.error('[RC] stock:', e.message);
+        console.error('[ReminderService] stock:', e.message);
       }
     }
     return n;
   }
 }
-module.exports = new RS();
+module.exports = new ReminderService();

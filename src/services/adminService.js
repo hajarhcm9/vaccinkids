@@ -1,5 +1,6 @@
 const { pool } = require('../config/database');
 const bcrypt = require('bcrypt');
+const ApiError = require('../utils/ApiError');
 
 const VALID_SYSTEM_INFO_TABLES = [
   'centre',
@@ -48,7 +49,7 @@ class AdminService {
     // Check CIN uniqueness
     var existing = await pool.query('SELECT id FROM personnel WHERE cin = $1', [cin]);
     if (existing.rows.length > 0) {
-      return { error: 'Un personnel avec ce CIN existe deja' };
+      throw ApiError.conflict('Un personnel avec ce CIN existe deja');
     }
 
     // Validate centre
@@ -56,12 +57,12 @@ class AdminService {
       centre_id,
     ]);
     if (centreRes.rows.length === 0) {
-      return { error: 'Centre non trouve ou inactif' };
+      throw ApiError.notFound('Centre non trouve ou inactif');
     }
 
     // Validate role
     if (!['admin', 'infirmier'].includes(role)) {
-      return { error: 'Role invalide. Utilisez: admin ou infirmier' };
+      throw ApiError.badRequest('Role invalide. Utilisez: admin ou infirmier');
     }
 
     var hash = await bcrypt.hash(mot_de_passe, 10);
@@ -170,7 +171,7 @@ class AdminService {
   async updatePersonnel(id, data, adminId) {
     var existing = await pool.query('SELECT * FROM personnel WHERE id = $1', [id]);
     if (existing.rows.length === 0) {
-      return { error: 'Personnel non trouve' };
+      throw ApiError.notFound('Personnel non trouve');
     }
 
     var old = existing.rows[0];
@@ -183,14 +184,14 @@ class AdminService {
       var field = allowedFields[i];
       if (data[field] !== undefined) {
         if (field === 'role' && !['admin', 'infirmier'].includes(data[field])) {
-          return { error: 'Role invalide' };
+          throw ApiError.badRequest('Role invalide');
         }
         if (field === 'centre_id') {
           var cRes = await pool.query('SELECT id FROM centre WHERE id = $1 AND est_actif = TRUE', [
             data[field],
           ]);
           if (cRes.rows.length === 0) {
-            return { error: 'Centre non trouve ou inactif' };
+            throw ApiError.notFound('Centre non trouve ou inactif');
           }
         }
         updates.push(field + ' = $' + idx);
@@ -207,7 +208,7 @@ class AdminService {
     }
 
     if (updates.length === 0) {
-      return { error: 'Aucune donnee a mettre a jour' };
+      throw ApiError.badRequest('Aucune donnee a mettre a jour');
     }
 
     values.push(id);
@@ -244,13 +245,13 @@ class AdminService {
   async deactivatePersonnel(id, adminId) {
     var existing = await pool.query('SELECT id, est_actif FROM personnel WHERE id = $1', [id]);
     if (existing.rows.length === 0) {
-      return { error: 'Personnel non trouve' };
+      throw ApiError.notFound('Personnel non trouve');
     }
     if (!existing.rows[0].est_actif) {
-      return { error: 'Personnel deja desactive' };
+      throw ApiError.conflict('Personnel deja desactive');
     }
     if (parseInt(id) === parseInt(adminId)) {
-      return { error: 'Vous ne pouvez pas desactiver votre propre compte' };
+      throw ApiError.forbidden('Vous ne pouvez pas desactiver votre propre compte');
     }
 
     await pool.query('UPDATE personnel SET est_actif = FALSE WHERE id = $1', [id]);
@@ -278,10 +279,10 @@ class AdminService {
   async reactivatePersonnel(id, adminId) {
     var existing = await pool.query('SELECT id, est_actif FROM personnel WHERE id = $1', [id]);
     if (existing.rows.length === 0) {
-      return { error: 'Personnel non trouve' };
+      throw ApiError.notFound('Personnel non trouve');
     }
     if (existing.rows[0].est_actif) {
-      return { error: 'Personnel deja actif' };
+      throw ApiError.conflict('Personnel deja actif');
     }
 
     await pool.query('UPDATE personnel SET est_actif = TRUE WHERE id = $1', [id]);
@@ -318,7 +319,7 @@ class AdminService {
     var gps_lng = data.gps_lng || null;
 
     if (!nom || !adresse || !telephone) {
-      return { error: 'Nom, adresse et telephone sont obligatoires' };
+      throw ApiError.badRequest('Nom, adresse et telephone sont obligatoires');
     }
 
     var res = await pool.query(
@@ -415,7 +416,7 @@ class AdminService {
   async updateCentre(id, data, adminId) {
     var existing = await pool.query('SELECT * FROM centre WHERE id = $1', [id]);
     if (existing.rows.length === 0) {
-      return { error: 'Centre non trouve' };
+      throw ApiError.notFound('Centre non trouve');
     }
 
     var old = existing.rows[0];
@@ -434,7 +435,7 @@ class AdminService {
     }
 
     if (updates.length === 0) {
-      return { error: 'Aucune donnee a mettre a jour' };
+      throw ApiError.badRequest('Aucune donnee a mettre a jour');
     }
 
     values.push(id);
@@ -470,10 +471,10 @@ class AdminService {
   async deactivateCentre(id, adminId) {
     var existing = await pool.query('SELECT id, est_actif FROM centre WHERE id = $1', [id]);
     if (existing.rows.length === 0) {
-      return { error: 'Centre non trouve' };
+      throw ApiError.notFound('Centre non trouve');
     }
     if (!existing.rows[0].est_actif) {
-      return { error: 'Centre deja desactive' };
+      throw ApiError.conflict('Centre deja desactive');
     }
 
     var personnelRes = await pool.query(
@@ -492,7 +493,7 @@ class AdminService {
       [id],
     );
     if (parseInt(activeSessionsRes.rows[0].total) > 0) {
-      return { error: 'Impossible de desactiver un centre avec des sessions actives' };
+      throw ApiError.conflict('Impossible de desactiver un centre avec des sessions actives');
     }
 
     await pool.query('UPDATE centre SET est_actif = FALSE WHERE id = $1', [id]);
@@ -520,10 +521,10 @@ class AdminService {
   async reactivateCentre(id, adminId) {
     var existing = await pool.query('SELECT id, est_actif FROM centre WHERE id = $1', [id]);
     if (existing.rows.length === 0) {
-      return { error: 'Centre non trouve' };
+      throw ApiError.notFound('Centre non trouve');
     }
     if (existing.rows[0].est_actif) {
-      return { error: 'Centre deja actif' };
+      throw ApiError.conflict('Centre deja actif');
     }
 
     await pool.query('UPDATE centre SET est_actif = TRUE WHERE id = $1', [id]);

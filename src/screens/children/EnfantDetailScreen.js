@@ -82,7 +82,10 @@ export default function EnfantDetailScreen({ route, navigation }) {
           <Text style={styles.cardTitle}>Informations</Text>
           <InfoRow icon="calendar-outline" label="Date de naissance" value={formatDateDisplay(enfant.date_naissance)} />
           <InfoRow icon="body-outline"     label="Sexe"              value={sexeLabel}                    />
-          <InfoRow icon="card-outline"     label="Identifiant"       value={`#${enfant.id}`}              />
+          {enfant.numero_centre != null
+            ? <InfoRow icon="card-outline" label="N° au centre" value={`${enfant.numero_centre}`} />
+            : <InfoRow icon="card-outline" label="Identifiant"  value={`#${enfant.id}`} />
+          }
         </View>
 
         {/* Vaccines summary card */}

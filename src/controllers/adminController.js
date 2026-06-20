@@ -14,10 +14,6 @@ const AdminController = {
   createPersonnel: catchAsync(async (req, res, next) => {
     const result = await adminService.createPersonnel(req.body, req.user.id);
 
-    if (result.error) {
-      return res.status(400).json({ status: 'error', message: result.error });
-    }
-
     return created(res, 'Personnel cree avec succes', result);
   }),
 
@@ -55,10 +51,6 @@ const AdminController = {
       req.user.id,
     );
 
-    if (result.error) {
-      return res.status(400).json({ status: 'error', message: result.error });
-    }
-
     return success(res, 200, 'Personnel mis a jour', result);
   }),
 
@@ -69,10 +61,6 @@ const AdminController = {
   deactivatePersonnel: catchAsync(async (req, res, next) => {
     const result = await adminService.deactivatePersonnel(parseInt(req.params.id), req.user.id);
 
-    if (result.error) {
-      return res.status(400).json({ status: 'error', message: result.error });
-    }
-
     return success(res, 200, 'Personnel desactive', result);
   }),
 
@@ -82,10 +70,6 @@ const AdminController = {
    */
   reactivatePersonnel: catchAsync(async (req, res, next) => {
     const result = await adminService.reactivatePersonnel(parseInt(req.params.id), req.user.id);
-
-    if (result.error) {
-      return res.status(400).json({ status: 'error', message: result.error });
-    }
 
     return success(res, 200, 'Personnel reactive', result);
   }),
@@ -100,10 +84,6 @@ const AdminController = {
    */
   createCentre: catchAsync(async (req, res, next) => {
     const result = await adminService.createCentre(req.body, req.user.id);
-
-    if (result.error) {
-      return res.status(400).json({ status: 'error', message: result.error });
-    }
 
     return created(res, 'Centre cree avec succes', result);
   }),
@@ -138,10 +118,6 @@ const AdminController = {
   updateCentre: catchAsync(async (req, res, next) => {
     const result = await adminService.updateCentre(parseInt(req.params.id), req.body, req.user.id);
 
-    if (result.error) {
-      return res.status(400).json({ status: 'error', message: result.error });
-    }
-
     return success(res, 200, 'Centre mis a jour', result);
   }),
 
@@ -152,19 +128,11 @@ const AdminController = {
   deactivateCentre: catchAsync(async (req, res, next) => {
     const result = await adminService.deactivateCentre(parseInt(req.params.id), req.user.id);
 
-    if (result.error) {
-      return res.status(400).json({ status: 'error', message: result.error });
-    }
-
     return success(res, 200, 'Centre desactive', result);
   }),
 
   reactivateCentre: catchAsync(async (req, res, next) => {
     const result = await adminService.reactivateCentre(parseInt(req.params.id), req.user.id);
-
-    if (result.error) {
-      return res.status(400).json({ status: 'error', message: result.error });
-    }
 
     return success(res, 200, 'Centre reactive', result);
   }),

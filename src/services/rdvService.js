@@ -16,6 +16,18 @@ export async function listSessions(params = {}) {
   return apiClient.get('/sessions', { params });
 }
 
+export async function smartMatchSessions(vaccin_id) {
+  return apiClient.get('/sessions/smart-match', { params: { vaccin_id } });
+}
+
+export async function proposeSession(data) {
+  return apiClient.post('/sessions/propose', data);
+}
+
+export async function listVaccins() {
+  return apiClient.get('/vaccins');
+}
+
 export async function inscribeSession(sessionId, bebe_id) {
   return apiClient.post(`/sessions/${sessionId}/inscrire`, { bebe_id });
 }

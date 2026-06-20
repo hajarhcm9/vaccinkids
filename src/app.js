@@ -46,6 +46,9 @@ app.use(cors(corsOptions));
 // ============================================
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true }));
+const { sanitizeInput, preventNoSQLInjection } = require('./middleware/sanitizationMiddleware');
+app.use(sanitizeInput);
+app.use(preventNoSQLInjection);
 
 // ============================================
 // 4. LOGGING
@@ -122,6 +125,7 @@ if (process.env.NODE_ENV !== 'test') {
   app.use('/api/auth/web-admin/refresh', refreshLimiter);
 }
 app.use('/api/auth', require('./routes/authRoutes'));
+app.use('/api/guest-rdv', require('./routes/guestRdvRoutes'));
 if (process.env.NODE_ENV !== 'test') app.use('/api/kiosks/login', loginLimiter);
 app.use('/api/kiosks', require('./routes/kioskRoutes'));
 app.use('/api/sessions', require('./routes/sessionRoutes'));

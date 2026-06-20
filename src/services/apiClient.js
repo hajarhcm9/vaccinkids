@@ -1,9 +1,11 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export const SERVER_BASE_URL = __DEV__
-  ? 'http://10.0.2.2:8080'
-  : 'https://api.vaccinkids.ma';
+export const SERVER_BASE_URL = process.env.EXPO_PUBLIC_API_URL
+  ? process.env.EXPO_PUBLIC_API_URL.replace(/\/api$/, '')
+  : __DEV__
+    ? 'http://10.0.2.2:3000'
+    : 'https://api.vaccinkids.ma';
 
 const BASE_URL = `${SERVER_BASE_URL}/api`;
 
@@ -12,7 +14,7 @@ const REFRESH_TOKEN_KEY = 'refreshToken';
 
 const apiClient = axios.create({
   baseURL: BASE_URL,
-  timeout: 3000,
+  timeout: 10000,
   headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
 });
 
