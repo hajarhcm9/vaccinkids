@@ -4,10 +4,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 export const SERVER_BASE_URL = process.env.EXPO_PUBLIC_API_URL
   ? process.env.EXPO_PUBLIC_API_URL.replace(/\/api$/, '')
   : __DEV__
-    ? 'http://10.0.2.2:3000'
+    ? 'http://192.168.1.6:3000'   // IP LAN du serveur — changer si nécessaire
     : 'https://api.vaccinkids.ma';
 
 const BASE_URL = `${SERVER_BASE_URL}/api`;
+
+if (__DEV__) console.log('[API] BASE_URL =', BASE_URL);
 
 const TOKEN_KEY = 'jwtToken';
 const REFRESH_TOKEN_KEY = 'refreshToken';

@@ -8,6 +8,22 @@ export async function verifyOTP(telephone, code) {
   return apiClient.post('/auth/parent/verify-otp', { telephone, code });
 }
 
+export async function loginWithBabyId(numero_enfant, cin) {
+  return apiClient.post('/auth/parent/login-baby', { numero_enfant, cin });
+}
+
+export async function loginWithEmail(email, cin) {
+  return apiClient.post('/auth/parent/login-email', { email, cin });
+}
+
+export async function loginStaff(cin, mot_de_passe) {
+  return apiClient.post('/auth/personnel/login', { cin, mot_de_passe });
+}
+
+export async function forgotNumero(email) {
+  return apiClient.post('/auth/parent/forgot-numero', { email });
+}
+
 export async function loginWithCIN(telephone, cin) {
   return apiClient.post('/auth/parent/login-cin', { telephone, cin });
 }

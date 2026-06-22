@@ -104,6 +104,16 @@
             android:textSize="12sp" />
     </LinearLayout>
 
+    <TextView
+        android:id="@+id/tvAlertesMessage"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingHorizontal="20dp"
+        android:paddingBottom="6dp"
+        android:textColor="@color/text_secondary"
+        android:textSize="13sp"
+        android:visibility="gone" />
+
     <!-- ═══ LIST ═══ -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvAlertes"

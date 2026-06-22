@@ -95,8 +95,9 @@ class DashboardFragment : Fragment(R.layout.fragment_dashboard) {
             try {
                 val response = ApiClient.apiService.getMe()
                 val user = response.data?.user
-                nurseNameView.text = "Bonjour, ${user?.nom ?: "infirmier"}"
-                centerNameView.text = "Centre de santé"
+                val prenom = user?.prenom?.let { "$it " } ?: ""
+                nurseNameView.text = "Bonjour, $prenom${user?.nom ?: "infirmier"}"
+                centerNameView.text = user?.centreNom ?: "Centre de santé"
             } catch (_: Exception) {}
         }
     }
@@ -166,13 +167,24 @@ class DashboardFragment : Fragment(R.layout.fragment_dashboard) {
                         nextRdvTime.text = upcoming.heureDebut?.take(5) ?: "--:--"
                         nextRdvPatient.text = listOfNotNull(upcoming.bebePrenom, upcoming.bebeNom)
                             .joinToString(" ").ifBlank { "Bébé #${upcoming.bebeId}" }
-                        nextRdvAge.text = listOfNotNull(upcoming.parentPrenom, upcoming.parentNom)
-                            .joinToString(" ").ifBlank { "Parent inconnu" }
+                        nextRdvAge.text = calculateAge(upcoming.bebeDateNaissance)
                         nextRdvType.text = upcoming.vaccinNom ?: "Vaccin"
                     }
                 }
             } catch (_: Exception) {}
         }
+    }
+
+    private fun calculateAge(dateNaissance: String?): String {
+        if (dateNaissance.isNullOrBlank()) return "Âge inconnu"
+        return try {
+            val dob = java.text.SimpleDateFormat("yyyy-MM-dd", Locale.FRENCH).parse(dateNaissance)
+                ?: return "Âge inconnu"
+            val totalMonths = ((Date().time - dob.time) / (1000L * 60 * 60 * 24 * 30.44)).toInt()
+            val years = totalMonths / 12
+            val months = totalMonths % 12
+            if (years > 0) "$years an${if (years > 1) "s" else ""} $months mois" else "$totalMonths mois"
+        } catch (_: Exception) { "Âge inconnu" }
     }
 
     private fun updateRefreshState() {

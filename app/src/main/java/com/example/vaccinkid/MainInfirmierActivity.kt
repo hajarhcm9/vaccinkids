@@ -6,6 +6,7 @@ import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import com.example.vaccinkid.db.SyncManager
 import com.example.vaccinkid.network.ApiClient
 import com.example.vaccinkid.network.TokenManager
 import com.google.android.material.bottomnavigation.BottomNavigationView
@@ -22,6 +23,7 @@ class MainInfirmierActivity : AppCompatActivity() {
 
         bottomNav = findViewById(R.id.bottomNav)
         validateSession()
+        backgroundSync()
 
         // Fragment par défaut : Dashboard
         if (savedInstanceState == null) {
@@ -67,7 +69,15 @@ class MainInfirmierActivity : AppCompatActivity() {
         }
     }
 
-    // ✅ Méthode publique pour naviguer depuis n'importe quel fragment
+    private fun backgroundSync() {
+        lifecycleScope.launch {
+            try {
+                SyncManager.push(this@MainInfirmierActivity)
+                SyncManager.pull(this@MainInfirmierActivity)
+            } catch (_: Exception) {}
+        }
+    }
+
     fun naviguerVers(fragment: androidx.fragment.app.Fragment) {
         supportFragmentManager.beginTransaction()
             .replace(R.id.fragmentContainer, fragment)

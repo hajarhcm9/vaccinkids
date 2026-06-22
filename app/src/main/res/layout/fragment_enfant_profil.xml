@@ -297,6 +297,26 @@
                 app:iconPadding="8dp"
                 app:rippleColor="@color/teal_50" />
 
+            <!-- ── QR code button ── -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnViewQr"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:layout_marginTop="10dp"
+                android:text="Afficher le code QR"
+                android:textColor="@color/brand_teal"
+                android:textSize="14sp"
+                app:strokeColor="@color/brand_teal"
+                app:strokeWidth="1.5dp"
+                app:cornerRadius="26dp"
+                app:icon="@drawable/ic_scan"
+                app:iconTint="@color/brand_teal"
+                app:iconSize="20dp"
+                app:iconGravity="textStart"
+                app:iconPadding="8dp"
+                app:rippleColor="@color/teal_50" />
+
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 

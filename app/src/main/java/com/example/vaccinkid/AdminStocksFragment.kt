@@ -17,6 +17,9 @@ import com.example.vaccinkid.model.UpsertStockRequest
 import com.example.vaccinkid.network.ApiClient
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textfield.TextInputEditText
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 
 class AdminStocksFragment : Fragment(R.layout.fragment_gestion_stocks_admin) {
@@ -58,9 +61,11 @@ class AdminStocksFragment : Fragment(R.layout.fragment_gestion_stocks_admin) {
         val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_edit_stock, null)
         val qteInput = dialogView.findViewById<TextInputEditText>(R.id.editEtQuantite)
         val seuilInput = dialogView.findViewById<TextInputEditText>(R.id.editEtSeuil)
+        val expirationInput = dialogView.findViewById<TextInputEditText>(R.id.editEtExpiration)
         val motifInput = dialogView.findViewById<TextInputEditText>(R.id.editEtMotif)
         qteInput.setText((stock.quantiteDisponible ?: 0).toString())
         seuilInput.setText((stock.seuilAlerte ?: 0).toString())
+        expirationInput.setText(stock.dateExpiration ?: "")
 
         MaterialAlertDialogBuilder(requireContext())
             .setTitle("Ajuster le stock — $nom")
@@ -69,14 +74,15 @@ class AdminStocksFragment : Fragment(R.layout.fragment_gestion_stocks_admin) {
             .setPositiveButton("Enregistrer") { _, _ ->
                 val qte = qteInput.text.toString().toIntOrNull()
                 val seuil = seuilInput.text.toString().toIntOrNull()
+                val expiration = expirationInput.text.toString().trim().ifBlank { null }
                 val motif = motifInput.text.toString().trim().ifBlank { null }
                 if (qte == null) { Toast.makeText(requireContext(), "Quantité invalide", Toast.LENGTH_SHORT).show(); return@setPositiveButton }
-                saveStockAdjustment(stock, qte, seuil, motif)
+                saveStockAdjustment(stock, qte, seuil, expiration, motif)
             }
             .show()
     }
 
-    private fun saveStockAdjustment(stock: StockDto, qte: Int, seuil: Int?, motif: String?) {
+    private fun saveStockAdjustment(stock: StockDto, qte: Int, seuil: Int?, dateExpiration: String?, motif: String?) {
         viewLifecycleOwner.lifecycleScope.launch {
             try {
                 if (stock.id != 0) {
@@ -84,6 +90,7 @@ class AdminStocksFragment : Fragment(R.layout.fragment_gestion_stocks_admin) {
                         com.example.vaccinkid.model.UpdateStockRequest(
                             quantiteDisponible = qte,
                             seuilAlerte = seuil,
+                            dateExpiration = dateExpiration,
                             motif = motif
                         ))
                     if (r.status != "success") throw Exception(r.message ?: "Refusé")
@@ -112,13 +119,15 @@ class AdminStocksFragment : Fragment(R.layout.fragment_gestion_stocks_admin) {
                 val refsResp = ApiClient.apiService.getAdminReferences()
                 val centres = refsResp.data?.centres.orEmpty()
 
-                val allStocks = mutableListOf<com.example.vaccinkid.model.StockDto>()
-                for (centre in centres) {
-                    try {
-                        val r = ApiClient.apiService.getStock(centre.id)
-                        val items = r.data.orEmpty().map { it.copy(centreNom = centre.nom ?: "Centre #${centre.id}") }
-                        allStocks.addAll(items)
-                    } catch (_: Exception) {}
+                val allStocks = coroutineScope {
+                    centres.map { centre ->
+                        async {
+                            try {
+                                ApiClient.apiService.getStock(centre.id).data.orEmpty()
+                                    .map { it.copy(centreNom = centre.nom ?: "Centre #${centre.id}") }
+                            } catch (_: Exception) { emptyList() }
+                        }
+                    }.awaitAll().flatten()
                 }
 
                 val alertStocks = allStocks.filter { s ->
@@ -133,9 +142,13 @@ class AdminStocksFragment : Fragment(R.layout.fragment_gestion_stocks_admin) {
                 alertAdapter.submit(alertStocks)
                 okAdapter.submit(okStocks)
 
+                val today = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US).format(java.util.Date())
+                val perimesStocks = allStocks.filter { s ->
+                    s.dateExpiration != null && s.dateExpiration < today && (s.quantiteDisponible ?: 0) > 0
+                }
                 tvTotal.text = allStocks.sumOf { it.quantiteDisponible ?: 0 }.toString()
                 tvFaibles.text = alertStocks.size.toString()
-                tvPerimes.text = "0"
+                tvPerimes.text = perimesStocks.size.toString()
                 messageView.visibility = View.GONE
             } catch (e: Exception) {
                 messageView.text = e.message ?: "Erreur réseau"

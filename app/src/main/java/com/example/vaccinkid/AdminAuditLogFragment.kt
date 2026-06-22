@@ -56,12 +56,12 @@ class AdminAuditLogFragment : Fragment(R.layout.fragment_audit_log) {
 
         btnFilter.setOnClickListener { page = 1; loadAudit() }
         btnPrev.setOnClickListener { if (page > 1) { page--; loadAudit() } }
-        btnNext.setOnClickListener { page++; loadAudit() }
+        btnNext.setOnClickListener { page++; loadAudit(fromNext = true) }
 
         loadAudit()
     }
 
-    private fun loadAudit() {
+    private fun loadAudit(fromNext: Boolean = false) {
         auditProgress.visibility = View.VISIBLE
         tvPageInfo.text = "Chargement…"
         viewLifecycleOwner.lifecycleScope.launch {
@@ -83,6 +83,7 @@ class AdminAuditLogFragment : Fragment(R.layout.fragment_audit_log) {
                 btnPrev.visibility = if (data.page > 1) View.VISIBLE else View.GONE
                 btnNext.visibility = if (data.page < data.totalPages) View.VISIBLE else View.GONE
             } catch (e: Exception) {
+                if (fromNext) page--
                 adapter.submit(emptyList())
                 tvPageInfo.text = e.message ?: "Erreur réseau"
                 btnPrev.visibility = if (page > 1) View.VISIBLE else View.GONE

@@ -95,7 +95,7 @@ const RendezVousController = {
 
     const rdv = await authorization.assertRendezVousAccess(req.user, rdvId);
     const allowedTransitions = {
-      EN_ATTENTE: ['CONFIRME', 'ABSENT', 'ANNULE', 'EN_LISTE_ATTENTE'],
+      EN_ATTENTE: ['CONFIRME', 'PRESENT', 'ABSENT', 'ANNULE', 'EN_LISTE_ATTENTE'],
       EN_LISTE_ATTENTE: ['CONFIRME', 'ANNULE'],
       CONFIRME: ['PRESENT', 'ABSENT', 'ANNULE'],
       PRESENT: [],
@@ -113,9 +113,11 @@ const RendezVousController = {
       return next(ApiError.badRequest('This appointment can no longer be cancelled'));
     }
 
-    // If confirming, assign queue number
+    // Assign queue number on first confirmation (CONFIRME or direct PRESENT from EN_ATTENTE)
     let updated;
-    if (statut === 'CONFIRME') {
+    const needsQueueNumber = statut === 'CONFIRME' ||
+      (statut === 'PRESENT' && rdv.statut === 'EN_ATTENTE' && rdv.numero_queue == null);
+    if (needsQueueNumber) {
       updated = await RendezVous.updateStatus(rdvId, statut);
       const nextNum = await RendezVous.getNextQueueNumber(rdv.session_id);
       updated = await RendezVous.assignQueueNumber(rdvId, nextNum);

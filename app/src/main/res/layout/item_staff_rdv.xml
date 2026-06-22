@@ -202,6 +202,23 @@
                         app:iconPadding="4dp" />
                 </LinearLayout>
 
+                <!-- Confirmer row (visible only for EN_LISTE_ATTENTE) -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/staffRdvConfirm"
+                    android:layout_width="match_parent"
+                    android:layout_height="42dp"
+                    android:layout_marginTop="8dp"
+                    android:background="@drawable/bg_btn_teal_pill"
+                    android:text="Confirmer la place"
+                    android:textColor="@color/white"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:stateListAnimator="@null"
+                    android:elevation="2dp"
+                    android:visibility="gone"
+                    app:backgroundTint="@null"
+                    app:cornerRadius="21dp" />
+
                 <!-- Secondary actions row -->
                 <LinearLayout
                     android:layout_width="match_parent"

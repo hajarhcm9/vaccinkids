@@ -11,6 +11,7 @@ import androidx.core.content.FileProvider
 import androidx.lifecycle.lifecycleScope
 import com.example.vaccinkid.model.AdminRefCentreDto
 import com.example.vaccinkid.network.ApiClient
+import com.example.vaccinkid.network.TokenManager
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.card.MaterialCardView
 import com.google.android.material.textfield.TextInputEditText
@@ -111,10 +112,12 @@ class ExportsAdminActivity : AppCompatActivity() {
     }
 
     private fun downloadFile(endpoint: String, fileName: String): File {
-        val request = Request.Builder()
+        val token = TokenManager.getAccessToken()
+        val requestBuilder = Request.Builder()
             .url(ApiClient.BASE_URL + endpoint)
             .header("Accept", "*/*")
-            .build()
+        if (!token.isNullOrBlank()) requestBuilder.header("Authorization", "Bearer $token")
+        val request = requestBuilder.build()
         ApiClient.httpClient.newCall(request).execute().use { response ->
             if (!response.isSuccessful) throw IllegalStateException("HTTP ${response.code}")
             val body = response.body ?: throw IllegalStateException("Réponse vide")

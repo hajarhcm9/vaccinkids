@@ -187,9 +187,10 @@ private class NotificationAdapter(
         private fun formatRelativeTime(iso: String?): String {
             if (iso.isNullOrBlank()) return "Aujourd'hui"
             return try {
-                val sdf = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", java.util.Locale.getDefault())
-                sdf.timeZone = java.util.TimeZone.getTimeZone("UTC")
-                val date = sdf.parse(iso) ?: return "Aujourd'hui"
+                val formats = arrayOf("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", "yyyy-MM-dd'T'HH:mm:ss'Z'")
+                val date = formats.firstNotNullOfOrNull { fmt ->
+                    try { java.text.SimpleDateFormat(fmt, java.util.Locale.getDefault()).also { it.timeZone = java.util.TimeZone.getTimeZone("UTC") }.parse(iso) } catch (_: Exception) { null }
+                } ?: return "Aujourd'hui"
                 val diffMs = System.currentTimeMillis() - date.time
                 val diffMin = diffMs / 60_000
                 when {

@@ -39,11 +39,11 @@ class GrowthChartFragment : Fragment(R.layout.fragment_growth_chart) {
 
     private var bebeId: Int = 0
     private var bebeName: String = ""
+    private var sexe: String? = null
     private var currentData: List<CroissanceDto> = emptyList()
 
-    // WHO weight-for-age percentile reference (boys, 0–30 months)
-    // Each array: [month, P3, P15, P50, P85, P97]
-    private val whoWeightRef = arrayOf(
+    // WHO weight-for-age [month, P3, P15, P50, P85, P97] — boys
+    private val whoWeightBoys = arrayOf(
         floatArrayOf(0f, 2.9f, 3.3f, 3.9f, 4.5f, 5.0f),
         floatArrayOf(2f, 4.6f, 5.1f, 5.8f, 6.6f, 7.2f),
         floatArrayOf(4f, 5.8f, 6.4f, 7.3f, 8.2f, 9.0f),
@@ -58,8 +58,24 @@ class GrowthChartFragment : Fragment(R.layout.fragment_growth_chart) {
         floatArrayOf(30f, 11.0f, 12.1f, 14.1f, 16.4f, 18.3f)
     )
 
-    // WHO height-for-age percentile reference (boys, 0–30 months)
-    private val whoHeightRef = arrayOf(
+    // WHO weight-for-age — girls
+    private val whoWeightGirls = arrayOf(
+        floatArrayOf(0f, 2.8f, 3.2f, 3.7f, 4.2f, 4.6f),
+        floatArrayOf(2f, 4.0f, 4.5f, 5.1f, 5.8f, 6.4f),
+        floatArrayOf(4f, 5.0f, 5.5f, 6.2f, 7.0f, 7.7f),
+        floatArrayOf(6f, 5.7f, 6.3f, 7.1f, 8.1f, 8.9f),
+        floatArrayOf(9f, 6.5f, 7.2f, 8.2f, 9.3f, 10.2f),
+        floatArrayOf(12f, 7.1f, 7.9f, 9.0f, 10.2f, 11.3f),
+        floatArrayOf(15f, 7.6f, 8.5f, 9.7f, 11.1f, 12.3f),
+        floatArrayOf(18f, 8.1f, 9.0f, 10.4f, 11.9f, 13.2f),
+        floatArrayOf(21f, 8.5f, 9.5f, 11.0f, 12.7f, 14.1f),
+        floatArrayOf(24f, 8.9f, 10.0f, 11.5f, 13.3f, 14.8f),
+        floatArrayOf(27f, 9.3f, 10.4f, 12.1f, 14.0f, 15.6f),
+        floatArrayOf(30f, 9.7f, 10.9f, 12.7f, 14.7f, 16.4f)
+    )
+
+    // WHO height-for-age [month, P3, P15, P50, P85, P97] — boys
+    private val whoHeightBoys = arrayOf(
         floatArrayOf(0f, 46.3f, 48.0f, 49.9f, 51.8f, 53.4f),
         floatArrayOf(2f, 54.4f, 56.4f, 58.4f, 60.4f, 62.2f),
         floatArrayOf(4f, 60.0f, 62.1f, 64.3f, 66.5f, 68.5f),
@@ -74,10 +90,29 @@ class GrowthChartFragment : Fragment(R.layout.fragment_growth_chart) {
         floatArrayOf(30f, 85.9f, 89.4f, 93.4f, 97.5f, 101.1f)
     )
 
+    // WHO height-for-age — girls
+    private val whoHeightGirls = arrayOf(
+        floatArrayOf(0f, 45.6f, 47.3f, 49.1f, 51.0f, 52.6f),
+        floatArrayOf(2f, 52.7f, 54.8f, 57.1f, 59.4f, 61.3f),
+        floatArrayOf(4f, 58.4f, 60.6f, 63.1f, 65.7f, 67.8f),
+        floatArrayOf(6f, 61.8f, 64.2f, 66.9f, 69.6f, 71.9f),
+        floatArrayOf(9f, 66.2f, 68.7f, 71.7f, 74.6f, 77.1f),
+        floatArrayOf(12f, 69.9f, 72.6f, 75.8f, 79.0f, 81.7f),
+        floatArrayOf(15f, 73.3f, 76.2f, 79.7f, 83.1f, 86.1f),
+        floatArrayOf(18f, 76.3f, 79.4f, 83.1f, 86.8f, 89.9f),
+        floatArrayOf(21f, 79.0f, 82.2f, 86.1f, 90.0f, 93.3f),
+        floatArrayOf(24f, 81.3f, 84.7f, 88.8f, 92.9f, 96.4f),
+        floatArrayOf(27f, 83.3f, 86.9f, 91.2f, 95.5f, 99.2f),
+        floatArrayOf(30f, 85.2f, 89.0f, 93.5f, 98.0f, 101.9f)
+    )
+
+    private fun isFemale() = sexe?.lowercase()?.trim() in listOf("f", "fille", "feminin", "féminin", "female")
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         bebeId = arguments?.getInt(ARG_BEBE_ID) ?: 0
         bebeName = arguments?.getString(ARG_BEBE_NAME).orEmpty()
+        sexe = arguments?.getString(ARG_SEXE)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -186,7 +221,7 @@ class GrowthChartFragment : Fragment(R.layout.fragment_growth_chart) {
         currentValueView.text = last?.poids?.let { "$it kg" } ?: "-- kg"
         lastMeasureDateView.text = last?.dateMesure ?: "--"
         updateEvolution(currentData.mapNotNull { m -> m.poids?.let { Pair((m.ageSemaines ?: 0).toFloat() / 4f, it) } }, "kg")
-        updateChartWithPercentiles(entries, Color.parseColor("#006D77"), whoWeightRef)
+        updateChartWithPercentiles(entries, Color.parseColor("#006D77"), if (isFemale()) whoWeightGirls else whoWeightBoys)
     }
 
     private fun renderTaille() {
@@ -198,7 +233,7 @@ class GrowthChartFragment : Fragment(R.layout.fragment_growth_chart) {
         currentValueView.text = last?.taille?.let { "$it cm" } ?: "-- cm"
         lastMeasureDateView.text = last?.dateMesure ?: "--"
         updateEvolution(currentData.mapNotNull { m -> m.taille?.let { Pair((m.ageSemaines ?: 0).toFloat() / 4f, it) } }, "cm")
-        updateChartWithPercentiles(entries, Color.parseColor("#0EA5E9"), whoHeightRef)
+        updateChartWithPercentiles(entries, Color.parseColor("#0EA5E9"), if (isFemale()) whoHeightGirls else whoHeightBoys)
     }
 
     private fun renderImc() {
@@ -344,12 +379,14 @@ class GrowthChartFragment : Fragment(R.layout.fragment_growth_chart) {
     companion object {
         private const val ARG_BEBE_ID = "bebe_id"
         private const val ARG_BEBE_NAME = "bebe_name"
+        private const val ARG_SEXE = "sexe"
 
-        fun newInstance(bebeId: Int, bebeName: String): GrowthChartFragment {
+        fun newInstance(bebeId: Int, bebeName: String, sexe: String? = null): GrowthChartFragment {
             return GrowthChartFragment().apply {
                 arguments = Bundle().apply {
                     putInt(ARG_BEBE_ID, bebeId)
                     putString(ARG_BEBE_NAME, bebeName)
+                    putString(ARG_SEXE, sexe)
                 }
             }
         }

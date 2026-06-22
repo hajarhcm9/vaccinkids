@@ -1,7 +1,7 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useRef } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  KeyboardAvoidingView, Platform, StatusBar, TextInput,
+  KeyboardAvoidingView, Platform, StatusBar, TextInput, Animated,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -12,246 +12,300 @@ import { Colors, Gradients, Radii, Spacing, Elevation } from '../../constants/th
 import { authService, ApiError } from '../../services';
 import { AuthContext } from '../../context/AuthContext';
 
-function normalizePhone(p) {
-  const c = p.replace(/\s/g, '');
-  return c.startsWith('0') ? '+212' + c.slice(1) : c;
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+async function handleAuthResponse(resp, navigation, login, fallbackCin) {
+  const user         = resp?.user;
+  const token        = resp?.tokens?.accessToken;
+  const refreshToken = resp?.tokens?.refreshToken;
+  if (!token) throw new Error('Réponse invalide du serveur');
+
+  await AsyncStorage.setItem('jwtToken', token);
+  if (refreshToken) await AsyncStorage.setItem('refreshToken', refreshToken);
+
+  if (user?.isNewUser || !user?.nom || user?.nom === 'Nouveau') {
+    navigation.replace('ProfileSetup', {
+      token, user, refreshToken,
+      cin: fallbackCin,
+    });
+  } else if (!user?.centre_id) {
+    navigation.replace('ProfileSetup', { token, user, refreshToken, centreOnly: true });
+  } else {
+    await login(token, user, refreshToken);
+  }
 }
 
-function maskPhone(normalized) {
-  const m = normalized.match(/^(\+212)([5-7])(\d{2})(\d{2})(\d{2})(\d{2})$/);
-  return m ? `+212 ${m[2]}${m[3]} ** ** ${m[5]} ${m[6]}` : normalized;
+function errorMessage(e) {
+  if (!(e instanceof ApiError)) return e.message || 'Erreur inattendue. Réessayez.';
+  if (e.isAuth)    return 'Identifiants incorrects. Vérifiez et réessayez.';
+  if (e.isNetwork) return 'Impossible de joindre le serveur.\nVérifiez votre connexion Wi-Fi.';
+  return e.message || 'Erreur inattendue. Réessayez.';
 }
 
-export default function LoginScreen({ navigation, route }) {
+// ── Main screen ───────────────────────────────────────────────────────────────
+
+export default function LoginScreen({ navigation }) {
   const { login } = useContext(AuthContext);
-  const insets = useSafeAreaInsets();
+  const insets    = useSafeAreaInsets();
 
-  // Phase 1 — phone (pre-fill if coming from GuestRdvScreen)
-  const [telephone, setTelephone]   = useState(route.params?.prefillPhone || '');
-  const [phoneError, setPhoneError] = useState(null);
-  const [checking, setChecking]     = useState(false);
+  // 'baby' | 'email'
+  const [mode, setMode] = useState('baby');
 
-  // Phase 2 — CIN
-  const [cinStep, setCinStep]       = useState(false);
-  const [cin, setCin]               = useState('');
-  const [cinError, setCinError]     = useState(null);
-  const [verifying, setVerifying]   = useState(false);
+  // Baby mode fields
+  const [numeroEnfant, setNumeroEnfant] = useState('');
+  const [numError,     setNumError]     = useState(null);
 
-  const handleNext = () => {
-    const clean = telephone.replace(/\s/g, '');
-    if (!/^(\+212|0)[5-7]\d{8}$/.test(clean)) {
-      setPhoneError('Numéro invalide (ex : 0612 345 678)');
-      return;
-    }
-    setPhoneError(null);
-    setCinStep(true);
+  // Email mode fields
+  const [email,      setEmail]      = useState('');
+  const [emailError, setEmailError] = useState(null);
+
+  // Shared
+  const [cin,     setCin]     = useState('');
+  const [cinError, setCinError] = useState(null);
+  const [loading,  setLoading] = useState(false);
+
+  const refCin   = useRef(null);
+  const refEmail = useRef(null);
+
+  const clearErrors = () => {
+    setNumError(null);
+    setEmailError(null);
+    setCinError(null);
   };
+
+  const switchMode = (m) => {
+    setMode(m);
+    clearErrors();
+  };
+
+  // ── Submit ──────────────────────────────────────────────────────────────────
 
   const handleLogin = async () => {
-    if (!cin.trim()) { setCinError('Veuillez saisir votre CIN'); return; }
-    setVerifying(true);
-    try {
-      const resp = await authService.loginWithCIN(normalizePhone(telephone), cin.trim());
-      const user         = resp?.user;
-      const token        = resp?.tokens?.accessToken;
-      const refreshToken = resp?.tokens?.refreshToken;
-      if (!token) throw new Error('Réponse invalide du serveur');
+    clearErrors();
+    let valid = true;
 
-      if (user?.isNewUser) {
-        // First-ever login → full profile setup (nom, prenom, centre)
-        await AsyncStorage.setItem('jwtToken', token);
-        if (refreshToken) await AsyncStorage.setItem('refreshToken', refreshToken);
-        navigation.replace('ProfileSetup', { token, user, refreshToken, cin: cin.trim().toUpperCase() });
-      } else if (!user?.centre_id) {
-        // Returning parent but no centre yet (pre-migration or skipped)
-        await AsyncStorage.setItem('jwtToken', token);
-        if (refreshToken) await AsyncStorage.setItem('refreshToken', refreshToken);
-        navigation.replace('ProfileSetup', { token, user, refreshToken, centreOnly: true });
+    if (mode === 'baby') {
+      if (!numeroEnfant.trim()) { setNumError("Entrez le numéro de l'enfant"); valid = false; }
+      else if (!/^\d+$/.test(numeroEnfant.trim())) { setNumError('Chiffres uniquement'); valid = false; }
+    } else {
+      if (!email.trim()) { setEmailError('Entrez votre adresse email'); valid = false; }
+      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) { setEmailError('Email invalide'); valid = false; }
+    }
+
+    if (!cin.trim()) { setCinError('Entrez votre CIN'); valid = false; }
+    if (!valid) return;
+
+    setLoading(true);
+    try {
+      let resp;
+      if (mode === 'baby') {
+        resp = await authService.loginWithBabyId(
+          parseInt(numeroEnfant.trim(), 10),
+          cin.trim().toUpperCase(),
+        );
       } else {
-        // Returning parent with centre assigned → straight to app
-        await login(token, user, refreshToken);
+        resp = await authService.loginWithEmail(
+          email.trim(),
+          cin.trim().toUpperCase(),
+        );
       }
+      await handleAuthResponse(resp, navigation, login, cin.trim().toUpperCase());
     } catch (e) {
-      const msg = e instanceof ApiError
-        ? (e.isAuth ? 'CIN incorrect. Vérifiez votre carte nationale d\'identité.'
-          : e.isNetwork ? 'Vérifiez votre connexion internet'
-          : e.message)
-        : 'Erreur inattendue. Réessayez.';
-      setCinError(msg);
+      setCinError(errorMessage(e));
     } finally {
-      setVerifying(false);
+      setLoading(false);
     }
   };
 
-  const scrollProps = {
-    contentContainerStyle: [
-      styles.scroll,
-      { paddingTop: insets.top + Spacing['2xl'], paddingBottom: insets.bottom + Spacing.xl },
-    ],
-    showsVerticalScrollIndicator: false,
-    keyboardShouldPersistTaps: 'always',
-    bounces: false,
-  };
+  // ── Render ──────────────────────────────────────────────────────────────────
 
-  const LogoBlock = () => (
-    <View style={styles.logoBlock}>
-      <View style={styles.iconRing}>
-        <View style={styles.iconInner}>
-          <Ionicons name="shield-checkmark" size={32} color={Colors.white} />
-        </View>
-      </View>
-      <Text style={styles.appName}>VacciKids</Text>
-      <Text style={styles.tagline}>Suivi vaccinal pédiatrique</Text>
-    </View>
-  );
+  const isBaby  = mode === 'baby';
+  const isEmail = mode === 'email';
 
-  // ── Phase 1: phone ───────────────────────────────────────────────────────
-  if (!cinStep) {
-    return (
-      <View style={styles.root}>
-        <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
-        <LinearGradient colors={Gradients.auth} style={StyleSheet.absoluteFillObject} />
-        <KeyboardAvoidingView
-          style={{ flex: 1 }}
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
-        >
-          <ScrollView {...scrollProps}>
-            <LogoBlock />
-            <View style={styles.card}>
-              <Text style={styles.cardTitle}>Connexion</Text>
-              <Text style={styles.cardSub}>
-                Entrez votre numéro de téléphone pour continuer.
-              </Text>
-
-              <Text style={styles.inputLabel}>Numéro de téléphone</Text>
-              <View style={[styles.phoneRow, phoneError && styles.phoneRowError]}>
-                <View style={styles.countryBadge}>
-                  <Text style={styles.countryFlag}>🇲🇦</Text>
-                  <Text style={styles.countryCode}>+212</Text>
-                </View>
-                <View style={styles.phoneDivider} />
-                <TextInput
-                  style={styles.phoneInput}
-                  placeholder="06 12 34 56 78"
-                  placeholderTextColor={Colors.textLight}
-                  value={telephone}
-                  onChangeText={(v) => { setTelephone(v); setPhoneError(null); }}
-                  keyboardType="phone-pad"
-                  maxLength={14}
-                  returnKeyType="next"
-                  onSubmitEditing={handleNext}
-                  autoFocus
-                />
-              </View>
-              {phoneError && (
-                <View style={styles.errorRow}>
-                  <Ionicons name="alert-circle-outline" size={13} color={Colors.danger} />
-                  <Text style={styles.errorText}>{phoneError}</Text>
-                </View>
-              )}
-
-              <AppButton
-                title="Continuer"
-                onPress={handleNext}
-                loading={checking}
-                disabled={!telephone.trim() || checking}
-                icon="arrow-forward"
-                iconPosition="right"
-                style={{ marginTop: Spacing.md }}
-              />
-            </View>
-
-            {/* Guest RDV shortcut */}
-            <TouchableOpacity
-              style={styles.guestBtn}
-              activeOpacity={0.8}
-              onPress={() => navigation.navigate('GuestRdv')}
-            >
-              <View style={styles.guestIconWrap}>
-                <Ionicons name="calendar-outline" size={16} color={Colors.accent} />
-              </View>
-              <Text style={styles.guestText}>Prendre un RDV sans compte</Text>
-              <Ionicons name="chevron-forward" size={14} color="rgba(255,255,255,0.5)" />
-            </TouchableOpacity>
-          </ScrollView>
-        </KeyboardAvoidingView>
-      </View>
-    );
-  }
-
-  // ── Phase 2: CIN ────���────────────────────────────────────────────────────
   return (
     <View style={styles.root}>
       <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
       <LinearGradient colors={Gradients.auth} style={StyleSheet.absoluteFillObject} />
+
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
       >
-        <ScrollView {...scrollProps}>
-          <LogoBlock />
-          <View style={styles.card}>
-            <View style={styles.cinIconWrap}>
-              <Ionicons name="card-outline" size={28} color={Colors.primary} />
+        <ScrollView
+          contentContainerStyle={[
+            styles.scroll,
+            { paddingTop: insets.top + Spacing['2xl'], paddingBottom: insets.bottom + Spacing.xl },
+          ]}
+          keyboardShouldPersistTaps="always"
+          bounces={false}
+        >
+          {/* ── Logo ──────────────────────────────────────────────── */}
+          <View style={styles.logoBlock}>
+            <View style={styles.iconRing}>
+              <View style={styles.iconInner}>
+                <Ionicons name="shield-checkmark" size={32} color={Colors.white} />
+              </View>
             </View>
-            <Text style={styles.cardTitle}>Carte nationale d'identité</Text>
-            <Text style={styles.cardSub}>
-              Numéro enregistré :{'\n'}
-              <Text style={styles.phoneBold}>{maskPhone(normalizePhone(telephone))}</Text>
-            </Text>
+            <Text style={styles.appName}>VacciKids</Text>
+            <Text style={styles.tagline}>Suivi vaccinal pédiatrique</Text>
+          </View>
 
-            <Text style={styles.inputLabel}>Numéro CIN</Text>
-            <View style={[styles.cinRow, cinError && styles.cinRowError]}>
-              <View style={styles.cinIconLeft}>
-                <Ionicons name="card" size={18} color={Colors.primary} />
+          {/* ── Card ──────────────────────────────────────────────── */}
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Connexion</Text>
+
+            {/* Mode tabs */}
+            <View style={styles.tabs}>
+              <TouchableOpacity
+                style={[styles.tab, isBaby && styles.tabActive]}
+                onPress={() => switchMode('baby')}
+                activeOpacity={0.8}
+              >
+                <Ionicons
+                  name="person-outline"
+                  size={15}
+                  color={isBaby ? Colors.primary : Colors.textSecondary}
+                />
+                <Text style={[styles.tabText, isBaby && styles.tabTextActive]}>
+                  N° de l'enfant
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.tab, isEmail && styles.tabActive]}
+                onPress={() => switchMode('email')}
+                activeOpacity={0.8}
+              >
+                <Ionicons
+                  name="mail-outline"
+                  size={15}
+                  color={isEmail ? Colors.primary : Colors.textSecondary}
+                />
+                <Text style={[styles.tabText, isEmail && styles.tabTextActive]}>
+                  Email
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* ── Baby mode ─────────────────────────────────────── */}
+            {isBaby && (
+              <>
+                <Text style={styles.inputLabel}>N° de l'enfant au centre</Text>
+                <View style={[styles.fieldRow, numError && styles.fieldRowError]}>
+                  <View style={styles.fieldIcon}>
+                    <Ionicons
+                      name="barcode-outline"
+                      size={20}
+                      color={numError ? Colors.danger : Colors.primary}
+                    />
+                  </View>
+                  <TextInput
+                    style={styles.fieldInput}
+                    placeholder="Ex : 42"
+                    placeholderTextColor={Colors.textLight}
+                    value={numeroEnfant}
+                    onChangeText={(v) => { setNumeroEnfant(v.replace(/\D/g, '')); setNumError(null); }}
+                    keyboardType="number-pad"
+                    maxLength={8}
+                    returnKeyType="next"
+                    onSubmitEditing={() => refCin.current?.focus()}
+                    autoFocus={isBaby}
+                  />
+                </View>
+                {numError && <ErrRow msg={numError} />}
+
+                <View style={styles.hintBox}>
+                  <Ionicons name="information-circle-outline" size={14} color={Colors.textLight} />
+                  <Text style={styles.hintText}>
+                    Petit numéro figurant sur le document remis par le centre de vaccination.
+                  </Text>
+                </View>
+              </>
+            )}
+
+            {/* ── Email mode ────────────────────────────────────── */}
+            {isEmail && (
+              <>
+                <Text style={styles.inputLabel}>Adresse email</Text>
+                <View style={[styles.fieldRow, emailError && styles.fieldRowError]}>
+                  <View style={styles.fieldIcon}>
+                    <Ionicons
+                      name="mail-outline"
+                      size={20}
+                      color={emailError ? Colors.danger : Colors.primary}
+                    />
+                  </View>
+                  <TextInput
+                    ref={refEmail}
+                    style={[styles.fieldInput, { fontSize: 15 }]}
+                    placeholder="votre@email.com"
+                    placeholderTextColor={Colors.textLight}
+                    value={email}
+                    onChangeText={(v) => { setEmail(v); setEmailError(null); }}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    returnKeyType="next"
+                    onSubmitEditing={() => refCin.current?.focus()}
+                    autoFocus={isEmail}
+                  />
+                </View>
+                {emailError && <ErrRow msg={emailError} />}
+              </>
+            )}
+
+            {/* ── CIN (shared) ──────────────────────────────────── */}
+            <Text style={[styles.inputLabel, { marginTop: Spacing.md }]}>Votre CIN</Text>
+            <View style={[styles.fieldRow, cinError && styles.fieldRowError]}>
+              <View style={styles.fieldIcon}>
+                <Ionicons
+                  name="card-outline"
+                  size={20}
+                  color={cinError ? Colors.danger : Colors.primary}
+                />
               </View>
               <TextInput
-                style={styles.cinInput}
+                ref={refCin}
+                style={[styles.fieldInput, styles.cinInput]}
                 placeholder="Ex : AB123456"
                 placeholderTextColor={Colors.textLight}
                 value={cin}
                 onChangeText={(v) => { setCin(v.toUpperCase()); setCinError(null); }}
                 autoCapitalize="characters"
                 autoCorrect={false}
-                autoFocus
+                maxLength={12}
                 returnKeyType="done"
                 onSubmitEditing={handleLogin}
               />
             </View>
-            {cinError && (
-              <View style={styles.errorRow}>
-                <Ionicons name="alert-circle-outline" size={13} color={Colors.danger} />
-                <Text style={styles.errorText}>{cinError}</Text>
-              </View>
-            )}
-
-            <View style={styles.cinNotice}>
-              <Ionicons name="information-circle-outline" size={14} color={Colors.primary} />
-              <Text style={styles.cinNoticeText}>
-                Première connexion ? Vous choisirez votre centre de vaccination à l'étape suivante. Vos rendez-vous y seront enregistrés.
-              </Text>
-            </View>
+            {cinError && <ErrRow msg={cinError} />}
 
             <AppButton
               title="Se connecter"
               onPress={handleLogin}
-              loading={verifying}
-              disabled={!cin.trim() || verifying}
+              loading={loading}
+              disabled={loading || (isBaby ? !numeroEnfant.trim() : !email.trim()) || !cin.trim()}
               icon="arrow-forward"
               iconPosition="right"
-              style={{ marginTop: Spacing.md }}
+              style={{ marginTop: Spacing.lg }}
             />
+          </View>
 
-            <TouchableOpacity
-              style={styles.backRow}
-              onPress={() => { setCinStep(false); setCinError(null); setCin(''); }}
-              hitSlop={{ top: 8, bottom: 8 }}
-            >
-              <Ionicons name="arrow-back" size={14} color={Colors.primary} />
-              <Text style={styles.backLink}>Modifier le numéro</Text>
-            </TouchableOpacity>
+          {/* ── Numéro oublié ───────────────────────────────────── */}
+          <TouchableOpacity
+            style={styles.forgotLink}
+            onPress={() => navigation.navigate('Forgot')}
+            hitSlop={{ top: 8, bottom: 8 }}
+          >
+            <Ionicons name="help-circle-outline" size={14} color="rgba(255,255,255,0.55)" />
+            <Text style={styles.forgotText}>Numéro d'enfant oublié ?</Text>
+          </TouchableOpacity>
+
+          {/* ── RDV sans compte ─────────────────────────────────── */}
+          <View style={styles.separatorRow}>
+            <View style={styles.separatorLine} />
+            <Text style={styles.separatorText}>ou</Text>
+            <View style={styles.separatorLine} />
           </View>
 
           <TouchableOpacity
@@ -262,8 +316,22 @@ export default function LoginScreen({ navigation, route }) {
             <View style={styles.guestIconWrap}>
               <Ionicons name="calendar-outline" size={16} color={Colors.accent} />
             </View>
-            <Text style={styles.guestText}>Prendre un RDV sans compte</Text>
-            <Ionicons name="chevron-forward" size={14} color="rgba(255,255,255,0.5)" />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.guestTitle}>Pas encore de numéro ?</Text>
+              <Text style={styles.guestSub}>Prendre un RDV sans compte</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={14} color="rgba(255,255,255,0.45)" />
+          </TouchableOpacity>
+
+          {/* ── Personnel médical ────────────────────────────────── */}
+          <TouchableOpacity
+            style={styles.staffBtn}
+            activeOpacity={0.8}
+            onPress={() => navigation.navigate('StaffLogin')}
+          >
+            <Ionicons name="medical-outline" size={14} color="rgba(255,255,255,0.40)" />
+            <Text style={styles.staffText}>Accès personnel médical</Text>
+            <Ionicons name="chevron-forward" size={12} color="rgba(255,255,255,0.25)" />
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -271,52 +339,71 @@ export default function LoginScreen({ navigation, route }) {
   );
 }
 
+// ── Small helper components ───────────────────────────────────────────────────
+
+function ErrRow({ msg }) {
+  return (
+    <View style={styles.errorRow}>
+      <Ionicons name="alert-circle-outline" size={13} color={Colors.danger} />
+      <Text style={styles.errorText}>{msg}</Text>
+    </View>
+  );
+}
+
+// ── Styles ────────────────────────────────────────────────────────────────────
+
 const styles = StyleSheet.create({
   root:   { flex: 1, backgroundColor: Colors.primaryDeep },
   scroll: { flexGrow: 1, paddingHorizontal: Spacing.xl },
 
+  // Logo
   logoBlock: { alignItems: 'center', marginBottom: Spacing['2xl'] },
   iconRing:  { width: 88, height: 88, borderRadius: 44, backgroundColor: Colors.glass, borderWidth: 2, borderColor: Colors.glassBorder, alignItems: 'center', justifyContent: 'center', marginBottom: Spacing.md },
   iconInner: { width: 66, height: 66, borderRadius: 33, backgroundColor: Colors.primaryLight, alignItems: 'center', justifyContent: 'center' },
   appName:   { fontSize: 34, fontWeight: '800', color: Colors.white, letterSpacing: -0.5, marginBottom: 4 },
   tagline:   { fontSize: 13, color: 'rgba(255,255,255,0.70)', letterSpacing: 0.3 },
 
+  // Card
   card:      { backgroundColor: Colors.surface, borderRadius: Radii['2xl'], padding: Spacing.xl, ...Elevation.xl, marginBottom: Spacing.lg },
-  cardTitle: { fontSize: 22, fontWeight: '700', color: Colors.text, marginBottom: 6 },
-  cardSub:   { fontSize: 13, color: Colors.textSecondary, marginBottom: Spacing.lg, lineHeight: 20 },
+  cardTitle: { fontSize: 22, fontWeight: '700', color: Colors.text, marginBottom: Spacing.md },
 
-  inputLabel: { fontSize: 13, fontWeight: '600', color: Colors.text, marginBottom: 8 },
+  // Mode tabs
+  tabs:         { flexDirection: 'row', backgroundColor: Colors.background, borderRadius: Radii.lg, padding: 4, marginBottom: Spacing.lg },
+  tab:          { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 9, borderRadius: Radii.md },
+  tabActive:    { backgroundColor: Colors.surface, ...Elevation.xs },
+  tabText:      { fontSize: 13, fontWeight: '600', color: Colors.textSecondary },
+  tabTextActive:{ color: Colors.primary },
 
-  phoneRow: {
-    flexDirection: 'row', alignItems: 'center',
-    borderWidth: 1.5, borderColor: Colors.border,
-    borderRadius: Radii.lg, backgroundColor: Colors.surfaceMuted, overflow: 'hidden',
-  },
-  phoneRowError:  { borderColor: Colors.danger },
-  countryBadge:   { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 14 },
-  countryFlag:    { fontSize: 18 },
-  countryCode:    { fontSize: 15, fontWeight: '700', color: Colors.text },
-  phoneDivider:   { width: 1, height: 28, backgroundColor: Colors.border },
-  phoneInput:     { flex: 1, paddingHorizontal: 12, paddingVertical: 14, fontSize: 16, color: Colors.text, letterSpacing: 0.5 },
+  // Fields
+  inputLabel:    { fontSize: 13, fontWeight: '600', color: Colors.text, marginBottom: 8 },
+  fieldRow:      { flexDirection: 'row', alignItems: 'center', borderWidth: 1.5, borderColor: Colors.border, borderRadius: Radii.lg, backgroundColor: Colors.surfaceMuted, overflow: 'hidden' },
+  fieldRowError: { borderColor: Colors.danger },
+  fieldIcon:     { paddingHorizontal: 14, paddingVertical: 14 },
+  fieldInput:    { flex: 1, paddingRight: 14, paddingVertical: 14, fontSize: 20, fontWeight: '700', color: Colors.text },
+  cinInput:      { letterSpacing: 2 },
 
-  cinIconWrap:    { width: 60, height: 60, borderRadius: 30, backgroundColor: Colors.primaryTint, alignItems: 'center', justifyContent: 'center', alignSelf: 'center', marginBottom: Spacing.md },
-  phoneBold:      { fontWeight: '700', color: Colors.primary },
+  errorRow:  { flexDirection: 'row', alignItems: 'flex-start', gap: 5, marginTop: 6, marginBottom: 2 },
+  errorText: { fontSize: 12, color: Colors.danger, fontWeight: '500', flex: 1, lineHeight: 17 },
 
-  cinRow:         { flexDirection: 'row', alignItems: 'center', borderWidth: 1.5, borderColor: Colors.border, borderRadius: Radii.lg, backgroundColor: Colors.surfaceMuted, overflow: 'hidden' },
-  cinRowError:    { borderColor: Colors.danger },
-  cinIconLeft:    { paddingHorizontal: 14, paddingVertical: 14 },
-  cinInput:       { flex: 1, paddingRight: 14, paddingVertical: 14, fontSize: 18, fontWeight: '700', color: Colors.text, letterSpacing: 2 },
+  hintBox:  { flexDirection: 'row', alignItems: 'flex-start', gap: 7, marginTop: Spacing.sm, padding: Spacing.sm, backgroundColor: Colors.background, borderRadius: Radii.md },
+  hintText: { flex: 1, fontSize: 11, color: Colors.textLight, lineHeight: 16 },
 
-  cinNotice:      { flexDirection: 'row', alignItems: 'flex-start', gap: 6, marginTop: Spacing.sm, marginBottom: 4, backgroundColor: Colors.primaryTint, borderRadius: Radii.md, padding: Spacing.sm },
-  cinNoticeText:  { flex: 1, fontSize: 12, color: Colors.primary, lineHeight: 17, fontWeight: '500' },
+  // Separator
+  separatorRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md, marginVertical: Spacing.sm },
+  separatorLine:{ flex: 1, height: 1, backgroundColor: 'rgba(255,255,255,0.12)' },
+  separatorText:{ fontSize: 12, color: 'rgba(255,255,255,0.35)', fontWeight: '600' },
 
-  errorRow:    { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 6, marginBottom: 4 },
-  errorText:   { fontSize: 12, color: Colors.danger, fontWeight: '500' },
+  // Forgot
+  forgotLink: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, paddingVertical: Spacing.sm },
+  forgotText: { fontSize: 12, color: 'rgba(255,255,255,0.55)', fontWeight: '500' },
 
-  backRow:     { flexDirection: 'row', alignItems: 'center', gap: 5, justifyContent: 'center', paddingTop: Spacing.base },
-  backLink:    { fontSize: 13, color: Colors.primary, fontWeight: '600' },
+  // Guest RDV
+  guestBtn:      { flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.glass, borderWidth: 1.5, borderColor: Colors.glassBorder, borderRadius: Radii.xl, paddingHorizontal: Spacing.base, paddingVertical: Spacing.md, gap: Spacing.sm },
+  guestIconWrap: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(245,165,36,0.20)', alignItems: 'center', justifyContent: 'center' },
+  guestTitle:    { color: Colors.white, fontSize: 14, fontWeight: '700' },
+  guestSub:      { color: 'rgba(255,255,255,0.55)', fontSize: 11, marginTop: 1 },
 
-  guestBtn:      { flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.glass, borderWidth: 1.5, borderColor: Colors.glassBorder, borderRadius: Radii.xl, paddingHorizontal: Spacing.base, paddingVertical: Spacing.md, marginBottom: Spacing.lg, gap: Spacing.sm },
-  guestIconWrap: { width: 30, height: 30, borderRadius: 15, backgroundColor: 'rgba(245,165,36,0.2)', alignItems: 'center', justifyContent: 'center' },
-  guestText:     { flex: 1, color: 'rgba(255,255,255,0.85)', fontSize: 13, fontWeight: '600' },
+  // Staff link
+  staffBtn:  { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: Spacing.md, marginTop: Spacing.sm },
+  staffText: { fontSize: 12, color: 'rgba(255,255,255,0.35)', fontWeight: '500' },
 });

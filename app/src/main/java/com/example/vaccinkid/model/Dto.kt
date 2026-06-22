@@ -72,6 +72,7 @@ data class StockDto(
     val nom: String? = null,
     @SerializedName("quantite_disponible") val quantiteDisponible: Int? = null,
     @SerializedName("seuil_alerte") val seuilAlerte: Int? = null,
+    @SerializedName("date_expiration") val dateExpiration: String? = null,
     @SerializedName("updated_at") val updatedAt: String? = null
 )
 
@@ -102,6 +103,7 @@ data class SessionRequest(
 data class UpdateStockRequest(
     @SerializedName("quantite_disponible") val quantiteDisponible: Int? = null,
     @SerializedName("seuil_alerte") val seuilAlerte: Int? = null,
+    @SerializedName("date_expiration") val dateExpiration: String? = null,
     val motif: String? = null
 )
 
@@ -165,12 +167,16 @@ data class RendezVousDto(
     val statut: String? = null,
     @SerializedName("bebe_prenom") val bebePrenom: String? = null,
     @SerializedName("bebe_nom") val bebeNom: String? = null,
+    @SerializedName("bebe_date_naissance") val bebeDateNaissance: String? = null,
+    @SerializedName("bebe_sexe") val bebeSexe: String? = null,
+    @SerializedName("bebe_code_qr") val bebeCodeQr: String? = null,
     @SerializedName("parent_nom") val parentNom: String? = null,
     @SerializedName("parent_prenom") val parentPrenom: String? = null,
     @SerializedName("parent_telephone") val parentTelephone: String? = null,
     @SerializedName("date_session") val dateSession: String? = null,
     @SerializedName("heure_debut") val heureDebut: String? = null,
-    @SerializedName("vaccin_nom") val vaccinNom: String? = null
+    @SerializedName("vaccin_nom") val vaccinNom: String? = null,
+    @SerializedName("numero_queue") val numeroQueue: Int? = null
 )
 
 data class UpdateRendezVousRequest(val statut: String)
@@ -274,7 +280,8 @@ data class SyncItemDto(
     @SerializedName("entity_type") val entityType: String,
     @SerializedName("entity_id") val entityId: Int? = null,
     val payload: Map<String, Any?>,
-    @SerializedName("client_timestamp") val clientTimestamp: String? = null
+    @SerializedName("client_timestamp") val clientTimestamp: String? = null,
+    @SerializedName("client_operation_id") val clientOperationId: String
 )
 
 data class SyncPushResultDto(

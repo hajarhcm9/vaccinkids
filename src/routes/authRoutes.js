@@ -12,7 +12,10 @@ const upload = require('../middleware/upload');
 // PUBLIC
 router.post('/parent/send-otp', validate(schemas.sendOTP), AuthController.sendOTP);
 router.post('/parent/verify-otp', validate(schemas.verifyOTP), AuthController.verifyOTP);
-router.post('/parent/login-cin', AuthController.loginWithCIN);
+router.post('/parent/login-baby',     AuthController.loginWithBabyId);
+router.post('/parent/login-email',    AuthController.loginWithEmail);
+router.post('/parent/login-cin',      AuthController.loginWithCIN);
+router.post('/parent/forgot-numero',  AuthController.forgotNumero);
 router.post(
   '/personnel/login',
   checkAccountLock,

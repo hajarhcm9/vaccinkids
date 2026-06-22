@@ -194,10 +194,12 @@ class GestionStocksActivity : AppCompatActivity() {
 
         val etQuantite = dialogView.findViewById<TextInputEditText>(R.id.editEtQuantite)
         val etSeuil = dialogView.findViewById<TextInputEditText>(R.id.editEtSeuil)
+        val etExpiration = dialogView.findViewById<TextInputEditText>(R.id.editEtExpiration)
         val etMotif = dialogView.findViewById<TextInputEditText>(R.id.editEtMotif)
 
         etQuantite.setText((stock.quantiteDisponible ?: 0).toString())
         etSeuil.setText((stock.seuilAlerte ?: 0).toString())
+        etExpiration.setText(stock.dateExpiration ?: "")
 
         val title = stock.vaccinNom ?: stock.nom ?: "Stock #${stock.id}"
         MaterialAlertDialogBuilder(this)
@@ -212,6 +214,7 @@ class GestionStocksActivity : AppCompatActivity() {
                             UpdateStockRequest(
                                 etQuantite.text?.toString()?.toIntOrNull(),
                                 etSeuil.text?.toString()?.toIntOrNull(),
+                                etExpiration.text?.toString()?.trim()?.ifBlank { null },
                                 etMotif.text?.toString()?.ifBlank { null }
                             )
                         )

@@ -15,6 +15,8 @@ import com.example.vaccinkid.model.ApiResponse
 import com.example.vaccinkid.network.ApiClient
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.card.MaterialCardView
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 
 class StatsAdminActivity : AppCompatActivity() {
@@ -50,12 +52,15 @@ class StatsAdminActivity : AppCompatActivity() {
         lifecycleScope.launch {
             try {
                 val centreId = centres.getOrNull(spinnerCentre.selectedItemPosition - 1)?.id
-                val dashboard = requireStats(ApiClient.apiService.getStatsDashboard(centreId), "Dashboard")
-                val coverage = requireStats(ApiClient.apiService.getStatsCouverture(centreId), "Couverture")
-                val sessions = requireStats(ApiClient.apiService.getStatsSessions(centreId), "Sessions")
-                val rdv = requireStats(ApiClient.apiService.getStatsRendezVous(centreId), "Rendez-vous")
-                val stock = requireStats(ApiClient.apiService.getStatsStock(centreId), "Stock")
-                val absences = requireStats(ApiClient.apiService.getStatsAbsenteisme(centreId), "Absences")
+                val (dashboard, coverage, sessions, rdv, stock, absences) = coroutineScope {
+                    val d = async { requireStats(ApiClient.apiService.getStatsDashboard(centreId), "Dashboard") }
+                    val c = async { requireStats(ApiClient.apiService.getStatsCouverture(centreId), "Couverture") }
+                    val s = async { requireStats(ApiClient.apiService.getStatsSessions(centreId), "Sessions") }
+                    val r = async { requireStats(ApiClient.apiService.getStatsRendezVous(centreId), "Rendez-vous") }
+                    val st = async { requireStats(ApiClient.apiService.getStatsStock(centreId), "Stock") }
+                    val a = async { requireStats(ApiClient.apiService.getStatsAbsenteisme(centreId), "Absences") }
+                    listOf(d.await(), c.await(), s.await(), r.await(), st.await(), a.await())
+                }
 
                 addSection("Dashboard", dashboard, "#1A9099")
                 addSection("Couverture vaccinale", coverage, "#10B981")

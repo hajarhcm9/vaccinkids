@@ -26,6 +26,7 @@ class AdminRendezVousFragment : Fragment(R.layout.fragment_admin_rdv) {
     private lateinit var tabPresents: TextView
     private lateinit var tabAbsents: TextView
     private lateinit var tabAttente: TextView
+    private lateinit var tabConfirmes: TextView
     private var allRdv: List<RendezVousDto> = emptyList()
     private var activeFilter = "TOUS"
 
@@ -38,6 +39,7 @@ class AdminRendezVousFragment : Fragment(R.layout.fragment_admin_rdv) {
         tabPresents = view.findViewById(R.id.tabRdvPresents)
         tabAbsents = view.findViewById(R.id.tabRdvAbsents)
         tabAttente = view.findViewById(R.id.tabRdvAttente)
+        tabConfirmes = view.findViewById(R.id.tabRdvConfirmes)
 
         adapter = RdvAdminAdapter(onDelete = { confirmDelete(it) })
         view.findViewById<RecyclerView>(R.id.rvRdvAdmin).apply {
@@ -49,6 +51,7 @@ class AdminRendezVousFragment : Fragment(R.layout.fragment_admin_rdv) {
         tabPresents.setOnClickListener { selectTab("PRESENT") }
         tabAbsents.setOnClickListener { selectTab("ABSENT") }
         tabAttente.setOnClickListener { selectTab("EN_ATTENTE") }
+        tabConfirmes.setOnClickListener { selectTab("CONFIRME") }
 
         refreshLayout.setOnRefreshListener { loadRdv() }
         loadRdv()
@@ -60,7 +63,8 @@ class AdminRendezVousFragment : Fragment(R.layout.fragment_admin_rdv) {
             tabTous to "TOUS",
             tabPresents to "PRESENT",
             tabAbsents to "ABSENT",
-            tabAttente to "EN_ATTENTE"
+            tabAttente to "EN_ATTENTE",
+            tabConfirmes to "CONFIRME"
         )
         tabs.forEach { (tv, key) ->
             if (key == filter) {

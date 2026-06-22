@@ -107,6 +107,17 @@
             android:text="Attente"
             android:textColor="@color/text_secondary"
             android:textSize="11sp" />
+
+        <TextView
+            android:id="@+id/tabRdvConfirmes"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:background="@drawable/bg_chip_inactive"
+            android:text="Confirmés"
+            android:textColor="@color/text_secondary"
+            android:textSize="11sp" />
     </LinearLayout>
 
     <!-- ═══ STATUS LINE ═══ -->

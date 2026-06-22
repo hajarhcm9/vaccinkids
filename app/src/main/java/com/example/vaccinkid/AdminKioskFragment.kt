@@ -27,7 +27,9 @@ import com.google.android.material.textfield.TextInputEditText
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.EncodeHintType
 import com.google.zxing.qrcode.QRCodeWriter
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class AdminKioskFragment : Fragment(R.layout.fragment_admin_kiosk) {
 
@@ -123,7 +125,13 @@ class AdminKioskFragment : Fragment(R.layout.fragment_admin_kiosk) {
     }
 
     private fun showQrDialog(code: String) {
-        val qrBitmap = generateQr(code, 600)
+        viewLifecycleOwner.lifecycleScope.launch {
+            val qrBitmap = withContext(Dispatchers.Default) { generateQr(code, 600) }
+            showQrDialogWithBitmap(code, qrBitmap)
+        }
+    }
+
+    private fun showQrDialogWithBitmap(code: String, qrBitmap: Bitmap?) {
 
         val dialogContent = LinearLayout(requireContext()).apply {
             orientation = LinearLayout.VERTICAL
@@ -171,10 +179,13 @@ class AdminKioskFragment : Fragment(R.layout.fragment_admin_kiosk) {
     private fun generateQr(content: String, sizePx: Int): Bitmap? = try {
         val hints = mapOf(EncodeHintType.MARGIN to 1)
         val bits = QRCodeWriter().encode(content, BarcodeFormat.QR_CODE, sizePx, sizePx, hints)
-        val bmp = Bitmap.createBitmap(sizePx, sizePx, Bitmap.Config.RGB_565)
-        for (x in 0 until sizePx) for (y in 0 until sizePx)
-            bmp.setPixel(x, y, if (bits[x, y]) Color.BLACK else Color.WHITE)
-        bmp
+        val pixels = IntArray(sizePx * sizePx) { idx ->
+            val x = idx % sizePx; val y = idx / sizePx
+            if (bits[x, y]) Color.BLACK else Color.WHITE
+        }
+        Bitmap.createBitmap(sizePx, sizePx, Bitmap.Config.ARGB_8888).also {
+            it.setPixels(pixels, 0, sizePx, 0, 0, sizePx, sizePx)
+        }
     } catch (_: Exception) { null }
 
     private fun confirmAction(prefix: String, kiosk: KioskDto, action: () -> Unit) {

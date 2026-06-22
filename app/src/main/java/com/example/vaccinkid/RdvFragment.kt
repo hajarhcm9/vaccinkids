@@ -16,10 +16,14 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import com.example.vaccinkid.db.AppDatabase
+import com.example.vaccinkid.db.toDto
+import com.example.vaccinkid.db.toEntity
 import com.example.vaccinkid.model.RendezVousDto
 import com.example.vaccinkid.model.SessionDto
 import com.example.vaccinkid.model.UpdateRendezVousRequest
 import com.example.vaccinkid.network.ApiClient
+import com.example.vaccinkid.network.TokenManager
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
@@ -72,6 +76,7 @@ class RdvFragment : Fragment(R.layout.fragment_rdv) {
         adapter = StaffRdvAdapter(
             onPresent = { updateRdvStatus(it, "PRESENT") },
             onAbsent = { updateRdvStatus(it, "ABSENT") },
+            onConfirm = { updateRdvStatus(it, "CONFIRME") },
             onVaccinate =(::openVaccination),
             onGrowth =(::openGrowth)
         )
@@ -129,43 +134,39 @@ class RdvFragment : Fragment(R.layout.fragment_rdv) {
     private fun loadSessions() {
         viewLifecycleOwner.lifecycleScope.launch {
             beginLoading("Chargement des sessions du jour...")
+            var fromCache = false
             try {
                 val response = ApiClient.apiService.getTodaySessions()
                 if (response.status != "success") throw Exception(response.message ?: "Sessions indisponibles")
                 sessions = response.data.orEmpty()
-                sessionSpinner.adapter = ArrayAdapter(
-                    requireContext(),
-                    android.R.layout.simple_spinner_dropdown_item,
-                    sessions.map { it.label() }.ifEmpty { listOf("Aucune session aujourd'hui") }
-                )
-                sessionSpinner.onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
-                    override fun onItemSelected(
-                        parent: android.widget.AdapterView<*>?,
-                        view: View?,
-                        position: Int,
-                        id: Long
-                    ) {
-                        updateSessionActions(selectedSession())
-                        loadRdvForSelectedSession()
-                    }
-
-                    override fun onNothingSelected(parent: android.widget.AdapterView<*>?) = Unit
-                }
-                if (sessions.isEmpty()) {
-                    rendezVous = emptyList()
-                    applyFilters()
-                    updateSessionActions(null)
-                    messageView.text = "Aucune session aujourd'hui."
-                }
-            } catch (error: Exception) {
-                sessions = emptyList()
-                rendezVous = emptyList()
-                applyFilters()
-                updateSessionActions(null)
-                messageView.text = error.message ?: "Erreur reseau"
-            } finally {
-                endLoading()
+                val db = AppDatabase.getInstance(requireContext())
+                if (sessions.isNotEmpty()) db.sessionDao().insertAll(sessions.map { it.toEntity() })
+            } catch (_: Exception) {
+                val centreId = TokenManager.getCentreId()
+                val cached = if (centreId != null)
+                    AppDatabase.getInstance(requireContext()).sessionDao().getByCentre(centreId).map { it.toDto() }
+                else emptyList()
+                if (cached.isNotEmpty()) { sessions = cached; fromCache = true }
+                else { sessions = emptyList() }
             }
+            sessionSpinner.adapter = ArrayAdapter(
+                requireContext(),
+                android.R.layout.simple_spinner_dropdown_item,
+                sessions.map { it.label() }.ifEmpty { listOf("Aucune session aujourd'hui") }
+            )
+            sessionSpinner.onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
+                override fun onItemSelected(parent: android.widget.AdapterView<*>?, view: View?, position: Int, id: Long) {
+                    updateSessionActions(selectedSession())
+                    loadRdvForSelectedSession()
+                }
+                override fun onNothingSelected(parent: android.widget.AdapterView<*>?) = Unit
+            }
+            if (sessions.isEmpty()) {
+                rendezVous = emptyList(); applyFilters(); updateSessionActions(null)
+                messageView.text = "Aucune session aujourd'hui."
+            }
+            if (fromCache) messageView.text = "⚠ Mode hors-ligne — données du cache"
+            endLoading()
         }
     }
 
@@ -177,11 +178,17 @@ class RdvFragment : Fragment(R.layout.fragment_rdv) {
                 val response = ApiClient.apiService.getSessionRendezVous(session.id)
                 if (response.status != "success") throw Exception(response.message ?: "RDV indisponibles")
                 rendezVous = response.data.orEmpty()
+                val db = AppDatabase.getInstance(requireContext())
+                if (rendezVous.isNotEmpty()) db.rendezVousDao().insertAll(rendezVous.map { it.toEntity() })
                 applyFilters()
-            } catch (error: Exception) {
-                rendezVous = emptyList()
+            } catch (_: Exception) {
+                val cached = AppDatabase.getInstance(requireContext())
+                    .rendezVousDao().getBySession(session.id).map { it.toDto() }
+                rendezVous = cached
                 applyFilters()
-                messageView.text = error.message ?: "Erreur reseau"
+                messageView.text = if (cached.isNotEmpty())
+                    "⚠ Mode hors-ligne — ${cached.size} RDV en cache"
+                else "Erreur réseau — aucun cache disponible"
             } finally {
                 endLoading()
             }
@@ -240,10 +247,13 @@ class RdvFragment : Fragment(R.layout.fragment_rdv) {
             try {
                 val response = ApiClient.apiService.updateRendezVous(rdv.id, UpdateRendezVousRequest(status))
                 if (response.status != "success") throw Exception(response.message ?: "Mise a jour impossible")
-                Toast.makeText(requireContext(), "Statut confirme par le serveur", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Statut confirmé par le serveur", Toast.LENGTH_SHORT).show()
                 loadRdvForSelectedSession()
-            } catch (error: Exception) {
-                messageView.text = error.message ?: "Erreur reseau"
+            } catch (_: Exception) {
+                com.example.vaccinkid.db.SyncManager.queueRdvStatusUpdate(requireContext(), rdv.id, status)
+                rendezVous = rendezVous.map { if (it.id == rdv.id) it.copy(statut = status) else it }
+                applyFilters()
+                messageView.text = "⚠ Hors-ligne — changement enregistré localement"
             } finally {
                 actionInFlight = false
                 adapter.setActionsEnabled(true)
@@ -367,6 +377,7 @@ class RdvFragment : Fragment(R.layout.fragment_rdv) {
 private class StaffRdvAdapter(
     private val onPresent: (RendezVousDto) -> Unit,
     private val onAbsent: (RendezVousDto) -> Unit,
+    private val onConfirm: (RendezVousDto) -> Unit,
     private val onVaccinate: (RendezVousDto) -> Unit,
     private val onGrowth: (RendezVousDto) -> Unit
 ) : RecyclerView.Adapter<StaffRdvAdapter.ViewHolder>() {
@@ -389,7 +400,7 @@ private class StaffRdvAdapter(
         )
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        holder.bind(items[position], actionsEnabled, onPresent, onAbsent, onVaccinate, onGrowth)
+        holder.bind(items[position], actionsEnabled, onPresent, onAbsent, onConfirm, onVaccinate, onGrowth)
     }
 
     override fun getItemCount() = items.size
@@ -403,6 +414,7 @@ private class StaffRdvAdapter(
         private val statusView: TextView = view.findViewById(R.id.staffRdvStatus)
         private val presentButton: MaterialButton = view.findViewById(R.id.staffRdvPresent)
         private val absentButton: MaterialButton = view.findViewById(R.id.staffRdvAbsent)
+        private val confirmButton: MaterialButton = view.findViewById(R.id.staffRdvConfirm)
         private val vaccinateButton: MaterialButton = view.findViewById(R.id.staffRdvVaccinate)
         private val growthButton: MaterialButton = view.findViewById(R.id.staffRdvGrowth)
 
@@ -411,6 +423,7 @@ private class StaffRdvAdapter(
             actionsEnabled: Boolean,
             onPresent: (RendezVousDto) -> Unit,
             onAbsent: (RendezVousDto) -> Unit,
+            onConfirm: (RendezVousDto) -> Unit,
             onVaccinate: (RendezVousDto) -> Unit,
             onGrowth: (RendezVousDto) -> Unit
         ) {
@@ -431,6 +444,9 @@ private class StaffRdvAdapter(
             }
             bindAction(absentButton, actionsEnabled && RdvTransitionPolicy.allows(rdv.statut, "ABSENT")) {
                 onAbsent(rdv)
+            }
+            bindAction(confirmButton, actionsEnabled && RdvTransitionPolicy.allows(rdv.statut, "CONFIRME")) {
+                onConfirm(rdv)
             }
             bindAction(vaccinateButton, actionsEnabled && rdv.statut in listOf("PRESENT", "CONFIRME")) {
                 onVaccinate(rdv)

@@ -14,6 +14,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.vaccinkid.model.BebeDto
 import com.example.vaccinkid.model.RendezVousDto
+import com.example.vaccinkid.db.SyncManager
 import com.example.vaccinkid.model.UpdateRendezVousRequest
 import com.example.vaccinkid.model.VaccinationHistoryDto
 import com.example.vaccinkid.network.ApiClient
@@ -29,6 +30,7 @@ class EnfantProfilFragment : Fragment(R.layout.fragment_enfant_profil) {
     private var bebeName: String = ""
     private var eligibleRdvs: List<RendezVousDto> = emptyList()
     private var lastVaccinations: List<VaccinationHistoryDto> = emptyList()
+    private var eligibleRdvAdapter: EligibleRdvAdapter? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -38,6 +40,7 @@ class EnfantProfilFragment : Fragment(R.layout.fragment_enfant_profil) {
         bebeName = args.getString(ARG_BEBE_NAME, "Bébé").orEmpty()
         val dateNaissance = args.getString(ARG_DATE_NAISSANCE)
         val sexe = args.getString(ARG_SEXE)
+        val codeQr = args.getString(ARG_CODE_QR)
         val parentNom = args.getString(ARG_PARENT_NOM)
         val parentTel = args.getString(ARG_PARENT_TEL)
 
@@ -60,7 +63,13 @@ class EnfantProfilFragment : Fragment(R.layout.fragment_enfant_profil) {
 
         view.findViewById<View>(R.id.btnViewGrowth).setOnClickListener {
             (activity as? MainInfirmierActivity)?.naviguerVers(
-                GrowthChartFragment.newInstance(bebeId, bebeName)
+                GrowthChartFragment.newInstance(bebeId, bebeName, sexe)
+            )
+        }
+
+        view.findViewById<View>(R.id.btnViewQr).setOnClickListener {
+            (activity as? MainInfirmierActivity)?.naviguerVers(
+                BebeQrFragment.newInstance(bebeName, codeQr)
             )
         }
     }
@@ -122,9 +131,16 @@ class EnfantProfilFragment : Fragment(R.layout.fragment_enfant_profil) {
             empty.visibility = View.VISIBLE
             return
         }
+        rv.visibility = View.VISIBLE
+        empty.visibility = View.GONE
         rv.isNestedScrollingEnabled = false
-        rv.layoutManager = LinearLayoutManager(requireContext())
-        rv.adapter = EligibleRdvAdapter()
+        if (rv.layoutManager == null) rv.layoutManager = LinearLayoutManager(requireContext())
+        if (eligibleRdvAdapter == null) {
+            eligibleRdvAdapter = EligibleRdvAdapter()
+            rv.adapter = eligibleRdvAdapter
+        } else {
+            eligibleRdvAdapter!!.notifyDataSetChanged()
+        }
     }
 
     private fun setupVaccinHistory(view: View) {
@@ -147,11 +163,13 @@ class EnfantProfilFragment : Fragment(R.layout.fragment_enfant_profil) {
                 if (r.status != "success") throw Exception(r.message ?: "Refusé")
                 val msg = if (statut == "PRESENT") "✓ Patient marqué présent" else "Patient marqué absent"
                 Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
-                // Refresh eligible RDVs in-place
                 eligibleRdvs = eligibleRdvs.map { if (it.id == rdvId) it.copy(statut = statut) else it }
                 setupEligibleRdvs(requireView())
             } catch (e: Exception) {
-                Toast.makeText(requireContext(), "Erreur : ${e.message}", Toast.LENGTH_SHORT).show()
+                SyncManager.queueRdvStatusUpdate(requireContext(), rdvId, statut)
+                eligibleRdvs = eligibleRdvs.map { if (it.id == rdvId) it.copy(statut = statut) else it }
+                setupEligibleRdvs(requireView())
+                Toast.makeText(requireContext(), "⚠ Hors-ligne — changement enregistré localement", Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -214,14 +232,17 @@ class EnfantProfilFragment : Fragment(R.layout.fragment_enfant_profil) {
                 }
             }
 
-            v.findViewById<View>(R.id.btnRdvVacciner).setOnClickListener {
+            val statut = rdv.statut?.uppercase()
+            val canVaccinate = statut in listOf("PRESENT", "CONFIRME")
+            val canMarkPresent = RdvTransitionPolicy.allows(rdv.statut, "PRESENT")
+            val canMarkAbsent = RdvTransitionPolicy.allows(rdv.statut, "ABSENT")
+
+            val btnVacciner = v.findViewById<View>(R.id.btnRdvVacciner)
+            btnVacciner.visibility = if (canVaccinate) View.VISIBLE else View.GONE
+            btnVacciner.setOnClickListener {
                 val sessionId = rdv.sessionId
                 if (sessionId == null || sessionId <= 0) {
                     Toast.makeText(requireContext(), "Ce RDV n'est lié à aucune session active", Toast.LENGTH_SHORT).show()
-                    return@setOnClickListener
-                }
-                if (rdv.statut?.uppercase() !in listOf("PRESENT", "CONFIRME")) {
-                    Toast.makeText(requireContext(), "Marquer le patient présent avant de vacciner", Toast.LENGTH_SHORT).show()
                     return@setOnClickListener
                 }
                 (activity as? MainInfirmierActivity)?.naviguerVers(
@@ -229,13 +250,13 @@ class EnfantProfilFragment : Fragment(R.layout.fragment_enfant_profil) {
                 )
             }
 
-            v.findViewById<View>(R.id.btnRdvPresent).setOnClickListener {
-                updateRdvStatus(rdv.id, "PRESENT")
-            }
+            val btnPresent = v.findViewById<View>(R.id.btnRdvPresent)
+            btnPresent.visibility = if (canMarkPresent) View.VISIBLE else View.GONE
+            btnPresent.setOnClickListener { updateRdvStatus(rdv.id, "PRESENT") }
 
-            v.findViewById<View>(R.id.btnRdvAbsent).setOnClickListener {
-                updateRdvStatus(rdv.id, "ABSENT")
-            }
+            val btnAbsent = v.findViewById<View>(R.id.btnRdvAbsent)
+            btnAbsent.visibility = if (canMarkAbsent) View.VISIBLE else View.GONE
+            btnAbsent.setOnClickListener { updateRdvStatus(rdv.id, "ABSENT") }
         }
     }
 
@@ -276,6 +297,7 @@ class EnfantProfilFragment : Fragment(R.layout.fragment_enfant_profil) {
         private const val ARG_BEBE_NAME = "bebeName"
         private const val ARG_DATE_NAISSANCE = "dateNaissance"
         private const val ARG_SEXE = "sexe"
+        private const val ARG_CODE_QR = "codeQr"
         private const val ARG_PARENT_NOM = "parentNom"
         private const val ARG_PARENT_TEL = "parentTel"
         private const val ARG_RDVS_JSON = "rdvsJson"
@@ -297,6 +319,7 @@ class EnfantProfilFragment : Fragment(R.layout.fragment_enfant_profil) {
                     )
                     putString(ARG_DATE_NAISSANCE, bebe.dateNaissance)
                     putString(ARG_SEXE, bebe.sexe)
+                    putString(ARG_CODE_QR, bebe.codeQr)
                     putString(
                         ARG_PARENT_NOM,
                         listOfNotNull(firstRdv?.parentPrenom, firstRdv?.parentNom).joinToString(" ").ifBlank { null }
@@ -315,8 +338,9 @@ class EnfantProfilFragment : Fragment(R.layout.fragment_enfant_profil) {
                 arguments = Bundle().apply {
                     putInt(ARG_BEBE_ID, rdv.bebeId ?: 0)
                     putString(ARG_BEBE_NAME, name)
-                    putString(ARG_DATE_NAISSANCE, null)
-                    putString(ARG_SEXE, null)
+                    putString(ARG_DATE_NAISSANCE, rdv.bebeDateNaissance)
+                    putString(ARG_SEXE, rdv.bebeSexe)
+                    putString(ARG_CODE_QR, rdv.bebeCodeQr)
                     putString(ARG_PARENT_NOM, listOfNotNull(rdv.parentPrenom, rdv.parentNom).joinToString(" ").ifBlank { null })
                     putString(ARG_PARENT_TEL, rdv.parentTelephone)
                     putString(ARG_RDVS_JSON, gson.toJson(listOf(rdv)))

@@ -48,14 +48,9 @@ class StaffMoreFragment : Fragment(R.layout.fragment_staff_more) {
                     "ADMIN" -> "Administrateur"
                     else -> user.role
                 }
-                val centreLabel = try {
-                    val sessions = ApiClient.apiService.getTodaySessions()
-                    sessions.data?.firstOrNull()?.centreNom
-                        ?: user.centreId?.let { "Centre #$it" }
-                        ?: "Aucun centre affecté"
-                } catch (_: Exception) {
-                    user.centreId?.let { "Centre #$it" } ?: "Aucun centre affecté"
-                }
+                val centreLabel = user.centreNom
+                    ?: user.centreId?.let { "Centre #$it" }
+                    ?: "Aucun centre affecté"
                 view.findViewById<TextView>(R.id.moreUserCentre).text = centreLabel
                 messageView.text = ""
             } catch (error: Exception) {

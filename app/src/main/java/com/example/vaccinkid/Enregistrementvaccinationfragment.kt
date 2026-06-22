@@ -119,14 +119,16 @@ class EnregistrementVaccinationFragment : Fragment(R.layout.fragment_enregistrem
         val rdvId = requireArguments().getInt(ARG_RDV_ID, 0)
         val selectedFlacon = flacons.getOrNull(flaconSpinner.selectedItemPosition) ?: return
 
-        val poids = etPoids.text.toString().toDoubleOrNull()
-        val taille = etTaille.text.toString().toDoubleOrNull()
+        val poidsRaw = etPoids.text.toString().trim()
+        val tailleRaw = etTaille.text.toString().trim()
+        val poids = poidsRaw.toDoubleOrNull()
+        val taille = tailleRaw.toDoubleOrNull()
 
-        if (poids == null || poids < 0.5 || poids > 100) {
+        if (poidsRaw.isNotEmpty() && (poids == null || poids < 0.5 || poids > 100)) {
             messageView.text = "Poids invalide. Entrez une valeur entre 0.5 et 100 kg."
             return
         }
-        if (taille == null || taille < 20 || taille > 220) {
+        if (tailleRaw.isNotEmpty() && (taille == null || taille < 20 || taille > 220)) {
             messageView.text = "Taille invalide. Entrez une valeur entre 20 et 220 cm."
             return
         }

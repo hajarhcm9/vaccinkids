@@ -61,16 +61,23 @@ class AdminDashboardFragment : Fragment(R.layout.fragment_admin_dashboard) {
         barChart.axisLeft.isEnabled = false
         barChart.axisRight.isEnabled = false
         barChart.setTouchEnabled(false)
-        
-        val entries = listOf(
-            BarEntry(1f, 10f), BarEntry(2f, 15f), BarEntry(3f, 12f),
-            BarEntry(4f, 20f), BarEntry(5f, 18f), BarEntry(6f, 25f)
+    }
+
+    private fun updateChart(stats: com.example.vaccinkid.model.DashboardStatsDto) {
+        val values = listOf(
+            stats.rdvEnAttente ?: 0,
+            stats.rdvConfirmes ?: 0,
+            stats.rdvPresents ?: 0,
+            stats.rdvAbsents ?: 0
         )
+        if (values.all { it == 0 }) { barChart.visibility = View.GONE; return }
+        barChart.visibility = View.VISIBLE
+        val entries = values.mapIndexed { i, v -> BarEntry(i.toFloat(), v.toFloat()) }
         val set = BarDataSet(entries, "").apply {
             color = Color.WHITE
             setDrawValues(false)
         }
-        barChart.data = BarData(set)
+        barChart.data = BarData(set).apply { barWidth = 0.55f }
         barChart.invalidate()
     }
 
@@ -85,9 +92,17 @@ class AdminDashboardFragment : Fragment(R.layout.fragment_admin_dashboard) {
                     centresCountView.text = stats.centresActifs?.toString() ?: "0"
                     staffCountView.text = stats.totalPersonnel?.toString() ?: "0"
                     sessionsCountView.text = stats.sessionsAVenir?.toString() ?: "0"
+                    updateChart(stats)
                     renderRecentActivity(stats)
                 }
-            } catch (_: Exception) {
+            } catch (e: Exception) {
+                totalVaccinesView.text = "—"
+                centresCountView.text = "—"
+                staffCountView.text = "—"
+                sessionsCountView.text = "—"
+                com.google.android.material.snackbar.Snackbar
+                    .make(requireView(), e.message ?: "Tableau de bord indisponible", com.google.android.material.snackbar.Snackbar.LENGTH_LONG)
+                    .show()
             } finally {
                 refreshView.isRefreshing = false
             }

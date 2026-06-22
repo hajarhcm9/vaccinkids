@@ -96,7 +96,7 @@ class GestionPersonnelFragment : Fragment(R.layout.fragment_gestion_personnel) {
             val matchTab = when (activeTab) {
                 "INFIRMIER" -> p.role?.lowercase() == "infirmier"
                 "ADMIN" -> p.role?.lowercase() == "admin"
-                "INACTIFS" -> p.estActif == false
+                "INACTIFS" -> p.estActif != true
                 else -> true
             }
             matchSearch && matchTab
@@ -170,8 +170,13 @@ class GestionPersonnelFragment : Fragment(R.layout.fragment_gestion_personnel) {
             .setPositiveButton(if (isNew) "Créer le compte" else "Enregistrer") { _, _ ->
                 val nomVal = etNom.text?.toString()?.trim() ?: ""
                 val prenomVal = etPrenom.text?.toString()?.trim() ?: ""
+                val pwdVal = etPwd.text?.toString()?.trim() ?: ""
                 if (nomVal.length < 2 || prenomVal.length < 2) {
                     Toast.makeText(requireContext(), "Nom et prénom requis (min. 2 caractères)", Toast.LENGTH_SHORT).show()
+                    return@setPositiveButton
+                }
+                if (isNew && pwdVal.length < 6) {
+                    Toast.makeText(requireContext(), "Mot de passe requis (min. 6 caractères)", Toast.LENGTH_SHORT).show()
                     return@setPositiveButton
                 }
                 savePersonnel(

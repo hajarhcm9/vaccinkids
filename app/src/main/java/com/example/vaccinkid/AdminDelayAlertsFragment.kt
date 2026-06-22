@@ -105,6 +105,16 @@ class AdminDelayAlertsFragment : Fragment(R.layout.fragment_admin_delay_alerts) 
     }
 
     private fun sendAlerts() {
+        val total = tvTotalDelayed.text.toString().toIntOrNull() ?: 0
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Envoyer les alertes de retard ?")
+            .setMessage("Cette action va notifier $total parents concernés par un retard vaccinal. Cette opération ne peut pas être annulée.")
+            .setNegativeButton("Annuler", null)
+            .setPositiveButton("Envoyer") { _, _ -> doSendAlerts() }
+            .show()
+    }
+
+    private fun doSendAlerts() {
         viewLifecycleOwner.lifecycleScope.launch {
             try {
                 showStatus("Envoi des alertes…")

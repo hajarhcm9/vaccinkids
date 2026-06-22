@@ -138,6 +138,183 @@ const AuthController = {
     }
   }),
 
+  // ---- PARENT — numéro oublié : envoi par email ----
+
+  forgotNumero: catchAsync(async (req, res, next) => {
+    const { email } = req.body;
+    if (!email || !email.trim())
+      return next(ApiError.badRequest('Adresse email requise'));
+
+    // Fire-and-forget: never reveal whether the email exists
+    const run = async () => {
+      const result = await query(
+        `SELECT p.nom, p.prenom,
+                COALESCE(
+                  json_agg(json_build_object(
+                    'id', b.id,
+                    'prenom', b.prenom,
+                    'numero', b.numero_centre)
+                    ORDER BY b.id)
+                  FILTER (WHERE b.id IS NOT NULL),
+                  '[]'
+                ) AS bebes
+         FROM parent p
+         LEFT JOIN bebe b ON b.parent_id = p.id
+         WHERE LOWER(p.email) = LOWER($1) AND p.est_actif = TRUE
+         GROUP BY p.id
+         LIMIT 1`,
+        [email.trim()],
+      );
+      if (!result.rows.length) return;
+
+      const parent = result.rows[0];
+      const bebes  = Array.isArray(parent.bebes) ? parent.bebes.filter((b) => b.numero != null) : [];
+      if (!bebes.length) return;
+
+      const EmailService = require('../services/emailService');
+      const listHtml = bebes
+        .map(
+          (b) =>
+            `<tr>
+               <td style="padding:6px 12px;font-size:15px;">${b.prenom || 'Enfant'}</td>
+               <td style="padding:6px 12px;font-size:22px;font-weight:800;color:#2b6cb0;">#${b.numero}</td>
+               <td style="padding:6px 12px;font-size:12px;color:#718096;">ID global : ${b.id}</td>
+             </tr>`,
+        )
+        .join('');
+
+      await EmailService.sendEmail({
+        to: email.trim(),
+        subject: "Vos numéros d'enfants — VacciniKids",
+        html: `
+<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px;">
+  <h2 style="color:#2b6cb0;margin-bottom:4px;">VacciniKids</h2>
+  <p style="color:#718096;font-size:13px;">Récupération de numéro</p>
+  <p>Bonjour <strong>${parent.prenom || ''} ${parent.nom || ''}</strong>,</p>
+  <p>Voici le(s) numéro(s) d'enfant(s) associé(s) à votre compte :</p>
+  <table style="border-collapse:collapse;background:#f7fafc;border-radius:8px;width:100%;margin:16px 0;">
+    <thead>
+      <tr style="background:#ebf8ff;">
+        <th style="padding:8px 12px;text-align:left;color:#2c5282;">Prénom</th>
+        <th style="padding:8px 12px;text-align:left;color:#2c5282;">N° au centre</th>
+        <th style="padding:8px 12px;text-align:left;color:#2c5282;">ID global</th>
+      </tr>
+    </thead>
+    <tbody>${listHtml}</tbody>
+  </table>
+  <p>Utilisez ce numéro + votre CIN pour vous connecter à l'application.</p>
+  <p style="color:#718096;font-size:12px;margin-top:24px;">VacciniKids — Service de vaccination pédiatrique</p>
+</div>`,
+      });
+    };
+
+    run().catch(() => {}); // silencieux côté client
+    return success(res, 200, "Si un compte correspond à cet email, vous recevrez les numéros de votre/vos enfant(s).", {});
+  }),
+
+  // ---- PARENT LOGIN via numéro enfant + CIN ----
+
+  loginWithBabyId: catchAsync(async (req, res, next) => {
+    const { numero_enfant, cin } = req.body;
+    if (!numero_enfant || !cin)
+      return next(ApiError.badRequest("Numéro de l'enfant et CIN requis"));
+
+    const num = parseInt(numero_enfant, 10);
+    if (!Number.isFinite(num) || num <= 0)
+      return next(ApiError.badRequest("Numéro de l'enfant invalide"));
+
+    // Accept both the global bebe.id AND the per-centre numero_centre
+    const result = await query(
+      `SELECT p.*
+       FROM parent p
+       JOIN bebe b ON b.parent_id = p.id
+       WHERE (b.numero_centre = $1 OR b.id = $1)
+         AND UPPER(p.cin) = UPPER($2)
+         AND p.est_actif = TRUE
+       LIMIT 1`,
+      [num, cin.trim()],
+    );
+
+    if (result.rows.length === 0)
+      return next(ApiError.unauthorized(
+        "Identifiants incorrects. Vérifiez le numéro de l'enfant et votre CIN.",
+      ));
+
+    const parent = result.rows[0];
+    const isNewUser = parent.is_new_user || parent.nom === 'Nouveau';
+
+    const tokens = await TokenService.generateAuthTokens(
+      { id: parent.id, role: 'parent', telephone: parent.telephone },
+    );
+
+    return created(res, 'Authentification réussie', {
+      user: {
+        id: parent.id,
+        telephone: parent.telephone,
+        nom: parent.nom,
+        prenom: parent.prenom,
+        email: parent.email || null,
+        cin: parent.cin,
+        centre_id: parent.centre_id || null,
+        langue_preferee: parent.langue_preferee,
+        role: 'parent',
+        isNewUser,
+      },
+      tokens: {
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
+        expiresIn: tokens.accessTokenExpiry,
+      },
+    });
+  }),
+
+  // ---- PARENT LOGIN via email + CIN (fallback) ----
+
+  loginWithEmail: catchAsync(async (req, res, next) => {
+    const { email, cin } = req.body;
+    if (!email || !cin)
+      return next(ApiError.badRequest('Email et CIN requis'));
+
+    const result = await query(
+      `SELECT * FROM parent
+       WHERE LOWER(email) = LOWER($1)
+         AND UPPER(cin)   = UPPER($2)
+         AND est_actif    = TRUE
+       LIMIT 1`,
+      [email.trim(), cin.trim()],
+    );
+
+    if (result.rows.length === 0)
+      return next(ApiError.unauthorized('Email ou CIN incorrect.'));
+
+    const parent = result.rows[0];
+    const isNewUser = parent.is_new_user || parent.nom === 'Nouveau';
+
+    const tokens = await TokenService.generateAuthTokens(
+      { id: parent.id, role: 'parent', telephone: parent.telephone },
+    );
+
+    return created(res, 'Authentification réussie', {
+      user: {
+        id: parent.id,
+        telephone: parent.telephone,
+        nom: parent.nom,
+        prenom: parent.prenom,
+        email: parent.email || null,
+        cin: parent.cin,
+        centre_id: parent.centre_id || null,
+        langue_preferee: parent.langue_preferee,
+        role: 'parent',
+        isNewUser,
+      },
+      tokens: {
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
+        expiresIn: tokens.accessTokenExpiry,
+      },
+    });
+  }),
+
   // ---- PARENT CIN LOGIN (no OTP) ----
 
   loginWithCIN: catchAsync(async (req, res, next) => {

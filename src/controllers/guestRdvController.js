@@ -5,6 +5,7 @@ const ApiError = require('../utils/ApiError');
 const catchAsync = require('../utils/catchAsync');
 const { isValidMoroccanPhone, normalizePhone } = require('../utils/validator');
 const { success, created } = require('../utils/responseHandler');
+const { createQrCode } = require('../utils/qrCode');
 
 function normalizeDate(str) {
   if (!str) return null;
@@ -76,6 +77,9 @@ const GuestRdvController = {
       : date_naissance_bebe;
     const dob = normalizeDate(dobRaw);
     if (!dob) return next(ApiError.badRequest('Date de naissance invalide (JJ/MM/AAAA)'));
+    const dobDate = new Date(dob);
+    if (isNaN(dobDate.getTime()) || dobDate > new Date())
+      return next(ApiError.badRequest('Date de naissance invalide ou dans le futur'));
 
     const sessionRes = await pool.query(
       `SELECT s.*, v.nom AS vaccin_nom, c.nom AS centre_nom, c.id AS centre_id,
@@ -117,9 +121,9 @@ const GuestRdvController = {
       const numero_centre = counterRes.rows[0]?.bebe_counter ?? null;
 
       const bebeRes = await client.query(
-        `INSERT INTO bebe (parent_id, prenom, nom, date_naissance, sexe, is_newborn, centre_id, numero_centre)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
-        [parent.id, finalPrenom, finalNom, dob, sexe_bebe || 'M', newborn, session.centre_id, numero_centre],
+        `INSERT INTO bebe (parent_id, prenom, nom, date_naissance, sexe, is_newborn, centre_id, numero_centre, code_qr)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
+        [parent.id, finalPrenom, finalNom, dob, sexe_bebe || 'M', newborn, session.centre_id, numero_centre, createQrCode()],
       );
       const bebe = bebeRes.rows[0];
 
@@ -153,13 +157,17 @@ const GuestRdvController = {
       return created(res, isFull ? 'Vous avez été ajouté à la liste d\'attente' : 'Rendez-vous confirmé', {
         rdv: {
           id: rdv.id,
-          statut,
+          statut: rdvStatut,
           vaccin_nom: session.vaccin_nom,
           date_session: session.date_session,
           heure_debut: session.heure_debut,
+          heure_fin: session.heure_fin,
           centre_nom: session.centre_nom,
           centre_adresse: session.centre_adresse,
           bebe_prenom: bebe.prenom,
+          bebe_nom: bebe.nom,
+          bebe_id: bebe.id,
+          bebe_numero_centre: bebe.numero_centre,
           en_attente: isFull,
         },
         message: isFull

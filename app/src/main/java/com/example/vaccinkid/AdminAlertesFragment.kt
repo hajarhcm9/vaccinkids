@@ -22,6 +22,7 @@ class AdminAlertesFragment : Fragment(R.layout.fragment_admin_alertes) {
     private lateinit var tabAll: TextView
     private lateinit var tabAlertes: TextView
     private lateinit var tabInfos: TextView
+    private lateinit var tvMessage: TextView
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -29,6 +30,7 @@ class AdminAlertesFragment : Fragment(R.layout.fragment_admin_alertes) {
         tabAll = view.findViewById(R.id.tabAlertesAll)
         tabAlertes = view.findViewById(R.id.tabAlertesAlertes)
         tabInfos = view.findViewById(R.id.tabAlertesInfos)
+        tvMessage = view.findViewById(R.id.tvAlertesMessage)
 
         adapter = AlertesAdminAdapter()
         view.findViewById<RecyclerView>(R.id.rvAlertes).apply {
@@ -74,14 +76,21 @@ class AdminAlertesFragment : Fragment(R.layout.fragment_admin_alertes) {
     }
 
     private fun loadAlertes() {
+        tvMessage.visibility = View.GONE
         viewLifecycleOwner.lifecycleScope.launch {
             try {
                 val response = ApiClient.apiService.getNotifications()
-                if (response.status == "success") {
-                    allItems = response.data.orEmpty()
-                    applyFilter()
+                if (response.status != "success") throw Exception(response.message ?: "Erreur serveur")
+                allItems = response.data.orEmpty()
+                applyFilter()
+                if (allItems.isEmpty()) {
+                    tvMessage.text = "Aucune alerte pour le moment"
+                    tvMessage.visibility = View.VISIBLE
                 }
-            } catch (_: Exception) {}
+            } catch (e: Exception) {
+                tvMessage.text = e.message ?: "Erreur réseau"
+                tvMessage.visibility = View.VISIBLE
+            }
         }
     }
 }

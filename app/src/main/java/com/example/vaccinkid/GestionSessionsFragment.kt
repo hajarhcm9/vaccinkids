@@ -90,7 +90,8 @@ class GestionSessionsFragment : Fragment(R.layout.fragment_gestion_sessions_admi
         val filtered = allSessions.filter { s ->
             when (activeTab) {
                 "AUJOURD_HUI" -> s.dateSession?.startsWith(today) == true
-                "A_VENIR"     -> s.statut in listOf("EN_FORMATION", "PLANIFIEE", "CONFIRMEE")
+                "A_VENIR"     -> s.statut in listOf("EN_FORMATION", "PLANIFIEE", "CONFIRMEE") &&
+                                  (s.dateSession == null || s.dateSession >= today)
                 "TERMINEES"   -> s.statut in listOf("TERMINEE", "ANNULEE")
                 else -> true
             }
@@ -119,7 +120,11 @@ class GestionSessionsFragment : Fragment(R.layout.fragment_gestion_sessions_admi
     }
 
     private fun showForm(item: SessionDto?) {
-        if (centres.isEmpty() || vaccins.isEmpty()) { loadReferences(); return }
+        if (centres.isEmpty() || vaccins.isEmpty()) {
+            Toast.makeText(requireContext(), "Chargement des références en cours, veuillez réessayer", Toast.LENGTH_SHORT).show()
+            loadReferences()
+            return
+        }
         val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_create_session, null)
         val cSp = dialogView.findViewById<Spinner>(R.id.spinnerSessionCentre)
         val vSp = dialogView.findViewById<Spinner>(R.id.spinnerSessionVaccin)

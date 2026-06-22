@@ -77,7 +77,7 @@ class RdvListFragment : Fragment() {
         return RdvItem(
             heure = "RDV #$id",
             enfant = enfant,
-            vaccin = "Session ${sessionId ?: "-"}",
+            vaccin = vaccinNom ?: "Session ${sessionId ?: "-"}",
             parent = parent,
             statut = statut ?: "INCONNU"
         )

@@ -43,6 +43,19 @@ const Stock = {
     return result.rows;
   },
 
+  async findExpiredByCentre(centreId) {
+    const result = await query(
+      `SELECT s.*, v.nom AS vaccin_nom
+       FROM stock s JOIN vaccin v ON v.id = s.vaccin_id
+       WHERE s.centre_id = $1
+         AND s.date_expiration IS NOT NULL
+         AND s.date_expiration < CURRENT_DATE
+         AND s.quantite_disponible > 0`,
+      [centreId],
+    );
+    return result.rows;
+  },
+
   async findLowStock(centreId) {
     const result = await query(
       `SELECT s.*, v.nom 
@@ -67,7 +80,7 @@ const Stock = {
       const fields = [];
       const values = [id];
       let paramIndex = 2;
-      const allowedFields = ['quantite_disponible', 'seuil_alerte'];
+      const allowedFields = ['quantite_disponible', 'seuil_alerte', 'date_expiration'];
       for (const field of allowedFields) {
         if (data[field] !== undefined) {
           fields.push(`${field} = $${paramIndex}`);
