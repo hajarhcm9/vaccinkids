@@ -13,6 +13,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import com.example.vaccinkid.db.AppDatabase
 import com.example.vaccinkid.model.BebeDto
 import com.example.vaccinkid.model.RendezVousDto
 import com.example.vaccinkid.network.ApiClient
@@ -114,11 +115,28 @@ class ScanQrFragment : Fragment() {
                     ).show()
                 }
             } catch (e: Exception) {
-                Toast.makeText(
-                    requireContext(),
-                    "Connexion requise. Recherche impossible : ${e.message}",
-                    Toast.LENGTH_LONG
-                ).show()
+                val cached = AppDatabase.getInstance(requireContext()).bebeDao().getByQr(code)
+                if (cached != null) {
+                    val bebe = BebeDto(
+                        id = cached.id,
+                        parentId = cached.parentId,
+                        prenom = cached.prenom,
+                        nom = cached.nom,
+                        dateNaissance = cached.dateNaissance,
+                        sexe = cached.sexe,
+                        codeQr = cached.codeQr
+                    )
+                    Toast.makeText(requireContext(), "Mode hors-ligne — données locales", Toast.LENGTH_SHORT).show()
+                    (activity as? MainInfirmierActivity)?.naviguerVers(
+                        EnfantProfilFragment.newInstance(bebe, emptyList(), emptyList())
+                    )
+                } else {
+                    Toast.makeText(
+                        requireContext(),
+                        "Connexion requise. Carnet introuvable hors-ligne.",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
             } finally {
                 setLoading(false)
             }

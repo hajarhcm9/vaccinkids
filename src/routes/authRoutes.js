@@ -10,6 +10,8 @@ const { requireWebAdminSurface } = require('../middleware/surfaceAvailability');
 const upload = require('../middleware/upload');
 
 // PUBLIC
+router.post('/parent/signup', validate(schemas.signupParent), AuthController.signupParent);
+router.post('/parent/login',  validate(schemas.loginParent),  AuthController.loginParent);
 router.post('/parent/send-otp', validate(schemas.sendOTP), AuthController.sendOTP);
 router.post('/parent/verify-otp', validate(schemas.verifyOTP), AuthController.verifyOTP);
 router.post('/parent/login-baby',     AuthController.loginWithBabyId);

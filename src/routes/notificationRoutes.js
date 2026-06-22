@@ -34,6 +34,30 @@ router.get(
 );
 
 /**
+ * @route   GET /api/notifications/preferences
+ * @desc    Get authenticated parent's notification preferences
+ * @access  Parent
+ */
+router.get(
+  '/preferences',
+  authenticate,
+  authorize('parent', 'infirmier', 'admin'),
+  notificationController.getPreferences,
+);
+
+/**
+ * @route   PATCH /api/notifications/preferences
+ * @desc    Update notification preferences
+ * @access  Parent
+ */
+router.patch(
+  '/preferences',
+  authenticate,
+  authorize('parent', 'infirmier', 'admin'),
+  notificationController.updatePreferences,
+);
+
+/**
  * @route   PATCH /api/notifications/:id/read
  * @desc    Mark a notification as read
  * @access  Parent, Infirmier, Admin

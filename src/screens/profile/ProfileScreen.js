@@ -1,4 +1,5 @@
-import React, { useState, useContext, useEffect } from 'react';
+import React, { useState, useContext, useEffect, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   View, Text, StyleSheet, TouchableOpacity, Alert,
   ScrollView, StatusBar, Image, ActivityIndicator,
@@ -42,21 +43,24 @@ export default function ProfileScreen({ navigation }) {
   const [profileStats, setProfileStats] = useState({ enfants: 0, rdvAVenir: 0, coverage: null });
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
-  useEffect(() => {
-    Promise.all([
+  const loadStats = useCallback(async () => {
+    const [enfantsResp, rdvResp] = await Promise.all([
       enfantService.listEnfants().catch(() => null),
       rdvService.listRdv().catch(() => null),
-    ]).then(([enfantsResp, rdvResp]) => {
-      const count = (enfantsResp || []).length;
-      const rdvCount = (rdvResp || []).filter((r) =>
-        ['EN_ATTENTE', 'CONFIRME', 'EN_LISTE_ATTENTE'].includes(r.statut)
-      ).length;
-      const totalV = enfantsResp?.reduce((a, e) => a + (e.vaccins_total || 0), 0) || 0;
-      const doneV  = enfantsResp?.reduce((a, e) => a + (e.vaccins_faits || 0), 0) || 0;
-      const coverage = totalV > 0 ? Math.round((doneV / totalV) * 100) : null;
-      setProfileStats({ enfants: count, rdvAVenir: rdvCount, coverage });
-    });
+    ]);
+    const now = new Date();
+    const count = (enfantsResp || []).length;
+    const rdvCount = (rdvResp || []).filter((r) =>
+      ['EN_ATTENTE', 'CONFIRME', 'EN_LISTE_ATTENTE'].includes(r.statut) &&
+      (!r.date_session || new Date(r.date_session) >= now)
+    ).length;
+    const totalV = enfantsResp?.reduce((a, e) => a + (e.vaccins_total || 0), 0) || 0;
+    const doneV  = enfantsResp?.reduce((a, e) => a + (e.vaccins_faits || 0), 0) || 0;
+    const coverage = totalV > 0 ? Math.round((doneV / totalV) * 100) : null;
+    setProfileStats({ enfants: count, rdvAVenir: rdvCount, coverage });
   }, []);
+
+  useFocusEffect(useCallback(() => { loadStats(); }, [loadStats]));
 
   const handlePickPhoto = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -65,7 +69,7 @@ export default function ProfileScreen({ navigation }) {
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ['images'],
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.8,
@@ -75,7 +79,7 @@ export default function ProfileScreen({ navigation }) {
     setUploadingPhoto(true);
     try {
       const data = await authService.uploadPhoto(uri);
-      await updateUser({ photo_url: data?.photo_url });
+      if (data?.photo_url) await updateUser({ photo_url: data.photo_url });
     } catch (e) {
       Alert.alert('Erreur', e?.message || 'Impossible de mettre à jour la photo.');
     } finally {
@@ -120,7 +124,7 @@ export default function ProfileScreen({ navigation }) {
             </View>
           </TouchableOpacity>
           <Text style={styles.userName}>{fullName}</Text>
-          <Text style={styles.userEmail}>{user?.telephone || '—'}</Text>
+          <Text style={styles.userEmail}>{user?.email || user?.telephone || '—'}</Text>
 
           <View style={styles.statsRow}>
             <View style={styles.statBlock}>
@@ -156,24 +160,37 @@ export default function ProfileScreen({ navigation }) {
             <SettingRow
               icon="person-outline"
               label="Modifier mes informations"
-              value={user?.telephone || undefined}
+              value={`${user?.prenom || ''} ${user?.nom || ''}`.trim() || undefined}
               onPress={() => navigation.navigate('EditProfile')}
               color={Colors.primary}
             />
             <View style={styles.rowDivider} />
             <SettingRow
-              icon="call-outline"
-              label="Numéro de téléphone"
-              value={user?.telephone || '—'}
+              icon="card-outline"
+              label="CIN"
+              value={user?.cin || '—'}
               onPress={() => {}}
               showChevron={false}
               color="#7C3AED"
             />
+            {user?.telephone ? (
+              <>
+                <View style={styles.rowDivider} />
+                <SettingRow
+                  icon="call-outline"
+                  label="Téléphone"
+                  value={user.telephone}
+                  onPress={() => {}}
+                  showChevron={false}
+                  color={Colors.info}
+                />
+              </>
+            ) : null}
             <View style={styles.rowDivider} />
             <SettingRow
               icon="medical-outline"
               label="Centre de santé"
-              value={user?.centre_nom || (user?.centre_id ? `Centre #${user.centre_id}` : 'Non défini')}
+              value={user?.centre_nom || (user?.centre_id ? `Centre #${user.centre_id}` : 'Non assigné')}
               onPress={() => {}}
               showChevron={false}
               color={Colors.success}

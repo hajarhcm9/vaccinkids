@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
-  ScrollView, StatusBar,
+  ScrollView, StatusBar, ActivityIndicator,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -34,6 +34,7 @@ export default function CalendrierScreen({ route, navigation }) {
   const [enfants,         setEnfants]         = useState([]);
   const [selectedEnfant,  setSelectedEnfant]  = useState(null);
   const [vaccins,         setVaccins]         = useState([]);
+  const [loadingVaccins,  setLoadingVaccins]  = useState(false);
 
   const loadEnfants = useCallback(async () => {
     try {
@@ -51,11 +52,14 @@ export default function CalendrierScreen({ route, navigation }) {
   }, [initialEnfantId]);
 
   const loadVaccins = useCallback(async (enfantId) => {
+    setLoadingVaccins(true);
     try {
       const data = await vaccinService.getCalendrierEnfant(enfantId);
       setVaccins(data || []);
     } catch (e) {
       setVaccins([]);
+    } finally {
+      setLoadingVaccins(false);
     }
   }, []);
 
@@ -67,6 +71,7 @@ export default function CalendrierScreen({ route, navigation }) {
   const handleSelectEnfant = (enfant) => {
     setSelectedEnfant(enfant);
     setVaccins([]);
+    setLoadingVaccins(true);
   };
 
   const total  = vaccins.length;
@@ -137,7 +142,7 @@ export default function CalendrierScreen({ route, navigation }) {
                 activeOpacity={0.8}
               >
                 <LinearGradient colors={gradient} style={styles.selectorAvatar}>
-                  <Text style={styles.selectorAvatarText}>{e.prenom[0]}</Text>
+                  <Text style={styles.selectorAvatarText}>{e.prenom?.[0] || '?'}</Text>
                 </LinearGradient>
                 <Text style={[styles.selectorName, isSelected && styles.selectorNameActive]}>
                   {e.prenom}
@@ -181,14 +186,20 @@ export default function CalendrierScreen({ route, navigation }) {
       {/* ── Vaccine list ── */}
       <FlatList
         data={vaccins}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => String(item.id)}
         renderItem={renderVaccin}
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
-          <View style={styles.emptyWrap}>
-            <Text style={styles.emptyText}>Aucun vaccin enregistré pour cet enfant.</Text>
-          </View>
+          loadingVaccins ? (
+            <View style={styles.emptyWrap}>
+              <ActivityIndicator color={Colors.primary} size="large" />
+            </View>
+          ) : (
+            <View style={styles.emptyWrap}>
+              <Text style={styles.emptyText}>Aucun vaccin enregistré pour cet enfant.</Text>
+            </View>
+          )
         }
       />
     </View>

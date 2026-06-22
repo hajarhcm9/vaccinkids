@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1050842629525",
+    "project_id": "vaccinikids",
+    "storage_bucket": "vaccinikids.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1050842629525:android:87e7344688ad5e3b92229c",
+        "android_client_info": {
+          "package_name": "ma.vaccinikids.parent"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAhnpXab29EoGJDy6nP9eaYr4Ww3hP1whg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

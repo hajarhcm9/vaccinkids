@@ -23,6 +23,8 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textfield.TextInputEditText
 import kotlinx.coroutines.launch
 import kotlin.math.abs
+import java.util.Date
+import java.util.Locale
 
 class GrowthChartFragment : Fragment(R.layout.fragment_growth_chart) {
     private lateinit var chart: LineChart
@@ -40,6 +42,7 @@ class GrowthChartFragment : Fragment(R.layout.fragment_growth_chart) {
     private var bebeId: Int = 0
     private var bebeName: String = ""
     private var sexe: String? = null
+    private var dateNaissance: String? = null
     private var currentData: List<CroissanceDto> = emptyList()
 
     // WHO weight-for-age [month, P3, P15, P50, P85, P97] — boys
@@ -113,6 +116,7 @@ class GrowthChartFragment : Fragment(R.layout.fragment_growth_chart) {
         bebeId = arguments?.getInt(ARG_BEBE_ID) ?: 0
         bebeName = arguments?.getString(ARG_BEBE_NAME).orEmpty()
         sexe = arguments?.getString(ARG_SEXE)
+        dateNaissance = arguments?.getString(ARG_DATE_NAISSANCE)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -136,6 +140,7 @@ class GrowthChartFragment : Fragment(R.layout.fragment_growth_chart) {
         btnTabImc = view.findViewById(R.id.btnTabImc)
 
         patientNameView.text = bebeName.ifBlank { "Patient #$bebeId" }
+        patientAgeView.text = calculateAge(dateNaissance)
 
         view.findViewById<View>(R.id.btnBackGrowth).setOnClickListener {
             parentFragmentManager.popBackStack()
@@ -376,17 +381,31 @@ class GrowthChartFragment : Fragment(R.layout.fragment_growth_chart) {
             .show()
     }
 
+    private fun calculateAge(dateNaissance: String?): String {
+        if (dateNaissance.isNullOrBlank()) return "Âge inconnu"
+        return try {
+            val dob = java.text.SimpleDateFormat("yyyy-MM-dd", Locale.FRENCH).parse(dateNaissance)
+                ?: return "Âge inconnu"
+            val totalMonths = ((Date().time - dob.time) / (1000L * 60 * 60 * 24 * 30.44)).toInt()
+            val years = totalMonths / 12
+            val months = totalMonths % 12
+            if (years > 0) "$years an${if (years > 1) "s" else ""} $months mois" else "$totalMonths mois"
+        } catch (_: Exception) { "Âge inconnu" }
+    }
+
     companion object {
         private const val ARG_BEBE_ID = "bebe_id"
         private const val ARG_BEBE_NAME = "bebe_name"
         private const val ARG_SEXE = "sexe"
+        private const val ARG_DATE_NAISSANCE = "date_naissance"
 
-        fun newInstance(bebeId: Int, bebeName: String, sexe: String? = null): GrowthChartFragment {
+        fun newInstance(bebeId: Int, bebeName: String, sexe: String? = null, dateNaissance: String? = null): GrowthChartFragment {
             return GrowthChartFragment().apply {
                 arguments = Bundle().apply {
                     putInt(ARG_BEBE_ID, bebeId)
                     putString(ARG_BEBE_NAME, bebeName)
                     putString(ARG_SEXE, sexe)
+                    putString(ARG_DATE_NAISSANCE, dateNaissance)
                 }
             }
         }

@@ -1,7 +1,7 @@
 const TokenService = require('../services/tokenService');
 const Parent = require('../models/Parent');
 const Personnel = require('../models/Personnel');
-const Kiosk = require('../models/Kiosk');
+
 const ApiError = require('../utils/ApiError');
 
 const normalizeAuthError = (error) => {
@@ -33,15 +33,6 @@ const authenticate = async (req, res, next) => {
       user = await Parent.findById(decoded.userId);
     } else if (decoded.role === 'infirmier' || decoded.role === 'admin') {
       user = await Personnel.findById(decoded.userId);
-    } else if (decoded.role === 'kiosk' && decoded.tokenType === 'kiosk') {
-      user = await Kiosk.findActiveById(decoded.userId);
-      if (
-        user &&
-        (Number(user.token_version) !== Number(decoded.tokenVersion) ||
-          Number(user.centre_id) !== Number(decoded.centreId))
-      ) {
-        user = null;
-      }
     }
 
     if (!user) {

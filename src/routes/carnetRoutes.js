@@ -44,6 +44,12 @@ router.get(
   authorize('parent', 'infirmier', 'admin'),
   CarnetController.getDelayedVaccines,
 );
+router.patch(
+  '/bebe/:id',
+  authenticate,
+  authorize('parent'),
+  CarnetController.updateBebe,
+);
 router.get('/qr/:code', authenticate, authorize('infirmier', 'admin'), CarnetController.getByQR);
 router.post(
   '/bebe/:id/croissance',

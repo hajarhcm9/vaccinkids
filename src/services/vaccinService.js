@@ -5,14 +5,18 @@ export async function getCalendrierEnfant(enfantId) {
 
   const done = (data?.vaccinations || []).map((v) => ({
     id: `done_${v.id}`,
+    vaccin_id: v.vaccin_id || null,
     nom: v.vaccin_nom || `Vaccin #${v.vaccin_id}`,
     statut: 'FAIT',
     date_prevue: v.date_session,
+    date_administree: v.date_heure || null,
     dose: v.dose || null,
+    lot: v.numero_lot || null,
   }));
 
-  const delayed = (data?.delayed_vaccines || []).map((v) => ({
-    id: `late_${v.vaccin_nom}`,
+  const delayed = (data?.delayed_vaccines || []).map((v, i) => ({
+    id: `late_${i}_${v.vaccin_nom}`,
+    vaccin_id: v.vaccin_id || null,
     nom: v.vaccin_nom,
     statut: 'EN_RETARD',
     date_prevue: null,
@@ -21,6 +25,7 @@ export async function getCalendrierEnfant(enfantId) {
 
   const upcoming = (data?.upcoming_appointments || []).map((r) => ({
     id: `rdv_${r.id}`,
+    vaccin_id: r.vaccin_id || null,
     nom: r.vaccin_nom,
     statut: 'A_VENIR',
     date_prevue: r.date_session,

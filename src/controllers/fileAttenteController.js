@@ -75,11 +75,6 @@ var getStats = catchAsync(async function (req, res) {
   success(res, 200, 'Queue stats', stats);
 });
 
-var getKioskQueue = catchAsync(async function (req, res) {
-  var entries = await faService.getKioskQueue(req.user.centre_id);
-  success(res, 200, 'Kiosk queue', { entries: entries });
-});
-
 module.exports = {
   joinQueue: joinQueue,
   getQueueByCentre: getQueueByCentre,
@@ -90,5 +85,4 @@ module.exports = {
   getMyPosition: getMyPosition,
   getWaitTime: getWaitTime,
   getStats: getStats,
-  getKioskQueue: getKioskQueue,
 };

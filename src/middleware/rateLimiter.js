@@ -66,8 +66,6 @@ const otpLimiter = createLimiter('otp');
 const loginLimiter = createLimiter('login');
 const refreshLimiter = createLimiter('refresh');
 const exportLimiter = createLimiter('exports');
-const kioskLimiter = createLimiter('kiosk');
-
 module.exports = {
   createLimiter,
   authLimiter: loginLimiter,
@@ -76,5 +74,4 @@ module.exports = {
   loginLimiter,
   refreshLimiter,
   exportLimiter,
-  kioskLimiter,
 };

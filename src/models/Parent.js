@@ -81,6 +81,22 @@ const Parent = {
     return result.rows;
   },
 
+  async getPreferences(id) {
+    const result = await query(
+      'SELECT notification_prefs FROM parent WHERE id = $1',
+      [id],
+    );
+    return result.rows[0]?.notification_prefs ?? null;
+  },
+
+  async setPreferences(id, prefs) {
+    const result = await query(
+      'UPDATE parent SET notification_prefs = $1, updated_at = NOW() WHERE id = $2 RETURNING notification_prefs',
+      [JSON.stringify(prefs), id],
+    );
+    return result.rows[0]?.notification_prefs ?? null;
+  },
+
   async update(id, data) {
     const fields = [];
     const values = [id];

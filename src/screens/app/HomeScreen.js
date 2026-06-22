@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AuthContext } from '../../context/AuthContext';
 import { Colors, Gradients, Radii, Spacing, Elevation, Typography } from '../../constants/theme';
@@ -45,11 +46,13 @@ export default function HomeScreen({ navigation }) {
         enfantService.listEnfants().catch(() => null),
         notificationService.getMyNotifications(5).catch(() => null),
       ]);
+      const now = new Date();
       const upcoming = (rdvResp || []).filter((r) =>
-        ['EN_ATTENTE', 'CONFIRME', 'EN_LISTE_ATTENTE'].includes(r.statut)
+        ['EN_ATTENTE', 'CONFIRME', 'EN_LISTE_ATTENTE'].includes(r.statut) &&
+        (!r.date_session || new Date(r.date_session) >= now)
       );
       if (upcoming.length > 0) {
-        const r = upcoming[0];
+        const r = [...upcoming].sort((a, b) => new Date(a.date_session) - new Date(b.date_session))[0];
         setNextRdv({
           enfant: r.bebe_prenom || r.bebe_nom || '—',
           vaccin: r.vaccin_nom || '—',
@@ -86,7 +89,7 @@ export default function HomeScreen({ navigation }) {
     } catch (e) {}
   }, []);
 
-  React.useEffect(() => { loadData(); }, [loadData]);
+  useFocusEffect(React.useCallback(() => { loadData(); }, [loadData]));
 
   const onRefresh = React.useCallback(async () => {
     setRefreshing(true);
@@ -199,11 +202,20 @@ export default function HomeScreen({ navigation }) {
             </View>
           </TouchableOpacity>
         ) : (
-          <TouchableOpacity style={styles.rdvEmpty} onPress={() => navigation.navigate('RDV')}>
-            <Ionicons name="calendar-outline" size={32} color={Colors.textLight} />
+          <View style={styles.rdvEmpty}>
+            <Ionicons name="calendar-outline" size={36} color={Colors.textLight} />
             <Text style={styles.rdvEmptyTitle}>Aucun rendez-vous planifié</Text>
-            <Text style={styles.rdvEmptyCta}>Prendre rendez-vous →</Text>
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.rdvEmptyBtn}
+              activeOpacity={0.85}
+              onPress={() => navigation.navigate('RDV')}
+            >
+              <LinearGradient colors={Gradients.brand} style={styles.rdvEmptyBtnGrad}>
+                <Ionicons name="add-circle-outline" size={18} color={Colors.white} />
+                <Text style={styles.rdvEmptyBtnText}>Prendre un rendez-vous</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
         )}
       </View>
 
@@ -277,9 +289,11 @@ const styles = StyleSheet.create({
   rdvMetaText:  { fontSize: 12, color: Colors.textLight },
   rdvDot:       { width: 3, height: 3, borderRadius: 2, backgroundColor: Colors.borderStrong },
   rdvChevron:   { width: 32, height: 32, borderRadius: 16, backgroundColor: Colors.primaryTint, alignItems: 'center', justifyContent: 'center' },
-  rdvEmpty:     { backgroundColor: Colors.surface, borderRadius: Radii['2xl'], padding: Spacing['2xl'], alignItems: 'center', gap: Spacing.sm, borderWidth: 1.5, borderColor: Colors.border, borderStyle: 'dashed' },
-  rdvEmptyTitle:{ fontSize: 15, fontWeight: '600', color: Colors.textSecondary },
-  rdvEmptyCta:  { fontSize: 13, fontWeight: '700', color: Colors.primary },
+  rdvEmpty:        { backgroundColor: Colors.surface, borderRadius: Radii['2xl'], padding: Spacing['2xl'], alignItems: 'center', gap: Spacing.md, borderWidth: 1.5, borderColor: Colors.border, borderStyle: 'dashed' },
+  rdvEmptyTitle:   { fontSize: 15, fontWeight: '600', color: Colors.textSecondary },
+  rdvEmptyBtn:     { borderRadius: Radii.xl, overflow: 'hidden', marginTop: Spacing.sm },
+  rdvEmptyBtnGrad: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: Spacing.xl, paddingVertical: 12 },
+  rdvEmptyBtnText: { fontSize: 14, fontWeight: '700', color: Colors.white },
 
   // Quick actions
   quickRow:     { flexDirection: 'row', justifyContent: 'space-between' },

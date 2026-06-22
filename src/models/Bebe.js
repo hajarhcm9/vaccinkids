@@ -41,7 +41,22 @@ const Bebe = {
   },
 
   async findById(id) {
-    const result = await query('SELECT * FROM bebe WHERE id = $1', [id]);
+    const result = await query(
+      `SELECT b.*,
+         (SELECT COUNT(*)::integer FROM vaccin
+          WHERE est_actif = TRUE
+            AND age_cible_semaines <= (CURRENT_DATE - b.date_naissance) / 7
+         ) AS vaccins_total,
+         (SELECT COUNT(DISTINCT s.vaccin_id)::integer
+          FROM vaccination v
+          JOIN rendez_vous rdv ON rdv.id = v.rendez_vous_id
+          JOIN session s       ON s.id   = rdv.session_id
+          WHERE rdv.bebe_id = b.id
+         ) AS vaccins_faits
+       FROM bebe b
+       WHERE b.id = $1`,
+      [id],
+    );
     return result.rows[0];
   },
 
@@ -69,9 +84,41 @@ const Bebe = {
   },
 
   async findByParent(parentId) {
-    const result = await query('SELECT * FROM bebe WHERE parent_id = $1 ORDER BY date_naissance', [
-      parentId,
-    ]);
+    const result = await query(
+      `SELECT b.*,
+         (SELECT COUNT(*)::integer FROM vaccin
+          WHERE est_actif = TRUE
+            AND age_cible_semaines <= (CURRENT_DATE - b.date_naissance) / 7
+         ) AS vaccins_total,
+         (SELECT COUNT(DISTINCT s.vaccin_id)::integer
+          FROM vaccination v
+          JOIN rendez_vous rdv ON rdv.id = v.rendez_vous_id
+          JOIN session s       ON s.id   = rdv.session_id
+          WHERE rdv.bebe_id = b.id
+         ) AS vaccins_faits,
+         (SELECT COUNT(*)::integer
+          FROM vaccin vc
+          WHERE vc.est_actif = TRUE
+            AND vc.age_cible_semaines <= (CURRENT_DATE - b.date_naissance) / 7
+            AND NOT EXISTS (
+              SELECT 1 FROM vaccination v2
+              JOIN rendez_vous rdv2 ON rdv2.id = v2.rendez_vous_id
+              JOIN session s2       ON s2.id   = rdv2.session_id
+              WHERE rdv2.bebe_id = b.id AND s2.vaccin_id = vc.id
+            )
+            AND NOT EXISTS (
+              SELECT 1 FROM rendez_vous rdv3
+              JOIN session s3 ON s3.id = rdv3.session_id
+              WHERE rdv3.bebe_id = b.id
+                AND s3.vaccin_id = vc.id
+                AND rdv3.statut IN ('EN_ATTENTE','CONFIRME','EN_LISTE_ATTENTE')
+            )
+         ) AS vaccins_retard
+       FROM bebe b
+       WHERE b.parent_id = $1
+       ORDER BY b.date_naissance`,
+      [parentId],
+    );
     return result.rows;
   },
 
@@ -92,7 +139,7 @@ const Bebe = {
     const fields = [];
     const values = [id];
     let paramIndex = 2;
-    const allowedFields = ['prenom', 'nom', 'date_naissance', 'sexe', 'photo_url'];
+    const allowedFields = ['prenom', 'nom', 'date_naissance', 'sexe', 'photo_url', 'is_newborn'];
     for (const field of allowedFields) {
       if (data[field] !== undefined) {
         fields.push(`${field} = $${paramIndex}`);
@@ -134,7 +181,7 @@ const Bebe = {
 
   async getDelayedVaccines(bebeId) {
     const result = await query(
-      `SELECT vc.nom AS vaccin_nom, vc.age_cible_semaines,
+      `SELECT vc.id AS vaccin_id, vc.nom AS vaccin_nom, vc.age_cible_semaines,
               b.date_naissance,
               (CURRENT_DATE - b.date_naissance) / 7 AS age_actuel_semaines
        FROM vaccin vc CROSS JOIN bebe b

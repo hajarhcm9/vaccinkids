@@ -105,19 +105,18 @@ class MainInfirmierActivity : AppCompatActivity() {
                 if (response.status == "success" && (role == "infirmier" || role == "medecin") && user?.centreId != null) {
                     return@launch // session valide
                 }
-                if (response.status != "success") {
-                    // Déconnecter uniquement si le serveur refuse explicitement l'auth
-                    TokenManager.clearTokens()
-                    Toast.makeText(
-                        this@MainInfirmierActivity,
-                        "Connexion requise : ${response.message ?: "session expirée"}",
-                        Toast.LENGTH_LONG
-                    ).show()
-                    val intent = Intent(this@MainInfirmierActivity, LoginInfirmierActivity::class.java)
-                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                    startActivity(intent)
-                    finish()
+                // status==success but wrong role or no centre → redirect
+                val msg = when {
+                    response.status != "success" -> "Connexion requise : ${response.message ?: "session expirée"}"
+                    role != "infirmier" && role != "medecin" -> "Accès refusé : rôle infirmier requis"
+                    else -> "Aucun centre affecté à ce compte"
                 }
+                TokenManager.clearTokens()
+                Toast.makeText(this@MainInfirmierActivity, msg, Toast.LENGTH_LONG).show()
+                val intent = Intent(this@MainInfirmierActivity, LoginInfirmierActivity::class.java)
+                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                startActivity(intent)
+                finish()
             } catch (_: Exception) {
                 // Erreur réseau — ne pas déconnecter, l'utilisateur peut être hors-ligne
             }

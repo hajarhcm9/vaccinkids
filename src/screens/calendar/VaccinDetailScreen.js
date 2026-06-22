@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, Gradients, Radii, Spacing, Elevation } from '../../constants/theme';
 import { vaccinService } from '../../services';
 
@@ -27,9 +28,10 @@ export default function VaccinDetailScreen({ route, navigation }) {
   const { vaccin: initial } = route.params;
   const [vaccin,  setVaccin]  = useState(initial);
   const [loading, setLoading] = useState(false);
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
-    const numericId = Number(initial?.id);
+    const numericId = Number(initial?.vaccin_id);
     if (Number.isInteger(numericId) && numericId > 0) {
       setLoading(true);
       vaccinService.getVaccinDetail(numericId)
@@ -37,7 +39,7 @@ export default function VaccinDetailScreen({ route, navigation }) {
         .catch(() => {})
         .finally(() => setLoading(false));
     }
-  }, [initial?.id]);
+  }, [initial?.vaccin_id]);
 
   const s = statusMeta(vaccin?.statut);
 
@@ -47,7 +49,7 @@ export default function VaccinDetailScreen({ route, navigation }) {
 
       <LinearGradient colors={s.gradient} style={styles.header}>
         <View style={styles.decCircle} />
-        <View style={styles.navRow}>
+        <View style={[styles.navRow, { paddingTop: insets.top + Spacing.md }]}>
           <TouchableOpacity style={styles.navBtn} onPress={() => navigation.goBack()}>
             <Ionicons name="arrow-back" size={20} color={Colors.white} />
           </TouchableOpacity>
@@ -138,7 +140,7 @@ const styles = StyleSheet.create({
   header:      { paddingBottom: Spacing['2xl'], position: 'relative', overflow: 'hidden' },
   decCircle:   { position: 'absolute', width: 180, height: 180, borderRadius: 90, backgroundColor: Colors.glass, top: -60, right: -40 },
 
-  navRow:      { flexDirection: 'row', alignItems: 'center', paddingHorizontal: Spacing.lg, paddingTop: Spacing['3xl'], paddingBottom: Spacing.lg },
+  navRow:      { flexDirection: 'row', alignItems: 'center', paddingHorizontal: Spacing.lg, paddingTop: Spacing.md, paddingBottom: Spacing.lg },
   navBtn:      { width: 38, height: 38, borderRadius: 19, backgroundColor: Colors.glass, borderWidth: 1, borderColor: Colors.glassBorder, alignItems: 'center', justifyContent: 'center' },
   navTitle:    { flex: 1, textAlign: 'center', fontSize: 16, fontWeight: '700', color: Colors.white },
 

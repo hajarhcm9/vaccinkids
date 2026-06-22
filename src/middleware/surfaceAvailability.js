@@ -7,9 +7,5 @@ const requireSurface = (enabled, name) => (req, res, next) => {
 };
 
 const requireWebAdminSurface = requireSurface(config.surfaces.webAdminEnabled, 'Web admin');
-const requireWaitingRoomSurface = requireSurface(
-  config.surfaces.waitingRoomEnabled,
-  'Waiting room',
-);
 
-module.exports = { requireSurface, requireWebAdminSurface, requireWaitingRoomSurface };
+module.exports = { requireSurface, requireWebAdminSurface };

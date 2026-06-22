@@ -6,7 +6,6 @@ const {
   loginLimiter,
   refreshLimiter,
   exportLimiter,
-  kioskLimiter,
 } = require('./middleware/rateLimiter');
 const swaggerUi = require('swagger-ui-express');
 const specOpenAPI = require('./config/swagger');
@@ -109,9 +108,7 @@ app.get('/metrics', async (req, res) => {
 if (config.surfaces.webAdminEnabled) {
   app.use('/admin', express.static(path.join(__dirname, '..', 'public', 'admin')));
 }
-if (config.surfaces.waitingRoomEnabled) {
-  app.use('/waiting-room', express.static(path.join(__dirname, '..', 'public', 'waiting-room')));
-}
+
 app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
 // ============================================
@@ -126,8 +123,7 @@ if (process.env.NODE_ENV !== 'test') {
 }
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/guest-rdv', require('./routes/guestRdvRoutes'));
-if (process.env.NODE_ENV !== 'test') app.use('/api/kiosks/login', loginLimiter);
-app.use('/api/kiosks', require('./routes/kioskRoutes'));
+
 app.use('/api/sessions', require('./routes/sessionRoutes'));
 app.use('/api/vaccins', require('./routes/vaccinRoutesFull'));
 app.use('/api/rendez-vous', require('./routes/rendezVousRoutes'));
@@ -146,7 +142,7 @@ app.use('/api/emails', require('./routes/emailRoutes'));
 app.use('/api/pdf', require('./routes/pdfRoutes'));
 if (process.env.NODE_ENV !== 'test') app.use('/api/exports', exportLimiter);
 app.use('/api/exports', require('./routes/exportRoutes'));
-if (process.env.NODE_ENV !== 'test') app.use('/api/file-attente/kiosk', kioskLimiter);
+
 app.use('/api/file-attente', require('./routes/fileAttenteRoutes'));
 app.use('/api/sync', require('./routes/syncRoutes'));
 
@@ -189,6 +185,7 @@ app.use((err, req, res, next) => {
   res.status(statusCode).json({
     status: 'error',
     message,
+    ...(err.errors?.length && { errors: err.errors }),
     ...(config.isDev && { stack: err.stack }),
   });
 });
