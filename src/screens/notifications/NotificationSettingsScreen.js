@@ -1,25 +1,40 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch, ActivityIndicator } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, Radii, Spacing, Elevation, Typography } from '../../constants/theme';
 import { notificationService } from '../../services';
 
+const PREFS_KEY = 'notif_preferences';
 const DEFAULT_PREFS = {
-  rdvRappel:     true,
+  rdvRappel:       true,
   rdvConfirmation: true,
-  vaccinsRetard: true,
-  actualites:    false,
+  vaccinsRetard:   true,
+  actualites:      false,
 };
 
 export default function NotificationSettingsScreen({ navigation }) {
   const [prefs, setPrefs] = useState(DEFAULT_PREFS);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     notificationService.getPreferences()
-      .then((data) => { if (data) setPrefs({ ...DEFAULT_PREFS, ...data }); })
-      .catch(() => {})
+      .then((serverPrefs) => {
+        if (serverPrefs && typeof serverPrefs === 'object') {
+          const merged = { ...DEFAULT_PREFS, ...serverPrefs };
+          setPrefs(merged);
+          AsyncStorage.setItem(PREFS_KEY, JSON.stringify(merged)).catch(() => {});
+        }
+      })
+      .catch(() => {
+        // Server unavailable — fall back to locally cached prefs
+        AsyncStorage.getItem(PREFS_KEY)
+          .then((raw) => { if (raw) setPrefs({ ...DEFAULT_PREFS, ...JSON.parse(raw) }); })
+          .catch(() => {});
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -27,8 +42,16 @@ export default function NotificationSettingsScreen({ navigation }) {
     const updated = { ...prefs, [key]: !prefs[key] };
     setPrefs(updated);
     setSaving(true);
-    try { await notificationService.updatePreferences(updated); } catch (e) {}
-    finally { setSaving(false); }
+    try {
+      await Promise.all([
+        notificationService.updatePreferences(updated),
+        AsyncStorage.setItem(PREFS_KEY, JSON.stringify(updated)),
+      ]);
+    } catch (e) {
+      // Best-effort: local cache was already written above even if server fails
+    } finally {
+      setSaving(false);
+    }
   };
 
   const ITEMS = [
@@ -40,7 +63,7 @@ export default function NotificationSettingsScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + Spacing.md }]}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={22} color={Colors.text} />
         </TouchableOpacity>
@@ -83,7 +106,7 @@ export default function NotificationSettingsScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
-  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: Spacing.lg, paddingVertical: Spacing.md, paddingTop: Spacing['3xl'], backgroundColor: Colors.surface, ...Elevation.sm },
+  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: Spacing.lg, paddingVertical: Spacing.md, paddingTop: Spacing.md, backgroundColor: Colors.surface, ...Elevation.sm },
   backBtn: { padding: 4, marginRight: Spacing.sm },
   headerTitle: { flex: 1, ...Typography.subtitle },
   scroll: { padding: Spacing.lg },

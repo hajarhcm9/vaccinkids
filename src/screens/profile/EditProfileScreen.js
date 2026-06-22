@@ -6,6 +6,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AuthContext } from '../../context/AuthContext';
 import AppButton from '../../components/ui/AppButton';
 import AppInput from '../../components/ui/AppInput';
@@ -20,19 +21,22 @@ const ProfileSchema = Yup.object().shape({
 
 export default function EditProfileScreen({ navigation }) {
   const { user, updateUser } = useContext(AuthContext);
+  const insets = useSafeAreaInsets();
 
   const handleSave = async (values, { setSubmitting, setErrors }) => {
     try {
       const resp = await authService.updateProfile({
         nom:    values.nom.trim(),
         prenom: values.prenom.trim(),
-        email:  values.email?.trim() || undefined,
+        email:  values.email?.trim() ?? undefined,
       });
-      await updateUser(resp?.user || { ...user, ...values });
+      await updateUser({ ...(resp?.user ?? { ...user, ...values }), email: resp?.user?.email ?? values.email?.trim() ?? user?.email ?? null });
       navigation.goBack();
     } catch (e) {
-      if (e instanceof ApiError && e.isValidation && e.details?.fields) {
-        setErrors(e.details.fields);
+      if (e instanceof ApiError && e.isValidation && e.details?.errors?.length) {
+        const fieldErrors = {};
+        e.details.errors.forEach(({ field, message }) => { fieldErrors[field] = message; });
+        setErrors(fieldErrors);
       } else {
         setErrors({ nom: e instanceof ApiError ? e.message : 'Erreur inattendue.' });
       }
@@ -43,7 +47,7 @@ export default function EditProfileScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + Spacing.md }]}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={22} color={Colors.text} />
         </TouchableOpacity>
@@ -133,7 +137,7 @@ export default function EditProfileScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   container:    { flex: 1, backgroundColor: Colors.background },
-  header:       { flexDirection: 'row', alignItems: 'center', paddingHorizontal: Spacing.lg, paddingVertical: Spacing.md, paddingTop: Spacing['3xl'], backgroundColor: Colors.surface, ...Elevation.sm },
+  header:       { flexDirection: 'row', alignItems: 'center', paddingHorizontal: Spacing.lg, paddingVertical: Spacing.md, paddingTop: Spacing.md, backgroundColor: Colors.surface, ...Elevation.sm },
   backBtn:      { padding: 4, marginRight: Spacing.sm },
   headerTitle:  { flex: 1, ...Typography.subtitle },
   scroll:       { padding: Spacing.lg },

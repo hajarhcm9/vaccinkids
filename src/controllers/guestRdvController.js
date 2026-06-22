@@ -60,13 +60,17 @@ const GuestRdvController = {
   }),
 
   createGuestRdv: catchAsync(async (req, res, next) => {
-    const { nom_parent, telephone, prenom_bebe, nom_bebe, date_naissance_bebe, sexe_bebe, session_id, is_newborn } = req.body;
+    const { nom_parent, telephone, cin, prenom_bebe, nom_bebe, date_naissance_bebe, sexe_bebe, session_id, is_newborn } = req.body;
     const newborn = is_newborn === true || is_newborn === 'true';
 
     if (!nom_parent || !telephone || !session_id)
       return next(ApiError.badRequest('Tous les champs obligatoires doivent être remplis'));
+    if (!cin || cin.trim().length < 3)
+      return next(ApiError.badRequest('Votre CIN est requise pour pouvoir vous connecter après le rendez-vous'));
     if (!newborn && !prenom_bebe)
       return next(ApiError.badRequest('Prénom de l\'enfant requis'));
+
+    const cinUpper = cin.trim().toUpperCase();
 
     const phone = normalizePhone(telephone);
     if (!isValidMoroccanPhone(phone))
@@ -102,11 +106,13 @@ const GuestRdvController = {
       await client.query('BEGIN');
 
       const parentRes = await client.query(
-        `INSERT INTO parent (telephone, nom, prenom, is_new_user, langue_preferee)
-         VALUES ($1, $2, 'Guest', FALSE, 'fr')
-         ON CONFLICT (telephone) DO UPDATE SET updated_at = NOW()
+        `INSERT INTO parent (telephone, nom, prenom, cin, is_new_user, langue_preferee)
+         VALUES ($1, $2, $3, $4, TRUE, 'fr')
+         ON CONFLICT (telephone) WHERE telephone IS NOT NULL DO UPDATE SET
+           cin = COALESCE(parent.cin, EXCLUDED.cin),
+           updated_at = NOW()
          RETURNING *`,
-        [phone, nom_parent.trim()],
+        [phone, nom_parent.trim(), nom_parent.trim(), cinUpper],
       );
       const parent = parentRes.rows[0];
 

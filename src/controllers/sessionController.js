@@ -19,6 +19,7 @@ const SessionController = {
     const sessions = await Session.findSmartMatch({
       centreId: centre_id,
       vaccinId: vaccin_id,
+      bebeId: req.query.bebe_id || null,
     });
     return success(res, 200, 'Sessions disponibles', sessions);
   }),

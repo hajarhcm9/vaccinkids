@@ -20,9 +20,12 @@ const CarnetEnhancedController = {
       RendezVous.findByParent(bebe.parent_id),
     ]);
 
+    const today = new Date().toISOString().split('T')[0];
     const babyUpcoming = upcomingRdvs.filter(
       (r) =>
-        r.bebe_id === parseInt(bebeId, 10) && !['ANNULE', 'PRESENT', 'ABSENT'].includes(r.statut),
+        r.bebe_id === parseInt(bebeId, 10) &&
+        !['ANNULE', 'PRESENT', 'ABSENT'].includes(r.statut) &&
+        (!r.date_session || r.date_session >= today),
     );
 
     const latestCroissance = croissance.length > 0 ? croissance[croissance.length - 1] : null;

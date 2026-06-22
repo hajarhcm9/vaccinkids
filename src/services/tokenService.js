@@ -12,19 +12,6 @@ const TokenService = {
     return jwt.sign(payload, config.jwt.secret, { expiresIn: config.jwt.expiresIn });
   },
 
-  generateKioskToken(kiosk) {
-    return jwt.sign(
-      {
-        userId: kiosk.id,
-        role: 'kiosk',
-        centreId: kiosk.centre_id,
-        tokenVersion: kiosk.token_version,
-        tokenType: 'kiosk',
-      },
-      config.jwt.secret,
-      { expiresIn: `${config.surfaces.kioskTokenMinutes}m` },
-    );
-  },
 
   generateRefreshToken(payload, expiresIn = config.jwt.refreshExpiresIn) {
     return jwt.sign(payload, config.jwt.refreshSecret, { expiresIn });

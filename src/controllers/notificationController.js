@@ -1,4 +1,5 @@
 const Notification = require('../models/Notification');
+const Parent = require('../models/Parent');
 const notificationService = require('../services/notificationService');
 const catchAsync = require('../utils/catchAsync');
 const ApiError = require('../utils/ApiError');
@@ -87,10 +88,45 @@ const sendManual = catchAsync(async (req, res) => {
   return created(res, 'Notification sent successfully', notification);
 });
 
+const DEFAULT_PREFS = {
+  rdvRappel: true,
+  rdvConfirmation: true,
+  vaccinsRetard: true,
+  actualites: false,
+};
+
+const getPreferences = catchAsync(async (req, res) => {
+  if (req.user.role !== 'parent') {
+    return success(res, 200, 'Preferences retrieved', DEFAULT_PREFS);
+  }
+  const prefs = await Parent.getPreferences(req.user.id);
+  return success(res, 200, 'Preferences retrieved', prefs ?? DEFAULT_PREFS);
+});
+
+const updatePreferences = catchAsync(async (req, res) => {
+  const allowed = ['rdvRappel', 'rdvConfirmation', 'vaccinsRetard', 'actualites'];
+  const sanitized = {};
+  for (const key of allowed) {
+    if (typeof req.body[key] === 'boolean') sanitized[key] = req.body[key];
+  }
+  if (Object.keys(sanitized).length === 0) {
+    throw ApiError.validation('No valid preference fields provided');
+  }
+  if (req.user.role !== 'parent') {
+    return success(res, 200, 'Preferences updated', { ...DEFAULT_PREFS, ...sanitized });
+  }
+  const current = (await Parent.getPreferences(req.user.id)) ?? DEFAULT_PREFS;
+  const merged = { ...current, ...sanitized };
+  const saved = await Parent.setPreferences(req.user.id, merged);
+  return success(res, 200, 'Preferences updated', saved ?? merged);
+});
+
 module.exports = {
   getMyNotifications,
   getUnreadCount,
   markAsRead,
   markAllRead,
   sendManual,
+  getPreferences,
+  updatePreferences,
 };

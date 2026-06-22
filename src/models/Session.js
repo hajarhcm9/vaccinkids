@@ -70,7 +70,17 @@ const Session = {
 
   // Returns sessions for a given vaccine, sorted by fill rate DESC (closest to full first).
   // EN_FORMATION sessions come before CONFIRMEE (waitlist).
-  async findSmartMatch({ centreId, vaccinId }) {
+  async findSmartMatch({ centreId, vaccinId, bebeId = null }) {
+    const values = [centreId, vaccinId];
+    const bebeFilter = bebeId
+      ? `AND NOT EXISTS (
+           SELECT 1 FROM rendez_vous ex
+           WHERE ex.session_id = s.id
+             AND ex.bebe_id = $${values.push(bebeId)}
+             AND ex.statut != 'ANNULE'
+         )`
+      : '';
+
     const result = await query(
       `SELECT s.*, c.nom AS centre_nom, v.nom AS vaccin_nom,
               v.doses_par_flacon,
@@ -87,6 +97,7 @@ const Session = {
          AND s.vaccin_id = $2
          AND s.date_session >= CURRENT_DATE
          AND s.statut IN ('EN_FORMATION','PLANIFIEE','CONFIRMEE')
+         ${bebeFilter}
        GROUP BY s.id, c.nom, v.nom, v.doses_par_flacon
        ORDER BY
          CASE s.statut
@@ -97,7 +108,7 @@ const Session = {
          END,
          fill_pct DESC,
          s.date_session ASC`,
-      [centreId, vaccinId],
+      values,
     );
     return result.rows;
   },

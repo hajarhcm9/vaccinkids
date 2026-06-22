@@ -73,6 +73,18 @@ const validate = (schema) => {
 };
 
 const schemas = {
+  signupParent: {
+    cin:          { type: 'string', required: true, minLength: 3, maxLength: 20 },
+    mot_de_passe: { type: 'string', required: true, minLength: 6 },
+    nom:          { type: 'string', required: true, minLength: 2, maxLength: 100 },
+    prenom:       { type: 'string', required: true, minLength: 2, maxLength: 100 },
+    email:        { type: 'string', maxLength: 254 },
+    centre_id:    { type: 'integer', required: true, min: 1 },
+  },
+  loginParent: {
+    cin:          { type: 'string', required: true },
+    mot_de_passe: { type: 'string', required: true },
+  },
   sendOTP: {
     telephone: {
       type: 'string',
@@ -93,14 +105,19 @@ const schemas = {
     },
   },
   registerParent: {
-    nom: { type: 'string', required: true, minLength: 2, maxLength: 100 },
-    prenom: { type: 'string', required: true, minLength: 2, maxLength: 100 },
+    nom:             { type: 'string', required: true, minLength: 2, maxLength: 100 },
+    prenom:          { type: 'string', required: true, minLength: 2, maxLength: 100 },
+    cin:             { type: 'string', maxLength: 20 },
+    email:           { type: 'string', maxLength: 254 },
+    centre_id:       { type: 'integer', required: true, min: 1 },
     langue_preferee: { type: 'string', enum: ['fr', 'ar'], default: 'fr' },
   },
   updateProfile: {
-    nom: { type: 'string', required: true, minLength: 2, maxLength: 100 },
-    prenom: { type: 'string', required: true, minLength: 2, maxLength: 100 },
-    langue_preferee: { type: 'string', enum: ['fr', 'ar'], default: 'fr' },
+    nom:             { type: 'string', minLength: 2, maxLength: 100 },
+    prenom:          { type: 'string', minLength: 2, maxLength: 100 },
+    langue_preferee: { type: 'string', enum: ['fr', 'ar'] },
+    email:           { type: 'string', maxLength: 254 },
+    centre_id:       { type: 'integer', min: 1 },
   },
   updateFcmToken: {
     fcm_token: { type: 'string', required: true, minLength: 10, maxLength: 4096 },
@@ -153,15 +170,16 @@ const schemas = {
     max_inscriptions: { type: 'integer', min: 1, max: 100 },
   },
   addBebe: {
-    prenom: { type: 'string', required: true, minLength: 2, maxLength: 100 },
-    nom: { type: 'string', required: true, minLength: 2, maxLength: 100 },
+    prenom:         { type: 'string', required: true, minLength: 2, maxLength: 100 },
+    nom:            { type: 'string', maxLength: 100 },
     date_naissance: {
       type: 'string',
       required: true,
       pattern: /^\d{4}-\d{2}-\d{2}$/,
       patternMessage: 'Date must be YYYY-MM-DD',
     },
-    sexe: { type: 'string', required: true, enum: ['M', 'F'] },
+    sexe:       { type: 'string', required: true, enum: ['M', 'F'] },
+    is_newborn: { type: 'boolean' },
   },
   createVaccin: {
     nom: { type: 'string', required: true, minLength: 2, maxLength: 100 },

@@ -1,5 +1,13 @@
 import apiClient from './apiClient';
 
+export async function signup(data) {
+  return apiClient.post('/auth/parent/signup', data);
+}
+
+export async function loginParent(cin, mot_de_passe) {
+  return apiClient.post('/auth/parent/login', { cin, mot_de_passe });
+}
+
 export async function sendOTP(telephone) {
   return apiClient.post('/auth/parent/send-otp', { telephone });
 }
@@ -36,8 +44,14 @@ export async function listPublicCentres() {
   return apiClient.get('/guest-rdv/centres');
 }
 
-export async function updateProfile({ nom, prenom, email, langue_preferee = 'fr', centre_id } = {}) {
-  return apiClient.patch('/auth/parent/profile', { nom, prenom, email, langue_preferee, centre_id });
+export async function updateProfile({ nom, prenom, email, langue_preferee, centre_id } = {}) {
+  const payload = {};
+  if (nom !== undefined)            payload.nom            = nom;
+  if (prenom !== undefined)         payload.prenom         = prenom;
+  if (email !== undefined)          payload.email          = email;
+  if (langue_preferee !== undefined) payload.langue_preferee = langue_preferee;
+  if (centre_id !== undefined)      payload.centre_id      = centre_id;
+  return apiClient.patch('/auth/parent/profile', payload);
 }
 
 export async function listGuestSessions({ newborn = false, centre_id } = {}) {

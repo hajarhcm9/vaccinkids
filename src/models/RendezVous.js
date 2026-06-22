@@ -19,13 +19,25 @@ const RendezVous = {
   },
 
   async findById(id) {
-    const result = await query('SELECT * FROM rendez_vous WHERE id = $1', [id]);
+    const result = await query(
+      'SELECT rdv.*, s.centre_id, s.date_session, s.heure_debut, s.heure_fin, s.statut AS session_statut, ' +
+        'v.nom AS vaccin_nom, c.nom AS centre_nom, ' +
+        'b.prenom AS bebe_prenom, b.nom AS bebe_nom, b.numero_centre AS bebe_numero_centre ' +
+        'FROM rendez_vous rdv ' +
+        'JOIN session s ON s.id = rdv.session_id ' +
+        'JOIN vaccin v ON v.id = s.vaccin_id ' +
+        'JOIN centre c ON c.id = s.centre_id ' +
+        'JOIN bebe b ON b.id = rdv.bebe_id ' +
+        'WHERE rdv.id = $1',
+      [id],
+    );
     return result.rows[0];
   },
 
   async findByParent(parentId) {
     const result = await query(
       'SELECT rdv.*, s.centre_id, s.date_session, s.heure_debut, s.heure_fin, s.statut AS session_statut, ' +
+        's.vaccin_id, ' +
         'v.nom AS vaccin_nom, c.nom AS centre_nom, c.adresse AS centre_adresse, ' +
         'c.gps_lat AS centre_gps_lat, c.gps_lng AS centre_gps_lng, ' +
         'b.prenom AS bebe_prenom, b.nom AS bebe_nom, b.numero_centre AS bebe_numero_centre ' +
@@ -89,6 +101,7 @@ const RendezVous = {
         'v.nom AS vaccin_nom, c.nom AS centre_nom, c.adresse AS centre_adresse, ' +
         'c.gps_lat AS centre_gps_lat, c.gps_lng AS centre_gps_lng, ' +
         'b.prenom AS bebe_prenom, b.nom AS bebe_nom, b.date_naissance AS bebe_date_naissance, b.sexe AS bebe_sexe, b.code_qr AS bebe_code_qr, ' +
+        's.vaccin_id, ' +
         'p.nom AS parent_nom, p.prenom AS parent_prenom, p.telephone AS parent_telephone ' +
         'FROM rendez_vous rdv ' +
         'JOIN session s ON s.id = rdv.session_id ' +

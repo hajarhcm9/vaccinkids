@@ -62,8 +62,12 @@ export default function RdvScreen({ navigation }) {
   const [propHeure,      setPropHeure]     = useState('');
   const [propError,      setPropError]     = useState('');
 
+  const _now = new Date();
   const rdvsBySegment = {
-    A_VENIR: allRdvs.filter((r) => UPCOMING_STATUTS.includes(r.statut)),
+    A_VENIR: allRdvs.filter((r) =>
+      UPCOMING_STATUTS.includes(r.statut) &&
+      (!r.date_session || new Date(r.date_session) >= _now)
+    ),
     FAIT:    allRdvs.filter((r) => DONE_STATUTS.includes(r.statut)),
     ANNULE:  allRdvs.filter((r) => r.statut === 'ANNULE'),
   };
@@ -81,15 +85,10 @@ export default function RdvScreen({ navigation }) {
     } catch (e) {}
   }, []);
 
-  useEffect(() => { loadData().finally(() => setLoading(false)); }, [loadData]);
-
   useFocusEffect(
     useCallback(() => {
-      const parent = navigation.getParent?.();
-      if (parent?.getState().routes.find((r) => r.params?.rdvListRefresh)) {
-        loadData();
-      }
-    }, [loadData, navigation])
+      loadData().finally(() => setLoading(false));
+    }, [loadData])
   );
 
   const onRefresh = useCallback(async () => {
@@ -120,7 +119,7 @@ export default function RdvScreen({ navigation }) {
     if (!selCentreModal) return;
     setSavingCentre(true);
     try {
-      const resp = await authService.updateProfile({ centre_id: selCentreModal.id });
+      await authService.updateProfile({ centre_id: selCentreModal.id });
       await updateUser({ centre_id: selCentreModal.id, centre_nom: selCentreModal.nom });
       setBookStep('pick');
     } catch (e) {
@@ -134,7 +133,7 @@ export default function RdvScreen({ navigation }) {
     if (!selEnfant || !selVaccin) return;
     setLoadingMatch(true);
     try {
-      const data = await rdvService.smartMatchSessions(selVaccin.id);
+      const data = await rdvService.smartMatchSessions(selVaccin.id, selEnfant.id);
       setMatchedSess(Array.isArray(data) ? data : []);
     } catch {
       setMatchedSess([]);
@@ -159,7 +158,7 @@ export default function RdvScreen({ navigation }) {
       });
       Alert.alert(
         'Séance proposée !',
-        `La séance ${selVaccin.nom} sera confirmée une fois que ${selVaccin.doses_par_flacon} participants auront réservé.\nVous recevrez une notification.`,
+        `La séance ${selVaccin.nom} sera confirmée une fois que ${selVaccin.doses_par_flacon ?? 'N'} participants auront réservé.\nVous recevrez une notification.`,
       );
       resetModal(); setShowModal(false);
       loadData();
@@ -184,6 +183,7 @@ export default function RdvScreen({ navigation }) {
               setAllRdvs((prev) =>
                 prev.map((r) => r.id === item.id ? { ...r, statut: 'ANNULE' } : r)
               );
+              setSegment('ANNULE');
             } catch (e) {
               Alert.alert('Erreur', 'Impossible d\'annuler ce rendez-vous.');
             }
@@ -203,18 +203,8 @@ export default function RdvScreen({ navigation }) {
         ? await rdvService.joinWaitlist(selSession.id, selEnfant.id)
         : await rdvService.inscribeSession(selSession.id, selEnfant.id);
 
-      const newRdv = resp?.id ? resp : {
-        id: `r_${Date.now()}`,
-        statut:      isFull ? 'EN_LISTE_ATTENTE' : 'EN_ATTENTE',
-        vaccin_nom:  selSession.vaccin_nom,
-        bebe_prenom: selEnfant.prenom,
-        bebe_nom:    selEnfant.nom,
-        date_session: selSession.date_session,
-        heure_debut:  selSession.heure_debut,
-        centre_nom:   selSession.centre_nom,
-      };
-      setAllRdvs((prev) => [newRdv, ...prev]);
       setShowModal(false); resetModal(); setSegment('A_VENIR');
+      loadData();
       if (isFull) Alert.alert('Liste d\'attente', 'La session est complète. Vous avez été ajouté à la liste d\'attente.');
     } catch (e) {
       Alert.alert('Erreur', e?.message || 'Impossible de prendre ce rendez-vous. Réessayez.');
@@ -445,7 +435,7 @@ export default function RdvScreen({ navigation }) {
                     </View>
                     {selVaccin && (
                       <Text style={styles.vaccinDoseHint}>
-                        {selVaccin.doses_par_flacon} doses par flacon
+                        {selVaccin.doses_par_flacon ?? '—'} doses par flacon
                       </Text>
                     )}
                   </PickerSection>
@@ -590,7 +580,7 @@ export default function RdvScreen({ navigation }) {
                   <View style={styles.proposeInfoBox}>
                     <Ionicons name="information-circle-outline" size={15} color={Colors.primary} />
                     <Text style={styles.proposeInfoText}>
-                      La séance {selVaccin?.nom} sera confirmée une fois {selVaccin?.doses_par_flacon} participants réunis. Vous recevrez une notification.
+                      La séance {selVaccin?.nom} sera confirmée une fois {selVaccin?.doses_par_flacon ?? 'N'} participants réunis. Vous recevrez une notification.
                     </Text>
                   </View>
 

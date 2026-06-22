@@ -20,6 +20,19 @@ const apiClient = axios.create({
   headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
 });
 
+// Allows AuthContext to register its logout function so apiClient can trigger
+// navigation-to-login when a token refresh fails mid-session.
+let authLogoutCallback = null;
+export function setAuthLogout(cb) {
+  authLogoutCallback = cb;
+}
+
+// Shared promise to deduplicate concurrent token refresh requests.
+// Without this, 4 parallel API calls that all get a 401 would each try to
+// refresh simultaneously — with rotating refresh tokens, 3 of the 4 would
+// fail with "invalid refresh token" and log the user out unnecessarily.
+let refreshPromise = null;
+
 apiClient.interceptors.request.use(
   async (config) => {
     const token = await AsyncStorage.getItem(TOKEN_KEY);
@@ -42,21 +55,30 @@ apiClient.interceptors.response.use(
       !originalRequest.url.includes('/auth/')
     ) {
       originalRequest._retry = true;
+
+      if (!refreshPromise) {
+        refreshPromise = (async () => {
+          const refreshToken = await AsyncStorage.getItem(REFRESH_TOKEN_KEY);
+          if (!refreshToken) throw new Error('No refresh token');
+          const refreshResponse = await axios.post(`${BASE_URL}/auth/refresh`, { refreshToken });
+          const body = refreshResponse.data;
+          const inner = (body !== null && body !== undefined && 'data' in body) ? body.data : body;
+          const token = inner?.tokens?.accessToken || inner?.token;
+          const newRefresh = inner?.tokens?.refreshToken || inner?.refreshToken;
+          if (!token) throw new Error('No access token in refresh response');
+          await AsyncStorage.setItem(TOKEN_KEY, token);
+          if (newRefresh) await AsyncStorage.setItem(REFRESH_TOKEN_KEY, newRefresh);
+          return token;
+        })().finally(() => { refreshPromise = null; });
+      }
+
       try {
-        const refreshToken = await AsyncStorage.getItem(REFRESH_TOKEN_KEY);
-        if (!refreshToken) throw new Error('No refresh token');
-        const refreshResponse = await axios.post(`${BASE_URL}/auth/refresh`, { refreshToken });
-        const body = refreshResponse.data;
-        const inner = (body !== null && body !== undefined && 'data' in body) ? body.data : body;
-        const token = inner?.tokens?.accessToken || inner?.token;
-        const newRefresh = inner?.tokens?.refreshToken || inner?.refreshToken;
-        if (!token) throw new Error('No access token in refresh response');
-        await AsyncStorage.setItem(TOKEN_KEY, token);
-        if (newRefresh) await AsyncStorage.setItem(REFRESH_TOKEN_KEY, newRefresh);
+        const token = await refreshPromise;
         originalRequest.headers.Authorization = `Bearer ${token}`;
         return apiClient(originalRequest);
-      } catch (refreshError) {
+      } catch {
         await AsyncStorage.multiRemove([TOKEN_KEY, REFRESH_TOKEN_KEY, 'userData']);
+        authLogoutCallback?.();
         return Promise.reject(new ApiError('Session expirée. Veuillez vous reconnecter.', 401));
       }
     }

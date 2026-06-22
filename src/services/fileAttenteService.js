@@ -102,16 +102,6 @@ async function getQueueBySession(sessionId) {
   return result.rows;
 }
 
-async function getKioskQueue(centreId) {
-  var result = await pool.query(
-    `SELECT numero_attente, statut
-     FROM file_attente
-     WHERE centre_id = $1 AND DATE(heure_arrivee) = CURRENT_DATE
-     ORDER BY numero_attente ASC`,
-    [centreId],
-  );
-  return result.rows;
-}
 
 async function callNext(centreId) {
   var result = await pool.query(
@@ -206,7 +196,7 @@ module.exports = {
   joinQueue: joinQueue,
   getQueueByCentre: getQueueByCentre,
   getQueueBySession: getQueueBySession,
-  getKioskQueue: getKioskQueue,
+
   callNext: callNext,
   completeService: completeService,
   abandonEntry: abandonEntry,

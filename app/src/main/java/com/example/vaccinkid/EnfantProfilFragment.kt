@@ -63,7 +63,7 @@ class EnfantProfilFragment : Fragment(R.layout.fragment_enfant_profil) {
 
         view.findViewById<View>(R.id.btnViewGrowth).setOnClickListener {
             (activity as? MainInfirmierActivity)?.naviguerVers(
-                GrowthChartFragment.newInstance(bebeId, bebeName, sexe)
+                GrowthChartFragment.newInstance(bebeId, bebeName, sexe, dateNaissance)
             )
         }
 

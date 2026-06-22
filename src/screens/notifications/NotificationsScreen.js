@@ -1,4 +1,5 @@
 import React, { useState, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
   RefreshControl, StatusBar,
@@ -18,10 +19,13 @@ function formatNotifDate(ts) {
 
 const TYPE_META = {
   RAPPEL:       { icon: 'alarm',                    color: Colors.primary,  bg: Colors.primaryTint,  label: 'Rappel' },
+  RAPPEL_RDV:   { icon: 'alarm',                    color: Colors.primary,  bg: Colors.primaryTint,  label: 'Rappel' },
   RETARD:       { icon: 'alert-circle',              color: Colors.danger,   bg: Colors.dangerBg,     label: 'Retard' },
+  ABSENCE:      { icon: 'alert-circle',              color: Colors.danger,   bg: Colors.dangerBg,     label: 'Absence' },
   CONFIRMATION: { icon: 'checkmark-circle',          color: Colors.success,  bg: Colors.successBg,    label: 'Confirmé' },
   INFO:         { icon: 'information-circle',        color: Colors.info,     bg: Colors.infoBg,       label: 'Info' },
   ALERTE:       { icon: 'warning',                   color: Colors.accent,   bg: Colors.accentLight,  label: 'Alerte' },
+  ALERTE_STOCK: { icon: 'warning',                   color: Colors.accent,   bg: Colors.accentLight,  label: 'Alerte' },
 };
 
 export default function NotificationsScreen() {
@@ -41,7 +45,7 @@ export default function NotificationsScreen() {
     setRefreshing(false);
   }, [loadNotifications]);
 
-  React.useEffect(() => { loadNotifications(); }, [loadNotifications]);
+  useFocusEffect(useCallback(() => { loadNotifications(); }, [loadNotifications]));
 
   const insets      = useSafeAreaInsets();
   const markAllRead = () => {
@@ -115,7 +119,7 @@ export default function NotificationsScreen() {
 
       <FlatList
         data={notifications}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => String(item.id)}
         renderItem={renderItem}
         ListEmptyComponent={renderEmpty}
         contentContainerStyle={[styles.list, !notifications.length && { flexGrow: 1 }]}

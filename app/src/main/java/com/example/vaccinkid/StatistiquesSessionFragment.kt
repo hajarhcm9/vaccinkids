@@ -58,7 +58,7 @@ class StatistiquesSessionFragment : Fragment(R.layout.fragment_statistiques_sess
                 val attente = rdvs.count { it.statut?.uppercase() in listOf("EN_ATTENTE", "CONFIRME") }
                 val vaccines = vaccinations.size
 
-                val taux = if (total > 0) (vaccines * 100) / total else 0
+                val taux = (if (total > 0) (vaccines * 100) / total else 0).coerceIn(0, 100)
 
                 view.findViewById<TextView>(R.id.tvStatsTaux).text = taux.toString()
                 view.findViewById<ProgressBar>(R.id.pbStatsTaux).progress = taux

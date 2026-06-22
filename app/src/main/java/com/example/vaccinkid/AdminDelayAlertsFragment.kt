@@ -32,6 +32,7 @@ class AdminDelayAlertsFragment : Fragment(R.layout.fragment_admin_delay_alerts) 
 
     private val vaccinAdapter = DelayVaccinAdapter()
     private val centreAdapter = DelayCentreAdapter()
+    private var totalDelayed: Int = 0
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -81,7 +82,8 @@ class AdminDelayAlertsFragment : Fragment(R.layout.fragment_admin_delay_alerts) 
     }
 
     private fun renderStats(data: DelayDashboardDto) {
-        tvTotalDelayed.text = (data.totalDelayed ?: 0).toString()
+        totalDelayed = data.totalDelayed ?: 0
+        tvTotalDelayed.text = totalDelayed.toString()
         tvUrgentCount.text = (data.urgentCount ?: 0).toString()
     }
 
@@ -105,7 +107,7 @@ class AdminDelayAlertsFragment : Fragment(R.layout.fragment_admin_delay_alerts) 
     }
 
     private fun sendAlerts() {
-        val total = tvTotalDelayed.text.toString().toIntOrNull() ?: 0
+        val total = totalDelayed
         MaterialAlertDialogBuilder(requireContext())
             .setTitle("Envoyer les alertes de retard ?")
             .setMessage("Cette action va notifier $total parents concernés par un retard vaccinal. Cette opération ne peut pas être annulée.")

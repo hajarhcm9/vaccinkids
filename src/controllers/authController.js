@@ -212,6 +212,129 @@ const AuthController = {
     return success(res, 200, "Si un compte correspond à cet email, vous recevrez les numéros de votre/vos enfant(s).", {});
   }),
 
+  // ---- PARENT SIGNUP (CIN + password) ----
+
+  signupParent: catchAsync(async (req, res, next) => {
+    const { cin, mot_de_passe, nom, prenom, email, centre_id } = req.body;
+    if (!cin || !mot_de_passe || !nom || !prenom || !centre_id)
+      return next(ApiError.badRequest('CIN, mot de passe, nom, prénom et centre sont requis'));
+
+    const cinUpper = cin.trim().toUpperCase();
+
+    const existing = await query(
+      'SELECT id, mot_de_passe FROM parent WHERE cin = $1 AND est_actif = TRUE',
+      [cinUpper],
+    );
+
+    let parent;
+    if (existing.rows.length > 0) {
+      const row = existing.rows[0];
+      if (row.mot_de_passe) {
+        return next(ApiError.conflict('Un compte existe déjà avec cette CIN. Connectez-vous.'));
+      }
+      // Guest account without password → claim it
+      const hash = await bcrypt.hash(mot_de_passe, 10);
+      const updated = await query(
+        `UPDATE parent SET mot_de_passe=$1, nom=$2, prenom=$3, centre_id=$4, email=$5,
+           is_new_user=FALSE, updated_at=NOW() WHERE id=$6 RETURNING *`,
+        [hash, nom.trim(), prenom.trim(), Number(centre_id),
+         email?.trim().toLowerCase() || null, row.id],
+      );
+      parent = updated.rows[0];
+    } else {
+      const hash = await bcrypt.hash(mot_de_passe, 10);
+      const inserted = await query(
+        `INSERT INTO parent (cin, mot_de_passe, nom, prenom, email, centre_id, is_new_user, langue_preferee)
+         VALUES ($1, $2, $3, $4, $5, $6, FALSE, 'fr') RETURNING *`,
+        [cinUpper, hash, nom.trim(), prenom.trim(),
+         email?.trim().toLowerCase() || null, Number(centre_id)],
+      );
+      parent = inserted.rows[0];
+    }
+
+    let centreNomSignup = null;
+    if (parent.centre_id) {
+      const cRes = await query('SELECT nom FROM centre WHERE id = $1', [parent.centre_id]);
+      centreNomSignup = cRes.rows[0]?.nom || null;
+    }
+    const tokens = await TokenService.generateAuthTokens({
+      id: parent.id, role: 'parent', telephone: parent.telephone,
+    });
+    return created(res, 'Compte créé avec succès', {
+      user: {
+        id: parent.id,
+        telephone: parent.telephone || null,
+        nom: parent.nom,
+        prenom: parent.prenom,
+        email: parent.email || null,
+        cin: parent.cin,
+        centre_id: parent.centre_id || null,
+        centre_nom: centreNomSignup,
+        langue_preferee: parent.langue_preferee,
+        role: 'parent',
+        isNewUser: false,
+      },
+      tokens: {
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
+        expiresIn: tokens.accessTokenExpiry,
+      },
+    });
+  }),
+
+  // ---- PARENT LOGIN (CIN + password) ----
+
+  loginParent: catchAsync(async (req, res, next) => {
+    const { cin, mot_de_passe } = req.body;
+    if (!cin || !mot_de_passe)
+      return next(ApiError.badRequest('CIN et mot de passe requis'));
+
+    const cinUpper = cin.trim().toUpperCase();
+    const result = await query(
+      'SELECT * FROM parent WHERE cin = $1 AND est_actif = TRUE LIMIT 1',
+      [cinUpper],
+    );
+
+    const parent = result.rows[0];
+    if (!parent || !parent.mot_de_passe) {
+      return next(ApiError.unauthorized('Identifiants incorrects.'));
+    }
+
+    const passwordMatch = await bcrypt.compare(mot_de_passe, parent.mot_de_passe);
+    if (!passwordMatch) {
+      return next(ApiError.unauthorized('Identifiants incorrects.'));
+    }
+
+    let centreNomLogin = null;
+    if (parent.centre_id) {
+      const cRes = await query('SELECT nom FROM centre WHERE id = $1', [parent.centre_id]);
+      centreNomLogin = cRes.rows[0]?.nom || null;
+    }
+    const tokens = await TokenService.generateAuthTokens({
+      id: parent.id, role: 'parent', telephone: parent.telephone,
+    });
+    return created(res, 'Authentification réussie', {
+      user: {
+        id: parent.id,
+        telephone: parent.telephone || null,
+        nom: parent.nom,
+        prenom: parent.prenom,
+        email: parent.email || null,
+        cin: parent.cin,
+        centre_id: parent.centre_id || null,
+        centre_nom: centreNomLogin,
+        langue_preferee: parent.langue_preferee,
+        role: 'parent',
+        isNewUser: parent.is_new_user || false,
+      },
+      tokens: {
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
+        expiresIn: tokens.accessTokenExpiry,
+      },
+    });
+  }),
+
   // ---- PARENT LOGIN via numéro enfant + CIN ----
 
   loginWithBabyId: catchAsync(async (req, res, next) => {
@@ -569,7 +692,7 @@ const AuthController = {
   }),
 
   logout: catchAsync(async (req, res, next) => {
-    const { refreshToken } = req.body;
+    const refreshToken = req.body?.refreshToken;
     if (refreshToken) await TokenService.revokeToken(refreshToken);
     return success(res, 200, 'Logged out successfully');
   }),
@@ -583,24 +706,29 @@ const AuthController = {
     if (req.user.role !== 'parent')
       return next(ApiError.forbidden('Only parents can update their profile this way'));
 
-    const { nom, prenom, langue_preferee, centre_id } = req.body;
+    const { nom, prenom, langue_preferee, email, centre_id } = req.body;
 
     // centre_id can only be set once — locked after first assignment
     if (centre_id && req.user.centre_id && req.user.centre_id !== Number(centre_id)) {
       return next(ApiError.forbidden('Le centre ne peut pas être modifié une fois fixé'));
     }
 
-    const fields = { nom, prenom, langue_preferee: langue_preferee || 'fr' };
+    const fields = {};
+    if (nom      !== undefined) fields.nom    = nom;
+    if (prenom   !== undefined) fields.prenom = prenom;
+    if (langue_preferee !== undefined) fields.langue_preferee = langue_preferee;
+    if (email    !== undefined) fields.email = email ? email.trim() : null;
     if (centre_id && !req.user.centre_id) fields.centre_id = Number(centre_id);
 
     const updatedParent = await Parent.update(req.user.id, fields);
     if (!updatedParent) return next(ApiError.notFound('Parent not found'));
 
-    // Fetch centre name if centre was just assigned
+    // Fetch centre name (always, so the client can display it without a separate round-trip)
     let centre_nom = null;
-    if (fields.centre_id) {
+    const effectiveCentreId = updatedParent.centre_id;
+    if (effectiveCentreId) {
       const { query: dbQuery } = require('../config/database');
-      const cr = await dbQuery('SELECT nom FROM centre WHERE id = $1', [fields.centre_id]);
+      const cr = await dbQuery('SELECT nom FROM centre WHERE id = $1', [effectiveCentreId]);
       centre_nom = cr.rows[0]?.nom || null;
     }
 
@@ -610,6 +738,7 @@ const AuthController = {
         telephone:       updatedParent.telephone,
         nom:             updatedParent.nom,
         prenom:          updatedParent.prenom,
+        email:           updatedParent.email || null,
         langue_preferee: updatedParent.langue_preferee,
         centre_id:       updatedParent.centre_id || null,
         centre_nom,

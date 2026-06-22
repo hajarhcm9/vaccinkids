@@ -180,14 +180,22 @@ export default function ProfileSetupScreen({ route }) {
         email:     values.email.trim() || undefined,
         centre_id: selCentre.id,
       });
-      const updatedUser = resp?.user || { ...userFromOtp, ...values, centre_id: selCentre.id };
+      const updatedUser = resp?.user
+        ? { ...resp.user, centre_nom: selCentre.nom }
+        : { ...userFromOtp, ...values, centre_id: selCentre.id, centre_nom: selCentre.nom };
       await AsyncStorage.setItem('new_parent_registration', 'true');
       await login(token, updatedUser, refreshToken);
     } catch (e) {
       if (e instanceof ApiError) {
-        if (e.isValidation && e.details?.fields) setErrors(e.details.fields);
-        else if (e.isNetwork) setErrors({ nom: 'Impossible de joindre le serveur. Vérifiez votre connexion Wi-Fi.' });
-        else setErrors({ nom: e.message });
+        if (e.isValidation && e.details?.errors?.length) {
+          const fieldErrors = {};
+          e.details.errors.forEach(({ field, message }) => { fieldErrors[field] = message; });
+          setErrors(fieldErrors);
+        } else if (e.isNetwork) {
+          setErrors({ nom: 'Impossible de joindre le serveur. Vérifiez votre connexion Wi-Fi.' });
+        } else {
+          setErrors({ nom: e.message });
+        }
       } else {
         setErrors({ nom: 'Erreur inattendue. Réessayez.' });
       }

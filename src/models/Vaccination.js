@@ -50,7 +50,7 @@ const Vaccination = {
 
   async findByBebe(bebeId) {
     const result = await query(
-      'SELECT vac.*, s.date_session, v.nom AS vaccin_nom, v.maladies_ciblees, ' +
+      'SELECT vac.*, s.date_session, s.vaccin_id, v.nom AS vaccin_nom, v.maladies_ciblees, ' +
         'f.numero_lot, f.fabricant, ' +
         'p.nom AS personnel_nom, p.prenom AS personnel_prenom ' +
         'FROM vaccination vac ' +

@@ -138,13 +138,6 @@ const config = {
           process.env.NODE_ENV === 'production' ? 20 : 200,
         ),
       },
-      kiosk: {
-        windowMs: parsePositiveInt(process.env.RATE_LIMIT_KIOSK_WINDOW_MS, 60 * 1000),
-        max: parsePositiveInt(
-          process.env.RATE_LIMIT_KIOSK_MAX,
-          process.env.NODE_ENV === 'production' ? 120 : 600,
-        ),
-      },
     },
   },
   trustProxy: parseTrustProxy(process.env.TRUST_PROXY),
@@ -164,11 +157,7 @@ const config = {
     webAdminEnabled:
       process.env.WEB_ADMIN_ENABLED === 'true' ||
       (process.env.NODE_ENV !== 'production' && process.env.WEB_ADMIN_ENABLED !== 'false'),
-    waitingRoomEnabled:
-      process.env.WAITING_ROOM_ENABLED === 'true' ||
-      (process.env.NODE_ENV !== 'production' && process.env.WAITING_ROOM_ENABLED !== 'false'),
     webAdminSessionDays: Math.min(parsePositiveInt(process.env.WEB_ADMIN_SESSION_DAYS, 7), 7),
-    kioskTokenMinutes: Math.min(parsePositiveInt(process.env.KIOSK_TOKEN_MINUTES, 15), 15),
   },
 
   swaggerEnabled: process.env.SWAGGER_ENABLED

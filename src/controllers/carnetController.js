@@ -40,6 +40,20 @@ const CarnetController = {
     return success(res, 200, 'Baby details retrieved', bebe);
   }),
 
+  updateBebe: catchAsync(async (req, res, next) => {
+    await authorization.assertBebeAccess(req.user, req.params.id);
+    const { prenom, nom, date_naissance, sexe } = req.body;
+    const updated = await Bebe.update(req.params.id, {
+      prenom,
+      nom,
+      date_naissance,
+      sexe,
+      is_newborn: false,
+    });
+    if (!updated) return next(ApiError.badRequest('Aucun champ à mettre à jour'));
+    return success(res, 200, 'Profil mis à jour', updated);
+  }),
+
   getVaccineHistory: catchAsync(async (req, res, next) => {
     await authorization.assertBebeAccess(req.user, req.params.id);
     const history = await Bebe.getVaccineHistory(req.params.id);
