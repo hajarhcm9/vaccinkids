@@ -280,6 +280,28 @@
                 app:singleSelection="true" />
         </HorizontalScrollView>
 
+        <!-- ═══ OFFLINE BANNER ═══ -->
+        <LinearLayout
+            android:id="@+id/rdvOfflineBanner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/warning_light"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingHorizontal="20dp"
+            android:paddingVertical="9dp"
+            android:layout_marginBottom="4dp"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/rdvOfflineText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/warning_dark"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
         <!-- ═══ STATUS MESSAGE ═══ -->
         <TextView
             android:id="@+id/rdvMessage"
