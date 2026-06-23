@@ -52,15 +52,21 @@ class StatsAdminActivity : AppCompatActivity() {
         lifecycleScope.launch {
             try {
                 val centreId = centres.getOrNull(spinnerCentre.selectedItemPosition - 1)?.id
-                val (dashboard, coverage, sessions, rdv, stock, absences) = coroutineScope {
-                    val d = async { requireStats(ApiClient.apiService.getStatsDashboard(centreId), "Dashboard") }
-                    val c = async { requireStats(ApiClient.apiService.getStatsCouverture(centreId), "Couverture") }
-                    val s = async { requireStats(ApiClient.apiService.getStatsSessions(centreId), "Sessions") }
-                    val r = async { requireStats(ApiClient.apiService.getStatsRendezVous(centreId), "Rendez-vous") }
+                val results = coroutineScope {
+                    val d  = async { requireStats(ApiClient.apiService.getStatsDashboard(centreId), "Dashboard") }
+                    val c  = async { requireStats(ApiClient.apiService.getStatsCouverture(centreId), "Couverture") }
+                    val s  = async { requireStats(ApiClient.apiService.getStatsSessions(centreId), "Sessions") }
+                    val r  = async { requireStats(ApiClient.apiService.getStatsRendezVous(centreId), "Rendez-vous") }
                     val st = async { requireStats(ApiClient.apiService.getStatsStock(centreId), "Stock") }
-                    val a = async { requireStats(ApiClient.apiService.getStatsAbsenteisme(centreId), "Absences") }
+                    val a  = async { requireStats(ApiClient.apiService.getStatsAbsenteisme(centreId), "Absences") }
                     listOf(d.await(), c.await(), s.await(), r.await(), st.await(), a.await())
                 }
+                val dashboard = results[0]
+                val coverage  = results[1]
+                val sessions  = results[2]
+                val rdv       = results[3]
+                val stock     = results[4]
+                val absences  = results[5]
 
                 addSection("Dashboard", dashboard, "#1A9099")
                 addSection("Couverture vaccinale", coverage, "#10B981")

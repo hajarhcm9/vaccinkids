@@ -57,7 +57,7 @@
                 android:textSize="12sp" />
         </LinearLayout>
 
-        <!-- Status badge -->
+        <!-- Status badge + action -->
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -76,6 +76,19 @@
                 android:textColor="@color/success_dark"
                 android:textSize="11sp"
                 android:textStyle="bold" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnTogglePersonnel"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:paddingHorizontal="4dp"
+                android:paddingVertical="2dp"
+                android:text="Désactiver"
+                android:textSize="10sp" />
         </LinearLayout>
 
     </LinearLayout>

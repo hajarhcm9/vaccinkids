@@ -52,6 +52,7 @@ object TokenManager : StaffSessionStore {
     fun getAccessToken(): String? = prefs.getString(KEY_ACCESS_TOKEN, null)
     override fun getRefreshToken(): String? = prefs.getString(KEY_REFRESH_TOKEN, null)
     fun getUserRole(): String? = prefs.getString(KEY_USER_ROLE, null)
+    fun getUserId(): Int? = prefs.getInt(KEY_USER_ID, 0).takeIf { it > 0 }
     fun getCentreId(): Int? = prefs.getInt(KEY_CENTRE_ID, 0).takeIf { it > 0 }
     fun saveCentreId(centreId: Int) { prefs.edit().putInt(KEY_CENTRE_ID, centreId).apply() }
     fun isLoggedIn(): Boolean = getAccessToken() != null

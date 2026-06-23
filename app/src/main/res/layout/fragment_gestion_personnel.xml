@@ -28,13 +28,30 @@
                 android:textSize="26sp"
                 android:textStyle="bold" />
 
-            <TextView
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
-                android:text="Comptes, rôles et affectations"
-                android:textColor="@color/text_secondary"
-                android:textSize="13sp" />
+                android:layout_marginTop="4dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Comptes, rôles et affectations"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="13sp" />
+                <TextView
+                    android:id="@+id/tvPersonnelTotal"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_chip_inactive"
+                    android:paddingHorizontal="10dp"
+                    android:paddingVertical="3dp"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp"
+                    android:visibility="gone" />
+            </LinearLayout>
         </LinearLayout>
 
         <!-- Search bar -->
@@ -50,7 +67,7 @@
             app:boxCornerRadiusBottomStart="14dp"
             app:boxCornerRadiusBottomEnd="14dp"
             app:boxStrokeColor="@color/brand_teal"
-            app:startIconDrawable="@drawable/ic_scan"
+            app:startIconDrawable="@drawable/ic_search"
             app:startIconTint="@color/brand_teal">
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etPersonnelSearch"
