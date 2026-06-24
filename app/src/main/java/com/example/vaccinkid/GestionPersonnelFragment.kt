@@ -1,5 +1,6 @@
 package com.example.vaccinkid
 
+import android.content.res.ColorStateList
 import android.graphics.Color
 import android.os.Bundle
 import android.os.Handler
@@ -8,11 +9,13 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
-import android.widget.ProgressBar
+import android.widget.FrameLayout
+import android.widget.LinearLayout
 import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import androidx.core.content.ContextCompat
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
@@ -26,6 +29,7 @@ import com.example.vaccinkid.network.ApiClient
 import com.example.vaccinkid.network.TokenManager
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.progressindicator.LinearProgressIndicator
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import kotlinx.coroutines.async
@@ -36,8 +40,11 @@ class GestionPersonnelFragment : Fragment(R.layout.fragment_gestion_personnel) {
 
     private lateinit var adapter: PersonnelXmlAdapter
     private lateinit var messageView: TextView
-    private lateinit var progressBar: ProgressBar
+    private lateinit var progressBar: LinearProgressIndicator
     private lateinit var tvPersonnelTotal: TextView
+    private lateinit var tvHeroInfirmiers: TextView
+    private lateinit var tvHeroAdmins: TextView
+    private lateinit var tvHeroInactifs: TextView
     private lateinit var tabTous: TextView
     private lateinit var tabInfirmiers: TextView
     private lateinit var tabAdmins: TextView
@@ -63,13 +70,16 @@ class GestionPersonnelFragment : Fragment(R.layout.fragment_gestion_personnel) {
     }
 
     private fun bindViews(view: View) {
-        messageView      = view.findViewById(R.id.tvPersonnelMessage)
-        progressBar      = view.findViewById(R.id.personnelProgress)
-        tvPersonnelTotal = view.findViewById(R.id.tvPersonnelTotal)
-        tabTous          = view.findViewById(R.id.tabPersonnelTous)
-        tabInfirmiers    = view.findViewById(R.id.tabPersonnelInfirmiers)
-        tabAdmins        = view.findViewById(R.id.tabPersonnelAdmins)
-        tabInactifs      = view.findViewById(R.id.tabPersonnelInactifs)
+        messageView       = view.findViewById(R.id.tvPersonnelMessage)
+        progressBar       = view.findViewById(R.id.personnelProgress)
+        tvPersonnelTotal  = view.findViewById(R.id.tvPersonnelTotal)
+        tvHeroInfirmiers  = view.findViewById(R.id.tvHeroInfirmiers)
+        tvHeroAdmins      = view.findViewById(R.id.tvHeroAdmins)
+        tvHeroInactifs    = view.findViewById(R.id.tvHeroInactifs)
+        tabTous           = view.findViewById(R.id.tabPersonnelTous)
+        tabInfirmiers     = view.findViewById(R.id.tabPersonnelInfirmiers)
+        tabAdmins         = view.findViewById(R.id.tabPersonnelAdmins)
+        tabInactifs       = view.findViewById(R.id.tabPersonnelInactifs)
 
         adapter = PersonnelXmlAdapter(
             onEdit   = { showForm(it) },
@@ -86,12 +96,12 @@ class GestionPersonnelFragment : Fragment(R.layout.fragment_gestion_personnel) {
             activeTab = tabKeys[idx]
             tabs.forEachIndexed { i, tv ->
                 if (i == idx) {
-                    tv.setBackgroundResource(R.drawable.bg_btn_teal_pill)
+                    tv.setBackgroundResource(R.drawable.bg_pill_lavender_active)
                     tv.setTextColor(requireContext().getColor(R.color.white))
                     tv.setTypeface(null, android.graphics.Typeface.BOLD)
                 } else {
-                    tv.setBackgroundResource(R.drawable.bg_chip_inactive)
-                    tv.setTextColor(requireContext().getColor(R.color.text_secondary))
+                    tv.setBackgroundResource(R.drawable.bg_pill_outline_lavender)
+                    tv.setTextColor(requireContext().getColor(R.color.brand_lavender))
                     tv.setTypeface(null, android.graphics.Typeface.NORMAL)
                 }
             }
@@ -99,6 +109,7 @@ class GestionPersonnelFragment : Fragment(R.layout.fragment_gestion_personnel) {
         }
 
         tabs.forEachIndexed { i, tv -> tv.setOnClickListener { selectTab(i) } }
+        selectTab(0)
 
         view.findViewById<TextInputEditText>(R.id.etPersonnelSearch).addTextChangedListener {
             searchQuery = it?.toString().orEmpty()
@@ -135,10 +146,24 @@ class GestionPersonnelFragment : Fragment(R.layout.fragment_gestion_personnel) {
         } else View.GONE
     }
 
-    private fun updateTabCounts() {
+    private fun updateHeroChips() {
         val infirmiers = allItems.count { it.role?.lowercase() == "infirmier" }
         val admins     = allItems.count { it.role?.lowercase() == "admin" }
         val inactifs   = allItems.count { it.estActif != true }
+
+        tvPersonnelTotal.text = "${allItems.size} membres"
+        tvPersonnelTotal.visibility = if (allItems.isNotEmpty()) View.VISIBLE else View.GONE
+
+        tvHeroInfirmiers.text = "$infirmiers Infirmier${if (infirmiers > 1) "s" else ""}"
+        tvHeroAdmins.text     = "$admins Admin${if (admins > 1) "s" else ""}"
+
+        if (inactifs > 0) {
+            tvHeroInactifs.text = "$inactifs inactif${if (inactifs > 1) "s" else ""} ⚠"
+            tvHeroInactifs.visibility = View.VISIBLE
+        } else {
+            tvHeroInactifs.visibility = View.GONE
+        }
+
         tabTous.text       = "Tous (${allItems.size})"
         tabInfirmiers.text = "Infirmiers ($infirmiers)"
         tabAdmins.text     = "Admins ($admins)"
@@ -149,6 +174,7 @@ class GestionPersonnelFragment : Fragment(R.layout.fragment_gestion_personnel) {
 
     private fun loadData() {
         progressBar.visibility = View.VISIBLE
+        messageView.visibility = View.GONE
         viewLifecycleOwner.lifecycleScope.launch {
             try {
                 val (personnelResp, refsResp) = coroutineScope {
@@ -167,11 +193,8 @@ class GestionPersonnelFragment : Fragment(R.layout.fragment_gestion_personnel) {
                 if (allItems.isEmpty()) {
                     messageView.text = "Aucun membre du personnel enregistré"
                     messageView.visibility = View.VISIBLE
-                } else {
-                    tvPersonnelTotal.text = "${personnelResp.data.total} membres"
-                    tvPersonnelTotal.visibility = View.VISIBLE
                 }
-                updateTabCounts()
+                updateHeroChips()
                 applyFilter()
             } catch (e: Exception) {
                 messageView.text = e.message ?: "Erreur réseau"
@@ -232,7 +255,6 @@ class GestionPersonnelFragment : Fragment(R.layout.fragment_gestion_personnel) {
             .setPositiveButton(if (isNew) "Créer le compte" else "Enregistrer") { _, _ -> }
             .show()
 
-        // Override to prevent auto-dismiss on validation failure
         dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
             tilCin.error    = null
             tilNom.error    = null
@@ -246,8 +268,7 @@ class GestionPersonnelFragment : Fragment(R.layout.fragment_gestion_personnel) {
 
             var valid = true
             if (isNew && cinVal.isNotBlank() && !cinVal.matches(Regex("^[A-Z]{1,2}[0-9]{5,6}$"))) {
-                tilCin.error = "Format invalide (ex: A123456 ou BE12345)"
-                valid = false
+                tilCin.error = "Format invalide (ex: A123456 ou BE12345)"; valid = false
             }
             if (nomVal.length < 2) { tilNom.error = "Min. 2 caractères"; valid = false }
             if (prenomVal.length < 2) { tilPrenom.error = "Min. 2 caractères"; valid = false }
@@ -304,9 +325,9 @@ class GestionPersonnelFragment : Fragment(R.layout.fragment_gestion_personnel) {
             .setTitle(if (isActive) "Désactiver le compte" else "Réactiver le compte")
             .setMessage(
                 if (isActive)
-                    "Désactiver le compte de $fullName ?\n\nIl ne pourra plus se connecter à l'application jusqu'à réactivation."
+                    "Désactiver le compte de $fullName ?\n\nIl ne pourra plus se connecter jusqu'à réactivation."
                 else
-                    "Réactiver le compte de $fullName ?\n\nIl pourra à nouveau se connecter à l'application."
+                    "Réactiver le compte de $fullName ?\n\nIl pourra à nouveau se connecter."
             )
             .setNegativeButton("Annuler", null)
             .setPositiveButton(if (isActive) "Désactiver" else "Réactiver") { _, _ ->
@@ -316,11 +337,10 @@ class GestionPersonnelFragment : Fragment(R.layout.fragment_gestion_personnel) {
                                 else ApiClient.apiService.reactivateAdminPersonnel(item.id)
                         if (r.status != "success") throw Exception(r.message ?: "Refusé")
 
-                        // Local update — no full reload needed
                         allItems = allItems.map {
                             if (it.id == item.id) it.copy(estActif = !isActive) else it
                         }
-                        updateTabCounts()
+                        updateHeroChips()
                         applyFilter()
                         Toast.makeText(requireContext(),
                             if (isActive) "Compte désactivé" else "Compte réactivé",
@@ -372,36 +392,71 @@ private class PersonnelXmlAdapter(
         private val onToggle: (AdminPersonnelDto) -> Unit
     ) : RecyclerView.ViewHolder(v) {
 
-        private val tvInitials   = v.findViewById<TextView>(R.id.tvPersonnelInitials)
-        private val tvNom        = v.findViewById<TextView>(R.id.tvPersonnelNom)
-        private val tvRoleCentre = v.findViewById<TextView>(R.id.tvPersonnelRoleCentre)
-        private val tvStatus     = v.findViewById<TextView>(R.id.tvPersonnelStatus)
-        private val btnToggle    = v.findViewById<MaterialButton>(R.id.btnTogglePersonnel)
+        private val vStatusBar    = v.findViewById<View>(R.id.vPersonnelStatusBar)
+        private val flAvatar      = v.findViewById<FrameLayout>(R.id.flPersonnelAvatar)
+        private val tvInitials    = v.findViewById<TextView>(R.id.tvPersonnelInitials)
+        private val tvNom         = v.findViewById<TextView>(R.id.tvPersonnelNom)
+        private val tvRoleCentre  = v.findViewById<TextView>(R.id.tvPersonnelRoleCentre)
+        private val tvStatus      = v.findViewById<TextView>(R.id.tvPersonnelStatus)
+        private val llCin         = v.findViewById<LinearLayout>(R.id.llPersonnelCin)
+        private val tvCin         = v.findViewById<TextView>(R.id.tvPersonnelCin)
+        private val btnEdit       = v.findViewById<MaterialButton>(R.id.btnEditPersonnel)
+        private val btnToggle     = v.findViewById<MaterialButton>(R.id.btnTogglePersonnel)
 
         fun bind(p: AdminPersonnelDto) {
+            val ctx = itemView.context
             val fullName = "${p.prenom ?: ""} ${p.nom ?: ""}".trim().ifBlank { "Inconnu" }
             val initials = listOfNotNull(p.prenom?.firstOrNull(), p.nom?.firstOrNull())
                 .joinToString("").uppercase().ifBlank { "?" }
+            val isAdmin  = p.role?.lowercase() == "admin"
+            val isActive = p.estActif == true
 
-            tvInitials.text   = initials
-            tvNom.text        = fullName
+            tvNom.text       = fullName
+            tvInitials.text  = initials
             tvRoleCentre.text = "${p.role?.replaceFirstChar { it.uppercase() } ?: "—"} · ${p.centreNom ?: "Aucun centre"}"
 
-            if (p.estActif == true) {
-                tvStatus.text = "Actif"
-                tvStatus.setBackgroundResource(R.drawable.bg_badge_success)
-                tvStatus.setTextColor(Color.parseColor("#065F46"))
-                btnToggle.text = "Désactiver"
-                btnToggle.setTextColor(Color.parseColor("#DC2626"))
+            // Role-colored avatar
+            if (isAdmin) {
+                flAvatar.setBackgroundResource(R.drawable.bg_kpi_icon_lavender)
+                tvInitials.setTextColor(Color.parseColor("#5B21B6"))
             } else {
-                tvStatus.text = "Inactif"
-                tvStatus.setBackgroundResource(R.drawable.bg_badge_error)
-                tvStatus.setTextColor(Color.parseColor("#991B1B"))
-                btnToggle.text = "Activer"
-                btnToggle.setTextColor(Color.parseColor("#059669"))
+                flAvatar.setBackgroundResource(R.drawable.bg_kpi_icon_green)
+                tvInitials.setTextColor(ContextCompat.getColor(ctx, R.color.brand_teal))
             }
 
+            // CIN chip
+            if (!p.cin.isNullOrBlank()) {
+                tvCin.text = "CIN: ${p.cin}"
+                llCin.visibility = View.VISIBLE
+            } else {
+                llCin.visibility = View.GONE
+            }
+
+            // Status
+            if (isActive) {
+                vStatusBar.setBackgroundColor(ContextCompat.getColor(ctx, R.color.success))
+                tvStatus.text = "Actif"
+                tvStatus.setBackgroundResource(R.drawable.bg_badge_success)
+                tvStatus.setTextColor(ContextCompat.getColor(ctx, R.color.success_dark))
+                btnToggle.text = "Désactiver"
+                btnToggle.setTextColor(ContextCompat.getColor(ctx, R.color.error))
+                btnToggle.strokeColor = ColorStateList.valueOf(ContextCompat.getColor(ctx, R.color.error))
+            } else {
+                vStatusBar.setBackgroundColor(ContextCompat.getColor(ctx, R.color.error))
+                tvStatus.text = "Inactif"
+                tvStatus.setBackgroundResource(R.drawable.bg_badge_error)
+                tvStatus.setTextColor(ContextCompat.getColor(ctx, R.color.error))
+                btnToggle.text = "Réactiver"
+                btnToggle.setTextColor(ContextCompat.getColor(ctx, R.color.success))
+                btnToggle.strokeColor = ColorStateList.valueOf(ContextCompat.getColor(ctx, R.color.success))
+            }
+
+            // Edit button always lavender
+            btnEdit.setTextColor(ContextCompat.getColor(ctx, R.color.brand_lavender))
+            btnEdit.strokeColor = ColorStateList.valueOf(ContextCompat.getColor(ctx, R.color.brand_lavender))
+
             itemView.setOnClickListener { onEdit(p) }
+            btnEdit.setOnClickListener { onEdit(p) }
             btnToggle.setOnClickListener { onToggle(p) }
         }
     }

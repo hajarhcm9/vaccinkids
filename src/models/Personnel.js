@@ -13,7 +13,7 @@ const Personnel = {
 
   async findById(id) {
     const result = await query(
-      'SELECT p.id, p.cin, p.nom, p.prenom, p.role, p.centre_id, c.nom AS centre_nom, p.est_actif, p.created_at FROM personnel p LEFT JOIN centres c ON c.id = p.centre_id WHERE p.id = $1',
+      'SELECT p.id, p.cin, p.nom, p.prenom, p.role, p.centre_id, c.nom AS centre_nom, p.est_actif, p.created_at FROM personnel p LEFT JOIN centre c ON c.id = p.centre_id WHERE p.id = $1',
       [id],
     );
     return result.rows[0];

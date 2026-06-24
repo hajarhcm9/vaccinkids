@@ -16,206 +16,228 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingTop="20dp"
             android:paddingBottom="110dp">
 
-            <!-- ══════════════════════════════════════
-                 HEADER — avatar + greeting + bell
-            ═══════════════════════════════════════ -->
-            <LinearLayout
+            <!-- ══════════════════════════════════════════════
+                 HERO — full-bleed gradient header
+            ══════════════════════════════════════════════ -->
+            <FrameLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:paddingHorizontal="22dp">
+                android:layout_height="215dp"
+                android:background="@drawable/bg_gradient_hero_dashboard">
 
-                <!-- Avatar with teal ring -->
-                <com.google.android.material.imageview.ShapeableImageView
-                    android:id="@+id/ivDashboardAvatar"
-                    android:layout_width="46dp"
-                    android:layout_height="46dp"
-                    android:contentDescription="@null"
-                    android:src="@drawable/ic_medical_staff"
-                    app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Full"
-                    app:strokeColor="@color/brand_teal"
-                    app:strokeWidth="2dp" />
+                <!-- Decorative circles -->
+                <View
+                    android:layout_width="160dp"
+                    android:layout_height="160dp"
+                    android:layout_gravity="end|top"
+                    android:layout_marginEnd="-44dp"
+                    android:layout_marginTop="-44dp"
+                    android:alpha="0.12"
+                    android:background="@drawable/bg_circle_white_alpha" />
 
-                <!-- Greeting -->
+                <View
+                    android:layout_width="110dp"
+                    android:layout_height="110dp"
+                    android:layout_gravity="end|bottom"
+                    android:layout_marginEnd="52dp"
+                    android:layout_marginBottom="-36dp"
+                    android:alpha="0.08"
+                    android:background="@drawable/bg_circle_white_alpha" />
+
+                <View
+                    android:layout_width="60dp"
+                    android:layout_height="60dp"
+                    android:layout_gravity="start|bottom"
+                    android:layout_marginStart="22dp"
+                    android:layout_marginBottom="-18dp"
+                    android:alpha="0.07"
+                    android:background="@drawable/bg_circle_white_alpha" />
+
+                <!-- Content column -->
                 <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="14dp"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Bonjour,"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="13sp" />
-
-                    <TextView
-                        android:id="@+id/tvDashboardNurseName"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Infirmier Samira"
-                        android:textColor="@color/text_primary"
-                        android:textSize="18sp"
-                        android:textStyle="bold"
-                        android:letterSpacing="-0.01" />
-                </LinearLayout>
-
-                <!-- Notification bell -->
-                <FrameLayout
-                    android:id="@+id/btnDashboardNotifications"
-                    android:layout_width="44dp"
-                    android:layout_height="44dp"
-                    android:background="@drawable/bg_kpi_card"
-                    android:elevation="2dp">
-                    <ImageView
-                        android:layout_width="22dp"
-                        android:layout_height="22dp"
-                        android:layout_gravity="center"
-                        android:contentDescription="Notifications"
-                        android:src="@drawable/ic_notifications"
-                        app:tint="@color/text_primary" />
-                </FrameLayout>
-            </LinearLayout>
-
-            <!-- Centre name sub-label -->
-            <TextView
-                android:id="@+id/tvDashboardCenterName"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="82dp"
-                android:layout_marginTop="1dp"
-                android:text="Centre de santé Al Amal"
-                android:textColor="@color/brand_teal"
-                android:textSize="12sp" />
-
-            <!-- ══════════════════════════════════════
-                 HERO CARD — today's overview
-            ═══════════════════════════════════════ -->
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/cvTodayBanner"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginHorizontal="22dp"
-                android:layout_marginTop="22dp"
-                app:cardCornerRadius="24dp"
-                app:cardElevation="0dp"
-                app:cardBackgroundColor="@color/stormy_teal"
-                app:strokeWidth="0dp">
-
-                <FrameLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/bg_gradient_hero_dashboard"
-                    android:minHeight="170dp"
-                    android:padding="22dp">
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"
+                    android:paddingHorizontal="22dp"
+                    android:paddingTop="46dp"
+                    android:paddingBottom="36dp">
 
-                    <!-- Text column -->
+                    <!-- Top row: date pill + notification bell -->
                     <LinearLayout
-                        android:layout_width="wrap_content"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_gravity="center_vertical"
-                        android:orientation="vertical">
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
 
-                        <!-- Date chip -->
-                        <FrameLayout
+                        <TextView
+                            android:id="@+id/tvDashboardDate"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:background="@drawable/bg_white_glow_circle"
+                            android:background="@drawable/bg_hero_pill"
                             android:paddingHorizontal="12dp"
-                            android:paddingVertical="5dp">
+                            android:paddingVertical="5dp"
+                            android:text="Lundi 23 Juin"
+                            android:textColor="@color/white"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+
+                        <View
+                            android:layout_width="0dp"
+                            android:layout_height="1dp"
+                            android:layout_weight="1" />
+
+                        <FrameLayout
+                            android:id="@+id/btnDashboardNotifications"
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:background="@drawable/bg_circle_white_alpha"
+                            android:foreground="?attr/selectableItemBackgroundBorderless">
+
+                            <ImageView
+                                android:layout_width="20dp"
+                                android:layout_height="20dp"
+                                android:layout_gravity="center"
+                                android:contentDescription="Notifications"
+                                android:src="@drawable/ic_notifications"
+                                app:tint="@color/white" />
+
                             <TextView
-                                android:id="@+id/tvDashboardDate"
+                                android:id="@+id/tvNotifBadge"
+                                android:layout_width="16dp"
+                                android:layout_height="16dp"
+                                android:layout_gravity="end|top"
+                                android:layout_marginEnd="1dp"
+                                android:layout_marginTop="1dp"
+                                android:background="@drawable/bg_badge_error"
+                                android:gravity="center"
+                                android:text="!"
+                                android:textColor="@color/white"
+                                android:textSize="9sp"
+                                android:textStyle="bold"
+                                android:visibility="gone" />
+                        </FrameLayout>
+                    </LinearLayout>
+
+                    <!-- Avatar + greeting + centre row -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:layout_weight="1"
+                        android:layout_marginTop="14dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <FrameLayout
+                            android:id="@+id/ivDashboardAvatar"
+                            android:layout_width="54dp"
+                            android:layout_height="54dp"
+                            android:background="@drawable/bg_more_avatar">
+
+                            <TextView
+                                android:id="@+id/tvDashboardAvatarInitials"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Lundi, 16 Juin 2025"
+                                android:layout_gravity="center"
+                                android:text="?"
                                 android:textColor="@color/white"
-                                android:textSize="13sp"
+                                android:textSize="19sp"
                                 android:textStyle="bold" />
                         </FrameLayout>
 
-                        <!-- Big stat -->
-                        <TextView
-                            android:id="@+id/tvDashboardSessionsCount"
-                            android:layout_width="wrap_content"
+                        <LinearLayout
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="18dp"
-                            android:text="4"
-                            android:textColor="@color/white"
-                            android:textSize="52sp"
-                            android:textStyle="bold"
-                            android:lineHeight="52dp"
-                            android:letterSpacing="-0.03" />
+                            android:layout_marginStart="14dp"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:id="@+id/tvDashboardNurseName"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Bon matin !"
+                                android:textColor="@color/white"
+                                android:textSize="20sp"
+                                android:textStyle="bold"
+                                android:letterSpacing="-0.01" />
+
+                            <LinearLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:gravity="center_vertical"
+                                android:layout_marginTop="4dp"
+                                android:orientation="horizontal">
+
+                                <ImageView
+                                    android:layout_width="12dp"
+                                    android:layout_height="12dp"
+                                    android:contentDescription="@null"
+                                    android:src="@drawable/ic_building"
+                                    app:tint="@color/white_70" />
+
+                                <TextView
+                                    android:id="@+id/tvDashboardCenterName"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="5dp"
+                                    android:text="Centre de santé"
+                                    android:textColor="@color/white_70"
+                                    android:textSize="13sp" />
+                            </LinearLayout>
+                        </LinearLayout>
 
                         <TextView
+                            android:id="@+id/tvSessionTime"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
-                            android:text="Sessions actives"
+                            android:background="@drawable/bg_hero_pill"
+                            android:paddingHorizontal="10dp"
+                            android:paddingVertical="5dp"
+                            android:text="--:-- – --:--"
                             android:textColor="@color/white_80"
-                            android:textSize="14sp" />
+                            android:textSize="12sp"
+                            android:visibility="gone" />
                     </LinearLayout>
+                </LinearLayout>
+            </FrameLayout>
 
-                    <!-- Decorative watermark icon (top-right) -->
-                    <ImageView
-                        android:layout_width="100dp"
-                        android:layout_height="100dp"
-                        android:layout_gravity="end|top"
-                        android:alpha="0.12"
-                        android:contentDescription="@null"
-                        android:src="@drawable/ic_calendar_event"
-                        app:tint="@color/white" />
-
-                    <!-- Small sparkle bottom-right -->
-                    <View
-                        android:layout_width="8dp"
-                        android:layout_height="8dp"
-                        android:layout_gravity="end|bottom"
-                        android:layout_margin="14dp"
-                        android:background="@drawable/bg_amber_circle"
-                        android:alpha="0.7" />
-
-                </FrameLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- ══════════════════════════════════════
-                 KPI ROW — 4 metric cards
-            ═══════════════════════════════════════ -->
+            <!-- ══════════════════════════════════════════════
+                 KPI STRIP — 4 floating cards overlap hero by 28dp
+            ══════════════════════════════════════════════ -->
             <LinearLayout
-                android:id="@+id/llKpiRow"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginHorizontal="22dp"
-                android:layout_marginTop="16dp"
-                android:orientation="horizontal">
+                android:orientation="horizontal"
+                android:layout_marginHorizontal="14dp"
+                android:layout_marginTop="-28dp"
+                android:paddingBottom="8dp">
 
-                <!-- RDV -->
                 <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/cvKpiRdv"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:layout_marginEnd="7dp"
-                    app:cardCornerRadius="20dp"
-                    app:cardElevation="2dp"
+                    android:layout_marginEnd="6dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    app:cardCornerRadius="18dp"
+                    app:cardElevation="6dp"
                     app:cardBackgroundColor="@color/white"
                     app:strokeWidth="0dp">
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
-                        android:padding="14dp">
+                        android:gravity="center"
+                        android:padding="12dp">
                         <FrameLayout
-                            android:layout_width="38dp"
-                            android:layout_height="38dp"
+                            android:layout_width="34dp"
+                            android:layout_height="34dp"
                             android:background="@drawable/bg_kpi_icon_blue">
                             <ImageView
-                                android:layout_width="20dp"
-                                android:layout_height="20dp"
+                                android:layout_width="16dp"
+                                android:layout_height="16dp"
                                 android:layout_gravity="center"
                                 android:contentDescription="@null"
                                 android:src="@drawable/ic_calendar_event"
@@ -225,11 +247,12 @@
                             android:id="@+id/tvKpiRdv"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="10dp"
+                            android:layout_marginTop="8dp"
                             android:text="--"
                             android:textColor="@color/info"
-                            android:textSize="24sp"
+                            android:textSize="22sp"
                             android:textStyle="bold"
+                            android:gravity="center"
                             android:letterSpacing="-0.02" />
                         <TextView
                             android:layout_width="wrap_content"
@@ -237,32 +260,36 @@
                             android:layout_marginTop="2dp"
                             android:text="RDV"
                             android:textColor="@color/text_secondary"
-                            android:textSize="11sp" />
+                            android:textSize="10sp"
+                            android:gravity="center" />
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 
-                <!-- Vaccinés -->
                 <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/cvKpiVaccines"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:layout_marginEnd="7dp"
-                    app:cardCornerRadius="20dp"
-                    app:cardElevation="2dp"
+                    android:layout_marginEnd="6dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    app:cardCornerRadius="18dp"
+                    app:cardElevation="6dp"
                     app:cardBackgroundColor="@color/white"
                     app:strokeWidth="0dp">
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
-                        android:padding="14dp">
+                        android:gravity="center"
+                        android:padding="12dp">
                         <FrameLayout
-                            android:layout_width="38dp"
-                            android:layout_height="38dp"
+                            android:layout_width="34dp"
+                            android:layout_height="34dp"
                             android:background="@drawable/bg_kpi_icon_green">
                             <ImageView
-                                android:layout_width="20dp"
-                                android:layout_height="20dp"
+                                android:layout_width="16dp"
+                                android:layout_height="16dp"
                                 android:layout_gravity="center"
                                 android:contentDescription="@null"
                                 android:src="@drawable/ic_syringe"
@@ -272,11 +299,12 @@
                             android:id="@+id/tvKpiVaccines"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="10dp"
+                            android:layout_marginTop="8dp"
                             android:text="--"
                             android:textColor="@color/success"
-                            android:textSize="24sp"
+                            android:textSize="22sp"
                             android:textStyle="bold"
+                            android:gravity="center"
                             android:letterSpacing="-0.02" />
                         <TextView
                             android:layout_width="wrap_content"
@@ -284,32 +312,36 @@
                             android:layout_marginTop="2dp"
                             android:text="Vaccinés"
                             android:textColor="@color/text_secondary"
-                            android:textSize="11sp" />
+                            android:textSize="10sp"
+                            android:gravity="center" />
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 
-                <!-- En attente -->
                 <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/cvKpiWaiting"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:layout_marginEnd="7dp"
-                    app:cardCornerRadius="20dp"
-                    app:cardElevation="2dp"
+                    android:layout_marginEnd="6dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    app:cardCornerRadius="18dp"
+                    app:cardElevation="6dp"
                     app:cardBackgroundColor="@color/white"
                     app:strokeWidth="0dp">
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
-                        android:padding="14dp">
+                        android:gravity="center"
+                        android:padding="12dp">
                         <FrameLayout
-                            android:layout_width="38dp"
-                            android:layout_height="38dp"
+                            android:layout_width="34dp"
+                            android:layout_height="34dp"
                             android:background="@drawable/bg_kpi_icon_orange">
                             <ImageView
-                                android:layout_width="20dp"
-                                android:layout_height="20dp"
+                                android:layout_width="16dp"
+                                android:layout_height="16dp"
                                 android:layout_gravity="center"
                                 android:contentDescription="@null"
                                 android:src="@drawable/ic_queue_people"
@@ -319,11 +351,12 @@
                             android:id="@+id/tvKpiWaiting"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="10dp"
+                            android:layout_marginTop="8dp"
                             android:text="--"
                             android:textColor="@color/warning"
-                            android:textSize="24sp"
+                            android:textSize="22sp"
                             android:textStyle="bold"
+                            android:gravity="center"
                             android:letterSpacing="-0.02" />
                         <TextView
                             android:layout_width="wrap_content"
@@ -331,45 +364,50 @@
                             android:layout_marginTop="2dp"
                             android:text="Attente"
                             android:textColor="@color/text_secondary"
-                            android:textSize="11sp" />
+                            android:textSize="10sp"
+                            android:gravity="center" />
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 
-                <!-- Absents -->
                 <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/cvKpiAbsents"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    app:cardCornerRadius="20dp"
-                    app:cardElevation="2dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    app:cardCornerRadius="18dp"
+                    app:cardElevation="6dp"
                     app:cardBackgroundColor="@color/white"
                     app:strokeWidth="0dp">
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
-                        android:padding="14dp">
+                        android:gravity="center"
+                        android:padding="12dp">
                         <FrameLayout
-                            android:layout_width="38dp"
-                            android:layout_height="38dp"
+                            android:layout_width="34dp"
+                            android:layout_height="34dp"
                             android:background="@drawable/bg_kpi_icon_red">
                             <ImageView
-                                android:layout_width="20dp"
-                                android:layout_height="20dp"
+                                android:layout_width="16dp"
+                                android:layout_height="16dp"
                                 android:layout_gravity="center"
                                 android:contentDescription="@null"
-                                android:src="@drawable/ic_logout"
+                                android:src="@drawable/ic_rdv"
                                 app:tint="@color/error" />
                         </FrameLayout>
                         <TextView
                             android:id="@+id/tvKpiAbsents"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="10dp"
+                            android:layout_marginTop="8dp"
                             android:text="--"
                             android:textColor="@color/error"
-                            android:textSize="24sp"
+                            android:textSize="22sp"
                             android:textStyle="bold"
+                            android:gravity="center"
                             android:letterSpacing="-0.02" />
                         <TextView
                             android:layout_width="wrap_content"
@@ -377,28 +415,143 @@
                             android:layout_marginTop="2dp"
                             android:text="Absents"
                             android:textColor="@color/text_secondary"
-                            android:textSize="11sp" />
+                            android:textSize="10sp"
+                            android:gravity="center" />
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
             </LinearLayout>
 
-            <!-- ══════════════════════════════════════
-                 PROCHAIN RDV — section title + card
-            ═══════════════════════════════════════ -->
+            <!-- ══════════════════════════════════════════════
+                 PROGRESSION CARD
+            ══════════════════════════════════════════════ -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="18dp"
+                android:layout_marginTop="12dp"
+                app:cardCornerRadius="20dp"
+                app:cardElevation="2dp"
+                app:cardBackgroundColor="@color/white"
+                app:strokeWidth="0dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <ImageView
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:contentDescription="@null"
+                            android:src="@drawable/ic_bar_chart"
+                            app:tint="@color/brand_teal" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="8dp"
+                            android:text="Progression du jour"
+                            android:textColor="@color/text_primary"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tvProgressLabel"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="- / -"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="13sp" />
+                    </LinearLayout>
+
+                    <com.google.android.material.progressindicator.LinearProgressIndicator
+                        android:id="@+id/progressRdv"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="14dp"
+                        android:progress="0"
+                        app:indicatorColor="@color/brand_teal"
+                        app:trackColor="@color/bg_screen"
+                        app:trackCornerRadius="5dp"
+                        app:trackThickness="10dp" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Hidden: kept for KT compatibility -->
+            <TextView
+                android:id="@+id/tvDashboardSessionsCount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:visibility="gone" />
+
+            <!-- ══════════════════════════════════════════════
+                 STOCK ALERT BANNER (hidden by default, clickable)
+            ══════════════════════════════════════════════ -->
+            <LinearLayout
+                android:id="@+id/bannerStockAlert"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="18dp"
+                android:layout_marginTop="14dp"
+                android:background="@drawable/bg_stock_alert"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingHorizontal="16dp"
+                android:paddingVertical="13dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:visibility="gone">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_package"
+                    app:tint="@color/warning_dark" />
+
+                <TextView
+                    android:id="@+id/tvStockAlertText"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
+                    android:layout_weight="1"
+                    android:text="Alertes stock en cours"
+                    android:textColor="@color/warning_dark"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_chevron_right"
+                    app:tint="@color/warning_dark" />
+            </LinearLayout>
+
+            <!-- ══════════════════════════════════════════════
+                 PROCHAIN PATIENT — section header + card
+            ══════════════════════════════════════════════ -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginHorizontal="22dp"
-                android:layout_marginTop="26dp"
+                android:layout_marginHorizontal="18dp"
+                android:layout_marginTop="24dp"
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
                 <TextView
-                    android:id="@+id/tvNextRdvTitle"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Prochain RDV"
+                    android:text="Prochain patient"
                     android:textColor="@color/text_primary"
                     android:textSize="16sp"
                     android:textStyle="bold" />
@@ -416,13 +569,14 @@
                     android:textStyle="bold" />
             </LinearLayout>
 
-            <!-- RDV card with left teal accent bar -->
+            <!-- RDV Card (visible when data available) -->
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/cvNextRdv"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginHorizontal="22dp"
-                android:layout_marginTop="12dp"
+                android:layout_marginHorizontal="18dp"
+                android:layout_marginTop="10dp"
+                android:visibility="gone"
                 app:cardCornerRadius="20dp"
                 app:cardElevation="3dp"
                 app:cardBackgroundColor="@color/white"
@@ -431,37 +585,33 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal">
+                    android:orientation="vertical">
 
-                    <!-- Left teal accent bar -->
-                    <View
-                        android:layout_width="5dp"
-                        android:layout_height="match_parent"
-                        android:background="@color/brand_teal" />
-
-                    <!-- Card content -->
+                    <!-- Patient info -->
                     <LinearLayout
-                        android:layout_width="0dp"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
                         android:gravity="center_vertical"
                         android:orientation="horizontal"
                         android:padding="18dp">
 
-                        <!-- Time chip -->
-                        <TextView
-                            android:id="@+id/tvNextRdvTime"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:background="@drawable/bg_time_chip"
-                            android:paddingHorizontal="12dp"
-                            android:paddingVertical="6dp"
-                            android:text="09:30"
-                            android:textColor="@color/brand_teal_dark"
-                            android:textSize="13sp"
-                            android:textStyle="bold" />
+                        <!-- Avatar circle with initials -->
+                        <FrameLayout
+                            android:layout_width="50dp"
+                            android:layout_height="50dp"
+                            android:background="@drawable/bg_circle_teal">
+                            <TextView
+                                android:id="@+id/tvNextRdvInitials"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="center"
+                                android:text="?"
+                                android:textColor="@color/white"
+                                android:textSize="16sp"
+                                android:textStyle="bold" />
+                        </FrameLayout>
 
-                        <!-- Name + age -->
+                        <!-- Name + age + badges -->
                         <LinearLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
@@ -473,7 +623,7 @@
                                 android:id="@+id/tvNextRdvPatient"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Youssef Amine"
+                                android:text="—"
                                 android:textColor="@color/text_primary"
                                 android:textSize="16sp"
                                 android:textStyle="bold" />
@@ -483,61 +633,299 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="2dp"
-                                android:text="2 ans, 3 mois"
+                                android:text="—"
                                 android:textColor="@color/text_secondary"
                                 android:textSize="13sp" />
+
+                            <LinearLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:gravity="center_vertical"
+                                android:layout_marginTop="8dp"
+                                android:orientation="horizontal">
+
+                                <TextView
+                                    android:id="@+id/tvNextRdvType"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:background="@drawable/badge_orange_bg"
+                                    android:paddingHorizontal="8dp"
+                                    android:paddingVertical="3dp"
+                                    android:text="Vaccin"
+                                    android:textColor="@color/warning_dark"
+                                    android:textSize="11sp"
+                                    android:textStyle="bold" />
+
+                                <TextView
+                                    android:id="@+id/tvNextRdvTime"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="8dp"
+                                    android:background="@drawable/bg_time_chip"
+                                    android:paddingHorizontal="10dp"
+                                    android:paddingVertical="3dp"
+                                    android:text="--:--"
+                                    android:textColor="@color/brand_teal_dark"
+                                    android:textSize="12sp"
+                                    android:textStyle="bold" />
+                            </LinearLayout>
                         </LinearLayout>
 
-                        <!-- Vaccine badge -->
-                        <TextView
-                            android:id="@+id/tvNextRdvType"
+                        <!-- Queue number badge -->
+                        <LinearLayout
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:background="@drawable/badge_orange_bg"
+                            android:layout_marginStart="10dp"
+                            android:background="@drawable/bg_badge_teal"
+                            android:gravity="center"
+                            android:minWidth="40dp"
+                            android:orientation="vertical"
                             android:paddingHorizontal="10dp"
-                            android:paddingVertical="5dp"
-                            android:text="Rappel DTC"
-                            android:textColor="@color/warning_dark"
-                            android:textSize="11sp"
+                            android:paddingVertical="6dp">
+                            <TextView
+                                android:id="@+id/tvNextRdvQueue"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="#–"
+                                android:textColor="@color/brand_teal_dark"
+                                android:textSize="14sp"
+                                android:textStyle="bold"
+                                android:gravity="center" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <!-- Divider -->
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:layout_marginHorizontal="18dp"
+                        android:background="#EEF2F6" />
+
+                    <!-- "Ouvrir le dossier" action row -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:paddingHorizontal="18dp"
+                        android:paddingVertical="14dp"
+                        android:orientation="horizontal">
+
+                        <ImageView
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:contentDescription="@null"
+                            android:src="@drawable/ic_scan"
+                            app:tint="@color/brand_teal" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="10dp"
+                            android:text="Ouvrir le dossier"
+                            android:textColor="@color/brand_teal"
+                            android:textSize="14sp"
                             android:textStyle="bold" />
+
+                        <ImageView
+                            android:layout_width="16dp"
+                            android:layout_height="16dp"
+                            android:contentDescription="@null"
+                            android:src="@drawable/ic_chevron_right"
+                            app:tint="@color/brand_teal" />
                     </LinearLayout>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- ══════════════════════════════════════
-                 QR SCANNER — main CTA
-            ═══════════════════════════════════════ -->
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/dashboardOpenScan"
+            <!-- Empty state (visible by default until data loads) -->
+            <LinearLayout
+                android:id="@+id/llNextRdvEmpty"
                 android:layout_width="match_parent"
-                android:layout_height="58dp"
-                android:layout_marginHorizontal="22dp"
-                android:layout_marginTop="30dp"
-                android:background="@drawable/bg_qr_btn"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="18dp"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/bg_kpi_card"
                 android:gravity="center"
-                android:text="Scanner QR"
-                android:textColor="@color/white"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:letterSpacing="0.01"
-                android:stateListAnimator="@null"
-                android:elevation="6dp"
-                app:backgroundTint="@null"
-                app:cornerRadius="16dp"
-                app:icon="@drawable/ic_scan"
-                app:iconTint="@color/white"
-                app:iconSize="22dp"
-                app:iconGravity="textStart"
-                app:iconPadding="10dp" />
+                android:orientation="vertical"
+                android:padding="26dp"
+                android:visibility="visible">
 
+                <ImageView
+                    android:layout_width="38dp"
+                    android:layout_height="38dp"
+                    android:alpha="0.28"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_calendar_event"
+                    app:tint="@color/brand_teal" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:gravity="center"
+                    android:text="Aucun RDV en attente"
+                    android:textColor="@color/text_primary"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:gravity="center"
+                    android:text="Tous les patients ont été pris en charge"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+            <!-- ══════════════════════════════════════════════
+                 QUICK ACTIONS — two large tile cards
+            ══════════════════════════════════════════════ -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="18dp"
+                android:layout_marginTop="26dp"
+                android:text="Actions rapides"
+                android:textColor="@color/text_primary"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="18dp"
+                android:layout_marginTop="12dp"
+                android:baselineAligned="false"
+                android:orientation="horizontal">
+
+                <!-- Scanner QR tile -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/dashboardOpenScan"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="10dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    app:cardCornerRadius="20dp"
+                    app:cardElevation="0dp"
+                    app:cardBackgroundColor="@color/brand_teal"
+                    app:strokeWidth="0dp">
+
+                    <FrameLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@drawable/bg_gradient_hero_dashboard">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center"
+                            android:orientation="vertical"
+                            android:padding="22dp">
+
+                            <FrameLayout
+                                android:layout_width="54dp"
+                                android:layout_height="54dp"
+                                android:background="@drawable/bg_circle_white_alpha">
+                                <ImageView
+                                    android:layout_width="26dp"
+                                    android:layout_height="26dp"
+                                    android:layout_gravity="center"
+                                    android:contentDescription="@null"
+                                    android:src="@drawable/ic_scan"
+                                    app:tint="@color/white" />
+                            </FrameLayout>
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="14dp"
+                                android:gravity="center"
+                                android:text="Scanner QR"
+                                android:textColor="@color/white"
+                                android:textSize="15sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="3dp"
+                                android:gravity="center"
+                                android:text="Accès rapide"
+                                android:textColor="@color/white_70"
+                                android:textSize="12sp" />
+                        </LinearLayout>
+                    </FrameLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- File d'attente tile -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/btnQueueDashboard"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:clickable="true"
+                    android:focusable="true"
+                    app:cardCornerRadius="20dp"
+                    app:cardElevation="0dp"
+                    app:cardBackgroundColor="@color/white"
+                    app:strokeColor="@color/brand_teal"
+                    app:strokeWidth="2dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:orientation="vertical"
+                        android:padding="22dp">
+
+                        <FrameLayout
+                            android:layout_width="54dp"
+                            android:layout_height="54dp"
+                            android:background="@drawable/bg_kpi_icon_teal">
+                            <ImageView
+                                android:layout_width="26dp"
+                                android:layout_height="26dp"
+                                android:layout_gravity="center"
+                                android:contentDescription="@null"
+                                android:src="@drawable/ic_queue_people"
+                                app:tint="@color/brand_teal" />
+                        </FrameLayout>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="14dp"
+                            android:gravity="center"
+                            android:text="File d'attente"
+                            android:textColor="@color/brand_teal"
+                            android:textSize="15sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="3dp"
+                            android:gravity="center"
+                            android:text="Gérer la queue"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="12sp" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+            </LinearLayout>
+
+            <!-- Error message -->
             <TextView
                 android:id="@+id/dashboardMessage"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginHorizontal="22dp"
-                android:layout_marginTop="10dp"
+                android:layout_marginHorizontal="18dp"
+                android:layout_marginTop="12dp"
                 android:textColor="@color/error_dark"
-                android:textSize="13sp" />
+                android:textSize="13sp"
+                android:visibility="gone" />
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>

@@ -11,64 +11,153 @@
         android:layout_height="match_parent"
         android:orientation="vertical">
 
-        <!-- Header -->
-        <LinearLayout
+        <!-- ══════════════════════════════════════
+             HERO GRADIENT 150dp
+        ═══════════════════════════════════════ -->
+        <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:paddingHorizontal="22dp"
-            android:paddingTop="22dp"
-            android:paddingBottom="14dp">
+            android:layout_height="150dp"
+            android:background="@drawable/bg_gradient_admin_hero">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Personnel"
-                android:textColor="@color/text_primary"
-                android:textSize="26sp"
-                android:textStyle="bold" />
+            <!-- Decorative blobs -->
+            <View
+                android:layout_width="160dp"
+                android:layout_height="160dp"
+                android:layout_gravity="top|end"
+                android:layout_marginEnd="-50dp"
+                android:layout_marginTop="-50dp"
+                android:alpha="0.07"
+                android:background="@drawable/bg_white_glow_circle" />
 
+            <View
+                android:layout_width="90dp"
+                android:layout_height="90dp"
+                android:layout_gravity="bottom|start"
+                android:layout_marginStart="40dp"
+                android:layout_marginBottom="-20dp"
+                android:alpha="0.06"
+                android:background="@drawable/bg_white_glow_circle" />
+
+            <!-- Content -->
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Comptes, rôles et affectations"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="13sp" />
-                <TextView
-                    android:id="@+id/tvPersonnelTotal"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/bg_chip_inactive"
-                    android:paddingHorizontal="10dp"
-                    android:paddingVertical="3dp"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="12sp"
-                    android:visibility="gone" />
-            </LinearLayout>
-        </LinearLayout>
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:paddingHorizontal="20dp"
+                android:paddingTop="20dp"
+                android:paddingBottom="18dp">
 
-        <!-- Search bar -->
+                <!-- Title row -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Gestion du Personnel"
+                            android:textColor="@color/white"
+                            android:textSize="20sp"
+                            android:textStyle="bold" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="Comptes · Rôles · Centres"
+                            android:textColor="#BBFFFFFF"
+                            android:textSize="12sp" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/tvPersonnelTotal"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/bg_chip_white_alpha"
+                        android:paddingHorizontal="12dp"
+                        android:paddingVertical="5dp"
+                        android:textColor="@color/white"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:visibility="gone" />
+                </LinearLayout>
+
+                <!-- KPI chips row -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/tvHeroInfirmiers"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="8dp"
+                        android:background="@drawable/bg_chip_white_alpha"
+                        android:drawablePadding="4dp"
+                        android:gravity="center_vertical"
+                        android:paddingHorizontal="10dp"
+                        android:paddingVertical="5dp"
+                        android:text="0 Infirmiers"
+                        android:textColor="@color/white"
+                        android:textSize="11sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvHeroAdmins"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="8dp"
+                        android:background="@drawable/bg_chip_white_alpha"
+                        android:paddingHorizontal="10dp"
+                        android:paddingVertical="5dp"
+                        android:text="0 Admins"
+                        android:textColor="@color/white"
+                        android:textSize="11sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvHeroInactifs"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/bg_badge_warning"
+                        android:paddingHorizontal="10dp"
+                        android:paddingVertical="5dp"
+                        android:text="0 inactifs"
+                        android:textColor="@color/warning_dark"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:visibility="gone" />
+                </LinearLayout>
+            </LinearLayout>
+        </FrameLayout>
+
+        <!-- ══════════════════════════════════════
+             SEARCH BAR
+        ═══════════════════════════════════════ -->
         <com.google.android.material.textfield.TextInputLayout
             style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginHorizontal="22dp"
-            android:layout_marginBottom="10dp"
-            android:hint="Rechercher par nom, rôle ou centre"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginTop="12dp"
+            android:hint="Rechercher nom, CIN, centre…"
+            app:boxBackgroundColor="@color/white"
             app:boxCornerRadiusTopStart="14dp"
             app:boxCornerRadiusTopEnd="14dp"
             app:boxCornerRadiusBottomStart="14dp"
             app:boxCornerRadiusBottomEnd="14dp"
-            app:boxStrokeColor="@color/brand_teal"
+            app:boxStrokeColor="@color/brand_lavender"
+            app:hintTextColor="@color/text_secondary"
             app:startIconDrawable="@drawable/ic_search"
-            app:startIconTint="@color/brand_teal">
+            app:startIconTint="@color/brand_lavender">
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etPersonnelSearch"
                 android:layout_width="match_parent"
@@ -77,86 +166,121 @@
                 android:maxLines="1" />
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Filter tabs -->
+        <!-- ══════════════════════════════════════
+             FILTER TABS
+        ═══════════════════════════════════════ -->
         <HorizontalScrollView
             android:layout_width="match_parent"
-            android:layout_height="44dp"
-            android:layout_marginHorizontal="22dp"
-            android:layout_marginBottom="10dp"
-            android:background="@drawable/bg_segment_container"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginBottom="6dp"
             android:scrollbars="none">
             <LinearLayout
                 android:layout_width="wrap_content"
-                android:layout_height="match_parent"
+                android:layout_height="wrap_content"
                 android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:padding="4dp">
-                <TextView android:id="@+id/tabPersonnelTous"
-                    android:layout_width="wrap_content" android:layout_height="match_parent"
-                    android:gravity="center" android:paddingHorizontal="18dp"
-                    android:background="@drawable/bg_btn_teal_pill"
-                    android:text="Tous" android:textColor="@color/white"
-                    android:textSize="13sp" android:textStyle="bold" />
-                <TextView android:id="@+id/tabPersonnelInfirmiers"
-                    android:layout_width="wrap_content" android:layout_height="match_parent"
-                    android:gravity="center" android:paddingHorizontal="18dp"
-                    android:text="Infirmiers" android:textColor="@color/text_secondary"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/tabPersonnelTous"
+                    android:layout_width="wrap_content"
+                    android:layout_height="38dp"
+                    android:layout_marginEnd="8dp"
+                    android:background="@drawable/bg_pill_lavender_active"
+                    android:gravity="center"
+                    android:paddingHorizontal="18dp"
+                    android:text="Tous"
+                    android:textColor="@color/white"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tabPersonnelInfirmiers"
+                    android:layout_width="wrap_content"
+                    android:layout_height="38dp"
+                    android:layout_marginEnd="8dp"
+                    android:background="@drawable/bg_pill_outline_lavender"
+                    android:gravity="center"
+                    android:paddingHorizontal="18dp"
+                    android:text="Infirmiers"
+                    android:textColor="@color/brand_lavender"
                     android:textSize="13sp" />
-                <TextView android:id="@+id/tabPersonnelAdmins"
-                    android:layout_width="wrap_content" android:layout_height="match_parent"
-                    android:gravity="center" android:paddingHorizontal="18dp"
-                    android:text="Admins" android:textColor="@color/text_secondary"
+
+                <TextView
+                    android:id="@+id/tabPersonnelAdmins"
+                    android:layout_width="wrap_content"
+                    android:layout_height="38dp"
+                    android:layout_marginEnd="8dp"
+                    android:background="@drawable/bg_pill_outline_lavender"
+                    android:gravity="center"
+                    android:paddingHorizontal="18dp"
+                    android:text="Admins"
+                    android:textColor="@color/brand_lavender"
                     android:textSize="13sp" />
-                <TextView android:id="@+id/tabPersonnelInactifs"
-                    android:layout_width="wrap_content" android:layout_height="match_parent"
-                    android:gravity="center" android:paddingHorizontal="18dp"
-                    android:text="Inactifs" android:textColor="@color/text_secondary"
+
+                <TextView
+                    android:id="@+id/tabPersonnelInactifs"
+                    android:layout_width="wrap_content"
+                    android:layout_height="38dp"
+                    android:background="@drawable/bg_pill_outline_lavender"
+                    android:gravity="center"
+                    android:paddingHorizontal="18dp"
+                    android:text="Inactifs"
+                    android:textColor="@color/brand_lavender"
                     android:textSize="13sp" />
             </LinearLayout>
         </HorizontalScrollView>
 
-        <!-- Status message -->
+        <!-- ══════════════════════════════════════
+             STATE VIEWS
+        ═══════════════════════════════════════ -->
+        <com.google.android.material.progressindicator.LinearProgressIndicator
+            android:id="@+id/personnelProgress"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:indeterminate="true"
+            android:visibility="gone"
+            app:indicatorColor="@color/brand_lavender"
+            app:trackColor="@color/bg_screen" />
+
         <TextView
             android:id="@+id/tvPersonnelMessage"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingHorizontal="22dp"
+            android:gravity="center"
+            android:padding="32dp"
             android:textColor="@color/text_secondary"
-            android:textSize="13sp"
+            android:textSize="14sp"
             android:visibility="gone" />
 
-        <!-- Progress -->
-        <ProgressBar
-            android:id="@+id/personnelProgress"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginTop="8dp"
-            android:visibility="gone" />
-
-        <!-- List -->
+        <!-- ══════════════════════════════════════
+             LIST
+        ═══════════════════════════════════════ -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rvPersonnel"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
             android:clipToPadding="false"
-            android:paddingHorizontal="22dp"
-            android:paddingTop="4dp"
-            android:paddingBottom="80dp" />
+            android:paddingHorizontal="16dp"
+            android:paddingTop="6dp"
+            android:paddingBottom="88dp" />
     </LinearLayout>
 
-    <!-- FAB -->
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
+    <!-- Extended FAB -->
+    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
         android:id="@+id/fabAddPersonnel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
-        android:layout_margin="22dp"
-        android:contentDescription="Ajouter personnel"
-        android:src="@android:drawable/ic_input_add"
-        app:backgroundTint="@color/brand_teal"
-        app:tint="@color/white"
-        app:elevation="8dp" />
+        android:layout_margin="20dp"
+        android:contentDescription="Ajouter un membre"
+        android:text="Ajouter"
+        android:textColor="@color/white"
+        app:backgroundTint="@color/brand_lavender"
+        app:elevation="6dp"
+        app:icon="@drawable/ic_add"
+        app:iconTint="@color/white" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

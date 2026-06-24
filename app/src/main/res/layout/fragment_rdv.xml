@@ -12,15 +12,17 @@
         android:layout_height="match_parent"
         android:orientation="vertical">
 
-        <!-- ═══ HEADER ═══ -->
+        <!-- ══════════════════════════════════════
+             HEADER
+        ═══════════════════════════════════════ -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
             android:gravity="center_vertical"
+            android:orientation="horizontal"
             android:paddingHorizontal="20dp"
-            android:paddingTop="18dp"
-            android:paddingBottom="10dp"
+            android:paddingTop="14dp"
+            android:paddingBottom="8dp"
             android:background="@color/bg_screen">
 
             <LinearLayout
@@ -33,36 +35,58 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Rendez-vous"
-                    android:textSize="26sp"
+                    android:textSize="24sp"
                     android:textColor="@color/text_primary"
                     android:textStyle="bold"
                     android:letterSpacing="-0.01" />
 
-                <TextView
+                <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Patients de la session du jour"
-                    android:textSize="13sp"
-                    android:textColor="@color/text_secondary"
-                    android:layout_marginTop="2dp" />
+                    android:layout_marginTop="3dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Patients du jour"
+                        android:textSize="12sp"
+                        android:textColor="@color/text_secondary" />
+
+                    <TextView
+                        android:id="@+id/tvRdvHeaderDate"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:background="@drawable/bg_chip_inactive"
+                        android:paddingHorizontal="10dp"
+                        android:paddingVertical="3dp"
+                        android:text="Lundi 23 Juin"
+                        android:textColor="@color/brand_teal"
+                        android:textSize="11sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
             </LinearLayout>
 
             <ProgressBar
                 android:id="@+id/rdvProgress"
-                android:layout_width="28dp"
-                android:layout_height="28dp"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
                 android:visibility="gone" />
         </LinearLayout>
 
-        <!-- ═══ SESSION CARD (improved) ═══ -->
+        <!-- ══════════════════════════════════════
+             SESSION CARD — custom nav (replaces Spinner)
+        ═══════════════════════════════════════ -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="16dp"
             android:layout_marginBottom="10dp"
             app:cardBackgroundColor="@color/white"
-            app:cardCornerRadius="18dp"
-            app:cardElevation="3dp"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="4dp"
             app:strokeWidth="0dp">
 
             <LinearLayout
@@ -70,95 +94,263 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
 
-                <!-- Teal top accent bar -->
+                <!-- Dynamic top status bar (color set in KT) -->
                 <View
+                    android:id="@+id/vSessionStatusBar"
                     android:layout_width="match_parent"
                     android:layout_height="4dp"
                     android:background="@color/brand_teal" />
 
-                <!-- Session selector row -->
+                <!-- Label + counter -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:paddingStart="14dp"
-                    android:paddingEnd="12dp"
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="16dp"
                     android:paddingTop="10dp"
-                    android:paddingBottom="6dp">
+                    android:paddingBottom="2dp">
 
-                    <LinearLayout
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="SESSION DU JOUR"
+                        android:textSize="10sp"
+                        android:textColor="@color/brand_teal"
+                        android:textStyle="bold"
+                        android:letterSpacing="0.06" />
+
+                    <TextView
+                        android:id="@+id/tvSessionCounter"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/bg_chip_inactive"
+                        android:paddingHorizontal="10dp"
+                        android:paddingVertical="3dp"
+                        android:text="—"
+                        android:textColor="@color/brand_teal"
+                        android:textSize="11sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <!-- ← session info → navigation row -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="10dp"
+                    android:paddingVertical="6dp">
+
+                    <!-- Prev arrow -->
+                    <FrameLayout
+                        android:id="@+id/btnPrevSession"
                         android:layout_width="36dp"
                         android:layout_height="36dp"
-                        android:background="@drawable/bg_badge_teal"
-                        android:gravity="center">
-
+                        android:background="@drawable/bg_kpi_icon_teal"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:foreground="?attr/selectableItemBackgroundBorderless">
                         <ImageView
                             android:layout_width="18dp"
                             android:layout_height="18dp"
-                            android:src="@drawable/ic_calendar_event"
-                            android:contentDescription="@null"
+                            android:layout_gravity="center"
+                            android:contentDescription="Session précédente"
+                            android:src="@drawable/ic_chevron_right"
+                            android:rotation="180"
                             app:tint="@color/brand_teal" />
-                    </LinearLayout>
+                    </FrameLayout>
 
+                    <!-- Session info (centre) -->
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:orientation="vertical"
-                        android:layout_marginStart="12dp">
+                        android:layout_marginHorizontal="10dp"
+                        android:orientation="vertical">
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="SESSION DU JOUR"
-                            android:textSize="10sp"
-                            android:textColor="@color/brand_teal"
-                            android:textStyle="bold"
-                            android:letterSpacing="0.05" />
-
-                        <Spinner
-                            android:id="@+id/rdvSessionSpinner"
+                        <!-- Vaccine name + status badge -->
+                        <LinearLayout
                             android:layout_width="match_parent"
-                            android:layout_height="42dp"
-                            android:background="@null" />
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:id="@+id/tvSessionVaccin"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="Aucune session"
+                                android:textSize="15sp"
+                                android:textColor="@color/text_primary"
+                                android:textStyle="bold"
+                                android:ellipsize="end"
+                                android:maxLines="1" />
+
+                            <TextView
+                                android:id="@+id/tvSessionStatusBadge"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="8dp"
+                                android:text="● EN COURS"
+                                android:textSize="10sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/success" />
+                        </LinearLayout>
+
+                        <!-- Time + inscrits -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:layout_marginTop="5dp"
+                            android:orientation="horizontal">
+
+                            <ImageView
+                                android:layout_width="12dp"
+                                android:layout_height="12dp"
+                                android:contentDescription="@null"
+                                android:src="@drawable/ic_calendar_event"
+                                android:layout_marginEnd="4dp"
+                                app:tint="@color/text_secondary" />
+
+                            <TextView
+                                android:id="@+id/tvSessionTimeRange"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="—"
+                                android:textSize="12sp"
+                                android:textColor="@color/text_secondary" />
+
+                            <View
+                                android:layout_width="1dp"
+                                android:layout_height="10dp"
+                                android:layout_marginHorizontal="8dp"
+                                android:background="@color/text_hint" />
+
+                            <ImageView
+                                android:layout_width="12dp"
+                                android:layout_height="12dp"
+                                android:contentDescription="@null"
+                                android:src="@drawable/ic_queue_people"
+                                android:layout_marginEnd="4dp"
+                                app:tint="@color/text_secondary" />
+
+                            <TextView
+                                android:id="@+id/tvSessionInscrits"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="—"
+                                android:textSize="12sp"
+                                android:textColor="@color/text_secondary" />
+                        </LinearLayout>
                     </LinearLayout>
+
+                    <!-- Next arrow -->
+                    <FrameLayout
+                        android:id="@+id/btnNextSession"
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:background="@drawable/bg_kpi_icon_teal"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:foreground="?attr/selectableItemBackgroundBorderless">
+                        <ImageView
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:layout_gravity="center"
+                            android:contentDescription="Session suivante"
+                            android:src="@drawable/ic_chevron_right"
+                            app:tint="@color/brand_teal" />
+                    </FrameLayout>
                 </LinearLayout>
 
-                <!-- Session action buttons row -->
+                <!-- Vaccination progress -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:paddingHorizontal="16dp"
+                    android:paddingTop="4dp"
+                    android:paddingBottom="10dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="6dp">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Progression"
+                            android:textSize="11sp"
+                            android:textColor="@color/text_secondary" />
+
+                        <TextView
+                            android:id="@+id/tvSessionProgress"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="— / — vaccinés"
+                            android:textSize="11sp"
+                            android:textColor="@color/brand_teal"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <com.google.android.material.progressindicator.LinearProgressIndicator
+                        android:id="@+id/progressRdvSession"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:progress="0"
+                        app:indicatorColor="@color/brand_teal"
+                        app:trackColor="@color/bg_screen"
+                        app:trackCornerRadius="4dp"
+                        app:trackThickness="8dp" />
+                </LinearLayout>
+
+                <!-- Divider -->
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="@color/outline" />
+
+                <!-- Action buttons -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:paddingStart="14dp"
-                    android:paddingEnd="14dp"
-                    android:paddingBottom="14dp"
-                    android:paddingTop="2dp">
+                    android:paddingHorizontal="12dp"
+                    android:paddingTop="8dp"
+                    android:paddingBottom="12dp">
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/rdvOpenQueue"
                         android:layout_width="0dp"
-                        android:layout_height="38dp"
+                        android:layout_height="36dp"
                         android:layout_weight="1"
-                        android:layout_marginEnd="6dp"
-                        android:text="File d'attente"
+                        android:layout_marginEnd="5dp"
+                        android:text="File"
                         android:textSize="11sp"
                         android:textColor="@color/white"
                         android:textStyle="bold"
                         app:backgroundTint="@color/brand_coral"
-                        app:cornerRadius="19dp"
+                        app:cornerRadius="18dp"
                         app:icon="@drawable/ic_queue_people"
                         app:iconTint="@color/white"
-                        app:iconSize="14dp"
-                        app:iconPadding="4dp"
+                        app:iconSize="13dp"
+                        app:iconPadding="3dp"
                         android:visibility="gone" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/rdvOpenVials"
                         android:layout_width="0dp"
-                        android:layout_height="38dp"
+                        android:layout_height="36dp"
                         android:layout_weight="1"
-                        android:layout_marginEnd="6dp"
+                        android:layout_marginEnd="5dp"
                         android:text="Flacons"
                         android:textSize="11sp"
                         android:textColor="@color/brand_teal"
@@ -166,85 +358,94 @@
                         app:backgroundTint="@color/teal_50"
                         app:strokeColor="@color/brand_teal"
                         app:strokeWidth="1.5dp"
-                        app:cornerRadius="19dp"
+                        app:cornerRadius="18dp"
                         app:icon="@drawable/ic_syringe"
                         app:iconTint="@color/brand_teal"
-                        app:iconSize="14dp"
+                        app:iconSize="13dp"
                         android:visibility="gone" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/rdvOpenStats"
                         android:layout_width="0dp"
-                        android:layout_height="38dp"
+                        android:layout_height="36dp"
                         android:layout_weight="1"
-                        android:layout_marginEnd="6dp"
+                        android:layout_marginEnd="5dp"
                         android:text="Stats"
                         android:textSize="11sp"
                         android:textColor="@color/brand_blue"
                         app:backgroundTint="@color/info_light"
-                        app:cornerRadius="19dp"
-                        app:icon="@drawable/ic_dashboard"
+                        app:cornerRadius="18dp"
+                        app:icon="@drawable/ic_bar_chart"
                         app:iconTint="@color/brand_blue"
-                        app:iconSize="14dp"
+                        app:iconSize="13dp"
                         android:visibility="gone" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/rdvStartSession"
                         android:layout_width="0dp"
-                        android:layout_height="38dp"
+                        android:layout_height="36dp"
                         android:layout_weight="1"
-                        android:layout_marginEnd="6dp"
+                        android:layout_marginEnd="5dp"
                         android:text="Démarrer"
                         android:textSize="11sp"
                         android:textColor="@color/white"
                         app:backgroundTint="@color/brand_teal"
-                        app:cornerRadius="19dp"
+                        app:cornerRadius="18dp"
                         app:icon="@drawable/ic_rdv"
                         app:iconTint="@color/white"
-                        app:iconSize="14dp"
+                        app:iconSize="13dp"
                         android:visibility="gone" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/rdvEndSession"
                         android:layout_width="0dp"
-                        android:layout_height="38dp"
+                        android:layout_height="36dp"
                         android:layout_weight="1"
                         android:text="Terminer"
                         android:textSize="11sp"
                         android:textColor="@color/white"
                         app:backgroundTint="@color/error"
-                        app:cornerRadius="19dp"
+                        app:cornerRadius="18dp"
                         android:visibility="gone" />
                 </LinearLayout>
+
+                <!-- Placeholder when no actions (avoid zero-height) -->
+                <LinearLayout
+                    android:id="@+id/llSessionProgressBadge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="0dp"
+                    android:visibility="gone" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- ═══ SEARCH BAR ═══ -->
+        <!-- ══════════════════════════════════════
+             SEARCH BAR
+        ═══════════════════════════════════════ -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="16dp"
-            android:layout_marginBottom="10dp"
+            android:layout_marginBottom="8dp"
             app:cardBackgroundColor="@color/white"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="2dp"
+            app:cardCornerRadius="14dp"
+            app:cardElevation="1dp"
             app:strokeWidth="0dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="52dp"
-                android:orientation="horizontal"
+                android:layout_height="48dp"
                 android:gravity="center_vertical"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp">
+                android:orientation="horizontal"
+                android:paddingStart="14dp"
+                android:paddingEnd="14dp">
 
                 <ImageView
                     android:layout_width="20dp"
                     android:layout_height="20dp"
-                    android:src="@drawable/ic_scan"
                     android:contentDescription="@null"
-                    app:tint="@color/brand_teal"
-                    android:layout_marginEnd="10dp" />
+                    android:src="@drawable/ic_search"
+                    android:layout_marginEnd="10dp"
+                    app:tint="@color/brand_teal" />
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/rdvSearch"
@@ -253,7 +454,7 @@
                     android:layout_weight="1"
                     android:background="@null"
                     android:hint="Rechercher bébé, parent ou téléphone…"
-                    android:textColorHint="@color/text_secondary"
+                    android:textColorHint="@color/text_hint"
                     android:textColor="@color/text_primary"
                     android:textSize="14sp"
                     android:inputType="text"
@@ -262,11 +463,13 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- ═══ STATUS FILTER CHIPS ═══ -->
+        <!-- ══════════════════════════════════════
+             STATUS FILTER CHIPS
+        ═══════════════════════════════════════ -->
         <HorizontalScrollView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp"
+            android:layout_marginBottom="6dp"
             android:paddingStart="16dp"
             android:paddingEnd="16dp"
             android:scrollbars="none">
@@ -280,48 +483,108 @@
                 app:singleSelection="true" />
         </HorizontalScrollView>
 
-        <!-- ═══ OFFLINE BANNER ═══ -->
+        <!-- ══════════════════════════════════════
+             OFFLINE BANNER
+        ═══════════════════════════════════════ -->
         <LinearLayout
             android:id="@+id/rdvOfflineBanner"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/warning_light"
-            android:orientation="horizontal"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginBottom="6dp"
+            android:background="@drawable/bg_stock_alert"
             android:gravity="center_vertical"
-            android:paddingHorizontal="20dp"
-            android:paddingVertical="9dp"
-            android:layout_marginBottom="4dp"
+            android:orientation="horizontal"
+            android:paddingHorizontal="14dp"
+            android:paddingVertical="10dp"
             android:visibility="gone">
+
+            <ImageView
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_package"
+                android:layout_marginEnd="8dp"
+                app:tint="@color/warning_dark" />
 
             <TextView
                 android:id="@+id/rdvOfflineText"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_weight="1"
                 android:textColor="@color/warning_dark"
                 android:textSize="12sp"
                 android:textStyle="bold" />
         </LinearLayout>
 
-        <!-- ═══ STATUS MESSAGE ═══ -->
+        <!-- ══════════════════════════════════════
+             STATUS MESSAGE
+        ═══════════════════════════════════════ -->
         <TextView
             android:id="@+id/rdvMessage"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:paddingHorizontal="20dp"
-            android:paddingBottom="6dp"
+            android:paddingBottom="4dp"
             android:textSize="12sp"
-            android:textColor="@color/text_secondary" />
+            android:textColor="@color/error_dark"
+            android:visibility="gone" />
 
-        <!-- ═══ RDV LIST ═══ -->
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rdvList"
+        <!-- ══════════════════════════════════════
+             LIST + EMPTY STATE
+        ═══════════════════════════════════════ -->
+        <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="1"
-            android:clipToPadding="false"
-            android:paddingStart="12dp"
-            android:paddingEnd="12dp"
-            android:paddingBottom="20dp" />
+            android:layout_weight="1">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rdvList"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clipToPadding="false"
+                android:paddingHorizontal="12dp"
+                android:paddingBottom="20dp" />
+
+            <LinearLayout
+                android:id="@+id/llEmptyRdv"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:padding="40dp"
+                android:visibility="visible">
+
+                <ImageView
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:alpha="0.25"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_calendar_event"
+                    app:tint="@color/brand_teal" />
+
+                <TextView
+                    android:id="@+id/tvEmptyRdvTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:gravity="center"
+                    android:text="Aucun rendez-vous"
+                    android:textColor="@color/text_primary"
+                    android:textSize="17sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvEmptyRdvSubtitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:gravity="center"
+                    android:text="Aucune session active aujourd'hui."
+                    android:textColor="@color/text_secondary"
+                    android:textSize="14sp" />
+            </LinearLayout>
+        </FrameLayout>
 
     </LinearLayout>
 </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>

@@ -6,265 +6,579 @@
     android:layout_height="match_parent"
     android:background="@color/bg_screen"
     android:clipToPadding="false"
-    android:paddingBottom="24dp">
+    android:paddingBottom="32dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <!-- ══════ HEADER ══════ -->
-        <LinearLayout
+        <!-- ══════════════════════════════════
+             HERO — compact 165dp gradient
+        ═══════════════════════════════════ -->
+        <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:paddingHorizontal="22dp"
-            android:paddingTop="22dp"
-            android:paddingBottom="8dp">
+            android:layout_height="165dp"
+            android:background="@drawable/bg_more_hero">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Plus"
-                android:textColor="@color/text_primary"
-                android:textSize="24sp"
-                android:textStyle="bold"
-                android:letterSpacing="-0.01" />
+            <!-- Decorative circles -->
+            <View
+                android:layout_width="170dp"
+                android:layout_height="170dp"
+                android:layout_gravity="bottom|end"
+                android:layout_marginEnd="-55dp"
+                android:layout_marginBottom="-55dp"
+                android:alpha="0.07"
+                android:background="@drawable/bg_white_glow_circle" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="3dp"
-                android:text="Profil et paramètres"
-                android:textColor="@color/text_secondary"
-                android:textSize="13sp" />
-        </LinearLayout>
+            <View
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:layout_gravity="top|start"
+                android:layout_marginStart="-25dp"
+                android:layout_marginTop="-25dp"
+                android:alpha="0.05"
+                android:background="@drawable/bg_white_glow_circle" />
 
-        <!-- ══════ PROFILE CARD ══════ -->
+            <View
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:layout_gravity="top|end"
+                android:layout_marginEnd="40dp"
+                android:layout_marginTop="20dp"
+                android:alpha="0.04"
+                android:background="@drawable/bg_white_glow_circle" />
+
+            <!-- Profile content -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center_horizontal"
+                android:orientation="vertical"
+                android:paddingTop="18dp"
+                android:paddingBottom="42dp"
+                android:paddingHorizontal="24dp">
+
+                <!-- Avatar -->
+                <FrameLayout
+                    android:id="@+id/moreAvatarFrame"
+                    android:layout_width="70dp"
+                    android:layout_height="70dp"
+                    android:background="@drawable/bg_more_avatar">
+
+                    <TextView
+                        android:id="@+id/moreAvatarInitials"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:text="?"
+                        android:textColor="@color/white"
+                        android:textSize="24sp"
+                        android:textStyle="bold" />
+                </FrameLayout>
+
+                <!-- Name -->
+                <TextView
+                    android:id="@+id/moreUserName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:text="Chargement…"
+                    android:textColor="@color/white"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+
+                <!-- Role + status dot -->
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="7dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/moreUserRole"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/bg_badge_white_alpha"
+                        android:paddingHorizontal="10dp"
+                        android:paddingVertical="4dp"
+                        android:textColor="@color/white"
+                        android:textSize="11sp"
+                        android:textStyle="bold" />
+
+                    <View
+                        android:layout_width="5dp"
+                        android:layout_height="5dp"
+                        android:layout_marginStart="10dp"
+                        android:layout_marginEnd="4dp"
+                        android:background="@drawable/bg_legend_dot_green" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Actif"
+                        android:textColor="#BBFFFFFF"
+                        android:textSize="11sp" />
+                </LinearLayout>
+            </LinearLayout>
+        </FrameLayout>
+
+        <!-- ══════════════════════════════════
+             PROFILE INFO CARD — overlaps hero
+        ═══════════════════════════════════ -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginHorizontal="22dp"
-            android:layout_marginTop="10dp"
+            android:layout_marginHorizontal="20dp"
+            android:layout_marginTop="-30dp"
             app:cardBackgroundColor="@color/white"
-            app:cardCornerRadius="24dp"
-            app:cardElevation="4dp"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="8dp"
             app:strokeWidth="0dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingHorizontal="16dp"
+                android:paddingVertical="14dp">
 
-                <!-- Teal left panel -->
-                <LinearLayout
-                    android:layout_width="90dp"
-                    android:layout_height="match_parent"
-                    android:background="@color/stormy_teal"
-                    android:gravity="center"
-                    android:orientation="vertical"
-                    android:padding="16dp">
+                <!-- Centre -->
+                <ImageView
+                    android:layout_width="15dp"
+                    android:layout_height="15dp"
+                    android:contentDescription="@null"
+                    android:layout_marginEnd="7dp"
+                    android:src="@drawable/ic_building"
+                    app:tint="@color/brand_teal" />
 
-                    <com.google.android.material.imageview.ShapeableImageView
-                        android:layout_width="52dp"
-                        android:layout_height="52dp"
-                        android:contentDescription="@null"
-                        android:src="@drawable/ic_medical_staff"
-                        app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Full"
-                        app:strokeColor="@color/pearl_aqua"
-                        app:strokeWidth="2dp"
-                        app:tint="@color/white" />
-
-                    <View
-                        android:layout_width="30dp"
-                        android:layout_height="2dp"
-                        android:layout_marginTop="14dp"
-                        android:background="@color/pearl_aqua"
-                        android:alpha="0.6" />
-
-                    <View
-                        android:layout_width="20dp"
-                        android:layout_height="2dp"
-                        android:layout_marginTop="6dp"
-                        android:background="@color/pearl_aqua"
-                        android:alpha="0.4" />
-                </LinearLayout>
-
-                <!-- Right info panel -->
-                <LinearLayout
+                <TextView
+                    android:id="@+id/moreUserCentre"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:orientation="vertical"
-                    android:padding="18dp">
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="13sp" />
 
-                    <TextView
-                        android:id="@+id/moreUserName"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Chargement..."
-                        android:textColor="@color/text_primary"
-                        android:textSize="17sp"
-                        android:textStyle="bold" />
+                <!-- Divider -->
+                <View
+                    android:layout_width="1dp"
+                    android:layout_height="18dp"
+                    android:layout_marginHorizontal="12dp"
+                    android:background="@color/outline" />
 
-                    <TextView
-                        android:id="@+id/moreUserRole"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:textColor="@color/brand_teal"
-                        android:textSize="13sp"
-                        android:textStyle="bold" />
+                <!-- Phone -->
+                <ImageView
+                    android:id="@+id/morePhoneIcon"
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
+                    android:contentDescription="@null"
+                    android:layout_marginEnd="5dp"
+                    android:src="@drawable/ic_phone"
+                    android:visibility="gone"
+                    app:tint="@color/brand_teal" />
 
-                    <TextView
-                        android:id="@+id/moreUserCentre"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:drawableStart="@drawable/ic_medical_staff"
-                        android:drawablePadding="5dp"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="12sp" />
+                <TextView
+                    android:id="@+id/moreUserPhone"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/brand_teal"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:visibility="gone" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
 
-                    <!-- Status badge -->
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
-                        android:background="@drawable/bg_badge_success"
-                        android:paddingHorizontal="10dp"
-                        android:paddingVertical="4dp"
-                        android:text="● En service"
-                        android:textColor="@color/success_dark"
-                        android:textSize="11sp"
-                        android:textStyle="bold" />
+        <!-- ══════════════════════════════════
+             ERROR CARD (hidden by default)
+        ═══════════════════════════════════ -->
+        <LinearLayout
+            android:id="@+id/moreErrorBand"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="20dp"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/bg_stock_alert"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingHorizontal="14dp"
+            android:paddingVertical="11dp"
+            android:visibility="gone">
+
+            <ImageView
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:contentDescription="@null"
+                android:layout_marginEnd="9dp"
+                android:src="@drawable/ic_notifications"
+                app:tint="@color/warning_dark" />
+
+            <TextView
+                android:id="@+id/moreMessage"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textColor="@color/warning_dark"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/moreRetryBtn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:background="@drawable/bg_badge_teal"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackgroundBorderless"
+                android:paddingHorizontal="12dp"
+                android:paddingVertical="5dp"
+                android:text="Réessayer"
+                android:textColor="@color/brand_teal_dark"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- ══════════════════════════════════
+             ACTIONS RAPIDES label
+        ═══════════════════════════════════ -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="22dp"
+            android:layout_marginTop="28dp"
+            android:layout_marginBottom="10dp"
+            android:letterSpacing="0.07"
+            android:text="ACTIONS RAPIDES"
+            android:textColor="@color/brand_teal"
+            android:textSize="11sp"
+            android:textStyle="bold" />
+
+        <!-- ══════════════════════════════════
+             ACTIONS 2 × 2 GRID CARD
+        ═══════════════════════════════════ -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="16dp"
+            app:cardBackgroundColor="@color/white"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="3dp"
+            app:strokeWidth="0dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <!-- Row 1 -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <!-- Notifications -->
+                    <LinearLayout
+                        android:id="@+id/moreNotifications"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:foreground="?attr/selectableItemBackground"
+                        android:gravity="center"
+                        android:orientation="vertical"
+                        android:paddingVertical="14dp">
+
+                        <FrameLayout
+                            android:layout_width="48dp"
+                            android:layout_height="48dp"
+                            android:background="@drawable/bg_notif_icon_blue">
+                            <ImageView
+                                android:layout_width="22dp"
+                                android:layout_height="22dp"
+                                android:layout_gravity="center"
+                                android:contentDescription="@null"
+                                android:src="@drawable/ic_notifications"
+                                app:tint="@color/info" />
+                        </FrameLayout>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="7dp"
+                            android:gravity="center"
+                            android:text="Notifications"
+                            android:textColor="@color/text_primary"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <!-- Vertical divider -->
+                    <View
+                        android:layout_width="1dp"
+                        android:layout_height="match_parent"
+                        android:background="@color/outline" />
+
+                    <!-- Stocks -->
+                    <LinearLayout
+                        android:id="@+id/moreStock"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:foreground="?attr/selectableItemBackground"
+                        android:gravity="center"
+                        android:orientation="vertical"
+                        android:paddingVertical="14dp">
+
+                        <FrameLayout
+                            android:layout_width="48dp"
+                            android:layout_height="48dp"
+                            android:background="@drawable/bg_kpi_icon_orange">
+                            <ImageView
+                                android:layout_width="22dp"
+                                android:layout_height="22dp"
+                                android:layout_gravity="center"
+                                android:contentDescription="@null"
+                                android:src="@drawable/ic_syringe"
+                                app:tint="@color/warning_dark" />
+                        </FrameLayout>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="7dp"
+                            android:gravity="center"
+                            android:text="Stocks vaccins"
+                            android:textColor="@color/text_primary"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- Horizontal divider -->
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="@color/outline" />
+
+                <!-- Row 2 -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <!-- Scanner QR -->
+                    <LinearLayout
+                        android:id="@+id/moreScan"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:foreground="?attr/selectableItemBackground"
+                        android:gravity="center"
+                        android:orientation="vertical"
+                        android:paddingVertical="14dp">
+
+                        <FrameLayout
+                            android:layout_width="48dp"
+                            android:layout_height="48dp"
+                            android:background="@drawable/bg_kpi_icon_teal">
+                            <ImageView
+                                android:layout_width="22dp"
+                                android:layout_height="22dp"
+                                android:layout_gravity="center"
+                                android:contentDescription="@null"
+                                android:src="@drawable/ic_scan"
+                                app:tint="@color/brand_teal" />
+                        </FrameLayout>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="7dp"
+                            android:gravity="center"
+                            android:text="Scanner QR"
+                            android:textColor="@color/text_primary"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <!-- Vertical divider -->
+                    <View
+                        android:layout_width="1dp"
+                        android:layout_height="match_parent"
+                        android:background="@color/outline" />
+
+                    <!-- File d'attente -->
+                    <LinearLayout
+                        android:id="@+id/moreQueue"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:foreground="?attr/selectableItemBackground"
+                        android:gravity="center"
+                        android:orientation="vertical"
+                        android:paddingVertical="14dp">
+
+                        <FrameLayout
+                            android:layout_width="48dp"
+                            android:layout_height="48dp"
+                            android:background="@drawable/bg_kpi_icon_green">
+                            <ImageView
+                                android:layout_width="22dp"
+                                android:layout_height="22dp"
+                                android:layout_gravity="center"
+                                android:contentDescription="@null"
+                                android:src="@drawable/ic_queue_people"
+                                app:tint="@color/success_dark" />
+                        </FrameLayout>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="7dp"
+                            android:gravity="center"
+                            android:text="File d'attente"
+                            android:textColor="@color/text_primary"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
                 </LinearLayout>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- ══════ OUTILS SECTION ══════ -->
+        <!-- ══════════════════════════════════
+             COMPTE label
+        ═══════════════════════════════════ -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginHorizontal="22dp"
-            android:layout_marginTop="28dp"
-            android:layout_marginBottom="12dp"
-            android:text="OUTILS"
+            android:layout_marginStart="22dp"
+            android:layout_marginTop="26dp"
+            android:layout_marginBottom="10dp"
+            android:letterSpacing="0.07"
+            android:text="COMPTE"
             android:textColor="@color/text_tertiary"
             android:textSize="11sp"
-            android:textStyle="bold"
-            android:letterSpacing="0.08" />
+            android:textStyle="bold" />
 
-        <!-- Notifications row -->
+        <!-- ══════════════════════════════════
+             LOGOUT — standalone red card
+        ═══════════════════════════════════ -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginHorizontal="22dp"
-            android:layout_marginBottom="1dp"
+            android:layout_marginHorizontal="16dp"
             app:cardBackgroundColor="@color/white"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="1dp"
-            app:strokeWidth="0dp">
+            app:cardCornerRadius="20dp"
+            app:cardElevation="2dp"
+            app:strokeColor="@color/error_light"
+            app:strokeWidth="1.5dp">
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/moreNotifications"
-                style="@style/Widget.Material3.Button.TextButton"
+            <LinearLayout
+                android:id="@+id/moreLogout"
                 android:layout_width="match_parent"
-                android:layout_height="60dp"
-                android:gravity="start|center_vertical"
-                android:paddingHorizontal="18dp"
-                android:text="Notifications"
-                android:textColor="@color/text_primary"
-                android:textSize="15sp"
-                app:backgroundTint="@android:color/transparent"
-                app:icon="@drawable/ic_notifications"
-                app:iconTint="@color/brand_teal"
-                app:iconSize="22dp"
-                app:iconPadding="14dp"
-                app:iconGravity="textStart"
-                app:rippleColor="@color/teal_50" />
+                android:layout_height="68dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingHorizontal="16dp">
+
+                <FrameLayout
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:layout_marginEnd="14dp"
+                    android:background="@drawable/bg_kpi_icon_red">
+                    <ImageView
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:layout_gravity="center"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_logout"
+                        app:tint="@color/error" />
+                </FrameLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Se déconnecter"
+                        android:textColor="@color/error"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Fermer la session en cours"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="12sp" />
+                </LinearLayout>
+
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_chevron_right"
+                    app:tint="@color/error" />
+            </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- Stocks row -->
-        <com.google.android.material.card.MaterialCardView
+        <!-- ══════════════════════════════════
+             FOOTER
+        ═══════════════════════════════════ -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginHorizontal="22dp"
-            android:layout_marginTop="8dp"
-            app:cardBackgroundColor="@color/white"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="1dp"
-            app:strokeWidth="0dp">
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/moreStock"
-                style="@style/Widget.Material3.Button.TextButton"
-                android:layout_width="match_parent"
-                android:layout_height="60dp"
-                android:gravity="start|center_vertical"
-                android:paddingHorizontal="18dp"
-                android:text="Stocks de vaccins"
-                android:textColor="@color/text_primary"
-                android:textSize="15sp"
-                app:backgroundTint="@android:color/transparent"
-                app:icon="@drawable/ic_syringe"
-                app:iconTint="@color/brand_teal"
-                app:iconSize="22dp"
-                app:iconPadding="14dp"
-                app:iconGravity="textStart"
-                app:rippleColor="@color/teal_50" />
-        </com.google.android.material.card.MaterialCardView>
-
-        <!-- Error / status message -->
-        <TextView
-            android:id="@+id/moreMessage"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginHorizontal="22dp"
-            android:layout_marginTop="14dp"
-            android:textColor="@color/error"
-            android:textSize="13sp"
-            android:visibility="gone" />
-
-        <!-- Spacer -->
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:layout_marginHorizontal="22dp"
-            android:layout_marginTop="28dp"
-            android:background="@color/outline" />
-
-        <!-- Version -->
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
+            android:layout_marginTop="36dp"
             android:gravity="center"
-            android:text="VaccinKids STAFF v1.0"
-            android:textColor="@color/text_tertiary"
-            android:textSize="12sp" />
+            android:orientation="vertical"
+            android:paddingBottom="8dp">
 
-        <!-- ══════ LOGOUT BUTTON ══════ -->
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/moreLogout"
-            android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:layout_marginHorizontal="22dp"
-            android:layout_marginTop="20dp"
-            android:layout_marginBottom="16dp"
-            android:text="Se déconnecter"
-            android:textColor="@color/white"
-            android:textSize="15sp"
-            android:textStyle="bold"
-            android:stateListAnimator="@null"
-            app:backgroundTint="@color/error"
-            app:cornerRadius="28dp"
-            app:icon="@drawable/ic_logout"
-            app:iconTint="@color/white"
-            app:iconSize="20dp"
-            app:iconGravity="textStart"
-            app:iconPadding="8dp"
-            app:rippleColor="@color/error_light" />
+            <ImageView
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:alpha="0.15"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_medical_staff"
+                app:tint="@color/brand_teal" />
+
+            <TextView
+                android:id="@+id/moreAppVersion"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:gravity="center"
+                android:textColor="@color/text_tertiary"
+                android:textSize="11sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="3dp"
+                android:gravity="center"
+                android:text="Chaque geste compte. Chaque vaccin protège."
+                android:textColor="@color/text_tertiary"
+                android:textSize="10sp" />
+        </LinearLayout>
 
     </LinearLayout>
 </androidx.core.widget.NestedScrollView>

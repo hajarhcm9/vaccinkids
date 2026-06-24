@@ -1,15 +1,17 @@
 package com.example.vaccinkid
 
+import android.content.Intent
+import android.content.res.ColorStateList
+import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ArrayAdapter
+import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.ProgressBar
-import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
 import androidx.core.content.ContextCompat
@@ -32,12 +34,17 @@ import com.google.android.material.button.MaterialButton
 import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.progressindicator.LinearProgressIndicator
 import com.google.android.material.textfield.TextInputEditText
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import kotlin.math.abs
 
 class RdvFragment : Fragment(R.layout.fragment_rdv) {
+
     private lateinit var refreshView: SwipeRefreshLayout
-    private lateinit var sessionSpinner: Spinner
     private lateinit var statusFilters: ChipGroup
     private lateinit var searchInput: TextInputEditText
     private lateinit var recyclerView: RecyclerView
@@ -45,6 +52,8 @@ class RdvFragment : Fragment(R.layout.fragment_rdv) {
     private lateinit var messageView: TextView
     private lateinit var offlineBanner: LinearLayout
     private lateinit var offlineBannerText: TextView
+    private lateinit var llEmptyRdv: LinearLayout
+    private lateinit var tvEmptyRdvSubtitle: TextView
     private lateinit var adapter: StaffRdvAdapter
     private lateinit var queueButton: MaterialButton
     private lateinit var vialsButton: MaterialButton
@@ -52,12 +61,25 @@ class RdvFragment : Fragment(R.layout.fragment_rdv) {
     private lateinit var startButton: MaterialButton
     private lateinit var endButton: MaterialButton
 
+    // Session navigation views
+    private lateinit var btnPrevSession: View
+    private lateinit var btnNextSession: View
+    private lateinit var tvSessionVaccin: TextView
+    private lateinit var tvSessionTimeRange: TextView
+    private lateinit var tvSessionStatusBadge: TextView
+    private lateinit var tvSessionInscrits: TextView
+    private lateinit var tvSessionCounter: TextView
+    private lateinit var tvSessionProgress: TextView
+    private lateinit var progressRdvSession: LinearProgressIndicator
+    private lateinit var vSessionStatusBar: View
+
     private var sessions: List<SessionDto> = emptyList()
     private var rendezVous: List<RendezVousDto> = emptyList()
     private var selectedStatus = ALL_STATUSES
     private var actionInFlight = false
     private var loadingRequests = 0
     private var offlineMode = false
+    private var currentSessionIndex = 0
 
     private val debounceHandler = Handler(Looper.getMainLooper())
     private val filterRunnable = Runnable { applyFilters() }
@@ -76,27 +98,52 @@ class RdvFragment : Fragment(R.layout.fragment_rdv) {
     }
 
     private fun bindViews(view: View) {
-        refreshView       = view.findViewById(R.id.rdvRefresh)
-        sessionSpinner    = view.findViewById(R.id.rdvSessionSpinner)
-        statusFilters     = view.findViewById(R.id.rdvStatusFilters)
-        searchInput       = view.findViewById(R.id.rdvSearch)
-        recyclerView      = view.findViewById(R.id.rdvList)
-        progress          = view.findViewById(R.id.rdvProgress)
-        messageView       = view.findViewById(R.id.rdvMessage)
-        offlineBanner     = view.findViewById(R.id.rdvOfflineBanner)
-        offlineBannerText = view.findViewById(R.id.rdvOfflineText)
-        queueButton       = view.findViewById(R.id.rdvOpenQueue)
-        vialsButton       = view.findViewById(R.id.rdvOpenVials)
-        statsButton       = view.findViewById(R.id.rdvOpenStats)
-        startButton       = view.findViewById(R.id.rdvStartSession)
-        endButton         = view.findViewById(R.id.rdvEndSession)
+        refreshView        = view.findViewById(R.id.rdvRefresh)
+        statusFilters      = view.findViewById(R.id.rdvStatusFilters)
+        searchInput        = view.findViewById(R.id.rdvSearch)
+        recyclerView       = view.findViewById(R.id.rdvList)
+        progress           = view.findViewById(R.id.rdvProgress)
+        messageView        = view.findViewById(R.id.rdvMessage)
+        offlineBanner      = view.findViewById(R.id.rdvOfflineBanner)
+        offlineBannerText  = view.findViewById(R.id.rdvOfflineText)
+        llEmptyRdv         = view.findViewById(R.id.llEmptyRdv)
+        tvEmptyRdvSubtitle = view.findViewById(R.id.tvEmptyRdvSubtitle)
+        queueButton        = view.findViewById(R.id.rdvOpenQueue)
+        vialsButton        = view.findViewById(R.id.rdvOpenVials)
+        statsButton        = view.findViewById(R.id.rdvOpenStats)
+        startButton        = view.findViewById(R.id.rdvStartSession)
+        endButton          = view.findViewById(R.id.rdvEndSession)
+
+        // Session nav
+        btnPrevSession       = view.findViewById(R.id.btnPrevSession)
+        btnNextSession       = view.findViewById(R.id.btnNextSession)
+        tvSessionVaccin      = view.findViewById(R.id.tvSessionVaccin)
+        tvSessionTimeRange   = view.findViewById(R.id.tvSessionTimeRange)
+        tvSessionStatusBadge = view.findViewById(R.id.tvSessionStatusBadge)
+        tvSessionInscrits    = view.findViewById(R.id.tvSessionInscrits)
+        tvSessionCounter     = view.findViewById(R.id.tvSessionCounter)
+        tvSessionProgress    = view.findViewById(R.id.tvSessionProgress)
+        progressRdvSession   = view.findViewById(R.id.progressRdvSession)
+        vSessionStatusBar    = view.findViewById(R.id.vSessionStatusBar)
+
+        view.findViewById<TextView>(R.id.tvRdvHeaderDate).text =
+            SimpleDateFormat("EEEE dd MMMM", Locale.FRENCH).format(Date())
+                .replaceFirstChar { it.uppercaseChar() }
 
         adapter = StaffRdvAdapter(
             onPresent   = { updateRdvStatus(it, "PRESENT") },
             onAbsent    = { updateRdvStatus(it, "ABSENT") },
             onConfirm   = { updateRdvStatus(it, "CONFIRME") },
             onVaccinate = (::openVaccination),
-            onGrowth    = (::openGrowth)
+            onGrowth    = (::openGrowth),
+            onCall      = { rdv ->
+                val phone = rdv.parentTelephone
+                if (!phone.isNullOrBlank()) {
+                    startActivity(Intent(Intent.ACTION_DIAL, Uri.parse("tel:$phone")))
+                } else {
+                    Toast.makeText(requireContext(), "Téléphone indisponible", Toast.LENGTH_SHORT).show()
+                }
+            }
         )
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
         recyclerView.adapter = adapter
@@ -109,6 +156,23 @@ class RdvFragment : Fragment(R.layout.fragment_rdv) {
         searchInput.doAfterTextChanged {
             debounceHandler.removeCallbacks(filterRunnable)
             debounceHandler.postDelayed(filterRunnable, 200)
+        }
+
+        btnPrevSession.setOnClickListener {
+            if (currentSessionIndex > 0) {
+                currentSessionIndex--
+                rendezVous = emptyList()
+                updateSessionProgress()
+                updateCurrentSessionDisplay()
+            }
+        }
+        btnNextSession.setOnClickListener {
+            if (currentSessionIndex < sessions.size - 1) {
+                currentSessionIndex++
+                rendezVous = emptyList()
+                updateSessionProgress()
+                updateCurrentSessionDisplay()
+            }
         }
 
         queueButton.setOnClickListener {
@@ -124,7 +188,7 @@ class RdvFragment : Fragment(R.layout.fragment_rdv) {
     private fun setupStatusFilters() {
         val tealColor = ContextCompat.getColor(requireContext(), R.color.brand_teal)
         val white     = ContextCompat.getColor(requireContext(), R.color.white)
-        val minChipW  = (84 * resources.displayMetrics.density).toInt()
+        val minChipW  = (80 * resources.displayMetrics.density).toInt()
 
         STATUS_OPTIONS.forEach { status ->
             statusFilters.addView(Chip(requireContext()).apply {
@@ -133,7 +197,8 @@ class RdvFragment : Fragment(R.layout.fragment_rdv) {
                 isCheckable = true
                 isChecked = (status == ALL_STATUSES)
                 tag = status
-                chipCornerRadius = 20f
+                shapeAppearanceModel = shapeAppearanceModel.toBuilder()
+                    .setAllCornerSizes(20f).build()
                 chipStrokeWidth = 1.5f
                 setChipStrokeColorResource(R.color.brand_teal)
                 isCheckedIconVisible = false
@@ -146,7 +211,7 @@ class RdvFragment : Fragment(R.layout.fragment_rdv) {
                     arrayOf(intArrayOf(android.R.attr.state_checked), intArrayOf()),
                     intArrayOf(white, tealColor)
                 ))
-                textSize = 12.5f
+                textSize = 12f
             })
         }
         statusFilters.setOnCheckedStateChangeListener { group, checkedIds ->
@@ -156,7 +221,7 @@ class RdvFragment : Fragment(R.layout.fragment_rdv) {
         }
     }
 
-    // ── Data loading ─────────────────────────────────────────────────────────
+    // ── Data loading ──────────────────────────────────────────────────────────
 
     private fun loadSessions() {
         viewLifecycleOwner.lifecycleScope.launch {
@@ -182,18 +247,13 @@ class RdvFragment : Fragment(R.layout.fragment_rdv) {
                 }
             }
 
-            sessionSpinner.adapter = ArrayAdapter(
-                requireContext(),
-                android.R.layout.simple_spinner_dropdown_item,
-                sessions.map { it.label() }.ifEmpty { listOf("Aucune session aujourd'hui") }
-            )
-            sessionSpinner.onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
-                override fun onItemSelected(parent: android.widget.AdapterView<*>?, view: View?, position: Int, id: Long) {
-                    updateSessionActions(selectedSession())
-                    loadRdvForSelectedSession()
-                }
-                override fun onNothingSelected(parent: android.widget.AdapterView<*>?) = Unit
-            }
+            // Auto-select the active EN_COURS session, fallback to 0
+            currentSessionIndex = sessions
+                .indexOfFirst { it.statut?.uppercase() == "EN_COURS" }
+                .coerceAtLeast(0)
+
+            updateCurrentSessionDisplay()
+
             if (sessions.isEmpty()) {
                 rendezVous = emptyList()
                 applyFilters()
@@ -214,21 +274,74 @@ class RdvFragment : Fragment(R.layout.fragment_rdv) {
                 val db = AppDatabase.getInstance(requireContext())
                 if (rendezVous.isNotEmpty()) db.rendezVousDao().insertAll(rendezVous.map { it.toEntity() })
                 if (!offlineMode) setOffline(false)
+                updateSessionProgress()
                 applyFilters()
             } catch (_: Exception) {
                 val cached = AppDatabase.getInstance(requireContext())
                     .rendezVousDao().getBySession(session.id).map { it.toDto() }
                 rendezVous = cached
+                updateSessionProgress()
                 applyFilters()
                 if (cached.isNotEmpty()) {
                     setOffline(true, "Mode hors-ligne · ${cached.size} RDV en cache")
                 } else {
                     messageView.text = "Erreur réseau — aucun cache disponible"
+                    messageView.visibility = View.VISIBLE
                 }
             } finally {
                 endLoading()
             }
         }
+    }
+
+    private fun updateSessionProgress() {
+        val total    = rendezVous.size
+        val presents = rendezVous.count { it.statut?.uppercase() == "PRESENT" }
+        if (total > 0) {
+            tvSessionProgress.text = "$presents / $total vaccinés"
+            val pct = (presents * 100) / total
+            progressRdvSession.setProgressCompat(pct, true)
+        } else {
+            tvSessionProgress.text = "— / — vaccinés"
+            progressRdvSession.setProgressCompat(0, false)
+        }
+    }
+
+    private fun updateCurrentSessionDisplay() {
+        val session = selectedSession()
+        val count   = sessions.size
+
+        tvSessionCounter.text = if (count > 0) "${currentSessionIndex + 1}/$count" else "—"
+        btnPrevSession.isEnabled = currentSessionIndex > 0
+        btnPrevSession.alpha     = if (currentSessionIndex > 0) 1f else 0.30f
+        btnNextSession.isEnabled = currentSessionIndex < count - 1
+        btnNextSession.alpha     = if (currentSessionIndex < count - 1) 1f else 0.30f
+
+        if (session != null) {
+            tvSessionVaccin.text = session.vaccinNom ?: "Session #${session.id}"
+            val s = session.heureDebut?.take(5)
+            val e = session.heureFin?.take(5)
+            tvSessionTimeRange.text = if (s != null && e != null) "$s – $e" else "Heure inconnue"
+            tvSessionInscrits.text  = "${session.inscrits ?: 0}/${session.maxInscriptions ?: "?"} inscrits"
+
+            val (statusText, statusColorRes) = when (session.statut?.uppercase()) {
+                "EN_COURS"  -> "● EN COURS"  to R.color.success
+                "CONFIRMEE" -> "○ CONFIRMÉE" to R.color.info
+                "TERMINEE"  -> "✓ TERMINÉE"  to R.color.text_secondary
+                "ANNULEE"   -> "✗ ANNULÉE"   to R.color.error
+                else        -> (session.statut ?: "—") to R.color.text_secondary
+            }
+            tvSessionStatusBadge.text = statusText
+            tvSessionStatusBadge.setTextColor(ContextCompat.getColor(requireContext(), statusColorRes))
+        } else {
+            tvSessionVaccin.text       = "Aucune session"
+            tvSessionTimeRange.text    = "—"
+            tvSessionInscrits.text     = "0/0 inscrits"
+            tvSessionStatusBadge.text  = ""
+        }
+
+        updateSessionActions(session)
+        loadRdvForSelectedSession()
     }
 
     // ── Filtering ─────────────────────────────────────────────────────────────
@@ -237,7 +350,8 @@ class RdvFragment : Fragment(R.layout.fragment_rdv) {
         updateStatusFilterCounts()
         val query = searchInput.text?.toString().orEmpty().trim().lowercase()
         val filtered = rendezVous.filter { rdv ->
-            val matchesStatus = selectedStatus == ALL_STATUSES || rdv.statut == selectedStatus
+            val matchesStatus = selectedStatus == ALL_STATUSES ||
+                    rdv.statut?.uppercase() == selectedStatus.uppercase()
             val searchable = listOf(
                 rdv.bebePrenom, rdv.bebeNom,
                 rdv.parentPrenom, rdv.parentNom,
@@ -246,11 +360,18 @@ class RdvFragment : Fragment(R.layout.fragment_rdv) {
             matchesStatus && (query.isBlank() || searchable.contains(query))
         }
         adapter.submit(filtered)
-        if (loadingRequests == 0) {
-            messageView.text = when {
-                sessions.isEmpty() -> "Aucune session aujourd'hui."
-                filtered.isEmpty() -> "Aucun rendez-vous pour ces filtres."
-                else               -> "${filtered.size} rendez-vous affiché(s)"
+
+        val isEmpty = filtered.isEmpty() && loadingRequests == 0
+        recyclerView.visibility  = if (isEmpty) View.GONE else View.VISIBLE
+        llEmptyRdv.visibility    = if (isEmpty) View.VISIBLE else View.GONE
+        messageView.visibility   = View.GONE
+
+        if (isEmpty) {
+            tvEmptyRdvSubtitle.text = when {
+                sessions.isEmpty() -> "Aucune session active aujourd'hui."
+                query.isNotBlank() -> "Aucun résultat pour « $query »."
+                selectedStatus != ALL_STATUSES -> "Aucun RDV avec le statut « ${statusLabel(selectedStatus)} »."
+                else -> "La liste des RDV est vide."
             }
         }
     }
@@ -261,8 +382,8 @@ class RdvFragment : Fragment(R.layout.fragment_rdv) {
             .forEach { chip ->
                 val status = chip.tag as? String ?: return@forEach
                 val count = if (status == ALL_STATUSES) rendezVous.size
-                            else rendezVous.count { it.statut == status }
-                chip.text = "${statusLabel(status)}  $count"
+                            else rendezVous.count { it.statut?.uppercase() == status }
+                chip.text = "${statusLabel(status)} ($count)"
             }
     }
 
@@ -271,7 +392,11 @@ class RdvFragment : Fragment(R.layout.fragment_rdv) {
     private fun updateRdvStatus(rdv: RendezVousDto, status: String) {
         if (actionInFlight) return
         if (!RdvTransitionPolicy.allows(rdv.statut, status)) {
-            messageView.text = "Transition ${rdv.statut ?: "inconnue"} → $status non autorisée."
+            Toast.makeText(
+                requireContext(),
+                "Transition ${rdv.statut ?: "inconnue"} → $status non autorisée.",
+                Toast.LENGTH_SHORT
+            ).show()
             return
         }
         actionInFlight = true
@@ -281,13 +406,21 @@ class RdvFragment : Fragment(R.layout.fragment_rdv) {
             try {
                 val response = ApiClient.apiService.updateRendezVous(rdv.id, UpdateRendezVousRequest(status))
                 if (response.status != "success") throw Exception(response.message ?: "Mise à jour impossible")
-                Toast.makeText(requireContext(), "Statut confirmé", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Statut mis à jour", Toast.LENGTH_SHORT).show()
                 loadRdvForSelectedSession()
-            } catch (_: Exception) {
-                com.example.vaccinkid.db.SyncManager.queueRdvStatusUpdate(requireContext(), rdv.id, status)
-                rendezVous = rendezVous.map { if (it.id == rdv.id) it.copy(statut = status) else it }
-                applyFilters()
-                setOffline(true, "Hors-ligne · changement enregistré localement")
+            } catch (e: Exception) {
+                val msg = e.message ?: ""
+                if (msg.contains("réseau", ignoreCase = true) || msg.contains("timeout", ignoreCase = true)
+                    || msg.contains("Unable to resolve", ignoreCase = true)
+                    || msg.contains("connect", ignoreCase = true)) {
+                    com.example.vaccinkid.db.SyncManager.queueRdvStatusUpdate(requireContext(), rdv.id, status)
+                    rendezVous = rendezVous.map { if (it.id == rdv.id) it.copy(statut = status) else it }
+                    updateSessionProgress()
+                    applyFilters()
+                    setOffline(true, "Hors-ligne · changement enregistré localement")
+                } else {
+                    Toast.makeText(requireContext(), msg.ifBlank { "Erreur serveur" }, Toast.LENGTH_LONG).show()
+                }
             } finally {
                 actionInFlight = false
                 adapter.setActionsEnabled(true)
@@ -327,7 +460,7 @@ class RdvFragment : Fragment(R.layout.fragment_rdv) {
                 ).show()
                 loadSessions()
             } catch (error: Exception) {
-                messageView.text = error.message ?: "Erreur réseau"
+                Toast.makeText(requireContext(), error.message ?: "Erreur réseau", Toast.LENGTH_LONG).show()
             } finally {
                 actionInFlight = false
                 setSessionButtonsEnabled(true)
@@ -378,8 +511,7 @@ class RdvFragment : Fragment(R.layout.fragment_rdv) {
 
     // ── UI helpers ────────────────────────────────────────────────────────────
 
-    private fun selectedSession(): SessionDto? =
-        sessions.getOrNull(sessionSpinner.selectedItemPosition)
+    private fun selectedSession(): SessionDto? = sessions.getOrNull(currentSessionIndex)
 
     private fun setOffline(offline: Boolean, message: String = "") {
         offlineMode = offline
@@ -394,14 +526,25 @@ class RdvFragment : Fragment(R.layout.fragment_rdv) {
         statsButton.visibility = if (status == "EN_COURS") View.VISIBLE else View.GONE
         startButton.visibility = if (status == "CONFIRMEE") View.VISIBLE else View.GONE
         endButton.visibility   = if (status == "EN_COURS") View.VISIBLE else View.GONE
+
+        val barColorRes = when (status) {
+            "EN_COURS"  -> R.color.success
+            "CONFIRMEE" -> R.color.info
+            "TERMINEE"  -> R.color.text_secondary
+            "ANNULEE"   -> R.color.error
+            else        -> R.color.brand_teal
+        }
+        vSessionStatusBar.setBackgroundColor(ContextCompat.getColor(requireContext(), barColorRes))
     }
 
     private fun setSessionButtonsEnabled(enabled: Boolean) {
-        startButton.isEnabled = enabled
-        endButton.isEnabled   = enabled
-        queueButton.isEnabled = enabled
-        vialsButton.isEnabled = enabled
-        statsButton.isEnabled = enabled
+        startButton.isEnabled  = enabled
+        endButton.isEnabled    = enabled
+        queueButton.isEnabled  = enabled
+        vialsButton.isEnabled  = enabled
+        statsButton.isEnabled  = enabled
+        btnPrevSession.isEnabled = enabled
+        btnNextSession.isEnabled = enabled
     }
 
     private fun beginLoading() {
@@ -432,12 +575,13 @@ class RdvFragment : Fragment(R.layout.fragment_rdv) {
     }
 
     private fun statusLabel(status: String): String = when (status) {
-        ALL_STATUSES -> "Tous"
-        "EN_ATTENTE" -> "En attente"
-        "CONFIRME"   -> "Confirmés"
-        "PRESENT"    -> "Présents"
-        "ABSENT"     -> "Absents"
-        else         -> status
+        ALL_STATUSES        -> "Tous"
+        "EN_ATTENTE"        -> "En attente"
+        "CONFIRME"          -> "Confirmés"
+        "EN_LISTE_ATTENTE"  -> "Liste attente"
+        "PRESENT"           -> "Présents"
+        "ABSENT"            -> "Absents"
+        else                -> status
     }
 
     companion object {
@@ -453,7 +597,8 @@ private class StaffRdvAdapter(
     private val onAbsent:    (RendezVousDto) -> Unit,
     private val onConfirm:   (RendezVousDto) -> Unit,
     private val onVaccinate: (RendezVousDto) -> Unit,
-    private val onGrowth:    (RendezVousDto) -> Unit
+    private val onGrowth:    (RendezVousDto) -> Unit,
+    private val onCall:      (RendezVousDto) -> Unit
 ) : RecyclerView.Adapter<StaffRdvAdapter.ViewHolder>() {
 
     private var items: List<RendezVousDto> = emptyList()
@@ -484,15 +629,20 @@ private class StaffRdvAdapter(
         ViewHolder(LayoutInflater.from(parent.context).inflate(R.layout.item_staff_rdv, parent, false))
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        holder.bind(items[position], actionsEnabled, onPresent, onAbsent, onConfirm, onVaccinate, onGrowth)
+        holder.bind(items[position], actionsEnabled, onPresent, onAbsent, onConfirm, onVaccinate, onGrowth, onCall)
     }
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        private val statusBar:       View           = view.findViewById(R.id.vStatusBar)
+        private val avatarFrame:     FrameLayout    = view.findViewById(R.id.flAvatar)
+        private val initialsView:    TextView       = view.findViewById(R.id.tvAvatarInitials)
         private val babyView:        TextView       = view.findViewById(R.id.staffRdvBaby)
-        private val metaView:        TextView       = view.findViewById(R.id.staffRdvMeta)
+        private val queueView:       TextView       = view.findViewById(R.id.tvRdvQueue)
+        private val vaccinBadge:     TextView       = view.findViewById(R.id.tvVaccinBadge)
         private val timeView:        TextView       = view.findViewById(R.id.staffRdvTime)
         private val parentView:      TextView       = view.findViewById(R.id.staffRdvParent)
         private val phoneView:       TextView       = view.findViewById(R.id.staffRdvPhone)
+        private val callButton:      FrameLayout    = view.findViewById(R.id.btnCallPhone)
         private val statusView:      TextView       = view.findViewById(R.id.staffRdvStatus)
         private val presentButton:   MaterialButton = view.findViewById(R.id.staffRdvPresent)
         private val absentButton:    MaterialButton = view.findViewById(R.id.staffRdvAbsent)
@@ -507,24 +657,65 @@ private class StaffRdvAdapter(
             onAbsent:    (RendezVousDto) -> Unit,
             onConfirm:   (RendezVousDto) -> Unit,
             onVaccinate: (RendezVousDto) -> Unit,
-            onGrowth:    (RendezVousDto) -> Unit
+            onGrowth:    (RendezVousDto) -> Unit,
+            onCall:      (RendezVousDto) -> Unit
         ) {
+            val ctx    = itemView.context
             val name   = listOfNotNull(rdv.bebePrenom, rdv.bebeNom).joinToString(" ").ifBlank { "Bébé #${rdv.bebeId}" }
             val parent = listOfNotNull(rdv.parentPrenom, rdv.parentNom).joinToString(" ").ifBlank { "Parent #${rdv.parentId}" }
 
-            babyView.text   = name
-            timeView.text   = rdv.heureDebut?.take(5) ?: "—"
-            metaView.text   = listOfNotNull(rdv.vaccinNom, "RDV #${rdv.id}").joinToString(" · ")
-            parentView.text = parent
-            phoneView.text  = formatPhone(rdv.parentTelephone)
-            statusView.text = rdv.statut ?: "INCONNU"
+            babyView.text    = name
+            timeView.text    = rdv.heureDebut?.take(5) ?: "—"
+            vaccinBadge.text = rdv.vaccinNom ?: "—"
+            parentView.text  = parent
+            phoneView.text   = formatPhone(rdv.parentTelephone)
+            statusView.text  = statusLabel(rdv.statut)
+
+            // Avatar initials + color by id
+            val initials = buildString {
+                rdv.bebePrenom?.firstOrNull()?.uppercaseChar()?.let { append(it) }
+                rdv.bebeNom?.firstOrNull()?.uppercaseChar()?.let { append(it) }
+            }.ifBlank { "?" }
+            initialsView.text = initials
+            val avatarColors = listOf(
+                R.color.brand_teal, R.color.info, R.color.success,
+                R.color.brand_coral, R.color.brand_lavender
+            )
+            avatarFrame.backgroundTintList = ColorStateList.valueOf(
+                ContextCompat.getColor(ctx, avatarColors[abs(rdv.id) % avatarColors.size])
+            )
+
+            // Queue badge
+            val queueNum = rdv.numeroQueue
+            if (queueNum != null) {
+                queueView.text       = "#$queueNum"
+                queueView.visibility = View.VISIBLE
+            } else {
+                queueView.visibility = View.GONE
+            }
+
+            // Status bar + badge styling
             styleStatus(rdv.statut)
 
+            // Call button
+            callButton.setOnClickListener { onCall(rdv) }
+            callButton.visibility = if (!rdv.parentTelephone.isNullOrBlank()) View.VISIBLE else View.GONE
+
+            // Action buttons
             bindAction(presentButton,   actionsEnabled && RdvTransitionPolicy.allows(rdv.statut, "PRESENT"))  { onPresent(rdv) }
             bindAction(absentButton,    actionsEnabled && RdvTransitionPolicy.allows(rdv.statut, "ABSENT"))   { onAbsent(rdv) }
             bindAction(confirmButton,   actionsEnabled && RdvTransitionPolicy.allows(rdv.statut, "CONFIRME")) { onConfirm(rdv) }
-            bindAction(vaccinateButton, actionsEnabled && rdv.statut in listOf("PRESENT", "CONFIRME"))        { onVaccinate(rdv) }
-            bindAction(growthButton,    actionsEnabled && rdv.statut in listOf("PRESENT", "CONFIRME"))        { onGrowth(rdv) }
+            bindAction(vaccinateButton, actionsEnabled && rdv.statut?.uppercase() == "PRESENT")               { onVaccinate(rdv) }
+            bindAction(growthButton,    actionsEnabled && rdv.statut?.uppercase() in listOf("PRESENT", "CONFIRME")) { onGrowth(rdv) }
+
+            // Hide action rows if nothing to show
+            val rowAVisible = presentButton.visibility == View.VISIBLE
+                    || absentButton.visibility == View.VISIBLE
+                    || confirmButton.visibility == View.VISIBLE
+            val rowBVisible = vaccinateButton.visibility == View.VISIBLE
+                    || growthButton.visibility == View.VISIBLE
+            (presentButton.parent as? ViewGroup)?.visibility  = if (rowAVisible) View.VISIBLE else View.GONE
+            (vaccinateButton.parent as? ViewGroup)?.visibility = if (rowBVisible) View.VISIBLE else View.GONE
         }
 
         private fun bindAction(button: MaterialButton, visible: Boolean, action: () -> Unit) {
@@ -535,18 +726,29 @@ private class StaffRdvAdapter(
 
         private fun styleStatus(status: String?) {
             val ctx = statusView.context
-            val (textColor, bgColor) = when (status) {
-                "PRESENT"  -> R.color.success_dark to R.color.success_light
-                "CONFIRME" -> R.color.info_dark    to R.color.info_light
-                "ABSENT"   -> R.color.error_dark   to R.color.error_light
-                else       -> R.color.warning_dark  to R.color.warning_light
+            val (barColor, textColor, bgColor) = when (status?.uppercase()) {
+                "PRESENT"           -> Triple(R.color.success,        R.color.success_dark,   R.color.success_light)
+                "CONFIRME"          -> Triple(R.color.info,           R.color.info_dark,      R.color.info_light)
+                "EN_LISTE_ATTENTE"  -> Triple(R.color.brand_lavender, R.color.brand_lavender_dark, R.color.brand_lavender_light)
+                "ABSENT"            -> Triple(R.color.error,          R.color.error_dark,     R.color.error_light)
+                else                -> Triple(R.color.warning,        R.color.warning_dark,   R.color.warning_light)
             }
+            statusBar.setBackgroundColor(ContextCompat.getColor(ctx, barColor))
             statusView.setTextColor(ContextCompat.getColor(ctx, textColor))
             statusView.background = StaffUi.rounded(
                 ContextCompat.getColor(ctx, bgColor),
                 ContextCompat.getColor(ctx, bgColor),
                 20
             )
+        }
+
+        private fun statusLabel(status: String?): String = when (status?.uppercase()) {
+            "EN_ATTENTE"       -> "EN ATTENTE"
+            "EN_LISTE_ATTENTE" -> "LISTE ATTENTE"
+            "CONFIRME"         -> "CONFIRMÉ"
+            "PRESENT"          -> "PRÉSENT"
+            "ABSENT"           -> "ABSENT"
+            else               -> status?.uppercase() ?: "INCONNU"
         }
 
         companion object {

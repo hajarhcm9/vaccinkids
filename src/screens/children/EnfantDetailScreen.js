@@ -2,8 +2,9 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, ScrollView,
   TouchableOpacity, StatusBar, ActivityIndicator,
-  Modal, TextInput, KeyboardAvoidingView, Platform, Alert,
+  Modal, TextInput, KeyboardAvoidingView, Platform, Alert, Share,
 } from 'react-native';
+import QRCode from 'react-native-qrcode-svg';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -53,6 +54,9 @@ export default function EnfantDetailScreen({ route, navigation }) {
 
   const [data,    setData]    = useState(null);
   const [loading, setLoading] = useState(true);
+
+  // QR modal state
+  const [showQr, setShowQr] = useState(false);
 
   // Complete-profile modal state
   const [showModal,  setShowModal]  = useState(false);
@@ -199,6 +203,16 @@ export default function EnfantDetailScreen({ route, navigation }) {
               <Text style={styles.actionBtnText}>Calendrier</Text>
             </TouchableOpacity>
           )}
+          {!isNewborn && bebe.code_qr && (
+            <TouchableOpacity
+              style={[styles.actionBtn, styles.actionBtnQr]}
+              activeOpacity={0.8}
+              onPress={() => setShowQr(true)}
+            >
+              <Ionicons name="qr-code-outline" size={16} color={Colors.white} />
+              <Text style={styles.actionBtnText}>Carte QR</Text>
+            </TouchableOpacity>
+          )}
           <TouchableOpacity
             style={[styles.actionBtn, !isNewborn && styles.actionBtnPrimary]}
             activeOpacity={0.8}
@@ -338,6 +352,87 @@ export default function EnfantDetailScreen({ route, navigation }) {
           </View>
         </ScrollView>
       )}
+
+      {/* ── Modal : QR Code ── */}
+      <Modal visible={showQr} animationType="fade" transparent onRequestClose={() => setShowQr(false)}>
+        <View style={styles.qrOverlay}>
+          <View style={styles.qrSheet}>
+            {/* Header */}
+            <View style={styles.qrHeader}>
+              <View>
+                <Text style={styles.qrTitle}>Carte de santé</Text>
+                <Text style={styles.qrSub}>
+                  {isF ? 'Elle' : 'Il'} s'appelle{' '}
+                  <Text style={{ fontWeight: '800', color: Colors.primary }}>
+                    {bebe.prenom} {bebe.nom}
+                  </Text>
+                </Text>
+              </View>
+              <TouchableOpacity style={styles.qrCloseBtn} onPress={() => setShowQr(false)}>
+                <Ionicons name="close" size={20} color={Colors.textSecondary} />
+              </TouchableOpacity>
+            </View>
+
+            {/* Age + pills */}
+            <View style={styles.qrPillRow}>
+              <View style={styles.qrPill}>
+                <Ionicons name="sparkles-outline" size={11} color={Colors.primary} />
+                <Text style={styles.qrPillText}>{getAge(bebe.date_naissance)}</Text>
+              </View>
+              <View style={styles.qrPill}>
+                <Ionicons name={isF ? 'female' : 'male'} size={11} color={Colors.primary} />
+                <Text style={styles.qrPillText}>{isF ? 'Fille' : 'Garçon'}</Text>
+              </View>
+              {bebe.numero_centre != null && (
+                <View style={styles.qrPill}>
+                  <Ionicons name="card-outline" size={11} color={Colors.primary} />
+                  <Text style={styles.qrPillText}>N° {bebe.numero_centre}</Text>
+                </View>
+              )}
+            </View>
+
+            {/* QR Code */}
+            <View style={styles.qrCodeWrap}>
+              <View style={styles.qrCodeCard}>
+                {bebe.code_qr ? (
+                  <QRCode
+                    value={bebe.code_qr}
+                    size={220}
+                    color="#003D46"
+                    backgroundColor="white"
+                    ecl="M"
+                  />
+                ) : (
+                  <View style={styles.qrPlaceholder}>
+                    <Ionicons name="qr-code-outline" size={60} color={Colors.border} />
+                    <Text style={styles.qrPlaceholderText}>QR non disponible</Text>
+                  </View>
+                )}
+              </View>
+            </View>
+
+            {/* Instruction for infirmier */}
+            <View style={styles.qrInstructionRow}>
+              <Ionicons name="information-circle-outline" size={16} color={Colors.primary} />
+              <Text style={styles.qrInstruction}>
+                Présentez ce code à l'infirmier(ère) pour enregistrer la vaccination
+              </Text>
+            </View>
+
+            {/* Close button */}
+            <TouchableOpacity
+              style={styles.qrDoneBtn}
+              activeOpacity={0.85}
+              onPress={() => setShowQr(false)}
+            >
+              <LinearGradient colors={Gradients.brand} style={styles.qrDoneBtnGrad}>
+                <Ionicons name="checkmark-circle" size={18} color={Colors.white} />
+                <Text style={styles.qrDoneBtnText}>Fermer</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
 
       {/* ── Modal : Compléter le profil ── */}
       <Modal visible={showModal} animationType="slide" transparent onRequestClose={() => setShowModal(false)}>
@@ -579,4 +674,31 @@ const styles = StyleSheet.create({
   saveBtn:     { marginTop: Spacing.sm },
   saveBtnGrad: { height: 54, borderRadius: Radii.xl, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10 },
   saveBtnText: { fontSize: 16, fontWeight: '800', color: Colors.white },
+
+  // Action button variant for QR
+  actionBtnQr: { backgroundColor: 'rgba(255,255,255,0.18)', borderColor: 'rgba(255,255,255,0.5)', borderWidth: 1 },
+
+  // QR Modal
+  qrOverlay:      { flex: 1, backgroundColor: 'rgba(0,0,0,0.55)', justifyContent: 'flex-end' },
+  qrSheet:        { backgroundColor: Colors.surface, borderTopLeftRadius: Radii['3xl'], borderTopRightRadius: Radii['3xl'], padding: Spacing.xl, paddingBottom: Spacing['4xl'] },
+  qrHeader:       { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: Spacing.md },
+  qrTitle:        { fontSize: 22, fontWeight: '800', color: Colors.text, marginBottom: 3 },
+  qrSub:          { fontSize: 14, color: Colors.textSecondary },
+  qrCloseBtn:     { width: 36, height: 36, borderRadius: 18, backgroundColor: Colors.background, alignItems: 'center', justifyContent: 'center' },
+
+  qrPillRow:      { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: Spacing.xl },
+  qrPill:         { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: Colors.primaryTint, paddingHorizontal: 12, paddingVertical: 5, borderRadius: Radii.pill },
+  qrPillText:     { fontSize: 12, fontWeight: '700', color: Colors.primary },
+
+  qrCodeWrap:     { alignItems: 'center', marginBottom: Spacing.xl },
+  qrCodeCard:     { padding: 20, backgroundColor: Colors.white, borderRadius: Radii['2xl'], ...Elevation.card, borderWidth: 1, borderColor: Colors.border },
+  qrPlaceholder:  { width: 220, height: 220, alignItems: 'center', justifyContent: 'center', gap: 12 },
+  qrPlaceholderText: { fontSize: 14, color: Colors.textLight, fontWeight: '600' },
+
+  qrInstructionRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, backgroundColor: Colors.primaryTint, borderRadius: Radii.xl, padding: Spacing.md, marginBottom: Spacing.xl },
+  qrInstruction:    { flex: 1, fontSize: 13, color: Colors.primary, fontWeight: '600', lineHeight: 19 },
+
+  qrDoneBtn:      { },
+  qrDoneBtnGrad:  { height: 54, borderRadius: Radii.xl, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10 },
+  qrDoneBtnText:  { fontSize: 16, fontWeight: '800', color: Colors.white },
 });

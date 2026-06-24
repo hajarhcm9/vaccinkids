@@ -1,306 +1,537 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
+<androidx.coordinatorlayout.widget.CoordinatorLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/bg_screen">
 
-    <!-- ══════ GRADIENT HEADER ══════ -->
-    <FrameLayout
-        android:id="@+id/flScanHeader"
+    <!-- ══════════════════════════════════════
+         MAIN SCROLLABLE CONTENT
+    ═══════════════════════════════════════ -->
+    <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:background="@drawable/bg_welcome_hero"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/glScan"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
-
-        <!-- Decorative glow -->
-        <View
-            android:layout_width="200dp"
-            android:layout_height="200dp"
-            android:layout_gravity="end|bottom"
-            android:translationX="60dp"
-            android:translationY="60dp"
-            android:background="@drawable/bg_white_glow_circle"
-            android:alpha="0.08" />
-
-        <!-- Back button -->
-        <FrameLayout
-            android:id="@+id/btnBackScan"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_gravity="start|top"
-            android:layout_margin="20dp"
-            android:background="@drawable/bg_circle_white_alpha">
-            <ImageView
-                android:layout_width="20dp"
-                android:layout_height="20dp"
-                android:layout_gravity="center"
-                android:contentDescription="Retour"
-                android:rotation="180"
-                android:src="@drawable/ic_logout"
-                app:tint="@color/white" />
-        </FrameLayout>
-
-        <!-- Titles centered -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:gravity="center"
-            android:orientation="vertical"
-            android:paddingHorizontal="24dp">
-
-            <TextView
-                android:id="@+id/tvScanTitle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Scanner QR"
-                android:textColor="@color/white"
-                android:textSize="24sp"
-                android:textStyle="bold"
-                android:letterSpacing="-0.01" />
-
-            <TextView
-                android:id="@+id/tvScanSubtitle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:gravity="center"
-                android:text="Scannez le QR code du carnet de santé"
-                android:textColor="@color/white_80"
-                android:textSize="14sp" />
-        </LinearLayout>
-    </FrameLayout>
-
-    <!-- Guideline at 38% -->
-    <androidx.constraintlayout.widget.Guideline
-        android:id="@+id/glScan"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        app:layout_constraintGuide_percent="0.36" />
-
-    <!-- ══════ WHITE CONTENT CARD ══════ -->
-    <ScrollView
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:background="@drawable/bg_bottom_sheet_white"
-        android:scrollbars="none"
+        android:layout_height="match_parent"
         android:fillViewport="true"
-        app:layout_constraintTop_toTopOf="@id/glScan"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+        android:scrollbars="none">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="center_horizontal"
-            android:orientation="vertical"
-            android:paddingBottom="40dp">
+            android:orientation="vertical">
 
-            <!-- Drag handle -->
-            <View
-                android:layout_width="44dp"
-                android:layout_height="4dp"
-                android:layout_marginTop="14dp"
-                android:layout_marginBottom="22dp"
-                android:background="@drawable/bg_drag_handle" />
-
-            <!-- ── Viewfinder ── -->
+            <!-- ══ GRADIENT HEADER ══ -->
             <FrameLayout
-                android:id="@+id/scanContainer"
-                android:layout_width="264dp"
-                android:layout_height="264dp"
-                android:background="@drawable/bg_scan_viewfinder">
+                android:layout_width="match_parent"
+                android:layout_height="220dp"
+                android:background="@drawable/bg_gradient_hero_dashboard">
 
-                <!-- Corner brackets overlay -->
-                <ImageView
-                    android:layout_width="80dp"
-                    android:layout_height="80dp"
-                    android:layout_gravity="start|top"
-                    android:alpha="0.0"
-                    android:contentDescription="@null"
-                    android:src="@drawable/ic_scan" />
-
-                <!-- Scan icon watermark -->
-                <ImageView
-                    android:layout_width="72dp"
-                    android:layout_height="72dp"
-                    android:layout_gravity="center"
-                    android:alpha="0.18"
-                    android:contentDescription="@null"
-                    android:src="@drawable/ic_scan"
-                    app:tint="@color/stormy_teal" />
-
-                <!-- Animated scan line -->
+                <!-- Decorative glow -->
                 <View
-                    android:id="@+id/scanLine"
-                    android:layout_width="match_parent"
-                    android:layout_height="2.5dp"
-                    android:layout_gravity="top"
-                    android:background="@color/brand_teal"
-                    android:alpha="0.85" />
-            </FrameLayout>
+                    android:layout_width="180dp"
+                    android:layout_height="180dp"
+                    android:layout_gravity="end|bottom"
+                    android:translationX="50dp"
+                    android:translationY="50dp"
+                    android:alpha="0.07"
+                    android:background="@drawable/bg_white_glow_circle" />
 
-            <!-- Hint text below viewfinder -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="18dp"
-                android:gravity="center"
-                android:text="Placez le code QR dans le cadre"
-                android:textColor="@color/text_secondary"
-                android:textSize="14sp" />
-
-            <!-- ── Open camera button ── -->
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnScanner"
-                android:layout_width="280dp"
-                android:layout_height="54dp"
-                android:layout_marginTop="28dp"
-                android:background="@drawable/bg_btn_teal_pill"
-                android:text="Ouvrir la caméra"
-                android:textColor="@color/white"
-                android:textSize="15sp"
-                android:textStyle="bold"
-                android:stateListAnimator="@null"
-                android:elevation="4dp"
-                app:backgroundTint="@null"
-                app:cornerRadius="27dp" />
-
-            <!-- Manual entry -->
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnSaisieManuelle"
-                style="@style/Widget.Material3.Button.TextButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:text="Saisie manuelle du numéro"
-                android:textColor="@color/brand_teal"
-                android:textSize="14sp"
-                app:rippleColor="@color/teal_100" />
-
-            <!-- ── Torch toggle ── -->
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
-                android:gravity="center"
-                android:orientation="vertical">
-
+                <!-- Back button -->
                 <FrameLayout
-                    android:id="@+id/btnTorch"
-                    android:layout_width="54dp"
-                    android:layout_height="54dp"
-                    android:background="@drawable/bg_kpi_icon_blue"
-                    android:elevation="3dp">
+                    android:id="@+id/btnBackScan"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_gravity="start|top"
+                    android:layout_margin="20dp"
+                    android:background="@drawable/bg_circle_white_alpha"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackgroundBorderless">
                     <ImageView
-                        android:layout_width="26dp"
-                        android:layout_height="26dp"
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
                         android:layout_gravity="center"
-                        android:contentDescription="Torche"
-                        android:src="@drawable/ic_notifications"
-                        app:tint="@color/info" />
+                        android:contentDescription="Retour"
+                        android:rotation="180"
+                        android:src="@drawable/ic_logout"
+                        app:tint="@color/white" />
                 </FrameLayout>
 
-                <TextView
+                <!-- Scan counter badge (top right) -->
+                <LinearLayout
+                    android:id="@+id/llScanCounter"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
-                    android:text="Torche"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="12sp" />
+                    android:layout_gravity="end|top"
+                    android:layout_margin="18dp"
+                    android:background="@drawable/bg_hero_pill"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="12dp"
+                    android:paddingVertical="6dp"
+                    android:visibility="gone">
+                    <TextView
+                        android:id="@+id/tvScanCount"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="0"
+                        android:textColor="@color/white"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="4dp"
+                        android:text="scans"
+                        android:textColor="#CCFFFFFF"
+                        android:textSize="12sp" />
+                </LinearLayout>
+
+                <!-- Header text -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="bottom"
+                    android:gravity="center_horizontal"
+                    android:orientation="vertical"
+                    android:paddingBottom="28dp"
+                    android:paddingHorizontal="24dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Scanner QR"
+                        android:textColor="@color/white"
+                        android:textSize="26sp"
+                        android:textStyle="bold"
+                        android:letterSpacing="-0.01" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:gravity="center"
+                        android:text="Scannez le QR code du carnet de santé"
+                        android:textColor="#CCFFFFFF"
+                        android:textSize="13sp" />
+                </LinearLayout>
+            </FrameLayout>
+
+            <!-- ══ WHITE CONTENT CARD ══ -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_bottom_sheet_white"
+                android:orientation="vertical"
+                android:paddingBottom="32dp">
+
+                <!-- Drag handle -->
+                <View
+                    android:layout_width="44dp"
+                    android:layout_height="4dp"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="14dp"
+                    android:layout_marginBottom="24dp"
+                    android:background="@drawable/bg_drag_handle" />
+
+                <!-- ── QR HERO ZONE ── -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_horizontal"
+                    android:orientation="vertical"
+                    android:paddingHorizontal="24dp">
+
+                    <!-- Viewfinder card -->
+                    <FrameLayout
+                        android:layout_width="220dp"
+                        android:layout_height="220dp"
+                        android:background="@drawable/bg_scan_viewfinder">
+
+                        <!-- Central QR icon -->
+                        <ImageView
+                            android:layout_width="72dp"
+                            android:layout_height="72dp"
+                            android:layout_gravity="center"
+                            android:alpha="0.22"
+                            android:contentDescription="@null"
+                            android:src="@drawable/ic_scan"
+                            app:tint="@color/stormy_teal" />
+
+                        <!-- Corner decoration overlay -->
+                        <ImageView
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:contentDescription="@null"
+                            android:src="@drawable/bg_scan_corners"
+                            android:scaleType="fitXY"
+                            android:alpha="0.6" />
+
+                        <!-- Animated scan line -->
+                        <View
+                            android:id="@+id/scanLine"
+                            android:layout_width="match_parent"
+                            android:layout_height="2.5dp"
+                            android:layout_gravity="top"
+                            android:alpha="0.9"
+                            android:background="@color/brand_teal" />
+
+                        <!-- Loading indicator (while fetching) -->
+                        <ProgressBar
+                            android:id="@+id/pbScanSpinner"
+                            android:layout_width="48dp"
+                            android:layout_height="48dp"
+                            android:layout_gravity="center"
+                            android:visibility="gone"
+                            android:indeterminateTint="@color/brand_teal" />
+                    </FrameLayout>
+
+                    <!-- Guidance text -->
+                    <TextView
+                        android:id="@+id/tvScanGuide"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:gravity="center"
+                        android:text="Placez le QR code du carnet dans le cadre"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="13sp" />
+
+                    <!-- ── PRIMARY CTA ── -->
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnScanner"
+                        android:layout_width="match_parent"
+                        android:layout_height="56dp"
+                        android:layout_marginTop="22dp"
+                        android:background="@drawable/bg_qr_btn"
+                        android:text="Ouvrir la caméra"
+                        android:textColor="@color/white"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:stateListAnimator="@null"
+                        android:elevation="4dp"
+                        android:letterSpacing="0.01"
+                        app:backgroundTint="@null"
+                        app:cornerRadius="28dp"
+                        app:icon="@drawable/ic_scan"
+                        app:iconTint="@color/white"
+                        app:iconSize="20dp"
+                        app:iconPadding="8dp" />
+
+                    <!-- ── SECONDARY ACTIONS ROW ── -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="14dp"
+                        android:gravity="center"
+                        android:orientation="horizontal">
+
+                        <!-- Torch toggle -->
+                        <LinearLayout
+                            android:id="@+id/btnTorch"
+                            android:layout_width="0dp"
+                            android:layout_height="48dp"
+                            android:layout_weight="1"
+                            android:layout_marginEnd="8dp"
+                            android:background="@drawable/bg_torch_off"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:foreground="?attr/selectableItemBackground"
+                            android:gravity="center"
+                            android:orientation="horizontal">
+
+                            <ImageView
+                                android:id="@+id/ivTorchIcon"
+                                android:layout_width="18dp"
+                                android:layout_height="18dp"
+                                android:contentDescription="@null"
+                                android:layout_marginEnd="6dp"
+                                android:src="@drawable/ic_flashlight"
+                                app:tint="@color/brand_teal" />
+
+                            <TextView
+                                android:id="@+id/tvTorchLabel"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Torche"
+                                android:textColor="@color/brand_teal"
+                                android:textSize="13sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+
+                        <!-- Manual entry -->
+                        <LinearLayout
+                            android:id="@+id/btnSaisieManuelle"
+                            android:layout_width="0dp"
+                            android:layout_height="48dp"
+                            android:layout_weight="1"
+                            android:layout_marginStart="8dp"
+                            android:background="@drawable/bg_torch_off"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:foreground="?attr/selectableItemBackground"
+                            android:gravity="center"
+                            android:orientation="horizontal">
+
+                            <ImageView
+                                android:layout_width="16dp"
+                                android:layout_height="16dp"
+                                android:contentDescription="@null"
+                                android:layout_marginEnd="6dp"
+                                android:src="@drawable/ic_lock"
+                                app:tint="@color/brand_teal" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Saisie manuelle"
+                                android:textColor="@color/brand_teal"
+                                android:textSize="13sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- ── RECENT SCANS SECTION ── -->
+                <LinearLayout
+                    android:id="@+id/llRecentScans"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="28dp"
+                    android:orientation="vertical"
+                    android:visibility="gone">
+
+                    <!-- Section header -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:paddingHorizontal="22dp"
+                        android:paddingBottom="12dp">
+
+                        <View
+                            android:layout_width="3dp"
+                            android:layout_height="16dp"
+                            android:layout_marginEnd="10dp"
+                            android:background="@color/brand_teal" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="SCANS RÉCENTS"
+                            android:textColor="@color/brand_teal"
+                            android:textSize="11sp"
+                            android:textStyle="bold"
+                            android:letterSpacing="0.08" />
+                    </LinearLayout>
+
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/rvRecentScans"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:clipToPadding="false"
+                        android:orientation="horizontal"
+                        android:paddingStart="18dp"
+                        android:paddingEnd="8dp"
+                        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+                </LinearLayout>
+
             </LinearLayout>
-
         </LinearLayout>
-    </ScrollView>
+    </androidx.core.widget.NestedScrollView>
 
-    <!-- ══════ DETECTION OVERLAY CARD ══════ -->
+    <!-- ══════════════════════════════════════
+         DETECTED PATIENT OVERLAY CARD (bottom)
+    ═══════════════════════════════════════ -->
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/cvDetectedPatient"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginHorizontal="18dp"
-        android:layout_marginBottom="24dp"
+        android:layout_gravity="bottom"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginBottom="20dp"
+        android:translationY="300dp"
         android:visibility="gone"
         app:cardBackgroundColor="@color/stormy_teal"
-        app:cardCornerRadius="22dp"
-        app:cardElevation="10dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:cardCornerRadius="24dp"
+        app:cardElevation="12dp"
         app:strokeWidth="0dp">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:padding="18dp">
+            android:orientation="vertical"
+            android:padding="20dp">
 
-            <com.google.android.material.imageview.ShapeableImageView
-                android:id="@+id/ivDetectedAvatar"
-                android:layout_width="52dp"
-                android:layout_height="52dp"
-                android:contentDescription="@null"
-                android:src="@drawable/ic_medical_staff"
-                app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Full"
-                app:strokeColor="@color/pearl_aqua"
-                app:strokeWidth="2dp" />
-
+            <!-- Label row -->
             <LinearLayout
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:layout_weight="1"
-                android:orientation="vertical">
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingBottom="14dp">
+
+                <View
+                    android:layout_width="8dp"
+                    android:layout_height="8dp"
+                    android:background="@drawable/bg_legend_dot_green"
+                    android:layout_marginEnd="8dp" />
 
                 <TextView
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:text="Enfant détecté"
+                    android:layout_weight="1"
+                    android:text="CARNET DÉTECTÉ"
                     android:textColor="@color/pearl_aqua"
-                    android:textSize="11sp"
+                    android:textSize="10sp"
                     android:textStyle="bold"
-                    android:letterSpacing="0.08" />
+                    android:letterSpacing="0.10" />
 
-                <TextView
-                    android:id="@+id/tvDetectedName"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:text="Youssef Amine"
-                    android:textColor="@color/white"
-                    android:textSize="17sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/tvDetectedAge"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="2 ans, 3 mois"
-                    android:textColor="@color/white_80"
-                    android:textSize="13sp" />
+                <FrameLayout
+                    android:id="@+id/btnDismissDetected"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:background="@drawable/bg_circle_white_alpha"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackgroundBorderless">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:text="✕"
+                        android:textColor="@color/white"
+                        android:textSize="12sp" />
+                </FrameLayout>
             </LinearLayout>
 
-            <FrameLayout
-                android:layout_width="44dp"
-                android:layout_height="44dp"
-                android:background="@drawable/bg_circle_white_alpha">
-                <ImageView
-                    android:layout_width="22dp"
-                    android:layout_height="22dp"
-                    android:layout_gravity="center"
-                    android:contentDescription="Confirmer"
-                    android:src="@drawable/ic_syringe"
-                    app:tint="@color/white" />
-            </FrameLayout>
+            <!-- Patient info row -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <!-- Avatar initiales -->
+                <FrameLayout
+                    android:id="@+id/flDetectedAvatar"
+                    android:layout_width="52dp"
+                    android:layout_height="52dp"
+                    android:background="@drawable/bg_circle_white_alpha">
+                    <TextView
+                        android:id="@+id/tvDetectedInitials"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:text="YA"
+                        android:textColor="@color/white"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+                </FrameLayout>
+
+                <!-- Name + age + next vaccine -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="14dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/tvDetectedName"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:text="Youssef Amine"
+                        android:textColor="@color/white"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="3dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:id="@+id/tvDetectedAge"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="2 ans 3 mois"
+                            android:textColor="#CCFFFFFF"
+                            android:textSize="13sp" />
+
+                        <TextView
+                            android:id="@+id/tvDetectedVaccin"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:background="@drawable/badge_orange_bg"
+                            android:paddingHorizontal="8dp"
+                            android:paddingVertical="2dp"
+                            android:text="DTC"
+                            android:textColor="@color/warning_dark"
+                            android:textSize="10sp"
+                            android:textStyle="bold"
+                            android:visibility="gone" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- Confirm / open profile -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnOpenProfile"
+                    android:layout_width="wrap_content"
+                    android:layout_height="44dp"
+                    android:text="Dossier"
+                    android:textColor="@color/stormy_teal"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    app:backgroundTint="@color/white"
+                    app:cornerRadius="22dp"
+                    app:icon="@drawable/ic_medical_staff"
+                    app:iconTint="@color/stormy_teal"
+                    app:iconSize="16dp" />
+            </LinearLayout>
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    <!-- Full-screen loading overlay -->
+    <FrameLayout
+        android:id="@+id/overlayLoading"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#99000000"
+        android:clickable="true"
+        android:focusable="true"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:background="@drawable/bg_card_rounded"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:padding="28dp">
+
+            <ProgressBar
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:indeterminateTint="@color/brand_teal" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:text="Recherche du carnet…"
+                android:textColor="@color/text_primary"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+    </FrameLayout>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

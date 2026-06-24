@@ -12,15 +12,17 @@
         android:layout_height="match_parent"
         android:orientation="vertical">
 
-        <!-- ══════ HEADER ══════ -->
+        <!-- ══════════════════════════════════════
+             HEADER
+        ═══════════════════════════════════════ -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center_vertical"
             android:orientation="horizontal"
-            android:paddingHorizontal="22dp"
-            android:paddingTop="22dp"
-            android:paddingBottom="18dp">
+            android:paddingHorizontal="20dp"
+            android:paddingTop="18dp"
+            android:paddingBottom="10dp">
 
             <LinearLayout
                 android:layout_width="0dp"
@@ -33,40 +35,175 @@
                     android:layout_height="wrap_content"
                     android:text="File d'attente"
                     android:textColor="@color/text_primary"
-                    android:textSize="22sp"
+                    android:textSize="26sp"
                     android:textStyle="bold"
                     android:letterSpacing="-0.01" />
 
-                <TextView
+                <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:text="Temps réel · session du jour"
-                    android:textColor="@color/brand_teal"
-                    android:textSize="13sp" />
+                    android:layout_marginTop="3dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <View
+                        android:layout_width="6dp"
+                        android:layout_height="6dp"
+                        android:layout_marginEnd="6dp"
+                        android:background="@drawable/bg_legend_dot_green" />
+
+                    <TextView
+                        android:id="@+id/tvQueueLastRefresh"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Temps réel"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="12sp" />
+                </LinearLayout>
             </LinearLayout>
 
-            <!-- Live indicator -->
-            <FrameLayout
-                android:layout_width="44dp"
-                android:layout_height="44dp"
-                android:background="@drawable/bg_kpi_card"
-                android:elevation="2dp">
-                <ImageView
-                    android:layout_width="22dp"
-                    android:layout_height="22dp"
-                    android:layout_gravity="center"
-                    android:contentDescription="Notifications"
-                    android:src="@drawable/ic_notifications"
-                    app:tint="@color/brand_teal" />
-            </FrameLayout>
+            <ProgressBar
+                android:id="@+id/queueProgress"
+                android:layout_width="26dp"
+                android:layout_height="26dp"
+                android:visibility="gone" />
         </LinearLayout>
 
-        <!-- ══════ TAB SWITCHER ══════ -->
+        <!-- ══════════════════════════════════════
+             KPI STATS ROW
+        ═══════════════════════════════════════ -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingHorizontal="16dp"
+            android:paddingBottom="10dp">
+
+            <!-- En attente -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cvKpiWaiting"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginEnd="6dp"
+                app:cardBackgroundColor="@color/white"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp"
+                app:strokeWidth="0dp">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:paddingVertical="12dp"
+                    android:paddingHorizontal="10dp">
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="3dp"
+                        android:layout_marginBottom="8dp"
+                        android:background="@color/warning" />
+                    <TextView
+                        android:id="@+id/tvKpiQueueWaiting"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="—"
+                        android:textColor="@color/warning_dark"
+                        android:textSize="24sp"
+                        android:textStyle="bold" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="En attente"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="11sp" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Appelés -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cvKpiCalled"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginEnd="6dp"
+                app:cardBackgroundColor="@color/white"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp"
+                app:strokeWidth="0dp">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:paddingVertical="12dp"
+                    android:paddingHorizontal="10dp">
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="3dp"
+                        android:layout_marginBottom="8dp"
+                        android:background="@color/info" />
+                    <TextView
+                        android:id="@+id/tvKpiQueueCalled"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="—"
+                        android:textColor="@color/info_dark"
+                        android:textSize="24sp"
+                        android:textStyle="bold" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Appelés"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="11sp" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Servis -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cvKpiDone"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                app:cardBackgroundColor="@color/white"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp"
+                app:strokeWidth="0dp">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:paddingVertical="12dp"
+                    android:paddingHorizontal="10dp">
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="3dp"
+                        android:layout_marginBottom="8dp"
+                        android:background="@color/success" />
+                    <TextView
+                        android:id="@+id/tvKpiQueueDone"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="—"
+                        android:textColor="@color/success_dark"
+                        android:textSize="24sp"
+                        android:textStyle="bold" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Servis"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="11sp" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+        </LinearLayout>
+
+        <!-- ══════════════════════════════════════
+             TAB SWITCHER
+        ═══════════════════════════════════════ -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="50dp"
-            android:layout_marginHorizontal="22dp"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginBottom="6dp"
             android:background="@drawable/bg_segment_container"
             android:orientation="horizontal"
             android:padding="5dp">
@@ -96,60 +233,144 @@
                 app:rippleColor="@color/pearl_aqua" />
         </LinearLayout>
 
-        <!-- ══════ STATE: loading / message ══════ -->
-        <ProgressBar
-            android:id="@+id/queueProgress"
-            style="@android:style/Widget.ProgressBar.Horizontal"
-            android:layout_width="match_parent"
-            android:layout_height="3dp"
-            android:layout_marginHorizontal="22dp"
-            android:layout_marginTop="10dp"
-            android:indeterminate="true"
-            android:indeterminateTint="@color/brand_teal"
-            android:visibility="gone" />
-
+        <!-- ══════════════════════════════════════
+             STATUS MESSAGE
+        ═══════════════════════════════════════ -->
         <TextView
             android:id="@+id/queueMessage"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:gravity="center"
-            android:paddingHorizontal="22dp"
+            android:paddingHorizontal="20dp"
+            android:paddingBottom="4dp"
             android:textColor="@color/text_secondary"
-            android:textSize="13sp" />
+            android:textSize="12sp" />
 
-        <!-- ══════ LIST ══════ -->
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/queueList"
+        <!-- ══════════════════════════════════════
+             LIST + EMPTY STATE
+        ═══════════════════════════════════════ -->
+        <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_marginTop="14dp"
-            android:layout_weight="1"
-            android:clipToPadding="false"
-            android:paddingHorizontal="22dp"
-            android:paddingBottom="16dp" />
+            android:layout_weight="1">
 
-        <!-- ══════ CALL NEXT CTA ══════ -->
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/queueCallNext"
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/queueList"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clipToPadding="false"
+                android:paddingHorizontal="12dp"
+                android:paddingBottom="8dp" />
+
+            <!-- Empty state -->
+            <LinearLayout
+                android:id="@+id/llQueueEmpty"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:padding="40dp"
+                android:visibility="gone">
+
+                <ImageView
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:alpha="0.28"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_queue_people"
+                    app:tint="@color/brand_teal" />
+
+                <TextView
+                    android:id="@+id/tvEmptyQueueTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:gravity="center"
+                    android:text="File vide"
+                    android:textColor="@color/text_primary"
+                    android:textSize="17sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvEmptyQueueSub"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:gravity="center"
+                    android:text="Aucun patient en attente pour le moment."
+                    android:textColor="@color/text_secondary"
+                    android:textSize="14sp" />
+            </LinearLayout>
+        </FrameLayout>
+
+        <!-- ══════════════════════════════════════
+             NEXT PATIENT HINT + CTA
+        ═══════════════════════════════════════ -->
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:layout_marginHorizontal="22dp"
-            android:layout_marginTop="8dp"
-            android:layout_marginBottom="24dp"
-            android:background="@drawable/bg_btn_teal_pill"
-            android:text="Appeler le prochain"
-            android:textColor="@color/white"
-            android:textSize="15sp"
-            android:textStyle="bold"
-            android:stateListAnimator="@null"
-            android:elevation="4dp"
-            app:backgroundTint="@null"
-            app:cornerRadius="28dp"
-            app:icon="@drawable/ic_queue_people"
-            app:iconTint="@color/white"
-            app:iconSize="22dp"
-            app:iconGravity="textStart" />
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="16dp"
+            android:paddingTop="8dp"
+            android:paddingBottom="20dp">
+
+            <!-- Next patient hint -->
+            <LinearLayout
+                android:id="@+id/llNextHint"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:background="@drawable/bg_badge_teal"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingHorizontal="14dp"
+                android:paddingVertical="8dp"
+                android:visibility="gone">
+
+                <ImageView
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
+                    android:contentDescription="@null"
+                    android:layout_marginEnd="8dp"
+                    android:src="@drawable/ic_queue_people"
+                    app:tint="@color/brand_teal_dark" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Prochain :"
+                    android:textColor="@color/brand_teal_dark"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:id="@+id/tvNextPatientName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/brand_teal_dark"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <!-- Call next CTA -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/queueCallNext"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:background="@drawable/bg_qr_btn"
+                android:text="Appeler le prochain"
+                android:textColor="@color/white"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:stateListAnimator="@null"
+                android:elevation="4dp"
+                android:letterSpacing="0.01"
+                app:backgroundTint="@null"
+                app:cornerRadius="28dp"
+                app:icon="@drawable/ic_queue_people"
+                app:iconTint="@color/white"
+                app:iconSize="20dp"
+                app:iconPadding="8dp" />
+        </LinearLayout>
 
     </LinearLayout>
 </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
