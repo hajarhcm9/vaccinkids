@@ -5,183 +5,333 @@
     android:id="@+id/stocksAdminRefresh"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/bg_screen">
+    android:background="@color/alice_blue">
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
+        android:paddingBottom="32dp">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:paddingBottom="32dp">
+            android:orientation="vertical">
 
-            <!-- Header -->
+            <!-- ══════════════════════════════════════
+                 HEADER
+            ═══════════════════════════════════════ -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:paddingHorizontal="22dp"
-                android:paddingTop="22dp"
+                android:background="@color/white"
+                android:elevation="2dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingHorizontal="20dp"
+                android:paddingTop="20dp"
                 android:paddingBottom="14dp">
-                <TextView
-                    android:layout_width="wrap_content"
+
+                <FrameLayout
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
+                    android:background="@drawable/bg_kpi_icon_teal"
+                    android:layout_marginEnd="14dp">
+                    <ImageView
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:layout_gravity="center"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_package"
+                        app:tint="@color/stormy_teal" />
+                </FrameLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:text="Stocks"
-                    android:textColor="@color/text_primary"
-                    android:textSize="26sp"
-                    android:textStyle="bold" />
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:text="Surveillance des stocks vaccins"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="13sp" />
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Stocks"
+                        android:textColor="@color/slate_900"
+                        android:textSize="26sp"
+                        android:textStyle="bold" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="Surveillance nationale en temps réel"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="12sp" />
+                </LinearLayout>
             </LinearLayout>
 
-            <!-- KPI row -->
+            <!-- ══════════════════════════════════════
+                 KPI ROW — 3 pastel gradient cards
+            ═══════════════════════════════════════ -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginHorizontal="22dp"
-                android:layout_marginBottom="20dp"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="4dp"
                 android:orientation="horizontal">
 
-                <com.google.android.material.card.MaterialCardView
-                    android:layout_width="0dp" android:layout_height="wrap_content"
-                    android:layout_weight="1" android:layout_marginEnd="6dp"
-                    app:cardBackgroundColor="@color/white"
-                    app:cardCornerRadius="16dp" app:cardElevation="2dp" app:strokeWidth="0dp">
-                    <LinearLayout android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical" android:padding="14dp">
-                        <FrameLayout android:layout_width="32dp" android:layout_height="32dp"
-                            android:background="@drawable/bg_kpi_icon_blue">
-                            <ImageView android:layout_width="16dp" android:layout_height="16dp"
-                                android:layout_gravity="center"
-                                android:src="@drawable/ic_package"
-                                android:contentDescription="@null"
-                                app:tint="@color/brand_lavender" />
-                        </FrameLayout>
-                        <TextView android:id="@+id/tvStockTotal"
-                            android:layout_width="wrap_content" android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp" android:text="4 666"
-                            android:textColor="@color/brand_lavender"
-                            android:textSize="20sp" android:textStyle="bold" />
-                        <TextView android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Total doses"
-                            android:textColor="@color/text_secondary" android:textSize="11sp" />
-                    </LinearLayout>
-                </com.google.android.material.card.MaterialCardView>
+                <!-- KPI 1 : Total doses — soft purple-blue -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="110dp"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="8dp"
+                    android:background="@drawable/bg_kpi_stock_purple"
+                    android:elevation="3dp"
+                    android:orientation="vertical"
+                    android:padding="14dp">
 
-                <com.google.android.material.card.MaterialCardView
-                    android:layout_width="0dp" android:layout_height="wrap_content"
-                    android:layout_weight="1" android:layout_marginHorizontal="3dp"
-                    app:cardBackgroundColor="@color/white"
-                    app:cardCornerRadius="16dp" app:cardElevation="2dp" app:strokeWidth="0dp">
-                    <LinearLayout android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical" android:padding="14dp">
-                        <FrameLayout android:layout_width="32dp" android:layout_height="32dp"
-                            android:background="@drawable/bg_kpi_icon_orange">
-                            <ImageView android:layout_width="16dp" android:layout_height="16dp"
-                                android:layout_gravity="center"
-                                android:src="@drawable/ic_notifications"
-                                android:contentDescription="@null"
-                                app:tint="@color/warning" />
-                        </FrameLayout>
-                        <TextView android:id="@+id/tvStockFaibles"
-                            android:layout_width="wrap_content" android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp" android:text="5"
-                            android:textColor="@color/warning"
-                            android:textSize="20sp" android:textStyle="bold" />
-                        <TextView android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Stocks faibles"
-                            android:textColor="@color/text_secondary" android:textSize="11sp" />
-                    </LinearLayout>
-                </com.google.android.material.card.MaterialCardView>
+                    <FrameLayout
+                        android:layout_width="28dp"
+                        android:layout_height="28dp"
+                        android:background="@drawable/bg_circle_white_alpha">
+                        <ImageView
+                            android:layout_width="14dp"
+                            android:layout_height="14dp"
+                            android:layout_gravity="center"
+                            android:contentDescription="@null"
+                            android:src="@drawable/ic_syringe"
+                            app:tint="#7C3AED" />
+                    </FrameLayout>
 
-                <com.google.android.material.card.MaterialCardView
-                    android:layout_width="0dp" android:layout_height="wrap_content"
-                    android:layout_weight="1" android:layout_marginStart="6dp"
-                    app:cardBackgroundColor="@color/white"
-                    app:cardCornerRadius="16dp" app:cardElevation="2dp" app:strokeWidth="0dp">
-                    <LinearLayout android:layout_width="match_parent"
+                    <TextView
+                        android:id="@+id/tvStockTotal"
+                        android:layout_width="wrap_content"
+                        android:layout_height="0dp"
+                        android:layout_weight="1"
+                        android:gravity="center_vertical"
+                        android:text="—"
+                        android:textColor="#7C3AED"
+                        android:textSize="30sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical" android:padding="14dp">
-                        <FrameLayout android:layout_width="32dp" android:layout_height="32dp"
-                            android:background="@drawable/bg_kpi_icon_red">
-                            <ImageView android:layout_width="16dp" android:layout_height="16dp"
-                                android:layout_gravity="center"
-                                android:src="@drawable/ic_notifications"
-                                android:contentDescription="@null"
-                                app:tint="@color/error" />
-                        </FrameLayout>
-                        <TextView android:id="@+id/tvStockPerimes"
-                            android:layout_width="wrap_content" android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp" android:text="0"
-                            android:textColor="@color/error"
-                            android:textSize="20sp" android:textStyle="bold" />
-                        <TextView android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Périmés"
-                            android:textColor="@color/text_secondary" android:textSize="11sp" />
-                    </LinearLayout>
-                </com.google.android.material.card.MaterialCardView>
+                        android:text="Total doses"
+                        android:textColor="#7C3AED"
+                        android:alpha="0.7"
+                        android:textSize="10sp" />
+                </LinearLayout>
+
+                <!-- KPI 2 : Stocks faibles — soft red -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="110dp"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="8dp"
+                    android:background="@drawable/bg_kpi_stock_red"
+                    android:elevation="3dp"
+                    android:orientation="vertical"
+                    android:padding="14dp">
+
+                    <FrameLayout
+                        android:layout_width="28dp"
+                        android:layout_height="28dp"
+                        android:background="@drawable/bg_circle_white_alpha">
+                        <ImageView
+                            android:layout_width="14dp"
+                            android:layout_height="14dp"
+                            android:layout_gravity="center"
+                            android:contentDescription="@null"
+                            android:src="@drawable/ic_notifications"
+                            app:tint="@color/error" />
+                    </FrameLayout>
+
+                    <TextView
+                        android:id="@+id/tvStockFaibles"
+                        android:layout_width="wrap_content"
+                        android:layout_height="0dp"
+                        android:layout_weight="1"
+                        android:gravity="center_vertical"
+                        android:text="—"
+                        android:textColor="@color/error"
+                        android:textSize="30sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Stocks faibles"
+                        android:textColor="@color/error"
+                        android:alpha="0.7"
+                        android:textSize="10sp" />
+                </LinearLayout>
+
+                <!-- KPI 3 : Ruptures — soft amber -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="110dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_kpi_stock_amber"
+                    android:elevation="3dp"
+                    android:orientation="vertical"
+                    android:padding="14dp">
+
+                    <FrameLayout
+                        android:layout_width="28dp"
+                        android:layout_height="28dp"
+                        android:background="@drawable/bg_circle_white_alpha">
+                        <ImageView
+                            android:layout_width="14dp"
+                            android:layout_height="14dp"
+                            android:layout_gravity="center"
+                            android:contentDescription="@null"
+                            android:src="@drawable/ic_notifications"
+                            app:tint="@color/warning" />
+                    </FrameLayout>
+
+                    <TextView
+                        android:id="@+id/tvStockPerimes"
+                        android:layout_width="wrap_content"
+                        android:layout_height="0dp"
+                        android:layout_weight="1"
+                        android:gravity="center_vertical"
+                        android:text="—"
+                        android:textColor="@color/warning"
+                        android:textSize="30sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Périmés"
+                        android:textColor="@color/warning"
+                        android:alpha="0.7"
+                        android:textSize="10sp" />
+                </LinearLayout>
             </LinearLayout>
 
-            <!-- Alert stocks section title -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="22dp"
-                android:layout_marginBottom="10dp"
-                android:text="Vigilance immédiate"
-                android:textColor="@color/text_primary"
-                android:textSize="16sp"
-                android:textStyle="bold" />
-
+            <!-- ══════════════════════════════════════
+                 STATUS MESSAGE
+            ═══════════════════════════════════════ -->
             <TextView
                 android:id="@+id/tvStocksMessage"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:paddingHorizontal="22dp"
+                android:gravity="center"
+                android:padding="24dp"
                 android:textColor="@color/text_secondary"
                 android:textSize="13sp"
                 android:visibility="gone" />
 
-            <!-- Alert RecyclerView -->
+            <!-- ══════════════════════════════════════
+                 SECTION : Vigilance immédiate
+            ═══════════════════════════════════════ -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingHorizontal="20dp"
+                android:paddingTop="20dp"
+                android:paddingBottom="10dp">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Vigilance immédiate"
+                        android:textColor="@color/slate_900"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="1dp"
+                        android:text="Stocks sous le seuil d'alerte"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="11sp" />
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_badge_error"
+                    android:paddingHorizontal="10dp"
+                    android:paddingVertical="5dp"
+                    android:text="⚠ Alertes"
+                    android:textColor="@color/error_dark"
+                    android:textSize="11sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rvStocksAlert"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:clipToPadding="false"
-                android:paddingHorizontal="22dp"
-                android:nestedScrollingEnabled="false" />
+                android:nestedScrollingEnabled="false"
+                android:paddingHorizontal="16dp"
+                android:paddingBottom="4dp" />
 
-            <!-- OK stocks section -->
-            <TextView
-                android:layout_width="wrap_content"
+            <!-- ══════════════════════════════════════
+                 SECTION : Stocks suffisants
+            ═══════════════════════════════════════ -->
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="22dp"
-                android:layout_marginTop="16dp"
-                android:layout_marginBottom="10dp"
-                android:text="Stocks suffisants"
-                android:textColor="@color/text_primary"
-                android:textSize="16sp"
-                android:textStyle="bold" />
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingHorizontal="20dp"
+                android:paddingTop="20dp"
+                android:paddingBottom="10dp">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Stocks suffisants"
+                        android:textColor="@color/slate_900"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="1dp"
+                        android:text="Niveaux au-dessus du seuil"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="11sp" />
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_badge_success"
+                    android:paddingHorizontal="10dp"
+                    android:paddingVertical="5dp"
+                    android:text="✓ Disponibles"
+                    android:textColor="@color/success_dark"
+                    android:textSize="11sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rvStocksOk"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:clipToPadding="false"
-                android:paddingHorizontal="22dp"
-                android:nestedScrollingEnabled="false" />
+                android:nestedScrollingEnabled="false"
+                android:paddingHorizontal="16dp"
+                android:paddingBottom="4dp" />
+
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>

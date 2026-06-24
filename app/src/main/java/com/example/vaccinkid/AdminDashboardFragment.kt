@@ -1,291 +1,364 @@
 package com.example.vaccinkid
 
 import android.content.Intent
+import android.graphics.Color
 import android.os.Bundle
 import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-import com.example.vaccinkid.model.DashboardStatsDto
 import com.example.vaccinkid.network.ApiClient
-import com.example.vaccinkid.network.TokenManager
+import com.example.vaccinkid.viewmodel.InfirmierAuthViewModel
+import com.github.mikephil.charting.charts.BarChart
+import com.github.mikephil.charting.components.XAxis
+import com.github.mikephil.charting.data.BarData
+import com.github.mikephil.charting.data.BarDataSet
+import com.github.mikephil.charting.data.BarEntry
 import com.google.android.material.card.MaterialCardView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.google.android.material.progressindicator.LinearProgressIndicator
-import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
-import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
 class AdminDashboardFragment : Fragment(R.layout.fragment_admin_dashboard) {
 
-    private lateinit var refreshView: SwipeRefreshLayout
+    private lateinit var authViewModel: InfirmierAuthViewModel
 
     // Header
     private lateinit var tvAdminAvatarInitials: TextView
     private lateinit var tvAdminGreeting: TextView
     private lateinit var tvAdminName: TextView
-    private lateinit var tvAdminDateBadge: TextView
-    private lateinit var tvAdminPeriod: TextView
-    private lateinit var tvLastUpdated: TextView
+    private lateinit var tvNotifBadge: TextView
+    private lateinit var btnAdminLogout: View
 
-    // KPI strip
-    private lateinit var totalVaccinesView: TextView
-    private lateinit var centresCountView: TextView
-    private lateinit var staffCountView: TextView
-    private lateinit var sessionsCountView: TextView
-    private lateinit var cvKpiCentres: MaterialCardView
-    private lateinit var cvKpiStaff: MaterialCardView
+    // Hero
+    private lateinit var tvTotalVaccines: TextView
+    private lateinit var tvAdminPeriod: TextView
+    private lateinit var tvAdminDateBadge: TextView
+    private lateinit var barChartSummary: BarChart
+    private lateinit var heroCard: MaterialCardView
+
+    // KPI Row 1
     private lateinit var cvKpiSessions: MaterialCardView
+    private lateinit var tvKpiSessions: TextView
+    private lateinit var cvKpiCentres: MaterialCardView
+    private lateinit var tvKpiCentres: TextView
+    private lateinit var cvKpiStaff: MaterialCardView
+    private lateinit var tvKpiStaff: TextView
+
+    // KPI Row 2
+    private lateinit var cvKpiVaccinations: MaterialCardView
+    private lateinit var tvKpiVaccinations: TextView
+    private lateinit var cvKpiAlertes: MaterialCardView
+    private lateinit var tvKpiAlertes: TextView
+    private lateinit var cvKpiBebes: MaterialCardView
+    private lateinit var tvKpiBebes: TextView
 
     // Alert banner
-    private lateinit var alertBanner: LinearLayout
-    private lateinit var alertBannerText: TextView
+    private lateinit var llAlertBanner: MaterialCardView
+    private lateinit var tvAlertBannerText: TextView
 
-    // Quick actions
-    private lateinit var cvQuickAlertesStock: LinearLayout
-    private lateinit var cvQuickRetards: LinearLayout
-    private lateinit var cvQuickRdv: LinearLayout
-    private lateinit var cvQuickSearch: LinearLayout
+    // Activity
+    private lateinit var llActivitySessions: LinearLayout
+    private lateinit var tvActivitySessionsDetail: TextView
+    private lateinit var llActivityRdv: LinearLayout
+    private lateinit var tvActivityRdvDetail: TextView
+    private lateinit var llActivityPresents: LinearLayout
+    private lateinit var tvActivityPresentsDetail: TextView
+    private lateinit var llActivityAlertes: LinearLayout
+    private lateinit var tvActivityAlertesDetail: TextView
+    private lateinit var dividerActivity3: View
 
-    // Stats progress
-    private lateinit var tvStatPresentsCount: TextView
-    private lateinit var tvStatConfirmesCount: TextView
-    private lateinit var tvStatEnAttenteCount: TextView
-    private lateinit var tvStatAbsentsCount: TextView
-    private lateinit var progressStatPresents: LinearProgressIndicator
-    private lateinit var progressStatConfirmes: LinearProgressIndicator
-    private lateinit var progressStatEnAttente: LinearProgressIndicator
-    private lateinit var progressStatAbsents: LinearProgressIndicator
+    private lateinit var tvLastUpdated: TextView
+    private lateinit var adminRefresh: SwipeRefreshLayout
 
-    // Bilan global
-    private lateinit var tvStatBebes: TextView
-    private lateinit var tvStatParents: TextView
+    // KPI cards list for staggered animation
+    private val kpiCards get() = listOf(cvKpiSessions, cvKpiCentres, cvKpiStaff,
+        cvKpiVaccinations, cvKpiAlertes, cvKpiBebes)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        authViewModel = ViewModelProvider(this)[InfirmierAuthViewModel::class.java]
+
         bindViews(view)
-        setupQuickActions()
-        loadDashboard()
+        setupClickListeners()
+        setupPeriod()
+        setupChart()
+        loadData()
+
+        adminRefresh.setOnRefreshListener { loadData() }
     }
 
     private fun bindViews(view: View) {
-        refreshView             = view.findViewById(R.id.adminRefresh)
         tvAdminAvatarInitials   = view.findViewById(R.id.tvAdminAvatarInitials)
         tvAdminGreeting         = view.findViewById(R.id.tvAdminGreeting)
         tvAdminName             = view.findViewById(R.id.tvAdminName)
-        tvAdminDateBadge        = view.findViewById(R.id.tvAdminDateBadge)
+        tvNotifBadge            = view.findViewById(R.id.tvNotifBadge)
+        btnAdminLogout          = view.findViewById(R.id.btnAdminLogout)
+        tvTotalVaccines         = view.findViewById(R.id.tvTotalVaccines)
         tvAdminPeriod           = view.findViewById(R.id.tvAdminPeriod)
-        tvLastUpdated           = view.findViewById(R.id.tvLastUpdated)
-        totalVaccinesView       = view.findViewById(R.id.tvTotalVaccines)
-        centresCountView        = view.findViewById(R.id.tvKpiCentres)
-        staffCountView          = view.findViewById(R.id.tvKpiStaff)
-        sessionsCountView       = view.findViewById(R.id.tvKpiSessions)
-        cvKpiCentres            = view.findViewById(R.id.cvKpiCentres)
-        cvKpiStaff              = view.findViewById(R.id.cvKpiStaff)
+        tvAdminDateBadge        = view.findViewById(R.id.tvAdminDateBadge)
+        barChartSummary         = view.findViewById(R.id.barChartSummary)
+        heroCard                = view.findViewById(R.id.heroCard)
         cvKpiSessions           = view.findViewById(R.id.cvKpiSessions)
-        alertBanner             = view.findViewById(R.id.llAlertBanner)
-        alertBannerText         = view.findViewById(R.id.tvAlertBannerText)
-        cvQuickAlertesStock     = view.findViewById(R.id.cvQuickAlertesStock)
-        cvQuickRetards          = view.findViewById(R.id.cvQuickRetards)
-        cvQuickRdv              = view.findViewById(R.id.cvQuickRdv)
-        cvQuickSearch           = view.findViewById(R.id.cvQuickSearch)
-        tvStatPresentsCount     = view.findViewById(R.id.tvStatPresentsCount)
-        tvStatConfirmesCount    = view.findViewById(R.id.tvStatConfirmesCount)
-        tvStatEnAttenteCount    = view.findViewById(R.id.tvStatEnAttenteCount)
-        tvStatAbsentsCount      = view.findViewById(R.id.tvStatAbsentsCount)
-        progressStatPresents    = view.findViewById(R.id.progressStatPresents)
-        progressStatConfirmes   = view.findViewById(R.id.progressStatConfirmes)
-        progressStatEnAttente   = view.findViewById(R.id.progressStatEnAttente)
-        progressStatAbsents     = view.findViewById(R.id.progressStatAbsents)
-        tvStatBebes             = view.findViewById(R.id.tvStatBebes)
-        tvStatParents           = view.findViewById(R.id.tvStatParents)
+        tvKpiSessions           = view.findViewById(R.id.tvKpiSessions)
+        cvKpiCentres            = view.findViewById(R.id.cvKpiCentres)
+        tvKpiCentres            = view.findViewById(R.id.tvKpiCentres)
+        cvKpiStaff              = view.findViewById(R.id.cvKpiStaff)
+        tvKpiStaff              = view.findViewById(R.id.tvKpiStaff)
+        cvKpiVaccinations       = view.findViewById(R.id.cvKpiVaccinations)
+        tvKpiVaccinations       = view.findViewById(R.id.tvKpiVaccinations)
+        cvKpiAlertes            = view.findViewById(R.id.cvKpiAlertes)
+        tvKpiAlertes            = view.findViewById(R.id.tvKpiAlertes)
+        cvKpiBebes              = view.findViewById(R.id.cvKpiBebes)
+        tvKpiBebes              = view.findViewById(R.id.tvKpiBebes)
+        llAlertBanner           = view.findViewById(R.id.llAlertBanner)
+        tvAlertBannerText       = view.findViewById(R.id.tvAlertBannerText)
+        llActivitySessions      = view.findViewById(R.id.llActivitySessions)
+        tvActivitySessionsDetail= view.findViewById(R.id.tvActivitySessionsDetail)
+        llActivityRdv           = view.findViewById(R.id.llActivityRdv)
+        tvActivityRdvDetail     = view.findViewById(R.id.tvActivityRdvDetail)
+        llActivityPresents      = view.findViewById(R.id.llActivityPresents)
+        tvActivityPresentsDetail= view.findViewById(R.id.tvActivityPresentsDetail)
+        llActivityAlertes       = view.findViewById(R.id.llActivityAlertes)
+        tvActivityAlertesDetail = view.findViewById(R.id.tvActivityAlertesDetail)
+        dividerActivity3        = view.findViewById(R.id.dividerActivity3)
+        tvLastUpdated           = view.findViewById(R.id.tvLastUpdated)
+        adminRefresh            = view.findViewById(R.id.adminRefresh)
 
-        refreshView.setOnRefreshListener { loadDashboard() }
-        view.findViewById<View>(R.id.btnAdminLogout).setOnClickListener { confirmLogout() }
-
-        // Date badge
-        val cal = Calendar.getInstance()
-        val days = listOf("Dimanche","Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi")
-        val months = listOf("Janvier","Février","Mars","Avril","Mai","Juin",
-                            "Juillet","Août","Septembre","Octobre","Novembre","Décembre")
-        tvAdminDateBadge.text = "${days[cal.get(Calendar.DAY_OF_WEEK) - 1]} ${cal.get(Calendar.DAY_OF_MONTH)} ${months[cal.get(Calendar.MONTH)]}"
-        tvAdminPeriod.text    = "${months[cal.get(Calendar.MONTH)]} ${cal.get(Calendar.YEAR)}"
-
-        // Greeting (set early; correct time-of-day value)
-        val hour = cal.get(Calendar.HOUR_OF_DAY)
-        tvAdminGreeting.text = when {
-            hour < 12 -> "Bonjour,"
-            hour < 18 -> "Bon après-midi,"
-            else      -> "Bonsoir,"
-        }
-
-        // Loading placeholders
-        totalVaccinesView.text    = "—"
-        centresCountView.text     = "—"
-        staffCountView.text       = "—"
-        sessionsCountView.text    = "—"
-        tvStatPresentsCount.text  = "—"
-        tvStatConfirmesCount.text = "—"
-        tvStatEnAttenteCount.text = "—"
-        tvStatAbsentsCount.text   = "—"
-        tvStatBebes.text          = "—"
-        tvStatParents.text        = "—"
-        tvLastUpdated.text        = "—"
+        // Initial hidden state for entrance animation
+        heroCard.alpha = 0f
+        heroCard.scaleY = 0.92f
+        kpiCards.forEach { it.alpha = 0f; it.translationY = 24f }
     }
 
-    private fun setupQuickActions() {
-        cvQuickAlertesStock.setOnClickListener {
-            (activity as? AdminActivity)?.naviguerVers(AdminAlertesFragment())
+    private fun setupClickListeners() {
+        val admin = requireActivity() as AdminActivity
+
+        btnAdminLogout.setOnClickListener { showLogoutDialog() }
+
+        cvKpiSessions.setOnClickListener    { admin.naviguerVers(GestionSessionsFragment()) }
+        cvKpiCentres.setOnClickListener     { admin.naviguerVers(AdminSearchFragment()) }
+        cvKpiStaff.setOnClickListener       { admin.naviguerVers(GestionPersonnelFragment()) }
+        cvKpiVaccinations.setOnClickListener { admin.naviguerVers(AdminRendezVousFragment()) }
+        cvKpiAlertes.setOnClickListener     { admin.naviguerVers(AdminAlertesFragment()) }
+        cvKpiBebes.setOnClickListener       { admin.naviguerVers(AdminRendezVousFragment()) }
+        llAlertBanner.setOnClickListener    { admin.naviguerVers(AdminAlertesFragment()) }
+
+        llActivitySessions.setOnClickListener { admin.naviguerVers(GestionSessionsFragment()) }
+        llActivityRdv.setOnClickListener      { admin.naviguerVers(AdminRendezVousFragment()) }
+        llActivityPresents.setOnClickListener { admin.naviguerVers(AdminRendezVousFragment()) }
+        llActivityAlertes.setOnClickListener  { admin.naviguerVers(AdminAlertesFragment()) }
+
+        view?.findViewById<View>(R.id.tvViewAll)?.setOnClickListener {
+            admin.naviguerVers(AdminRendezVousFragment())
         }
-        cvQuickRetards.setOnClickListener {
-            (activity as? AdminActivity)?.naviguerVers(AdminDelayAlertsFragment())
-        }
-        cvQuickRdv.setOnClickListener {
-            (activity as? AdminActivity)?.naviguerVers(AdminRendezVousFragment())
-        }
-        cvQuickSearch.setOnClickListener {
-            (activity as? AdminActivity)?.naviguerVers(AdminSearchFragment())
-        }
-        cvKpiCentres.setOnClickListener {
-            (activity as? AdminActivity)?.naviguerVers(AdminSearchFragment())
-        }
-        cvKpiStaff.setOnClickListener {
-            (activity as? AdminActivity)?.naviguerVers(GestionPersonnelFragment())
-        }
-        cvKpiSessions.setOnClickListener {
-            (activity as? AdminActivity)?.naviguerVers(GestionSessionsFragment())
-        }
-        alertBanner.setOnClickListener {
-            (activity as? AdminActivity)?.naviguerVers(AdminAlertesFragment())
+        view?.findViewById<View>(R.id.llViewSelector)?.setOnClickListener { /* label only */ }
+    }
+
+    private fun setupPeriod() {
+        val month = SimpleDateFormat("MMMM yyyy", Locale.FRENCH).format(Date())
+            .replaceFirstChar { it.uppercase() }
+        tvAdminPeriod.text = month
+        tvAdminDateBadge.text = month
+        tvAdminGreeting.text = greetingForHour()
+    }
+
+    private fun setupChart() {
+        barChartSummary.apply {
+            description.isEnabled = false
+            legend.isEnabled = false
+            setTouchEnabled(false)
+            setDrawGridBackground(false)
+            setDrawBorders(false)
+            setBackgroundColor(Color.TRANSPARENT)
+
+            xAxis.apply {
+                setDrawGridLines(false)
+                setDrawLabels(false)
+                setDrawAxisLine(false)
+                position = XAxis.XAxisPosition.BOTTOM
+            }
+            axisLeft.apply {
+                setDrawGridLines(false)
+                setDrawLabels(false)
+                setDrawAxisLine(false)
+            }
+            axisRight.isEnabled = false
         }
     }
 
-    // ── Data loading ─────────────────────────────────────────────────────────
-
-    private fun loadDashboard() {
-        refreshView.isRefreshing = true
+    private fun loadData() {
         viewLifecycleOwner.lifecycleScope.launch {
             try {
-                val (statsResponse, meResponse) = coroutineScope {
-                    val s = async { ApiClient.apiService.getDashboardStats() }
-                    val m = async { runCatching { ApiClient.apiService.getMe() }.getOrNull() }
-                    s.await() to m.await()
+                // Load profile
+                val meResp = ApiClient.apiService.getMe()
+                val user = meResp.data?.user
+                if (user != null) {
+                    val fullName = listOfNotNull(user.prenom, user.nom)
+                        .joinToString(" ").ifBlank { "Administrateur" }
+                    tvAdminName.text = fullName
+                    tvAdminAvatarInitials.text = buildInitials(user.prenom ?: "", user.nom ?: "")
+                }
+            } catch (_: Exception) {}
+
+            try {
+                // Load dashboard stats
+                val statsResp = ApiClient.apiService.getDashboardStats()
+                val stats = statsResp.data ?: return@launch
+
+                // Hero big number
+                tvTotalVaccines.text = formatCount(stats.totalVaccinations ?: 0)
+
+                // KPI Row 1
+                tvKpiSessions.text  = formatCount(stats.sessionsAVenir ?: 0)
+                tvKpiCentres.text   = formatCount(stats.centresActifs ?: 0)
+                tvKpiStaff.text     = formatCount(stats.totalPersonnel ?: 0)
+
+                // KPI Row 2
+                tvKpiVaccinations.text = formatCount(stats.totalVaccinations ?: 0)
+                val alertes = stats.alertesStock ?: 0
+                tvKpiAlertes.text   = formatCount(alertes)
+                tvKpiBebes.text     = formatCount(stats.totalBebes ?: 0)
+
+                // Notification badge
+                if (alertes > 0) {
+                    tvNotifBadge.text = if (alertes > 9) "9+" else alertes.toString()
+                    tvNotifBadge.visibility = View.VISIBLE
+                } else {
+                    tvNotifBadge.visibility = View.GONE
                 }
 
-                // Admin name + initials
-                val user = meResponse?.data?.user
-                val prenom = user?.prenom?.trim().orEmpty()
-                val nom    = user?.nom?.trim().orEmpty()
-                val displayName = listOfNotNull(prenom.ifBlank { null }, nom.ifBlank { null })
-                    .joinToString(" ").ifBlank { "Administrateur" }
-                tvAdminName.text          = displayName
-                tvAdminAvatarInitials.text = buildInitials(prenom, nom)
-
-                // Stats
-                val stats = statsResponse.data
-                if (statsResponse.status == "success" && stats != null) {
-                    totalVaccinesView.text = formatCount(stats.totalVaccinations)
-                    centresCountView.text  = formatCount(stats.centresActifs)
-                    staffCountView.text    = formatCount(stats.totalPersonnel)
-                    sessionsCountView.text = formatCount(stats.sessionsAVenir)
-                    tvStatBebes.text       = formatCount(stats.totalBebes)
-                    tvStatParents.text     = formatCount(stats.totalParents)
-                    updateStatsProgress(stats)
-                    updateAlertBanner(stats)
+                // Alert banner
+                if (alertes > 0) {
+                    tvAlertBannerText.text =
+                        "$alertes alerte${if (alertes > 1) "s" else ""} stock critique${if (alertes > 1) "s" else ""} — Appuyez pour voir"
+                    llAlertBanner.visibility = View.VISIBLE
+                } else {
+                    llAlertBanner.visibility = View.GONE
                 }
 
-                tvLastUpdated.text = SimpleDateFormat("HH:mm", Locale.FRANCE).format(Date())
+                // Activity section
+                val sessions  = stats.sessionsAVenir ?: 0
+                val confirmes = stats.rdvConfirmes ?: 0
+                val presents  = stats.rdvPresents ?: 0
 
-            } catch (e: Exception) {
-                com.google.android.material.snackbar.Snackbar
-                    .make(requireView(), e.message ?: "Tableau de bord indisponible",
-                          com.google.android.material.snackbar.Snackbar.LENGTH_LONG)
-                    .show()
+                tvActivitySessionsDetail.text =
+                    "$sessions session${if (sessions != 1) "s" else ""} programmée${if (sessions != 1) "s" else ""}"
+                tvActivityRdvDetail.text =
+                    "$confirmes RDV confirmé${if (confirmes != 1) "s" else ""}"
+                tvActivityPresentsDetail.text =
+                    "$presents patient${if (presents != 1) "s" else ""} présent${if (presents != 1) "s" else ""} aujourd'hui"
+
+                if (alertes > 0) {
+                    tvActivityAlertesDetail.text =
+                        "$alertes produit${if (alertes > 1) "s" else ""} en rupture imminente"
+                    llActivityAlertes.visibility = View.VISIBLE
+                    dividerActivity3.visibility  = View.VISIBLE
+                } else {
+                    llActivityAlertes.visibility = View.GONE
+                    dividerActivity3.visibility  = View.GONE
+                }
+
+                // Bar chart: rdv breakdown
+                updateChart(
+                    enAttente  = stats.rdvEnAttente  ?: 0,
+                    confirmes  = confirmes,
+                    presents   = presents,
+                    absents    = stats.rdvAbsents    ?: 0
+                )
+
+                // Timestamp
+                val heure = SimpleDateFormat("HH:mm", Locale.FRENCH).format(Date())
+                tvLastUpdated.text = "Mis à jour à $heure"
+
+                // Run entrance animations
+                runEntranceAnimations()
+
+            } catch (_: Exception) {
+                tvLastUpdated.text = "Erreur de chargement"
             } finally {
-                refreshView.isRefreshing = false
+                if (::adminRefresh.isInitialized) adminRefresh.isRefreshing = false
             }
         }
     }
 
-    // ── Stats progress bars ───────────────────────────────────────────────────
+    private fun updateChart(enAttente: Int, confirmes: Int, presents: Int, absents: Int) {
+        val entries = listOf(enAttente, confirmes, presents, absents)
+            .mapIndexed { i, v -> BarEntry(i.toFloat(), v.toFloat()) }
 
-    private fun updateStatsProgress(stats: DashboardStatsDto) {
-        val presents  = stats.rdvPresents  ?: 0
-        val confirmes = stats.rdvConfirmes ?: 0
-        val enAttente = stats.rdvEnAttente ?: 0
-        val absents   = stats.rdvAbsents   ?: 0
-        val total     = (presents + confirmes + enAttente + absents).coerceAtLeast(1)
+        val dataSet = BarDataSet(entries, "").apply {
+            color = Color.parseColor("#B3FFFFFF")
+            setDrawValues(false)
+        }
 
-        tvStatPresentsCount.text  = presents.toString()
-        tvStatConfirmesCount.text = confirmes.toString()
-        tvStatEnAttenteCount.text = enAttente.toString()
-        tvStatAbsentsCount.text   = absents.toString()
+        barChartSummary.data = BarData(dataSet).apply { barWidth = 0.5f }
+        barChartSummary.animateY(900)
 
-        progressStatPresents.max  = total
-        progressStatConfirmes.max = total
-        progressStatEnAttente.max = total
-        progressStatAbsents.max   = total
-
-        progressStatPresents.setProgressCompat(presents, true)
-        progressStatConfirmes.setProgressCompat(confirmes, true)
-        progressStatEnAttente.setProgressCompat(enAttente, true)
-        progressStatAbsents.setProgressCompat(absents, true)
+        // Fade in chart after data loaded
+        barChartSummary.animate().alpha(0.75f).setDuration(600).setStartDelay(400).start()
     }
 
-    // ── Alert banner ──────────────────────────────────────────────────────────
+    private fun runEntranceAnimations() {
+        // Hero fade + scale
+        heroCard.animate()
+            .alpha(1f)
+            .scaleY(1f)
+            .setDuration(450)
+            .setStartDelay(80)
+            .start()
 
-    private fun updateAlertBanner(stats: DashboardStatsDto) {
-        val stockAlerts = stats.alertesStock ?: 0
-        if (stockAlerts > 0) {
-            alertBanner.visibility = View.VISIBLE
-            alertBannerText.text = "$stockAlerts alerte(s) de stock critique — Voir →"
-        } else {
-            alertBanner.visibility = View.GONE
+        // KPI cards cascade
+        kpiCards.forEachIndexed { index, card ->
+            card.animate()
+                .alpha(1f)
+                .translationY(0f)
+                .setDuration(350)
+                .setStartDelay((120 + index * 80).toLong())
+                .start()
         }
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
+    private fun showLogoutDialog() {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Se déconnecter ?")
+            .setMessage("Vous serez redirigé vers l'écran de connexion.")
+            .setNegativeButton("Annuler", null)
+            .setPositiveButton("Se déconnecter") { _, _ ->
+                authViewModel.logout {
+                    startActivity(
+                        Intent(requireContext(), AdminLoginActivity::class.java).apply {
+                            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                        }
+                    )
+                }
+            }
+            .show()
+    }
 
     private fun buildInitials(prenom: String, nom: String): String {
         val p = prenom.firstOrNull()?.uppercaseChar()
         val n = nom.firstOrNull()?.uppercaseChar()
+        return listOfNotNull(p, n).joinToString("").ifBlank { "AD" }
+    }
+
+    private fun formatCount(n: Int): String = when {
+        n >= 1_000_000 -> "${n / 1_000_000}M"
+        n >= 1_000     -> "${n / 1_000},${(n % 1_000) / 100}k"
+        else           -> n.toString()
+    }
+
+    private fun greetingForHour(): String {
+        val hour = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)
         return when {
-            p != null && n != null -> "$p$n"
-            p != null              -> "$p"
-            n != null              -> "$n"
-            else                   -> "A"
-        }
-    }
-
-    private fun formatCount(value: Int?): String = value?.toString() ?: "0"
-
-    // ── Logout ────────────────────────────────────────────────────────────────
-
-    private fun confirmLogout() {
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Déconnexion")
-            .setMessage("Voulez-vous fermer la session administrateur ?")
-            .setNegativeButton("Annuler", null)
-            .setPositiveButton("Déconnexion") { _, _ -> doLogout() }
-            .show()
-    }
-
-    private fun doLogout() {
-        viewLifecycleOwner.lifecycleScope.launch {
-            val refreshToken = TokenManager.getRefreshToken()
-            try { ApiClient.apiService.logout(mapOf("refreshToken" to refreshToken)) } catch (_: Exception) {}
-            finally {
-                TokenManager.clearTokens()
-                startActivity(Intent(requireContext(), AdminLoginActivity::class.java).apply {
-                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                })
-            }
+            hour < 12 -> "Bonjour,"
+            hour < 18 -> "Bon après-midi,"
+            else      -> "Bonsoir,"
         }
     }
 }

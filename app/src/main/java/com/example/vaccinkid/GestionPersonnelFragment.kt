@@ -11,10 +11,10 @@ import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.FrameLayout
 import android.widget.LinearLayout
-import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import com.google.android.material.textfield.MaterialAutoCompleteTextView
 import androidx.core.content.ContextCompat
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
@@ -96,12 +96,12 @@ class GestionPersonnelFragment : Fragment(R.layout.fragment_gestion_personnel) {
             activeTab = tabKeys[idx]
             tabs.forEachIndexed { i, tv ->
                 if (i == idx) {
-                    tv.setBackgroundResource(R.drawable.bg_pill_lavender_active)
+                    tv.setBackgroundResource(R.drawable.bg_pill_teal_active)
                     tv.setTextColor(requireContext().getColor(R.color.white))
                     tv.setTypeface(null, android.graphics.Typeface.BOLD)
                 } else {
-                    tv.setBackgroundResource(R.drawable.bg_pill_outline_lavender)
-                    tv.setTextColor(requireContext().getColor(R.color.brand_lavender))
+                    tv.setBackgroundResource(R.drawable.bg_pill_outline_teal)
+                    tv.setTextColor(requireContext().getColor(R.color.stormy_teal))
                     tv.setTypeface(null, android.graphics.Typeface.NORMAL)
                 }
             }
@@ -213,49 +213,105 @@ class GestionPersonnelFragment : Fragment(R.layout.fragment_gestion_personnel) {
 
         val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_add_personnel, null)
 
-        val layoutCin   = dialogView.findViewById<View>(R.id.layoutCin)
-        val tilCin      = dialogView.findViewById<TextInputLayout>(R.id.tilCin)
-        val tilNom      = dialogView.findViewById<TextInputLayout>(R.id.tilNom)
-        val tilPrenom   = dialogView.findViewById<TextInputLayout>(R.id.tilPrenom)
-        val tilPwd      = dialogView.findViewById<TextInputLayout>(R.id.tilPassword)
-        val etCin       = dialogView.findViewById<TextInputEditText>(R.id.etCin)
-        val etNom       = dialogView.findViewById<TextInputEditText>(R.id.etNom)
-        val etPrenom    = dialogView.findViewById<TextInputEditText>(R.id.etPrenom)
-        val etPwd       = dialogView.findViewById<TextInputEditText>(R.id.etPassword)
-        val roleSpinner   = dialogView.findViewById<Spinner>(R.id.spinnerRole)
-        val centreSpinner = dialogView.findViewById<Spinner>(R.id.spinnerCentre)
-        val tvPwdHint   = dialogView.findViewById<TextView>(R.id.tvPasswordHint)
+        val layoutCin    = dialogView.findViewById<View>(R.id.layoutCin)
+        val tilCin       = dialogView.findViewById<TextInputLayout>(R.id.tilCin)
+        val tilNom       = dialogView.findViewById<TextInputLayout>(R.id.tilNom)
+        val tilPrenom    = dialogView.findViewById<TextInputLayout>(R.id.tilPrenom)
+        val tilPwd       = dialogView.findViewById<TextInputLayout>(R.id.tilPassword)
+        val etCin        = dialogView.findViewById<TextInputEditText>(R.id.etCin)
+        val etNom        = dialogView.findViewById<TextInputEditText>(R.id.etNom)
+        val etPrenom     = dialogView.findViewById<TextInputEditText>(R.id.etPrenom)
+        val etPwd        = dialogView.findViewById<TextInputEditText>(R.id.etPassword)
+        val tvPwdHint    = dialogView.findViewById<TextView>(R.id.tvPasswordHint)
+        val tvFormTitle  = dialogView.findViewById<TextView>(R.id.tvFormTitle)
+        val tvFormSub    = dialogView.findViewById<TextView>(R.id.tvFormSubtitle)
+        val btnSave      = dialogView.findViewById<MaterialButton>(R.id.btnFormSave)
+        val btnCancel    = dialogView.findViewById<MaterialButton>(R.id.btnFormCancel)
+
+        // Role toggle
+        val btnRoleInfirmier = dialogView.findViewById<LinearLayout>(R.id.btnRoleInfirmier)
+        val btnRoleAdmin     = dialogView.findViewById<LinearLayout>(R.id.btnRoleAdmin)
+        val tvRoleInf        = dialogView.findViewById<TextView>(R.id.tvRoleInfirmier)
+        val tvRoleAdm        = dialogView.findViewById<TextView>(R.id.tvRoleAdmin)
+        val icRoleInf        = dialogView.findViewById<android.widget.ImageView>(R.id.icRoleInfirmier)
+        val icRoleAdm        = dialogView.findViewById<android.widget.ImageView>(R.id.icRoleAdmin)
+
+        // Centre dropdown
+        val actvCentre   = dialogView.findViewById<MaterialAutoCompleteTextView>(R.id.actvCentre)
+
+        // ── Configure header ──────────────────────────────────────────────────
+        tvFormTitle.text = if (isNew) "Nouveau membre" else "Modifier le profil"
+        tvFormSub.text   = if (isNew) "Complétez le formulaire" else "${item?.prenom ?: ""} ${item?.nom ?: ""}".trim()
 
         layoutCin.visibility = if (isNew) View.VISIBLE else View.GONE
         tvPwdHint.visibility = if (isNew) View.GONE else View.VISIBLE
+        btnSave.text         = if (isNew) "Créer le compte" else "Enregistrer"
 
         if (!isNew) {
             etNom.setText(item?.nom ?: "")
             etPrenom.setText(item?.prenom ?: "")
         }
 
-        val roles = listOf("infirmier", "admin")
-        roleSpinner.adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, roles)
-        roleSpinner.setSelection(if (item?.role == "admin") 1 else 0)
-        roleSpinner.isEnabled = !isSelf
+        // ── Role toggle ───────────────────────────────────────────────────────
+        var selectedRole = item?.role?.lowercase() ?: "infirmier"
 
-        centreSpinner.adapter = ArrayAdapter(
-            requireContext(),
-            android.R.layout.simple_spinner_dropdown_item,
-            if (centres.isEmpty()) listOf("Aucun centre disponible")
-            else centres.map { it.nom ?: "Centre #${it.id}" }
+        fun applyRoleUI() {
+            val tealColor  = ContextCompat.getColor(requireContext(), R.color.stormy_teal)
+            val whiteColor = ContextCompat.getColor(requireContext(), R.color.white)
+            if (selectedRole == "admin") {
+                btnRoleAdmin.setBackgroundResource(R.drawable.bg_pill_teal_active)
+                tvRoleAdm.setTextColor(whiteColor)
+                icRoleAdm.imageTintList = ColorStateList.valueOf(whiteColor)
+                btnRoleInfirmier.setBackgroundResource(R.drawable.bg_pill_outline_teal)
+                tvRoleInf.setTextColor(tealColor)
+                icRoleInf.imageTintList = ColorStateList.valueOf(tealColor)
+            } else {
+                btnRoleInfirmier.setBackgroundResource(R.drawable.bg_pill_teal_active)
+                tvRoleInf.setTextColor(whiteColor)
+                icRoleInf.imageTintList = ColorStateList.valueOf(whiteColor)
+                btnRoleAdmin.setBackgroundResource(R.drawable.bg_pill_outline_teal)
+                tvRoleAdm.setTextColor(tealColor)
+                icRoleAdm.imageTintList = ColorStateList.valueOf(tealColor)
+            }
+        }
+        applyRoleUI()
+
+        if (!isSelf) {
+            btnRoleInfirmier.setOnClickListener { selectedRole = "infirmier"; applyRoleUI() }
+            btnRoleAdmin.setOnClickListener     { selectedRole = "admin";     applyRoleUI() }
+        } else {
+            btnRoleInfirmier.isClickable = false
+            btnRoleAdmin.isClickable     = false
+        }
+
+        // ── Centre dropdown ───────────────────────────────────────────────────
+        val centreNames = if (centres.isEmpty()) listOf("Aucun centre disponible")
+                          else centres.map { it.nom ?: "Centre #${it.id}" }
+        var selectedCentreIdx = centres.indexOfFirst { it.id == item?.centreId }.coerceAtLeast(0)
+
+        actvCentre.setAdapter(
+            ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, centreNames)
         )
-        val centreIdx = centres.indexOfFirst { it.id == item?.centreId }
-        centreSpinner.setSelection(if (centreIdx >= 0) centreIdx else 0)
+        actvCentre.setText(centreNames.getOrNull(selectedCentreIdx) ?: "", false)
+        actvCentre.setOnItemClickListener { _, _, position, _ -> selectedCentreIdx = position }
 
+        // ── Show dialog ───────────────────────────────────────────────────────
         val dialog = MaterialAlertDialogBuilder(requireContext())
-            .setTitle(if (isNew) "Ajouter un membre du personnel" else "Modifier le profil")
             .setView(dialogView)
-            .setNegativeButton("Annuler", null)
-            .setPositiveButton(if (isNew) "Créer le compte" else "Enregistrer") { _, _ -> }
-            .show()
+            .create()
 
-        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+        dialog.show()
+
+        // Make dialog full-width with rounded corners
+        dialog.window?.apply {
+            setLayout(android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                      android.view.ViewGroup.LayoutParams.WRAP_CONTENT)
+            setBackgroundDrawableResource(android.R.color.transparent)
+        }
+
+        btnCancel.setOnClickListener { dialog.dismiss() }
+
+        btnSave.setOnClickListener {
             tilCin.error    = null
             tilNom.error    = null
             tilPrenom.error = null
@@ -268,9 +324,9 @@ class GestionPersonnelFragment : Fragment(R.layout.fragment_gestion_personnel) {
 
             var valid = true
             if (isNew && cinVal.isNotBlank() && !cinVal.matches(Regex("^[A-Z]{1,2}[0-9]{5,6}$"))) {
-                tilCin.error = "Format invalide (ex: A123456 ou BE12345)"; valid = false
+                tilCin.error = "Format invalide (ex: A123456)"; valid = false
             }
-            if (nomVal.length < 2) { tilNom.error = "Min. 2 caractères"; valid = false }
+            if (nomVal.length < 2)    { tilNom.error    = "Min. 2 caractères"; valid = false }
             if (prenomVal.length < 2) { tilPrenom.error = "Min. 2 caractères"; valid = false }
             if (isNew && pwdVal.length < 6) { tilPwd.error = "Min. 6 caractères requis"; valid = false }
             if (!valid) return@setOnClickListener
@@ -282,8 +338,8 @@ class GestionPersonnelFragment : Fragment(R.layout.fragment_gestion_personnel) {
                     cin        = if (isNew) cinVal.ifBlank { null } else null,
                     nom        = nomVal,
                     prenom     = prenomVal,
-                    role       = roles[roleSpinner.selectedItemPosition],
-                    centreId   = centres.getOrNull(centreSpinner.selectedItemPosition)?.id,
+                    role       = selectedRole,
+                    centreId   = centres.getOrNull(selectedCentreIdx)?.id,
                     motDePasse = pwdVal.ifBlank { null }
                 )
             )
@@ -417,8 +473,8 @@ private class PersonnelXmlAdapter(
 
             // Role-colored avatar
             if (isAdmin) {
-                flAvatar.setBackgroundResource(R.drawable.bg_kpi_icon_lavender)
-                tvInitials.setTextColor(Color.parseColor("#5B21B6"))
+                flAvatar.setBackgroundResource(R.drawable.bg_kpi_icon_almond)
+                tvInitials.setTextColor(Color.parseColor("#E29578"))
             } else {
                 flAvatar.setBackgroundResource(R.drawable.bg_kpi_icon_green)
                 tvInitials.setTextColor(ContextCompat.getColor(ctx, R.color.brand_teal))
@@ -451,9 +507,8 @@ private class PersonnelXmlAdapter(
                 btnToggle.strokeColor = ColorStateList.valueOf(ContextCompat.getColor(ctx, R.color.success))
             }
 
-            // Edit button always lavender
-            btnEdit.setTextColor(ContextCompat.getColor(ctx, R.color.brand_lavender))
-            btnEdit.strokeColor = ColorStateList.valueOf(ContextCompat.getColor(ctx, R.color.brand_lavender))
+            btnEdit.setTextColor(ContextCompat.getColor(ctx, R.color.stormy_teal))
+            btnEdit.strokeColor = ColorStateList.valueOf(ContextCompat.getColor(ctx, R.color.stormy_teal))
 
             itemView.setOnClickListener { onEdit(p) }
             btnEdit.setOnClickListener { onEdit(p) }

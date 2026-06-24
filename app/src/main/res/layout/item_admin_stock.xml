@@ -4,85 +4,107 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="10dp"
+    android:layout_marginBottom="12dp"
+    android:clickable="true"
+    android:focusable="true"
     app:cardBackgroundColor="@color/white"
-    app:cardCornerRadius="16dp"
-    app:cardElevation="2dp"
+    app:cardCornerRadius="22dp"
+    app:cardElevation="4dp"
     app:strokeWidth="0dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="14dp">
 
-        <!-- Severity bar -->
-        <View
-            android:id="@+id/viewStockSeverityBar"
-            android:layout_width="5dp"
-            android:layout_height="match_parent"
-            android:background="@color/error" />
+        <!-- Vaccine icon — bg changes per status -->
+        <FrameLayout
+            android:id="@+id/fvStockIconBg"
+            android:layout_width="52dp"
+            android:layout_height="52dp"
+            android:background="@drawable/bg_stock_icon_ok">
+            <ImageView
+                android:id="@+id/ivStockIcon"
+                android:layout_width="26dp"
+                android:layout_height="26dp"
+                android:layout_gravity="center"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_syringe"
+                app:tint="@color/success" />
+        </FrameLayout>
 
+        <!-- Info block -->
         <LinearLayout
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:padding="14dp">
+            android:layout_weight="1"
+            android:layout_marginHorizontal="12dp"
+            android:orientation="vertical">
 
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical">
-
-                <TextView
-                    android:id="@+id/tvStockVaccinNom"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textColor="@color/text_primary"
-                    android:textSize="14sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/tvStockCentre"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="12sp" />
-
-                <!-- Mini progress bar -->
-                <ProgressBar
-                    android:id="@+id/pbStockLevel"
-                    style="@style/Widget.AppCompat.ProgressBar.Horizontal"
-                    android:layout_width="match_parent"
-                    android:layout_height="5dp"
-                    android:layout_marginTop="8dp"
-                    android:max="100"
-                    android:progress="20"
-                    android:progressTint="@color/error"
-                    android:progressBackgroundTint="@color/error_light" />
-
-                <TextView
-                    android:id="@+id/tvStockQteInfo"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="11sp" />
-            </LinearLayout>
-
+            <!-- Vaccine name -->
             <TextView
-                android:id="@+id/tvStockBadge"
+                android:id="@+id/tvStockVaccinNom"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textColor="@color/slate_900"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+
+            <!-- Centre -->
+            <TextView
+                android:id="@+id/tvStockCentre"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textColor="@color/text_secondary"
+                android:textSize="11sp" />
+
+            <!-- Progress bar -->
+            <com.google.android.material.progressindicator.LinearProgressIndicator
+                android:id="@+id/pbStockLevel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:max="100"
+                android:progress="50"
+                app:indicatorColor="@color/success"
+                app:trackColor="@color/success_light"
+                app:trackCornerRadius="4dp" />
+
+            <!-- Dose count -->
+            <TextView
+                android:id="@+id/tvStockQteInfo"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="12dp"
-                android:background="@drawable/bg_badge_error"
-                android:paddingHorizontal="10dp"
-                android:paddingVertical="4dp"
-                android:text="Critique"
-                android:textSize="11sp"
-                android:textStyle="bold" />
+                android:layout_marginTop="4dp"
+                android:textColor="@color/text_secondary"
+                android:textSize="11sp" />
         </LinearLayout>
+
+        <!-- Status badge -->
+        <TextView
+            android:id="@+id/tvStockBadge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_badge_success"
+            android:paddingHorizontal="10dp"
+            android:paddingVertical="5dp"
+            android:text="OK"
+            android:textSize="11sp"
+            android:textStyle="bold" />
     </LinearLayout>
+
+    <!-- Hidden view for legacy VH ref — keeps compilation intact -->
+    <View
+        android:id="@+id/viewStockSeverityBar"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="gone" />
+
 </com.google.android.material.card.MaterialCardView>

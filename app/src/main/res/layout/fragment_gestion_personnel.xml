@@ -4,7 +4,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/bg_screen">
+    android:background="@color/alice_blue">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -17,7 +17,7 @@
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="150dp"
-            android:background="@drawable/bg_gradient_admin_hero">
+            android:background="@drawable/bg_more_hero">
 
             <!-- Decorative blobs -->
             <View
@@ -154,10 +154,10 @@
             app:boxCornerRadiusTopEnd="14dp"
             app:boxCornerRadiusBottomStart="14dp"
             app:boxCornerRadiusBottomEnd="14dp"
-            app:boxStrokeColor="@color/brand_lavender"
+            app:boxStrokeColor="@color/stormy_teal"
             app:hintTextColor="@color/text_secondary"
             app:startIconDrawable="@drawable/ic_search"
-            app:startIconTint="@color/brand_lavender">
+            app:startIconTint="@color/stormy_teal">
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etPersonnelSearch"
                 android:layout_width="match_parent"
@@ -187,7 +187,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="38dp"
                     android:layout_marginEnd="8dp"
-                    android:background="@drawable/bg_pill_lavender_active"
+                    android:background="@drawable/bg_pill_teal_active"
                     android:gravity="center"
                     android:paddingHorizontal="18dp"
                     android:text="Tous"
@@ -200,11 +200,11 @@
                     android:layout_width="wrap_content"
                     android:layout_height="38dp"
                     android:layout_marginEnd="8dp"
-                    android:background="@drawable/bg_pill_outline_lavender"
+                    android:background="@drawable/bg_pill_outline_teal"
                     android:gravity="center"
                     android:paddingHorizontal="18dp"
                     android:text="Infirmiers"
-                    android:textColor="@color/brand_lavender"
+                    android:textColor="@color/stormy_teal"
                     android:textSize="13sp" />
 
                 <TextView
@@ -212,22 +212,22 @@
                     android:layout_width="wrap_content"
                     android:layout_height="38dp"
                     android:layout_marginEnd="8dp"
-                    android:background="@drawable/bg_pill_outline_lavender"
+                    android:background="@drawable/bg_pill_outline_teal"
                     android:gravity="center"
                     android:paddingHorizontal="18dp"
                     android:text="Admins"
-                    android:textColor="@color/brand_lavender"
+                    android:textColor="@color/stormy_teal"
                     android:textSize="13sp" />
 
                 <TextView
                     android:id="@+id/tabPersonnelInactifs"
                     android:layout_width="wrap_content"
                     android:layout_height="38dp"
-                    android:background="@drawable/bg_pill_outline_lavender"
+                    android:background="@drawable/bg_pill_outline_teal"
                     android:gravity="center"
                     android:paddingHorizontal="18dp"
                     android:text="Inactifs"
-                    android:textColor="@color/brand_lavender"
+                    android:textColor="@color/stormy_teal"
                     android:textSize="13sp" />
             </LinearLayout>
         </HorizontalScrollView>
@@ -241,8 +241,8 @@
             android:layout_height="wrap_content"
             android:indeterminate="true"
             android:visibility="gone"
-            app:indicatorColor="@color/brand_lavender"
-            app:trackColor="@color/bg_screen" />
+            app:indicatorColor="@color/stormy_teal"
+            app:trackColor="@color/alice_blue" />
 
         <TextView
             android:id="@+id/tvPersonnelMessage"
@@ -278,7 +278,7 @@
         android:contentDescription="Ajouter un membre"
         android:text="Ajouter"
         android:textColor="@color/white"
-        app:backgroundTint="@color/brand_lavender"
+        app:backgroundTint="@color/stormy_teal"
         app:elevation="6dp"
         app:icon="@drawable/ic_add"
         app:iconTint="@color/white" />

@@ -5,7 +5,7 @@
     android:id="@+id/adminRefresh"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/bg_screen">
+    android:background="@color/slate_50">
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
@@ -15,983 +15,748 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingBottom="100dp">
+            android:paddingBottom="110dp">
 
             <!-- ══════════════════════════════════════
-                 HERO — full-bleed gradient 215dp
-            ═══════════════════════════════════════ -->
-            <FrameLayout
-                android:layout_width="match_parent"
-                android:layout_height="215dp"
-                android:background="@drawable/bg_gradient_admin_hero">
-
-                <!-- Decorative circles -->
-                <View
-                    android:layout_width="200dp"
-                    android:layout_height="200dp"
-                    android:layout_gravity="top|end"
-                    android:layout_marginEnd="-60dp"
-                    android:layout_marginTop="-60dp"
-                    android:alpha="0.08"
-                    android:background="@drawable/bg_white_glow_circle" />
-
-                <View
-                    android:layout_width="120dp"
-                    android:layout_height="120dp"
-                    android:layout_gravity="bottom|start"
-                    android:layout_marginStart="-30dp"
-                    android:layout_marginBottom="-30dp"
-                    android:alpha="0.06"
-                    android:background="@drawable/bg_white_glow_circle" />
-
-                <View
-                    android:layout_width="70dp"
-                    android:layout_height="70dp"
-                    android:layout_gravity="top|start"
-                    android:layout_marginStart="60dp"
-                    android:layout_marginTop="30dp"
-                    android:alpha="0.05"
-                    android:background="@drawable/bg_white_glow_circle" />
-
-                <!-- Hero content -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:orientation="vertical"
-                    android:paddingHorizontal="20dp"
-                    android:paddingTop="16dp"
-                    android:paddingBottom="44dp">
-
-                    <!-- Top row: date pill + logout -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
-
-                        <TextView
-                            android:id="@+id/tvAdminDateBadge"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:background="@drawable/bg_hero_pill"
-                            android:paddingHorizontal="12dp"
-                            android:paddingVertical="5dp"
-                            android:text="Mardi 24 Juin"
-                            android:textColor="@color/white"
-                            android:textSize="11sp"
-                            android:textStyle="bold" />
-
-                        <FrameLayout
-                            android:id="@+id/btnAdminLogout"
-                            android:layout_width="38dp"
-                            android:layout_height="38dp"
-                            android:background="@drawable/bg_circle_white_alpha"
-                            android:clickable="true"
-                            android:focusable="true"
-                            android:foreground="?attr/selectableItemBackgroundBorderless">
-                            <ImageView
-                                android:layout_width="18dp"
-                                android:layout_height="18dp"
-                                android:layout_gravity="center"
-                                android:contentDescription="Déconnexion"
-                                android:src="@drawable/ic_logout"
-                                app:tint="@color/white" />
-                        </FrameLayout>
-                    </LinearLayout>
-
-                    <!-- Avatar + name row -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="18dp"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
-
-                        <!-- Avatar initials circle -->
-                        <FrameLayout
-                            android:layout_width="58dp"
-                            android:layout_height="58dp"
-                            android:background="@drawable/bg_more_avatar">
-                            <TextView
-                                android:id="@+id/tvAdminAvatarInitials"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_gravity="center"
-                                android:text="?"
-                                android:textColor="@color/white"
-                                android:textSize="20sp"
-                                android:textStyle="bold" />
-                        </FrameLayout>
-
-                        <!-- Greeting + name + badge -->
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:layout_marginStart="14dp"
-                            android:orientation="vertical">
-
-                            <TextView
-                                android:id="@+id/tvAdminGreeting"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Bonjour,"
-                                android:textColor="#CCFFFFFF"
-                                android:textSize="13sp" />
-
-                            <TextView
-                                android:id="@+id/tvAdminName"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:ellipsize="end"
-                                android:maxLines="1"
-                                android:text="Administrateur"
-                                android:textColor="@color/white"
-                                android:textSize="20sp"
-                                android:textStyle="bold" />
-
-                            <LinearLayout
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="6dp"
-                                android:gravity="center_vertical"
-                                android:orientation="horizontal">
-
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:background="@drawable/bg_hero_pill"
-                                    android:paddingHorizontal="10dp"
-                                    android:paddingVertical="3dp"
-                                    android:text="Administrateur"
-                                    android:textColor="@color/white"
-                                    android:textSize="10sp"
-                                    android:textStyle="bold" />
-
-                                <View
-                                    android:layout_width="5dp"
-                                    android:layout_height="5dp"
-                                    android:layout_marginStart="10dp"
-                                    android:layout_marginEnd="4dp"
-                                    android:background="@drawable/bg_legend_dot_green" />
-
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="Connecté"
-                                    android:textColor="#AAFFFFFF"
-                                    android:textSize="10sp" />
-                            </LinearLayout>
-                        </LinearLayout>
-
-                        <!-- Period -->
-                        <TextView
-                            android:id="@+id/tvAdminPeriod"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:background="@drawable/bg_hero_pill"
-                            android:paddingHorizontal="10dp"
-                            android:paddingVertical="4dp"
-                            android:textColor="@color/white"
-                            android:textSize="11sp"
-                            android:textStyle="bold" />
-                    </LinearLayout>
-                </LinearLayout>
-            </FrameLayout>
-
-            <!-- ══════════════════════════════════════
-                 KPI STRIP — overlaps hero -28dp
+                 HEADER — premium flat
             ═══════════════════════════════════════ -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="-28dp"
-                android:layout_marginHorizontal="16dp"
-                android:orientation="horizontal">
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingHorizontal="20dp"
+                android:paddingTop="18dp"
+                android:paddingBottom="10dp">
 
-                <!-- Sessions à venir -->
-                <com.google.android.material.card.MaterialCardView
-                    android:id="@+id/cvKpiSessions"
+                <!-- Avatar + online dot -->
+                <FrameLayout
+                    android:layout_width="52dp"
+                    android:layout_height="52dp">
+
+                    <FrameLayout
+                        android:layout_width="52dp"
+                        android:layout_height="52dp"
+                        android:background="@drawable/bg_admin_avatar_circle">
+                        <TextView
+                            android:id="@+id/tvAdminAvatarInitials"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:text="AD"
+                            android:textColor="@color/brand_coral"
+                            android:textSize="18sp"
+                            android:textStyle="bold" />
+                    </FrameLayout>
+
+                    <!-- Online dot -->
+                    <View
+                        android:layout_width="13dp"
+                        android:layout_height="13dp"
+                        android:layout_gravity="bottom|end"
+                        android:layout_margin="1dp"
+                        android:background="@drawable/bg_legend_dot_green" />
+                </FrameLayout>
+
+                <!-- Greeting + name + verified -->
+                <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:layout_marginEnd="5dp"
-                    android:clickable="true"
-                    android:focusable="true"
-                    app:cardBackgroundColor="@color/white"
-                    app:cardCornerRadius="16dp"
-                    app:cardElevation="6dp"
-                    app:strokeWidth="0dp">
-                    <LinearLayout
-                        android:layout_width="match_parent"
+                    android:layout_marginStart="12dp"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/tvAdminGreeting"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:padding="12dp">
-                        <FrameLayout
-                            android:layout_width="34dp"
-                            android:layout_height="34dp"
-                            android:background="@drawable/bg_kpi_icon_blue">
-                            <ImageView
-                                android:layout_width="17dp"
-                                android:layout_height="17dp"
-                                android:layout_gravity="center"
-                                android:contentDescription="@null"
-                                android:src="@drawable/ic_calendar_event"
-                                app:tint="@color/info" />
-                        </FrameLayout>
+                        android:text="Bonjour,"
+                        android:textColor="@color/slate_500"
+                        android:textSize="14sp" />
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
                         <TextView
-                            android:id="@+id/tvKpiSessions"
+                            android:id="@+id/tvAdminName"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
-                            android:text="—"
-                            android:textColor="@color/info"
+                            android:ellipsize="end"
+                            android:maxLines="1"
+                            android:text="Administrateur"
+                            android:textColor="@color/slate_900"
                             android:textSize="22sp"
                             android:textStyle="bold" />
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Sessions"
-                            android:textColor="@color/text_secondary"
-                            android:textSize="10sp" />
+
+                        <!-- Verified badge -->
+                        <FrameLayout
+                            android:layout_width="19dp"
+                            android:layout_height="19dp"
+                            android:layout_marginStart="6dp"
+                            android:background="@drawable/bg_kpi_icon_teal">
+                            <ImageView
+                                android:layout_width="10dp"
+                                android:layout_height="10dp"
+                                android:layout_gravity="center"
+                                android:contentDescription="@null"
+                                android:src="@drawable/ic_medical_staff"
+                                app:tint="@color/brand_teal" />
+                        </FrameLayout>
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- Notification bell -->
+                <FrameLayout
+                    android:id="@+id/btnAdminLogout"
+                    android:layout_width="46dp"
+                    android:layout_height="46dp"
+                    android:background="@drawable/bg_view_selector"
+                    android:clickable="true"
+                    android:elevation="3dp"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackgroundBorderless">
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_gravity="center"
+                        android:contentDescription="Déconnexion"
+                        android:src="@drawable/ic_logout"
+                        app:tint="@color/slate_700" />
+
+                    <TextView
+                        android:id="@+id/tvNotifBadge"
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:layout_gravity="top|end"
+                        android:layout_margin="4dp"
+                        android:background="@drawable/bg_notif_dot"
+                        android:gravity="center"
+                        android:text="!"
+                        android:textColor="@color/white"
+                        android:textSize="7sp"
+                        android:textStyle="bold"
+                        android:visibility="gone" />
+                </FrameLayout>
+            </LinearLayout>
+
+            <!-- ══════════════════════════════════════
+                 VIEW SELECTOR + PERIOD ROW
+            ═══════════════════════════════════════ -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingHorizontal="20dp"
+                android:paddingBottom="14dp">
+
+                <!-- Selector card -->
+                <LinearLayout
+                    android:id="@+id/llViewSelector"
+                    android:layout_width="wrap_content"
+                    android:layout_height="46dp"
+                    android:background="@drawable/bg_view_selector"
+                    android:clickable="true"
+                    android:elevation="4dp"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackground"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="14dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Vue d'ensemble"
+                        android:textColor="@color/slate_700"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+
+                    <ImageView
+                        android:layout_width="14dp"
+                        android:layout_height="14dp"
+                        android:layout_marginStart="6dp"
+                        android:contentDescription="@null"
+                        android:rotation="90"
+                        android:src="@drawable/ic_chevron_right"
+                        app:tint="@color/slate_500" />
+                </LinearLayout>
+
+                <View android:layout_width="0dp" android:layout_height="0dp" android:layout_weight="1" />
+
+                <TextView
+                    android:id="@+id/tvAdminPeriod"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_badge_teal"
+                    android:paddingHorizontal="12dp"
+                    android:paddingVertical="6dp"
+                    android:textColor="@color/brand_teal"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <!-- ══════════════════════════════════════
+                 HERO CARD — glassmorphism premium
+            ═══════════════════════════════════════ -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/heroCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginBottom="20dp"
+                app:cardBackgroundColor="@android:color/transparent"
+                app:cardCornerRadius="28dp"
+                app:cardElevation="0dp"
+                app:strokeWidth="0dp">
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="200dp"
+                    android:background="@drawable/bg_gradient_hero_admin_premium">
+
+                    <!-- Abstract circles -->
+                    <View
+                        android:layout_width="280dp"
+                        android:layout_height="280dp"
+                        android:layout_gravity="bottom|end"
+                        android:layout_marginEnd="-90dp"
+                        android:layout_marginBottom="-90dp"
+                        android:alpha="0.08"
+                        android:background="@drawable/bg_white_glow_circle" />
+
+                    <View
+                        android:layout_width="140dp"
+                        android:layout_height="140dp"
+                        android:layout_gravity="top|start"
+                        android:layout_marginStart="-40dp"
+                        android:layout_marginTop="-40dp"
+                        android:alpha="0.06"
+                        android:background="@drawable/bg_white_glow_circle" />
+
+                    <View
+                        android:layout_width="70dp"
+                        android:layout_height="70dp"
+                        android:layout_gravity="top|end"
+                        android:layout_marginEnd="50dp"
+                        android:layout_marginTop="18dp"
+                        android:alpha="0.05"
+                        android:background="@drawable/bg_white_glow_circle" />
+
+                    <!-- Content -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="horizontal">
+
+                        <!-- Left: stats -->
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:paddingStart="22dp"
+                            android:paddingTop="22dp"
+                            android:paddingBottom="18dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:letterSpacing="0.04"
+                                android:text="VACCINATIONS"
+                                android:textColor="@color/white_75"
+                                android:textSize="11sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/tvAdminDateBadge"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="1dp"
+                                android:textColor="@color/white_50"
+                                android:textSize="11sp" />
+
+                            <!-- Big number -->
+                            <TextView
+                                android:id="@+id/tvTotalVaccines"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="2dp"
+                                android:includeFontPadding="false"
+                                android:text="—"
+                                android:textColor="@color/white"
+                                android:textSize="54sp"
+                                android:textStyle="bold" />
+
+                            <!-- Growth badge -->
+                            <LinearLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="8dp"
+                                android:background="@drawable/bg_growth_pill"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal"
+                                android:paddingHorizontal="10dp"
+                                android:paddingVertical="5dp">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="↑  Ce mois actuel"
+                                    android:textColor="@color/white"
+                                    android:textSize="11sp"
+                                    android:textStyle="bold" />
+                            </LinearLayout>
+                        </LinearLayout>
+
+                        <!-- Right: bar chart glassmorphism -->
+                        <com.github.mikephil.charting.charts.BarChart
+                            android:id="@+id/barChartSummary"
+                            android:layout_width="130dp"
+                            android:layout_height="match_parent"
+                            android:alpha="0.0"
+                            android:layout_marginEnd="14dp"
+                            android:layout_marginTop="20dp"
+                            android:layout_marginBottom="20dp" />
+                    </LinearLayout>
+                </FrameLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- ══════════════════════════════════════
+                 ALERT BANNER (hidden by default)
+            ═══════════════════════════════════════ -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/llAlertBanner"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginBottom="16dp"
+                android:visibility="gone"
+                app:cardBackgroundColor="@color/error_light"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="0dp"
+                app:strokeColor="@color/error"
+                app:strokeWidth="1dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="14dp"
+                    android:paddingVertical="12dp">
+
+                    <ImageView android:layout_width="18dp" android:layout_height="18dp"
+                        android:layout_marginEnd="10dp" android:contentDescription="@null"
+                        android:src="@drawable/ic_notifications" app:tint="@color/error" />
+
+                    <TextView android:id="@+id/tvAlertBannerText"
+                        android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:textColor="@color/error" android:textSize="13sp" android:textStyle="bold" />
+
+                    <ImageView android:layout_width="16dp" android:layout_height="16dp"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_chevron_right" app:tint="@color/error" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- ══════════════════════════════════════
+                 KPI LABEL
+            ═══════════════════════════════════════ -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="22dp"
+                android:layout_marginBottom="10dp"
+                android:letterSpacing="0.07"
+                android:text="INDICATEURS CLÉS"
+                android:textColor="@color/stormy_teal"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+
+            <!-- ══════════════════════════════════════
+                 KPI GRID — Row 1
+            ═══════════════════════════════════════ -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="12dp"
+                android:layout_marginBottom="8dp"
+                android:orientation="horizontal">
+
+                <!-- Sessions -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/cvKpiSessions"
+                    android:layout_width="0dp" android:layout_height="wrap_content"
+                    android:layout_weight="1" android:layout_marginHorizontal="4dp"
+                    android:clickable="true" android:focusable="true"
+                    app:cardBackgroundColor="@color/white" app:cardCornerRadius="22dp"
+                    app:cardElevation="4dp" app:strokeWidth="0dp">
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:orientation="vertical" android:padding="14dp">
+                        <FrameLayout android:layout_width="36dp" android:layout_height="36dp"
+                            android:background="@drawable/bg_kpi_icon_blue">
+                            <ImageView android:layout_width="18dp" android:layout_height="18dp"
+                                android:layout_gravity="center" android:contentDescription="@null"
+                                android:src="@drawable/ic_calendar_event" app:tint="@color/info" />
+                        </FrameLayout>
+                        <TextView android:id="@+id/tvKpiSessions"
+                            android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp" android:text="—"
+                            android:textColor="@color/slate_900" android:textSize="24sp" android:textStyle="bold" />
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="Sessions" android:textColor="@color/text_secondary" android:textSize="10sp" />
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp" android:background="@drawable/bg_kpi_trend_green"
+                            android:paddingHorizontal="7dp" android:paddingVertical="2dp"
+                            android:text="À venir" android:textColor="@color/success_dark" android:textSize="9sp" android:textStyle="bold" />
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 
-                <!-- Centres actifs -->
+                <!-- Centres -->
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/cvKpiCentres"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginEnd="5dp"
-                    android:clickable="true"
-                    android:focusable="true"
-                    app:cardBackgroundColor="@color/white"
-                    app:cardCornerRadius="16dp"
-                    app:cardElevation="6dp"
-                    app:strokeWidth="0dp">
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:padding="12dp">
-                        <FrameLayout
-                            android:layout_width="34dp"
-                            android:layout_height="34dp"
-                            android:background="@drawable/bg_kpi_icon_lavender">
-                            <ImageView
-                                android:layout_width="17dp"
-                                android:layout_height="17dp"
-                                android:layout_gravity="center"
-                                android:contentDescription="@null"
-                                android:src="@drawable/ic_building"
-                                app:tint="@color/brand_lavender" />
+                    android:layout_width="0dp" android:layout_height="wrap_content"
+                    android:layout_weight="1" android:layout_marginHorizontal="4dp"
+                    android:clickable="true" android:focusable="true"
+                    app:cardBackgroundColor="@color/white" app:cardCornerRadius="22dp"
+                    app:cardElevation="4dp" app:strokeWidth="0dp">
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:orientation="vertical" android:padding="14dp">
+                        <FrameLayout android:layout_width="36dp" android:layout_height="36dp"
+                            android:background="@drawable/bg_kpi_icon_pearl">
+                            <ImageView android:layout_width="18dp" android:layout_height="18dp"
+                                android:layout_gravity="center" android:contentDescription="@null"
+                                android:src="@drawable/ic_building" app:tint="@color/stormy_teal" />
                         </FrameLayout>
-                        <TextView
-                            android:id="@+id/tvKpiCentres"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
-                            android:text="—"
-                            android:textColor="@color/brand_lavender"
-                            android:textSize="22sp"
-                            android:textStyle="bold" />
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Centres"
-                            android:textColor="@color/text_secondary"
-                            android:textSize="10sp" />
+                        <TextView android:id="@+id/tvKpiCentres"
+                            android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp" android:text="—"
+                            android:textColor="@color/slate_900" android:textSize="24sp" android:textStyle="bold" />
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="Centres" android:textColor="@color/text_secondary" android:textSize="10sp" />
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp" android:background="@drawable/bg_kpi_trend_green"
+                            android:paddingHorizontal="7dp" android:paddingVertical="2dp"
+                            android:text="Actifs" android:textColor="@color/success_dark" android:textSize="9sp" android:textStyle="bold" />
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 
                 <!-- Personnel -->
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/cvKpiStaff"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginEnd="5dp"
-                    android:clickable="true"
-                    android:focusable="true"
-                    app:cardBackgroundColor="@color/white"
-                    app:cardCornerRadius="16dp"
-                    app:cardElevation="6dp"
-                    app:strokeWidth="0dp">
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:padding="12dp">
-                        <FrameLayout
-                            android:layout_width="34dp"
-                            android:layout_height="34dp"
+                    android:layout_width="0dp" android:layout_height="wrap_content"
+                    android:layout_weight="1" android:layout_marginHorizontal="4dp"
+                    android:clickable="true" android:focusable="true"
+                    app:cardBackgroundColor="@color/white" app:cardCornerRadius="22dp"
+                    app:cardElevation="4dp" app:strokeWidth="0dp">
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:orientation="vertical" android:padding="14dp">
+                        <FrameLayout android:layout_width="36dp" android:layout_height="36dp"
                             android:background="@drawable/bg_kpi_icon_green">
-                            <ImageView
-                                android:layout_width="17dp"
-                                android:layout_height="17dp"
-                                android:layout_gravity="center"
-                                android:contentDescription="@null"
-                                android:src="@drawable/ic_medical_staff"
-                                app:tint="@color/success_dark" />
+                            <ImageView android:layout_width="18dp" android:layout_height="18dp"
+                                android:layout_gravity="center" android:contentDescription="@null"
+                                android:src="@drawable/ic_medical_staff" app:tint="@color/success_dark" />
                         </FrameLayout>
-                        <TextView
-                            android:id="@+id/tvKpiStaff"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
-                            android:text="—"
-                            android:textColor="@color/success"
-                            android:textSize="22sp"
-                            android:textStyle="bold" />
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Infirmiers"
-                            android:textColor="@color/text_secondary"
-                            android:textSize="10sp" />
-                    </LinearLayout>
-                </com.google.android.material.card.MaterialCardView>
-
-                <!-- Vaccinations totales -->
-                <com.google.android.material.card.MaterialCardView
-                    android:id="@+id/cvKpiVaccinations"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:clickable="true"
-                    android:focusable="true"
-                    app:cardBackgroundColor="@color/white"
-                    app:cardCornerRadius="16dp"
-                    app:cardElevation="6dp"
-                    app:strokeWidth="0dp">
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:padding="12dp">
-                        <FrameLayout
-                            android:layout_width="34dp"
-                            android:layout_height="34dp"
-                            android:background="@drawable/bg_kpi_icon_teal">
-                            <ImageView
-                                android:layout_width="17dp"
-                                android:layout_height="17dp"
-                                android:layout_gravity="center"
-                                android:contentDescription="@null"
-                                android:src="@drawable/ic_syringe"
-                                app:tint="@color/brand_teal" />
-                        </FrameLayout>
-                        <TextView
-                            android:id="@+id/tvTotalVaccines"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
-                            android:text="—"
-                            android:textColor="@color/brand_teal"
-                            android:textSize="22sp"
-                            android:textStyle="bold" />
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Vaccins"
-                            android:textColor="@color/text_secondary"
-                            android:textSize="10sp" />
+                        <TextView android:id="@+id/tvKpiStaff"
+                            android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp" android:text="—"
+                            android:textColor="@color/slate_900" android:textSize="24sp" android:textStyle="bold" />
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="Personnel" android:textColor="@color/text_secondary" android:textSize="10sp" />
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp" android:background="@drawable/bg_kpi_trend_green"
+                            android:paddingHorizontal="7dp" android:paddingVertical="2dp"
+                            android:text="Actif" android:textColor="@color/success_dark" android:textSize="9sp" android:textStyle="bold" />
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
             </LinearLayout>
 
             <!-- ══════════════════════════════════════
-                 ALERT BANNER (hidden by default)
+                 KPI GRID — Row 2
             ═══════════════════════════════════════ -->
             <LinearLayout
-                android:id="@+id/llAlertBanner"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginHorizontal="16dp"
-                android:layout_marginTop="14dp"
-                android:background="@drawable/bg_stock_alert"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:paddingHorizontal="14dp"
-                android:paddingVertical="12dp"
-                android:visibility="gone">
+                android:layout_marginHorizontal="12dp"
+                android:layout_marginBottom="22dp"
+                android:orientation="horizontal">
 
-                <ImageView
-                    android:layout_width="18dp"
-                    android:layout_height="18dp"
-                    android:contentDescription="@null"
-                    android:layout_marginEnd="10dp"
-                    android:src="@drawable/ic_notifications"
-                    app:tint="@color/warning_dark" />
+                <!-- Vaccinations total -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/cvKpiVaccinations"
+                    android:layout_width="0dp" android:layout_height="wrap_content"
+                    android:layout_weight="1" android:layout_marginHorizontal="4dp"
+                    android:clickable="true" android:focusable="true"
+                    app:cardBackgroundColor="@color/white" app:cardCornerRadius="22dp"
+                    app:cardElevation="4dp" app:strokeWidth="0dp">
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:orientation="vertical" android:padding="14dp">
+                        <FrameLayout android:layout_width="36dp" android:layout_height="36dp"
+                            android:background="@drawable/bg_kpi_icon_teal">
+                            <ImageView android:layout_width="18dp" android:layout_height="18dp"
+                                android:layout_gravity="center" android:contentDescription="@null"
+                                android:src="@drawable/ic_syringe" app:tint="@color/brand_teal" />
+                        </FrameLayout>
+                        <TextView android:id="@+id/tvKpiVaccinations"
+                            android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp" android:text="—"
+                            android:textColor="@color/slate_900" android:textSize="24sp" android:textStyle="bold" />
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="Vaccinés" android:textColor="@color/text_secondary" android:textSize="10sp" />
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp" android:background="@drawable/bg_kpi_trend_green"
+                            android:paddingHorizontal="7dp" android:paddingVertical="2dp"
+                            android:text="Total" android:textColor="@color/success_dark" android:textSize="9sp" android:textStyle="bold" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
 
-                <TextView
-                    android:id="@+id/tvAlertBannerText"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:textColor="@color/warning_dark"
-                    android:textSize="13sp"
-                    android:textStyle="bold" />
+                <!-- Alertes critiques -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/cvKpiAlertes"
+                    android:layout_width="0dp" android:layout_height="wrap_content"
+                    android:layout_weight="1" android:layout_marginHorizontal="4dp"
+                    android:clickable="true" android:focusable="true"
+                    app:cardBackgroundColor="@color/white" app:cardCornerRadius="22dp"
+                    app:cardElevation="4dp" app:strokeWidth="0dp">
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:orientation="vertical" android:padding="14dp">
+                        <FrameLayout android:layout_width="36dp" android:layout_height="36dp"
+                            android:background="@drawable/bg_kpi_icon_red">
+                            <ImageView android:layout_width="18dp" android:layout_height="18dp"
+                                android:layout_gravity="center" android:contentDescription="@null"
+                                android:src="@drawable/ic_notifications" app:tint="@color/error" />
+                        </FrameLayout>
+                        <TextView android:id="@+id/tvKpiAlertes"
+                            android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp" android:text="—"
+                            android:textColor="@color/error" android:textSize="24sp" android:textStyle="bold" />
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="Alertes" android:textColor="@color/text_secondary" android:textSize="10sp" />
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp" android:background="@drawable/bg_kpi_trend_red"
+                            android:paddingHorizontal="7dp" android:paddingVertical="2dp"
+                            android:text="Stock" android:textColor="@color/error_dark" android:textSize="9sp" android:textStyle="bold" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
 
-                <ImageView
-                    android:layout_width="16dp"
-                    android:layout_height="16dp"
-                    android:contentDescription="@null"
-                    android:src="@drawable/ic_chevron_right"
-                    app:tint="@color/warning_dark" />
+                <!-- Bébés suivis -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/cvKpiBebes"
+                    android:layout_width="0dp" android:layout_height="wrap_content"
+                    android:layout_weight="1" android:layout_marginHorizontal="4dp"
+                    android:clickable="true" android:focusable="true"
+                    app:cardBackgroundColor="@color/white" app:cardCornerRadius="22dp"
+                    app:cardElevation="4dp" app:strokeWidth="0dp">
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:orientation="vertical" android:padding="14dp">
+                        <FrameLayout android:layout_width="36dp" android:layout_height="36dp"
+                            android:background="@drawable/bg_kpi_icon_almond">
+                            <ImageView android:layout_width="18dp" android:layout_height="18dp"
+                                android:layout_gravity="center" android:contentDescription="@null"
+                                android:src="@drawable/ic_rdv" app:tint="@color/brand_coral" />
+                        </FrameLayout>
+                        <TextView android:id="@+id/tvKpiBebes"
+                            android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp" android:text="—"
+                            android:textColor="@color/slate_900" android:textSize="24sp" android:textStyle="bold" />
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="Bébés" android:textColor="@color/text_secondary" android:textSize="10sp" />
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp" android:background="@drawable/bg_kpi_trend_green"
+                            android:paddingHorizontal="7dp" android:paddingVertical="2dp"
+                            android:text="Suivis" android:textColor="@color/success_dark" android:textSize="9sp" android:textStyle="bold" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
             </LinearLayout>
 
             <!-- ══════════════════════════════════════
-                 ACCÈS RAPIDE label
+                 ACTIVITÉ label + card
             ═══════════════════════════════════════ -->
-            <TextView
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="22dp"
-                android:layout_marginTop="22dp"
-                android:layout_marginBottom="10dp"
-                android:letterSpacing="0.07"
-                android:text="ACCÈS RAPIDE"
-                android:textColor="@color/brand_lavender"
-                android:textSize="11sp"
-                android:textStyle="bold" />
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingHorizontal="22dp"
+                android:paddingBottom="10dp">
 
-            <!-- ══════════════════════════════════════
-                 2 × 2 ACTIONS GRID
-            ═══════════════════════════════════════ -->
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                    android:layout_weight="1" android:letterSpacing="0.07"
+                    android:text="ACTIVITÉ RÉCENTE"
+                    android:textColor="@color/stormy_teal" android:textSize="11sp" android:textStyle="bold" />
+
+                <TextView android:id="@+id/tvViewAll"
+                    android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:clickable="true" android:focusable="true"
+                    android:foreground="?attr/selectableItemBackgroundBorderless"
+                    android:paddingVertical="4dp"
+                    android:text="Voir tout →"
+                    android:textColor="@color/stormy_teal" android:textSize="12sp" android:textStyle="bold" />
+            </LinearLayout>
+
             <com.google.android.material.card.MaterialCardView
+                android:id="@+id/activityCard"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="16dp"
+                android:layout_marginBottom="12dp"
                 app:cardBackgroundColor="@color/white"
-                app:cardCornerRadius="20dp"
-                app:cardElevation="3dp"
-                app:strokeWidth="0dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical">
-
-                    <!-- Row 1 -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal">
-
-                        <!-- Alertes Stock -->
-                        <LinearLayout
-                            android:id="@+id/cvQuickAlertesStock"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:clickable="true"
-                            android:focusable="true"
-                            android:foreground="?attr/selectableItemBackground"
-                            android:gravity="center"
-                            android:orientation="vertical"
-                            android:paddingVertical="18dp"
-                            android:paddingHorizontal="8dp">
-
-                            <FrameLayout
-                                android:layout_width="48dp"
-                                android:layout_height="48dp"
-                                android:background="@drawable/bg_kpi_icon_red">
-                                <ImageView
-                                    android:layout_width="22dp"
-                                    android:layout_height="22dp"
-                                    android:layout_gravity="center"
-                                    android:contentDescription="@null"
-                                    android:src="@drawable/ic_notifications"
-                                    app:tint="@color/error" />
-                            </FrameLayout>
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="8dp"
-                                android:gravity="center"
-                                android:text="Alertes Stock"
-                                android:textColor="@color/text_primary"
-                                android:textSize="12sp"
-                                android:textStyle="bold" />
-                        </LinearLayout>
-
-                        <View
-                            android:layout_width="1dp"
-                            android:layout_height="match_parent"
-                            android:background="@color/outline" />
-
-                        <!-- Retards Vaccins -->
-                        <LinearLayout
-                            android:id="@+id/cvQuickRetards"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:clickable="true"
-                            android:focusable="true"
-                            android:foreground="?attr/selectableItemBackground"
-                            android:gravity="center"
-                            android:orientation="vertical"
-                            android:paddingVertical="18dp"
-                            android:paddingHorizontal="8dp">
-
-                            <FrameLayout
-                                android:layout_width="48dp"
-                                android:layout_height="48dp"
-                                android:background="@drawable/bg_kpi_icon_orange">
-                                <ImageView
-                                    android:layout_width="22dp"
-                                    android:layout_height="22dp"
-                                    android:layout_gravity="center"
-                                    android:contentDescription="@null"
-                                    android:src="@drawable/ic_medical_staff"
-                                    app:tint="@color/warning_dark" />
-                            </FrameLayout>
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="8dp"
-                                android:gravity="center"
-                                android:text="Retards vaccins"
-                                android:textColor="@color/text_primary"
-                                android:textSize="12sp"
-                                android:textStyle="bold" />
-                        </LinearLayout>
-                    </LinearLayout>
-
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:background="@color/outline" />
-
-                    <!-- Row 2 -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal">
-
-                        <!-- RDV Globaux -->
-                        <LinearLayout
-                            android:id="@+id/cvQuickRdv"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:clickable="true"
-                            android:focusable="true"
-                            android:foreground="?attr/selectableItemBackground"
-                            android:gravity="center"
-                            android:orientation="vertical"
-                            android:paddingVertical="18dp"
-                            android:paddingHorizontal="8dp">
-
-                            <FrameLayout
-                                android:layout_width="48dp"
-                                android:layout_height="48dp"
-                                android:background="@drawable/bg_kpi_icon_blue">
-                                <ImageView
-                                    android:layout_width="22dp"
-                                    android:layout_height="22dp"
-                                    android:layout_gravity="center"
-                                    android:contentDescription="@null"
-                                    android:src="@drawable/ic_calendar_event"
-                                    app:tint="@color/info" />
-                            </FrameLayout>
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="8dp"
-                                android:gravity="center"
-                                android:text="RDV Globaux"
-                                android:textColor="@color/text_primary"
-                                android:textSize="12sp"
-                                android:textStyle="bold" />
-                        </LinearLayout>
-
-                        <View
-                            android:layout_width="1dp"
-                            android:layout_height="match_parent"
-                            android:background="@color/outline" />
-
-                        <!-- Rechercher -->
-                        <LinearLayout
-                            android:id="@+id/cvQuickSearch"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:clickable="true"
-                            android:focusable="true"
-                            android:foreground="?attr/selectableItemBackground"
-                            android:gravity="center"
-                            android:orientation="vertical"
-                            android:paddingVertical="18dp"
-                            android:paddingHorizontal="8dp">
-
-                            <FrameLayout
-                                android:layout_width="48dp"
-                                android:layout_height="48dp"
-                                android:background="@drawable/bg_kpi_icon_teal">
-                                <ImageView
-                                    android:layout_width="22dp"
-                                    android:layout_height="22dp"
-                                    android:layout_gravity="center"
-                                    android:contentDescription="@null"
-                                    android:src="@drawable/ic_search"
-                                    app:tint="@color/brand_teal" />
-                            </FrameLayout>
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="8dp"
-                                android:gravity="center"
-                                android:text="Rechercher"
-                                android:textColor="@color/text_primary"
-                                android:textSize="12sp"
-                                android:textStyle="bold" />
-                        </LinearLayout>
-                    </LinearLayout>
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- ══════════════════════════════════════
-                 STATISTIQUES DU JOUR label
-            ═══════════════════════════════════════ -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="22dp"
-                android:layout_marginTop="22dp"
-                android:layout_marginBottom="10dp"
-                android:letterSpacing="0.07"
-                android:text="STATISTIQUES DU JOUR"
-                android:textColor="@color/brand_lavender"
-                android:textSize="11sp"
-                android:textStyle="bold" />
-
-            <!-- ══════════════════════════════════════
-                 STATS PROGRESS CARD
-            ═══════════════════════════════════════ -->
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginHorizontal="16dp"
-                app:cardBackgroundColor="@color/white"
-                app:cardCornerRadius="20dp"
-                app:cardElevation="3dp"
+                app:cardCornerRadius="28dp"
+                app:cardElevation="4dp"
                 app:strokeWidth="0dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="18dp">
+                    android:paddingHorizontal="18dp"
+                    android:paddingVertical="10dp">
 
-                    <!-- Présents -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal"
-                        android:layout_marginBottom="4dp">
-                        <View
-                            android:layout_width="4dp"
-                            android:layout_height="18dp"
-                            android:layout_marginEnd="10dp"
-                            android:background="@drawable/bg_legend_dot_green" />
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="Présents aujourd'hui"
-                            android:textColor="@color/text_secondary"
-                            android:textSize="13sp" />
-                        <TextView
-                            android:id="@+id/tvStatPresentsCount"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="—"
-                            android:textColor="@color/success"
-                            android:textSize="15sp"
-                            android:textStyle="bold" />
+                    <!-- Item 1 — Sessions -->
+                    <LinearLayout android:id="@+id/llActivitySessions"
+                        android:layout_width="match_parent" android:layout_height="70dp"
+                        android:clickable="true" android:focusable="true"
+                        android:foreground="?attr/selectableItemBackground"
+                        android:gravity="center_vertical" android:orientation="horizontal">
+                        <FrameLayout android:layout_width="42dp" android:layout_height="42dp"
+                            android:background="@drawable/bg_activity_icon_green">
+                            <ImageView android:layout_width="20dp" android:layout_height="20dp"
+                                android:layout_gravity="center" android:contentDescription="@null"
+                                android:src="@drawable/ic_calendar_event" app:tint="@color/success" />
+                        </FrameLayout>
+                        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                            android:layout_weight="1" android:layout_marginStart="14dp"
+                            android:orientation="vertical">
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                                android:text="Sessions à venir"
+                                android:textColor="@color/slate_900" android:textSize="14sp" android:textStyle="bold" />
+                            <TextView android:id="@+id/tvActivitySessionsDetail"
+                                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                                android:layout_marginTop="2dp" android:text="Chargement…"
+                                android:textColor="@color/text_secondary" android:textSize="12sp" />
+                        </LinearLayout>
+                        <ImageView android:layout_width="16dp" android:layout_height="16dp"
+                            android:contentDescription="@null"
+                            android:src="@drawable/ic_chevron_right" app:tint="@color/pearl_aqua" />
                     </LinearLayout>
-                    <com.google.android.material.progressindicator.LinearProgressIndicator
-                        android:id="@+id/progressStatPresents"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginBottom="14dp"
-                        android:progress="0"
-                        app:indicatorColor="@color/success"
-                        app:trackColor="@color/success_light"
-                        app:trackCornerRadius="4dp"
-                        app:trackThickness="7dp" />
 
-                    <!-- Confirmés -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal"
-                        android:layout_marginBottom="4dp">
-                        <View
-                            android:layout_width="4dp"
-                            android:layout_height="18dp"
-                            android:layout_marginEnd="10dp"
-                            android:background="@drawable/bg_legend_dot_teal" />
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="RDV confirmés"
-                            android:textColor="@color/text_secondary"
-                            android:textSize="13sp" />
-                        <TextView
-                            android:id="@+id/tvStatConfirmesCount"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="—"
-                            android:textColor="@color/info"
-                            android:textSize="15sp"
-                            android:textStyle="bold" />
-                    </LinearLayout>
-                    <com.google.android.material.progressindicator.LinearProgressIndicator
-                        android:id="@+id/progressStatConfirmes"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginBottom="14dp"
-                        android:progress="0"
-                        app:indicatorColor="@color/info"
-                        app:trackColor="@color/info_light"
-                        app:trackCornerRadius="4dp"
-                        app:trackThickness="7dp" />
+                    <View android:layout_width="match_parent" android:layout_height="1dp"
+                        android:background="@color/outline" />
 
-                    <!-- En attente -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal"
-                        android:layout_marginBottom="4dp">
-                        <View
-                            android:layout_width="4dp"
-                            android:layout_height="18dp"
-                            android:layout_marginEnd="10dp"
-                            android:background="@drawable/bg_legend_dot_orange" />
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="En attente"
-                            android:textColor="@color/text_secondary"
-                            android:textSize="13sp" />
-                        <TextView
-                            android:id="@+id/tvStatEnAttenteCount"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="—"
-                            android:textColor="@color/warning"
-                            android:textSize="15sp"
-                            android:textStyle="bold" />
+                    <!-- Item 2 — RDV confirmés -->
+                    <LinearLayout android:id="@+id/llActivityRdv"
+                        android:layout_width="match_parent" android:layout_height="70dp"
+                        android:clickable="true" android:focusable="true"
+                        android:foreground="?attr/selectableItemBackground"
+                        android:gravity="center_vertical" android:orientation="horizontal">
+                        <FrameLayout android:layout_width="42dp" android:layout_height="42dp"
+                            android:background="@drawable/bg_activity_icon_blue">
+                            <ImageView android:layout_width="20dp" android:layout_height="20dp"
+                                android:layout_gravity="center" android:contentDescription="@null"
+                                android:src="@drawable/ic_rdv" app:tint="@color/info" />
+                        </FrameLayout>
+                        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                            android:layout_weight="1" android:layout_marginStart="14dp"
+                            android:orientation="vertical">
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                                android:text="RDV confirmés"
+                                android:textColor="@color/slate_900" android:textSize="14sp" android:textStyle="bold" />
+                            <TextView android:id="@+id/tvActivityRdvDetail"
+                                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                                android:layout_marginTop="2dp" android:text="Chargement…"
+                                android:textColor="@color/text_secondary" android:textSize="12sp" />
+                        </LinearLayout>
+                        <ImageView android:layout_width="16dp" android:layout_height="16dp"
+                            android:contentDescription="@null"
+                            android:src="@drawable/ic_chevron_right" app:tint="@color/pearl_aqua" />
                     </LinearLayout>
-                    <com.google.android.material.progressindicator.LinearProgressIndicator
-                        android:id="@+id/progressStatEnAttente"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginBottom="14dp"
-                        android:progress="0"
-                        app:indicatorColor="@color/warning"
-                        app:trackColor="@color/warning_light"
-                        app:trackCornerRadius="4dp"
-                        app:trackThickness="7dp" />
 
-                    <!-- Absents -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal"
-                        android:layout_marginBottom="4dp">
-                        <View
-                            android:layout_width="4dp"
-                            android:layout_height="18dp"
-                            android:layout_marginEnd="10dp"
-                            android:background="@drawable/bg_legend_dot_red" />
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="Absents"
-                            android:textColor="@color/text_secondary"
-                            android:textSize="13sp" />
-                        <TextView
-                            android:id="@+id/tvStatAbsentsCount"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="—"
-                            android:textColor="@color/error"
-                            android:textSize="15sp"
-                            android:textStyle="bold" />
+                    <View android:layout_width="match_parent" android:layout_height="1dp"
+                        android:background="@color/outline" />
+
+                    <!-- Item 3 — Présents aujourd'hui -->
+                    <LinearLayout android:id="@+id/llActivityPresents"
+                        android:layout_width="match_parent" android:layout_height="70dp"
+                        android:clickable="true" android:focusable="true"
+                        android:foreground="?attr/selectableItemBackground"
+                        android:gravity="center_vertical" android:orientation="horizontal">
+                        <FrameLayout android:layout_width="42dp" android:layout_height="42dp"
+                            android:background="@drawable/bg_kpi_icon_almond">
+                            <ImageView android:layout_width="20dp" android:layout_height="20dp"
+                                android:layout_gravity="center" android:contentDescription="@null"
+                                android:src="@drawable/ic_medical_staff" app:tint="@color/brand_coral" />
+                        </FrameLayout>
+                        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                            android:layout_weight="1" android:layout_marginStart="14dp"
+                            android:orientation="vertical">
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                                android:text="Patients présents"
+                                android:textColor="@color/slate_900" android:textSize="14sp" android:textStyle="bold" />
+                            <TextView android:id="@+id/tvActivityPresentsDetail"
+                                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                                android:layout_marginTop="2dp" android:text="Chargement…"
+                                android:textColor="@color/text_secondary" android:textSize="12sp" />
+                        </LinearLayout>
+                        <ImageView android:layout_width="16dp" android:layout_height="16dp"
+                            android:contentDescription="@null"
+                            android:src="@drawable/ic_chevron_right" app:tint="@color/pearl_aqua" />
                     </LinearLayout>
-                    <com.google.android.material.progressindicator.LinearProgressIndicator
-                        android:id="@+id/progressStatAbsents"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:progress="0"
-                        app:indicatorColor="@color/error"
-                        app:trackColor="@color/error_light"
-                        app:trackCornerRadius="4dp"
-                        app:trackThickness="7dp" />
+
+                    <!-- Item 4 — Alertes stock (GONE if 0) -->
+                    <View android:id="@+id/dividerActivity3"
+                        android:layout_width="match_parent" android:layout_height="1dp"
+                        android:background="@color/outline" android:visibility="gone" />
+
+                    <LinearLayout android:id="@+id/llActivityAlertes"
+                        android:layout_width="match_parent" android:layout_height="70dp"
+                        android:clickable="true" android:focusable="true"
+                        android:foreground="?attr/selectableItemBackground"
+                        android:gravity="center_vertical" android:orientation="horizontal"
+                        android:visibility="gone">
+                        <FrameLayout android:layout_width="42dp" android:layout_height="42dp"
+                            android:background="@drawable/bg_activity_icon_red">
+                            <ImageView android:layout_width="20dp" android:layout_height="20dp"
+                                android:layout_gravity="center" android:contentDescription="@null"
+                                android:src="@drawable/ic_package" app:tint="@color/error" />
+                        </FrameLayout>
+                        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                            android:layout_weight="1" android:layout_marginStart="14dp"
+                            android:orientation="vertical">
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                                android:text="Stock critique"
+                                android:textColor="@color/error" android:textSize="14sp" android:textStyle="bold" />
+                            <TextView android:id="@+id/tvActivityAlertesDetail"
+                                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                                android:layout_marginTop="2dp"
+                                android:textColor="@color/text_secondary" android:textSize="12sp" />
+                        </LinearLayout>
+                        <ImageView android:layout_width="16dp" android:layout_height="16dp"
+                            android:contentDescription="@null"
+                            android:src="@drawable/ic_chevron_right" app:tint="@color/error" />
+                    </LinearLayout>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- ══════════════════════════════════════
-                 BILAN GLOBAL label
-            ═══════════════════════════════════════ -->
+            <!-- Last updated -->
             <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="22dp"
-                android:layout_marginTop="22dp"
-                android:layout_marginBottom="10dp"
-                android:letterSpacing="0.07"
-                android:text="BILAN GLOBAL"
-                android:textColor="@color/brand_lavender"
-                android:textSize="11sp"
-                android:textStyle="bold" />
-
-            <!-- ══════════════════════════════════════
-                 3 MINI GLOBAL STAT CARDS
-            ═══════════════════════════════════════ -->
-            <LinearLayout
+                android:id="@+id/tvLastUpdated"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginHorizontal="16dp"
-                android:orientation="horizontal">
+                android:gravity="center"
+                android:paddingVertical="8dp"
+                android:textColor="@color/slate_400"
+                android:textSize="11sp" />
 
-                <!-- Bébés suivis -->
-                <com.google.android.material.card.MaterialCardView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginEnd="6dp"
-                    app:cardBackgroundColor="@color/white"
-                    app:cardCornerRadius="16dp"
-                    app:cardElevation="2dp"
-                    app:strokeWidth="0dp">
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:padding="14dp">
-                        <ImageView
-                            android:layout_width="22dp"
-                            android:layout_height="22dp"
-                            android:contentDescription="@null"
-                            android:src="@drawable/ic_rdv"
-                            app:tint="@color/brand_lavender" />
-                        <TextView
-                            android:id="@+id/tvStatBebes"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
-                            android:text="—"
-                            android:textColor="@color/text_primary"
-                            android:textSize="20sp"
-                            android:textStyle="bold" />
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Bébés suivis"
-                            android:textColor="@color/text_secondary"
-                            android:textSize="11sp" />
-                    </LinearLayout>
-                </com.google.android.material.card.MaterialCardView>
-
-                <!-- Parents inscrits -->
-                <com.google.android.material.card.MaterialCardView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginEnd="6dp"
-                    app:cardBackgroundColor="@color/white"
-                    app:cardCornerRadius="16dp"
-                    app:cardElevation="2dp"
-                    app:strokeWidth="0dp">
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:padding="14dp">
-                        <ImageView
-                            android:layout_width="22dp"
-                            android:layout_height="22dp"
-                            android:contentDescription="@null"
-                            android:src="@drawable/ic_medical_staff"
-                            app:tint="@color/brand_coral" />
-                        <TextView
-                            android:id="@+id/tvStatParents"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
-                            android:text="—"
-                            android:textColor="@color/text_primary"
-                            android:textSize="20sp"
-                            android:textStyle="bold" />
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Parents"
-                            android:textColor="@color/text_secondary"
-                            android:textSize="11sp" />
-                    </LinearLayout>
-                </com.google.android.material.card.MaterialCardView>
-
-                <!-- Timestamp -->
-                <com.google.android.material.card.MaterialCardView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    app:cardBackgroundColor="@color/white"
-                    app:cardCornerRadius="16dp"
-                    app:cardElevation="2dp"
-                    app:strokeWidth="0dp">
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:padding="14dp">
-                        <ImageView
-                            android:layout_width="22dp"
-                            android:layout_height="22dp"
-                            android:contentDescription="@null"
-                            android:src="@drawable/ic_calendar_event"
-                            app:tint="@color/brand_teal" />
-                        <TextView
-                            android:id="@+id/tvLastUpdated"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
-                            android:text="—"
-                            android:textColor="@color/text_primary"
-                            android:textSize="12sp"
-                            android:textStyle="bold" />
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Dernière MAJ"
-                            android:textColor="@color/text_secondary"
-                            android:textSize="11sp" />
-                    </LinearLayout>
-                </com.google.android.material.card.MaterialCardView>
-            </LinearLayout>
-
-            <!-- Hidden compat views (keep IDs for legacy bindings) -->
-            <LinearLayout
-                android:id="@+id/llAdminActivities"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:visibility="gone" />
+            <!-- Legacy compat -->
+            <LinearLayout android:id="@+id/llAdminActivities"
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="vertical" android:visibility="gone" />
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
