@@ -80,7 +80,7 @@ jobs:
       - run: DATABASE_URL=postgres://vaccinikids_user:vaccinikids_password@localhost:5432/vaccinikids BACKUP_DIR=/tmp/backups npm run db:backup
       - run: RESTORE_DATABASE_URL=postgres://vaccinikids_user:vaccinikids_password@localhost:5432/vaccinikids_restore_test BACKUP_AGE_IDENTITY_FILE=/tmp/vaccinikids-age-key npm run db:restore -- "$(ls /tmp/backups/*.dump.age)"
       - run: DATABASE_URL=postgres://vaccinikids_user:vaccinikids_password@localhost:5432/vaccinikids_restore_test npm run db:verify-invariants
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
         with:
           name: backend-coverage-${{ github.sha }}
@@ -111,7 +111,7 @@ jobs:
         run: ./android/gradlew -p android app:assembleDebug -PreactNativeArchitectures=arm64-v8a
       - name: Build personnel Android app
         run: ./gradlew :app:assembleDebug
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
         with:
           name: android-debug-${{ github.sha }}
@@ -158,7 +158,7 @@ jobs:
           npm run mobile:configure
           ./android/gradlew -p android app:assembleRelease -PreactNativeArchitectures=arm64-v8a
           ./gradlew :app:assembleRelease
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: android-release-ci-signed-${{ github.sha }}
           path: |
@@ -185,7 +185,7 @@ jobs:
           api-level: 35
           arch: x86_64
           script: ./gradlew :app:connectedDebugAndroidTest
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
         with:
           name: android-instrumentation-${{ github.sha }}
@@ -214,7 +214,7 @@ jobs:
           xcodebuild -workspace ios/VacciniKids.xcworkspace
           -scheme VacciniKids -configuration Release
           -sdk iphonesimulator -derivedDataPath build/ios-ci CODE_SIGNING_ALLOWED=NO build
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ios-simulator-release-${{ github.sha }}
           path: build/ios-ci/Build/Products/Release-iphonesimulator/VacciniKids.app
