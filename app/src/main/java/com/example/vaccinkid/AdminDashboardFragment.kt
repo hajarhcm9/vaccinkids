@@ -1,9 +1,7 @@
 package com.example.vaccinkid
 
 import android.content.Intent
-import android.graphics.Color
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -13,12 +11,9 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.example.vaccinkid.model.DashboardStatsDto
 import com.example.vaccinkid.network.ApiClient
 import com.example.vaccinkid.network.TokenManager
-import com.github.mikephil.charting.charts.BarChart
-import com.github.mikephil.charting.data.BarData
-import com.github.mikephil.charting.data.BarDataSet
-import com.github.mikephil.charting.data.BarEntry
 import com.google.android.material.card.MaterialCardView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.progressindicator.LinearProgressIndicator
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
@@ -30,79 +25,118 @@ import java.util.Locale
 class AdminDashboardFragment : Fragment(R.layout.fragment_admin_dashboard) {
 
     private lateinit var refreshView: SwipeRefreshLayout
-    private lateinit var barChart: BarChart
 
+    // Header
+    private lateinit var tvAdminAvatarInitials: TextView
+    private lateinit var tvAdminGreeting: TextView
     private lateinit var tvAdminName: TextView
+    private lateinit var tvAdminDateBadge: TextView
     private lateinit var tvAdminPeriod: TextView
     private lateinit var tvLastUpdated: TextView
+
+    // KPI strip
     private lateinit var totalVaccinesView: TextView
     private lateinit var centresCountView: TextView
     private lateinit var staffCountView: TextView
     private lateinit var sessionsCountView: TextView
-    private lateinit var activityContainer: LinearLayout
-    private lateinit var alertBanner: LinearLayout
-    private lateinit var alertBannerText: TextView
-
     private lateinit var cvKpiCentres: MaterialCardView
     private lateinit var cvKpiStaff: MaterialCardView
     private lateinit var cvKpiSessions: MaterialCardView
-    private lateinit var cvQuickAlertesStock: MaterialCardView
-    private lateinit var cvQuickRetards: MaterialCardView
-    private lateinit var cvQuickRdv: MaterialCardView
-    private lateinit var cvQuickSearch: MaterialCardView
+
+    // Alert banner
+    private lateinit var alertBanner: LinearLayout
+    private lateinit var alertBannerText: TextView
+
+    // Quick actions
+    private lateinit var cvQuickAlertesStock: LinearLayout
+    private lateinit var cvQuickRetards: LinearLayout
+    private lateinit var cvQuickRdv: LinearLayout
+    private lateinit var cvQuickSearch: LinearLayout
+
+    // Stats progress
+    private lateinit var tvStatPresentsCount: TextView
+    private lateinit var tvStatConfirmesCount: TextView
+    private lateinit var tvStatEnAttenteCount: TextView
+    private lateinit var tvStatAbsentsCount: TextView
+    private lateinit var progressStatPresents: LinearProgressIndicator
+    private lateinit var progressStatConfirmes: LinearProgressIndicator
+    private lateinit var progressStatEnAttente: LinearProgressIndicator
+    private lateinit var progressStatAbsents: LinearProgressIndicator
+
+    // Bilan global
+    private lateinit var tvStatBebes: TextView
+    private lateinit var tvStatParents: TextView
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         bindViews(view)
-        setupChart()
         setupQuickActions()
         loadDashboard()
     }
 
     private fun bindViews(view: View) {
-        refreshView        = view.findViewById(R.id.adminRefresh)
-        barChart           = view.findViewById(R.id.barChartSummary)
-        tvAdminName        = view.findViewById(R.id.tvAdminName)
-        tvAdminPeriod      = view.findViewById(R.id.tvAdminPeriod)
-        tvLastUpdated      = view.findViewById(R.id.tvLastUpdated)
-        totalVaccinesView  = view.findViewById(R.id.tvTotalVaccines)
-        centresCountView   = view.findViewById(R.id.tvKpiCentres)
-        staffCountView     = view.findViewById(R.id.tvKpiStaff)
-        sessionsCountView  = view.findViewById(R.id.tvKpiSessions)
-        activityContainer  = view.findViewById(R.id.llAdminActivities)
-        alertBanner        = view.findViewById(R.id.llAlertBanner)
-        alertBannerText    = view.findViewById(R.id.tvAlertBannerText)
-        cvKpiCentres       = view.findViewById(R.id.cvKpiCentres)
-        cvKpiStaff         = view.findViewById(R.id.cvKpiStaff)
-        cvKpiSessions      = view.findViewById(R.id.cvKpiSessions)
-        cvQuickAlertesStock = view.findViewById(R.id.cvQuickAlertesStock)
-        cvQuickRetards     = view.findViewById(R.id.cvQuickRetards)
-        cvQuickRdv         = view.findViewById(R.id.cvQuickRdv)
-        cvQuickSearch      = view.findViewById(R.id.cvQuickSearch)
+        refreshView             = view.findViewById(R.id.adminRefresh)
+        tvAdminAvatarInitials   = view.findViewById(R.id.tvAdminAvatarInitials)
+        tvAdminGreeting         = view.findViewById(R.id.tvAdminGreeting)
+        tvAdminName             = view.findViewById(R.id.tvAdminName)
+        tvAdminDateBadge        = view.findViewById(R.id.tvAdminDateBadge)
+        tvAdminPeriod           = view.findViewById(R.id.tvAdminPeriod)
+        tvLastUpdated           = view.findViewById(R.id.tvLastUpdated)
+        totalVaccinesView       = view.findViewById(R.id.tvTotalVaccines)
+        centresCountView        = view.findViewById(R.id.tvKpiCentres)
+        staffCountView          = view.findViewById(R.id.tvKpiStaff)
+        sessionsCountView       = view.findViewById(R.id.tvKpiSessions)
+        cvKpiCentres            = view.findViewById(R.id.cvKpiCentres)
+        cvKpiStaff              = view.findViewById(R.id.cvKpiStaff)
+        cvKpiSessions           = view.findViewById(R.id.cvKpiSessions)
+        alertBanner             = view.findViewById(R.id.llAlertBanner)
+        alertBannerText         = view.findViewById(R.id.tvAlertBannerText)
+        cvQuickAlertesStock     = view.findViewById(R.id.cvQuickAlertesStock)
+        cvQuickRetards          = view.findViewById(R.id.cvQuickRetards)
+        cvQuickRdv              = view.findViewById(R.id.cvQuickRdv)
+        cvQuickSearch           = view.findViewById(R.id.cvQuickSearch)
+        tvStatPresentsCount     = view.findViewById(R.id.tvStatPresentsCount)
+        tvStatConfirmesCount    = view.findViewById(R.id.tvStatConfirmesCount)
+        tvStatEnAttenteCount    = view.findViewById(R.id.tvStatEnAttenteCount)
+        tvStatAbsentsCount      = view.findViewById(R.id.tvStatAbsentsCount)
+        progressStatPresents    = view.findViewById(R.id.progressStatPresents)
+        progressStatConfirmes   = view.findViewById(R.id.progressStatConfirmes)
+        progressStatEnAttente   = view.findViewById(R.id.progressStatEnAttente)
+        progressStatAbsents     = view.findViewById(R.id.progressStatAbsents)
+        tvStatBebes             = view.findViewById(R.id.tvStatBebes)
+        tvStatParents           = view.findViewById(R.id.tvStatParents)
 
         refreshView.setOnRefreshListener { loadDashboard() }
         view.findViewById<View>(R.id.btnAdminLogout).setOnClickListener { confirmLogout() }
 
-        // Période dynamique
+        // Date badge
         val cal = Calendar.getInstance()
+        val days = listOf("Dimanche","Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi")
         val months = listOf("Janvier","Février","Mars","Avril","Mai","Juin",
                             "Juillet","Août","Septembre","Octobre","Novembre","Décembre")
-        tvAdminPeriod.text = "${months[cal.get(Calendar.MONTH)]} ${cal.get(Calendar.YEAR)}"
+        tvAdminDateBadge.text = "${days[cal.get(Calendar.DAY_OF_WEEK) - 1]} ${cal.get(Calendar.DAY_OF_MONTH)} ${months[cal.get(Calendar.MONTH)]}"
+        tvAdminPeriod.text    = "${months[cal.get(Calendar.MONTH)]} ${cal.get(Calendar.YEAR)}"
 
-        // Placeholders en tirets pendant le chargement
-        totalVaccinesView.text = "—"
-        centresCountView.text  = "—"
-        staffCountView.text    = "—"
-        sessionsCountView.text = "—"
-    }
+        // Greeting (set early; correct time-of-day value)
+        val hour = cal.get(Calendar.HOUR_OF_DAY)
+        tvAdminGreeting.text = when {
+            hour < 12 -> "Bonjour,"
+            hour < 18 -> "Bon après-midi,"
+            else      -> "Bonsoir,"
+        }
 
-    private fun setupChart() {
-        barChart.description.isEnabled = false
-        barChart.legend.isEnabled      = false
-        barChart.xAxis.isEnabled       = false
-        barChart.axisLeft.isEnabled    = false
-        barChart.axisRight.isEnabled   = false
-        barChart.setTouchEnabled(false)
+        // Loading placeholders
+        totalVaccinesView.text    = "—"
+        centresCountView.text     = "—"
+        staffCountView.text       = "—"
+        sessionsCountView.text    = "—"
+        tvStatPresentsCount.text  = "—"
+        tvStatConfirmesCount.text = "—"
+        tvStatEnAttenteCount.text = "—"
+        tvStatAbsentsCount.text   = "—"
+        tvStatBebes.text          = "—"
+        tvStatParents.text        = "—"
+        tvLastUpdated.text        = "—"
     }
 
     private fun setupQuickActions() {
@@ -144,38 +178,31 @@ class AdminDashboardFragment : Fragment(R.layout.fragment_admin_dashboard) {
                     s.await() to m.await()
                 }
 
-                // Admin name
+                // Admin name + initials
                 val user = meResponse?.data?.user
-                val displayName = listOfNotNull(user?.prenom, user?.nom).joinToString(" ")
-                    .ifBlank { "Administrateur" }
-                val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
-                val greeting = when {
-                    hour < 12 -> "Bonjour"
-                    hour < 18 -> "Bon après-midi"
-                    else      -> "Bonsoir"
-                }
-                tvAdminName.text = "$greeting, $displayName"
+                val prenom = user?.prenom?.trim().orEmpty()
+                val nom    = user?.nom?.trim().orEmpty()
+                val displayName = listOfNotNull(prenom.ifBlank { null }, nom.ifBlank { null })
+                    .joinToString(" ").ifBlank { "Administrateur" }
+                tvAdminName.text          = displayName
+                tvAdminAvatarInitials.text = buildInitials(prenom, nom)
 
                 // Stats
                 val stats = statsResponse.data
                 if (statsResponse.status == "success" && stats != null) {
-                    totalVaccinesView.text = stats.totalVaccinations?.toString() ?: "0"
-                    centresCountView.text  = stats.centresActifs?.toString()    ?: "0"
-                    staffCountView.text    = stats.totalPersonnel?.toString()   ?: "0"
-                    sessionsCountView.text = stats.sessionsAVenir?.toString()   ?: "0"
-                    updateChart(stats)
-                    renderStats(stats)
+                    totalVaccinesView.text = formatCount(stats.totalVaccinations)
+                    centresCountView.text  = formatCount(stats.centresActifs)
+                    staffCountView.text    = formatCount(stats.totalPersonnel)
+                    sessionsCountView.text = formatCount(stats.sessionsAVenir)
+                    tvStatBebes.text       = formatCount(stats.totalBebes)
+                    tvStatParents.text     = formatCount(stats.totalParents)
+                    updateStatsProgress(stats)
                     updateAlertBanner(stats)
                 }
 
-                // Timestamp
-                tvLastUpdated.text = "Mis à jour à ${SimpleDateFormat("HH:mm", Locale.FRANCE).format(Date())}"
+                tvLastUpdated.text = SimpleDateFormat("HH:mm", Locale.FRANCE).format(Date())
 
             } catch (e: Exception) {
-                totalVaccinesView.text = "—"
-                centresCountView.text  = "—"
-                staffCountView.text    = "—"
-                sessionsCountView.text = "—"
                 com.google.android.material.snackbar.Snackbar
                     .make(requireView(), e.message ?: "Tableau de bord indisponible",
                           com.google.android.material.snackbar.Snackbar.LENGTH_LONG)
@@ -186,30 +213,29 @@ class AdminDashboardFragment : Fragment(R.layout.fragment_admin_dashboard) {
         }
     }
 
-    // ── Chart ─────────────────────────────────────────────────────────────────
+    // ── Stats progress bars ───────────────────────────────────────────────────
 
-    private fun updateChart(stats: DashboardStatsDto) {
-        val values = listOf(
-            stats.rdvEnAttente ?: 0,
-            stats.rdvConfirmes ?: 0,
-            stats.rdvPresents  ?: 0,
-            stats.rdvAbsents   ?: 0
-        )
-        if (values.all { it == 0 }) { barChart.visibility = View.GONE; return }
-        barChart.visibility = View.VISIBLE
-        val colors = listOf(
-            Color.parseColor("#F59E0B"),  // En attente — amber
-            Color.parseColor("#60A5FA"),  // Confirmés — bleu clair
-            Color.parseColor("#34D399"),  // Présents — vert
-            Color.parseColor("#F87171"),  // Absents — rouge clair
-        )
-        val entries = values.mapIndexed { i, v -> BarEntry(i.toFloat(), v.toFloat()) }
-        val set = BarDataSet(entries, "").apply {
-            this.colors = colors
-            setDrawValues(false)
-        }
-        barChart.data = BarData(set).apply { barWidth = 0.55f }
-        barChart.invalidate()
+    private fun updateStatsProgress(stats: DashboardStatsDto) {
+        val presents  = stats.rdvPresents  ?: 0
+        val confirmes = stats.rdvConfirmes ?: 0
+        val enAttente = stats.rdvEnAttente ?: 0
+        val absents   = stats.rdvAbsents   ?: 0
+        val total     = (presents + confirmes + enAttente + absents).coerceAtLeast(1)
+
+        tvStatPresentsCount.text  = presents.toString()
+        tvStatConfirmesCount.text = confirmes.toString()
+        tvStatEnAttenteCount.text = enAttente.toString()
+        tvStatAbsentsCount.text   = absents.toString()
+
+        progressStatPresents.max  = total
+        progressStatConfirmes.max = total
+        progressStatEnAttente.max = total
+        progressStatAbsents.max   = total
+
+        progressStatPresents.setProgressCompat(presents, true)
+        progressStatConfirmes.setProgressCompat(confirmes, true)
+        progressStatEnAttente.setProgressCompat(enAttente, true)
+        progressStatAbsents.setProgressCompat(absents, true)
     }
 
     // ── Alert banner ──────────────────────────────────────────────────────────
@@ -218,53 +244,26 @@ class AdminDashboardFragment : Fragment(R.layout.fragment_admin_dashboard) {
         val stockAlerts = stats.alertesStock ?: 0
         if (stockAlerts > 0) {
             alertBanner.visibility = View.VISIBLE
-            alertBannerText.text = "$stockAlerts alerte(s) de stock critique — Voir détail →"
+            alertBannerText.text = "$stockAlerts alerte(s) de stock critique — Voir →"
         } else {
             alertBanner.visibility = View.GONE
         }
     }
 
-    // ── Stats du jour ─────────────────────────────────────────────────────────
+    // ── Helpers ───────────────────────────────────────────────────────────────
 
-    private fun renderStats(stats: DashboardStatsDto) {
-        activityContainer.removeAllViews()
-        val inflater = LayoutInflater.from(requireContext())
-
-        val rdvRows = listOfNotNull(
-            stats.rdvPresents?.takeIf { it > 0 }?.let { "Patients présents aujourd'hui"    to it.toString() },
-            stats.rdvConfirmes?.takeIf { it > 0 }?.let { "RDV confirmés en attente"         to it.toString() },
-            stats.rdvEnAttente?.takeIf { it > 0 }?.let { "RDV en attente de confirmation"   to it.toString() },
-            stats.rdvAbsents?.takeIf { it > 0 }?.let  { "Absences enregistrées"             to it.toString() },
-        )
-
-        val globalRows = listOf(
-            "Total bébés suivis"      to (stats.totalBebes?.toString() ?: "0"),
-            "Total parents inscrits"  to (stats.totalParents?.toString() ?: "0"),
-            "Vaccinations effectuées" to (stats.totalVaccinations?.toString() ?: "0"),
-        )
-
-        if (rdvRows.isEmpty()) {
-            // Empty state — no sessions today
-            val empty = inflater.inflate(R.layout.item_dashboard_stat_row, activityContainer, false)
-            empty.findViewById<TextView>(R.id.tvStatRowLabel).text = "Aucune session en cours aujourd'hui"
-            empty.findViewById<TextView>(R.id.tvStatRowValue).text = ""
-            activityContainer.addView(empty)
-        } else {
-            rdvRows.forEach { (label, value) ->
-                val row = inflater.inflate(R.layout.item_dashboard_stat_row, activityContainer, false)
-                row.findViewById<TextView>(R.id.tvStatRowLabel).text = label
-                row.findViewById<TextView>(R.id.tvStatRowValue).text = value
-                activityContainer.addView(row)
-            }
-        }
-
-        globalRows.forEach { (label, value) ->
-            val row = inflater.inflate(R.layout.item_dashboard_stat_row, activityContainer, false)
-            row.findViewById<TextView>(R.id.tvStatRowLabel).text = label
-            row.findViewById<TextView>(R.id.tvStatRowValue).text = value
-            activityContainer.addView(row)
+    private fun buildInitials(prenom: String, nom: String): String {
+        val p = prenom.firstOrNull()?.uppercaseChar()
+        val n = nom.firstOrNull()?.uppercaseChar()
+        return when {
+            p != null && n != null -> "$p$n"
+            p != null              -> "$p"
+            n != null              -> "$n"
+            else                   -> "A"
         }
     }
+
+    private fun formatCount(value: Int?): String = value?.toString() ?: "0"
 
     // ── Logout ────────────────────────────────────────────────────────────────
 

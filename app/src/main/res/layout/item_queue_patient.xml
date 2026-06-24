@@ -6,97 +6,184 @@
     android:layout_height="wrap_content"
     android:layout_marginBottom="10dp"
     app:cardBackgroundColor="@color/white"
-    app:cardCornerRadius="18dp"
-    app:cardElevation="2dp"
+    app:cardCornerRadius="20dp"
+    app:cardElevation="3dp"
     app:strokeWidth="0dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:padding="16dp">
+        android:orientation="horizontal">
 
-        <!-- Queue position badge -->
-        <FrameLayout
-            android:layout_width="46dp"
-            android:layout_height="46dp"
-            android:background="@drawable/bg_fab_teal">
-            <TextView
-                android:id="@+id/queueItemPosition"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:gravity="center"
-                android:textColor="@color/white"
-                android:textSize="18sp"
-                android:textStyle="bold" />
-        </FrameLayout>
+        <!-- Status color bar (left) -->
+        <View
+            android:id="@+id/queueStatusBar"
+            android:layout_width="5dp"
+            android:layout_height="match_parent"
+            android:background="@color/warning" />
 
-        <!-- Avatar circle -->
-        <com.google.android.material.imageview.ShapeableImageView
-            android:layout_width="44dp"
-            android:layout_height="44dp"
-            android:layout_marginStart="12dp"
-            android:contentDescription="@null"
-            android:src="@drawable/ic_medical_staff"
-            app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Full"
-            app:strokeColor="@color/pearl_aqua"
-            app:strokeWidth="1.5dp" />
-
-        <!-- Name + phone -->
+        <!-- Card body -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
             android:layout_weight="1"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:padding="14dp">
 
-            <TextView
-                android:id="@+id/queueItemName"
+            <!-- ── Row 1: Queue badge + Avatar + Name + Status ── -->
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textColor="@color/text_primary"
-                android:textSize="15sp"
-                android:textStyle="bold" />
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
-            <TextView
-                android:id="@+id/queueItemPhone"
+                <!-- Queue number badge -->
+                <FrameLayout
+                    android:id="@+id/flQueueNumBg"
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:background="@drawable/bg_queue_number_waiting">
+                    <TextView
+                        android:id="@+id/queueItemPosition"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:gravity="center"
+                        android:textColor="@color/warning_dark"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+                </FrameLayout>
+
+                <!-- Avatar with initials -->
+                <FrameLayout
+                    android:id="@+id/flQueueAvatar"
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
+                    android:layout_marginStart="10dp"
+                    android:background="@drawable/bg_circle_staff_primary">
+                    <TextView
+                        android:id="@+id/tvQueueInitials"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:text="YA"
+                        android:textColor="@color/white"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+                </FrameLayout>
+
+                <!-- Name + vaccin info -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/queueItemName"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:textColor="@color/text_primary"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvQueueVaccin"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="3dp"
+                        android:background="@drawable/badge_orange_bg"
+                        android:paddingHorizontal="7dp"
+                        android:paddingVertical="2dp"
+                        android:textColor="@color/warning_dark"
+                        android:textSize="10sp"
+                        android:textStyle="bold"
+                        android:visibility="gone" />
+                </LinearLayout>
+
+                <!-- Status badge -->
+                <TextView
+                    android:id="@+id/queueItemStatus"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:paddingHorizontal="9dp"
+                    android:paddingVertical="4dp"
+                    android:textSize="10sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <!-- ── Row 2: Phone ── -->
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
-                android:textColor="@color/text_secondary"
-                android:textSize="12sp" />
-        </LinearLayout>
+                android:layout_marginTop="10dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
-        <!-- Status + action -->
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:gravity="end|center_vertical"
-            android:orientation="vertical">
+                <ImageView
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
+                    android:contentDescription="@null"
+                    android:layout_marginEnd="6dp"
+                    android:src="@drawable/ic_phone"
+                    app:tint="@color/text_secondary" />
 
-            <TextView
-                android:id="@+id/queueItemStatus"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:paddingHorizontal="10dp"
-                android:paddingVertical="4dp"
-                android:textSize="11sp"
-                android:textStyle="bold" />
+                <TextView
+                    android:id="@+id/queueItemPhone"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp" />
 
+                <!-- Call button -->
+                <FrameLayout
+                    android:id="@+id/btnQueueCall"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:background="@drawable/bg_kpi_icon_green"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackgroundBorderless"
+                    android:visibility="gone">
+                    <ImageView
+                        android:layout_width="15dp"
+                        android:layout_height="15dp"
+                        android:layout_gravity="center"
+                        android:contentDescription="Appeler"
+                        android:src="@drawable/ic_phone"
+                        app:tint="@color/success_dark" />
+                </FrameLayout>
+            </LinearLayout>
+
+            <!-- ── Divider ── -->
+            <View
+                android:id="@+id/queueDivider"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="12dp"
+                android:layout_marginBottom="10dp"
+                android:background="@color/outline"
+                android:visibility="gone" />
+
+            <!-- ── Actions (EN_COURS only) ── -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/queueItemComplete"
-                style="@style/Widget.Material3.Button.OutlinedButton"
-                android:layout_width="90dp"
-                android:layout_height="36dp"
-                android:layout_marginTop="6dp"
-                android:text="Terminer"
-                android:textSize="12sp"
+                android:layout_width="match_parent"
+                android:layout_height="42dp"
+                android:text="✓  Service terminé"
+                android:textColor="@color/white"
+                android:textSize="13sp"
+                android:textStyle="bold"
                 android:visibility="gone"
-                app:strokeColor="@color/brand_teal"
-                app:strokeWidth="1.5dp"
-                android:textColor="@color/brand_teal"
-                app:cornerRadius="18dp" />
+                app:backgroundTint="@color/success"
+                app:cornerRadius="21dp"
+                app:icon="@drawable/ic_medical_staff"
+                app:iconTint="@color/white"
+                app:iconSize="16dp" />
         </LinearLayout>
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>

@@ -4,7 +4,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="12dp"
+    android:layout_marginBottom="10dp"
     app:cardBackgroundColor="@color/white"
     app:cardCornerRadius="20dp"
     app:cardElevation="2dp"
@@ -15,40 +15,46 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal">
 
-        <!-- Left teal accent bar -->
+        <!-- Dynamic status color bar (left) -->
         <View
+            android:id="@+id/vStatusBar"
             android:layout_width="5dp"
             android:layout_height="match_parent"
             android:background="@color/brand_teal" />
 
-        <!-- Card content -->
+        <!-- Card body -->
         <LinearLayout
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:padding="15dp">
 
-            <!-- Row 1: time chip + name/age + status badge -->
+            <!-- ── Row 1: Avatar + Name + Status ── -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
-                <!-- Time chip -->
-                <TextView
-                    android:id="@+id/staffRdvTime"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/bg_time_chip"
-                    android:paddingHorizontal="10dp"
-                    android:paddingVertical="5dp"
-                    android:text="09:30"
-                    android:textColor="@color/brand_teal_dark"
-                    android:textSize="12sp"
-                    android:textStyle="bold" />
+                <!-- Avatar with initials -->
+                <FrameLayout
+                    android:id="@+id/flAvatar"
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:background="@drawable/bg_circle_staff_primary">
+                    <TextView
+                        android:id="@+id/tvAvatarInitials"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:text="YA"
+                        android:textColor="@color/white"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+                </FrameLayout>
 
-                <!-- Name + meta -->
+                <!-- Name + vaccine + time -->
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -56,77 +62,138 @@
                     android:layout_weight="1"
                     android:orientation="vertical">
 
-                    <TextView
-                        android:id="@+id/staffRdvBaby"
-                        android:layout_width="wrap_content"
+                    <!-- Name + queue badge -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:textColor="@color/text_primary"
-                        android:textSize="15sp"
-                        android:textStyle="bold" />
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
 
-                    <TextView
-                        android:id="@+id/staffRdvMeta"
-                        android:layout_width="wrap_content"
+                        <TextView
+                            android:id="@+id/staffRdvBaby"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:ellipsize="end"
+                            android:maxLines="1"
+                            android:textColor="@color/text_primary"
+                            android:textSize="15sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tvRdvQueue"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="6dp"
+                            android:background="@drawable/bg_badge_teal"
+                            android:paddingHorizontal="7dp"
+                            android:paddingVertical="3dp"
+                            android:text="#1"
+                            android:textColor="@color/brand_teal_dark"
+                            android:textSize="11sp"
+                            android:textStyle="bold"
+                            android:visibility="gone" />
+                    </LinearLayout>
+
+                    <!-- Vaccine badge + time chip + status -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="12sp" />
+                        android:layout_marginTop="5dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:id="@+id/tvVaccinBadge"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/badge_orange_bg"
+                            android:ellipsize="end"
+                            android:maxLines="1"
+                            android:maxWidth="120dp"
+                            android:paddingHorizontal="8dp"
+                            android:paddingVertical="3dp"
+                            android:text="DTC"
+                            android:textColor="@color/warning_dark"
+                            android:textSize="10sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/staffRdvTime"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="6dp"
+                            android:background="@drawable/bg_time_chip"
+                            android:paddingHorizontal="8dp"
+                            android:paddingVertical="3dp"
+                            android:text="09:30"
+                            android:textColor="@color/brand_teal_dark"
+                            android:textSize="10sp"
+                            android:textStyle="bold" />
+
+                        <View
+                            android:layout_width="0dp"
+                            android:layout_height="1dp"
+                            android:layout_weight="1" />
+
+                        <!-- Status badge (right) -->
+                        <TextView
+                            android:id="@+id/staffRdvStatus"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:paddingHorizontal="9dp"
+                            android:paddingVertical="3dp"
+                            android:textSize="10sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
                 </LinearLayout>
-
-                <!-- Status badge -->
-                <TextView
-                    android:id="@+id/staffRdvStatus"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:paddingHorizontal="10dp"
-                    android:paddingVertical="4dp"
-                    android:textSize="11sp"
-                    android:textStyle="bold" />
             </LinearLayout>
 
-            <!-- Row 2: parent info -->
+            <!-- ── Row 2: Parent + Phone ── -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
+                android:background="@color/bg_screen"
+                android:paddingHorizontal="10dp"
+                android:paddingVertical="8dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
+                <!-- Parent name -->
                 <ImageView
-                    android:layout_width="14dp"
-                    android:layout_height="14dp"
-                    android:src="@drawable/ic_medical_staff"
+                    android:layout_width="13dp"
+                    android:layout_height="13dp"
                     android:contentDescription="@null"
-                    app:tint="@color/brand_teal"
-                    android:layout_marginEnd="6dp" />
+                    android:layout_marginEnd="6dp"
+                    android:src="@drawable/ic_medical_staff"
+                    app:tint="@color/brand_teal" />
 
                 <TextView
                     android:id="@+id/staffRdvParent"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:textColor="@color/text_primary"
-                    android:textSize="13sp"
-                    android:textStyle="bold"
                     android:ellipsize="end"
-                    android:maxLines="1" />
-            </LinearLayout>
+                    android:maxLines="1"
+                    android:textColor="@color/text_body"
+                    android:textSize="13sp" />
 
-            <!-- Row 3: phone -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="5dp"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
+                <!-- Divider dot -->
+                <View
+                    android:layout_width="1dp"
+                    android:layout_height="12dp"
+                    android:layout_marginHorizontal="8dp"
+                    android:background="@color/text_hint" />
 
+                <!-- Phone -->
                 <ImageView
-                    android:layout_width="14dp"
-                    android:layout_height="14dp"
-                    android:src="@drawable/ic_phone"
+                    android:layout_width="13dp"
+                    android:layout_height="13dp"
                     android:contentDescription="@null"
-                    app:tint="@color/text_secondary"
-                    android:layout_marginEnd="6dp" />
+                    android:layout_marginEnd="5dp"
+                    android:src="@drawable/ic_phone"
+                    app:tint="@color/text_secondary" />
 
                 <TextView
                     android:id="@+id/staffRdvPhone"
@@ -134,60 +201,115 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:textColor="@color/text_secondary"
-                    android:textSize="13sp" />
+                    android:textSize="12sp"
+                    android:ellipsize="end"
+                    android:maxLines="1" />
+
+                <!-- Call button -->
+                <FrameLayout
+                    android:id="@+id/btnCallPhone"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:layout_marginStart="6dp"
+                    android:background="@drawable/bg_kpi_icon_green"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackgroundBorderless">
+                    <ImageView
+                        android:layout_width="15dp"
+                        android:layout_height="15dp"
+                        android:layout_gravity="center"
+                        android:contentDescription="Appeler"
+                        android:src="@drawable/ic_phone"
+                        app:tint="@color/success_dark" />
+                </FrameLayout>
             </LinearLayout>
 
-            <!-- Divider -->
+            <!-- ── Divider ── -->
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
-                android:layout_marginTop="14dp"
-                android:layout_marginBottom="12dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
                 android:background="@color/outline" />
 
-            <!-- Row 3: action buttons (2+2 layout) -->
+            <!-- ── Actions ── -->
             <LinearLayout
                 android:id="@+id/staffRdvActions"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
 
-                <!-- Primary actions row -->
+                <!-- Row A: Présent + Absent + Confirmer -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal">
 
-                    <!-- Présent -->
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/staffRdvPresent"
                         android:layout_width="0dp"
-                        android:layout_height="42dp"
+                        android:layout_height="40dp"
                         android:layout_weight="1"
                         android:layout_marginEnd="6dp"
-                        android:background="@drawable/bg_btn_teal_pill"
                         android:text="Présent"
                         android:textColor="@color/white"
                         android:textSize="13sp"
                         android:textStyle="bold"
-                        android:stateListAnimator="@null"
-                        android:elevation="2dp"
-                        app:backgroundTint="@null"
-                        app:cornerRadius="21dp"
-                        app:icon="@drawable/ic_syringe"
+                        app:backgroundTint="@color/success"
+                        app:cornerRadius="20dp"
+                        app:icon="@drawable/ic_medical_staff"
                         app:iconTint="@color/white"
-                        app:iconSize="16dp"
-                        app:iconGravity="textStart"
+                        app:iconSize="15dp"
                         app:iconPadding="4dp" />
 
-                    <!-- Vacciner -->
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/staffRdvAbsent"
+                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        android:layout_width="0dp"
+                        android:layout_height="40dp"
+                        android:layout_weight="1"
+                        android:text="Absent"
+                        android:textColor="@color/error"
+                        android:textSize="13sp"
+                        app:strokeColor="@color/error"
+                        app:strokeWidth="1.5dp"
+                        app:cornerRadius="20dp"
+                        app:rippleColor="@color/error_light" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/staffRdvConfirm"
+                        android:layout_width="0dp"
+                        android:layout_height="40dp"
+                        android:layout_weight="1"
+                        android:layout_marginStart="6dp"
+                        android:text="Confirmer"
+                        android:textColor="@color/white"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:visibility="gone"
+                        app:backgroundTint="@color/brand_teal"
+                        app:cornerRadius="20dp"
+                        app:icon="@drawable/ic_calendar_event"
+                        app:iconTint="@color/white"
+                        app:iconSize="14dp" />
+                </LinearLayout>
+
+                <!-- Row B: Vacciner (gradient, full-width) + Dossier -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="7dp"
+                    android:orientation="horizontal">
+
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/staffRdvVaccinate"
                         android:layout_width="0dp"
                         android:layout_height="42dp"
                         android:layout_weight="1"
+                        android:layout_marginEnd="6dp"
                         android:background="@drawable/bg_qr_btn"
-                        android:text="Vacciner"
+                        android:text="💉 Vacciner"
                         android:textColor="@color/white"
                         android:textSize="13sp"
                         android:textStyle="bold"
@@ -195,70 +317,26 @@
                         android:elevation="2dp"
                         app:backgroundTint="@null"
                         app:cornerRadius="21dp"
-                        app:icon="@drawable/ic_scan"
-                        app:iconTint="@color/white"
-                        app:iconSize="16dp"
-                        app:iconGravity="textStart"
-                        app:iconPadding="4dp" />
-                </LinearLayout>
+                        app:iconSize="0dp" />
 
-                <!-- Confirmer row (visible only for EN_LISTE_ATTENTE) -->
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/staffRdvConfirm"
-                    android:layout_width="match_parent"
-                    android:layout_height="42dp"
-                    android:layout_marginTop="8dp"
-                    android:background="@drawable/bg_btn_teal_pill"
-                    android:text="Confirmer la place"
-                    android:textColor="@color/white"
-                    android:textSize="13sp"
-                    android:textStyle="bold"
-                    android:stateListAnimator="@null"
-                    android:elevation="2dp"
-                    android:visibility="gone"
-                    app:backgroundTint="@null"
-                    app:cornerRadius="21dp" />
-
-                <!-- Secondary actions row -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:orientation="horizontal">
-
-                    <!-- Absent -->
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/staffRdvAbsent"
-                        style="@style/Widget.Material3.Button.OutlinedButton"
-                        android:layout_width="0dp"
-                        android:layout_height="38dp"
-                        android:layout_weight="1"
-                        android:layout_marginEnd="6dp"
-                        android:text="Absent"
-                        android:textSize="13sp"
-                        android:textColor="@color/error"
-                        app:strokeColor="@color/error"
-                        app:strokeWidth="1.5dp"
-                        app:cornerRadius="19dp"
-                        app:rippleColor="@color/error_light" />
-
-                    <!-- Dossier -->
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/staffRdvGrowth"
                         style="@style/Widget.Material3.Button.OutlinedButton"
                         android:layout_width="0dp"
-                        android:layout_height="38dp"
+                        android:layout_height="42dp"
                         android:layout_weight="1"
                         android:text="Dossier"
-                        android:textSize="13sp"
                         android:textColor="@color/brand_teal"
+                        android:textSize="13sp"
                         app:strokeColor="@color/brand_teal"
                         app:strokeWidth="1.5dp"
-                        app:cornerRadius="19dp"
+                        app:cornerRadius="21dp"
+                        app:icon="@drawable/ic_bar_chart"
+                        app:iconTint="@color/brand_teal"
+                        app:iconSize="15dp"
                         app:rippleColor="@color/teal_100" />
                 </LinearLayout>
             </LinearLayout>
-
         </LinearLayout>
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>
