@@ -10,332 +10,758 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:paddingBottom="32dp">
+        android:paddingBottom="100dp">
 
-        <!-- Admin profile card -->
-        <com.google.android.material.card.MaterialCardView
+        <!-- ══════════════════════════════════════
+             HERO — stormy-teal gradient 185dp
+        ═══════════════════════════════════════ -->
+        <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginHorizontal="22dp"
-            android:layout_marginTop="22dp"
-            android:layout_marginBottom="20dp"
-            app:cardBackgroundColor="@color/white"
-            app:cardCornerRadius="22dp"
-            app:cardElevation="3dp"
-            app:strokeWidth="0dp">
+            android:layout_height="185dp"
+            android:background="@drawable/bg_more_hero">
 
-            <FrameLayout
+            <!-- Pearl-aqua decorative circles -->
+            <View
+                android:layout_width="200dp"
+                android:layout_height="200dp"
+                android:layout_gravity="top|end"
+                android:layout_marginEnd="-70dp"
+                android:layout_marginTop="-70dp"
+                android:alpha="0.14"
+                android:background="@drawable/bg_white_glow_circle" />
+
+            <View
+                android:layout_width="110dp"
+                android:layout_height="110dp"
+                android:layout_gravity="bottom|start"
+                android:layout_marginStart="-30dp"
+                android:layout_marginBottom="-30dp"
+                android:alpha="0.10"
+                android:background="@drawable/bg_white_glow_circle" />
+
+            <View
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:layout_gravity="top|start"
+                android:layout_marginStart="80dp"
+                android:layout_marginTop="20dp"
+                android:alpha="0.08"
+                android:background="@drawable/bg_white_glow_circle" />
+
+            <!-- Hero content -->
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@drawable/bg_gradient_admin"
-                android:padding="20dp">
+                android:layout_height="match_parent"
+                android:gravity="center_horizontal"
+                android:orientation="vertical"
+                android:paddingTop="24dp"
+                android:paddingBottom="50dp">
 
+                <!-- Avatar initials — almond-silk circle -->
+                <FrameLayout
+                    android:layout_width="72dp"
+                    android:layout_height="72dp"
+                    android:background="@drawable/bg_admin_avatar_circle">
+                    <TextView
+                        android:id="@+id/tvAdminMoreInitials"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:text="AD"
+                        android:textColor="@color/brand_coral"
+                        android:textSize="22sp"
+                        android:textStyle="bold" />
+                </FrameLayout>
+
+                <!-- Name -->
+                <TextView
+                    android:id="@+id/tvAdminMoreName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:text="Administrateur"
+                    android:textColor="@color/white"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+
+                <!-- Role badge + Actif dot -->
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
 
-                    <FrameLayout
-                        android:layout_width="54dp"
-                        android:layout_height="54dp"
-                        android:background="@drawable/bg_legend_dot_teal">
-                        <TextView
-                            android:id="@+id/tvAdminMoreInitials"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_gravity="center"
-                            android:text="HA"
-                            android:textColor="@color/white"
-                            android:textSize="18sp"
-                            android:textStyle="bold" />
-                    </FrameLayout>
-
-                    <LinearLayout
+                    <TextView
+                        android:id="@+id/tvAdminMoreRole"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="16dp"
-                        android:orientation="vertical">
-                        <TextView
-                            android:id="@+id/tvAdminMoreName"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Admin Hassan"
-                            android:textColor="@color/white"
-                            android:textSize="17sp"
-                            android:textStyle="bold" />
-                        <TextView
-                            android:id="@+id/tvAdminMoreRole"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
-                            android:text="Administrateur principal"
-                            android:textColor="@color/white_75"
-                            android:textSize="13sp" />
-                    </LinearLayout>
-                </LinearLayout>
-            </FrameLayout>
-        </com.google.android.material.card.MaterialCardView>
+                        android:background="@drawable/bg_badge_pearl"
+                        android:paddingHorizontal="12dp"
+                        android:paddingVertical="4dp"
+                        android:text="Administrateur principal"
+                        android:textColor="@color/white"
+                        android:textSize="11sp"
+                        android:textStyle="bold" />
 
-        <!-- Menu items -->
+                    <View
+                        android:layout_width="5dp"
+                        android:layout_height="5dp"
+                        android:layout_marginStart="10dp"
+                        android:layout_marginEnd="4dp"
+                        android:background="@drawable/bg_legend_dot_green" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Actif"
+                        android:textColor="#AAFFFFFF"
+                        android:textSize="10sp" />
+                </LinearLayout>
+            </LinearLayout>
+        </FrameLayout>
+
+        <!-- ══════════════════════════════════════
+             PROFILE FLOAT CARD (overlap -30dp)
+        ═══════════════════════════════════════ -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginHorizontal="22dp"
-            android:layout_marginBottom="12dp"
+            android:layout_marginTop="-30dp"
+            android:layout_marginHorizontal="18dp"
             app:cardBackgroundColor="@color/white"
             app:cardCornerRadius="20dp"
-            app:cardElevation="2dp"
+            app:cardElevation="10dp"
             app:strokeWidth="0dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="8dp">
+                android:paddingHorizontal="18dp"
+                android:paddingVertical="14dp">
 
-                <!-- Centres -->
-                <LinearLayout android:id="@+id/menuAdminCentres"
-                    android:layout_width="match_parent" android:layout_height="60dp"
-                    android:gravity="center_vertical" android:orientation="horizontal"
-                    android:paddingHorizontal="12dp" android:background="?selectableItemBackground">
+                <!-- Centre row -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+                    <ImageView
+                        android:id="@+id/ivCentreIcon"
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
+                        android:layout_marginEnd="10dp"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_building"
+                        app:tint="@color/stormy_teal" />
+                    <TextView
+                        android:id="@+id/tvAdminMoreCentre"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Centre non affecté"
+                        android:textColor="@color/text_primary"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <!-- Phone row (hidden if null) -->
+                <LinearLayout
+                    android:id="@+id/llAdminMorePhone"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:visibility="gone">
+                    <ImageView
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:layout_marginEnd="10dp"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_phone"
+                        app:tint="@color/pearl_aqua" />
+                    <TextView
+                        android:id="@+id/tvAdminMorePhone"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="13sp" />
+                </LinearLayout>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- ══════════════════════════════════════
+             GESTION RAPIDE label
+        ═══════════════════════════════════════ -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="22dp"
+            android:layout_marginTop="22dp"
+            android:layout_marginBottom="10dp"
+            android:letterSpacing="0.07"
+            android:text="GESTION RAPIDE"
+            android:textColor="@color/stormy_teal"
+            android:textSize="11sp"
+            android:textStyle="bold" />
+
+        <!-- ══════════════════════════════════════
+             2 × 2 GRID CARD — palette colors
+        ═══════════════════════════════════════ -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="16dp"
+            app:cardBackgroundColor="@color/white"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="3dp"
+            app:strokeWidth="0dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <!-- Row 1 -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <!-- Centres -->
+                    <LinearLayout
+                        android:id="@+id/menuAdminCentres"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:foreground="?attr/selectableItemBackground"
+                        android:gravity="center"
+                        android:orientation="vertical"
+                        android:paddingVertical="18dp"
+                        android:paddingHorizontal="8dp">
+
+                        <FrameLayout
+                            android:layout_width="50dp"
+                            android:layout_height="50dp"
+                            android:background="@drawable/bg_kpi_icon_almond">
+                            <ImageView
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
+                                android:layout_gravity="center"
+                                android:contentDescription="@null"
+                                android:src="@drawable/ic_building"
+                                app:tint="@color/brand_coral" />
+                        </FrameLayout>
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:gravity="center"
+                            android:text="Centres"
+                            android:textColor="@color/text_primary"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <View
+                        android:layout_width="1dp"
+                        android:layout_height="match_parent"
+                        android:background="@color/outline" />
+
+                    <!-- Vaccins -->
+                    <LinearLayout
+                        android:id="@+id/menuAdminVaccins"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:foreground="?attr/selectableItemBackground"
+                        android:gravity="center"
+                        android:orientation="vertical"
+                        android:paddingVertical="18dp"
+                        android:paddingHorizontal="8dp">
+
+                        <FrameLayout
+                            android:layout_width="50dp"
+                            android:layout_height="50dp"
+                            android:background="@drawable/bg_kpi_icon_pearl">
+                            <ImageView
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
+                                android:layout_gravity="center"
+                                android:contentDescription="@null"
+                                android:src="@drawable/ic_syringe"
+                                app:tint="@color/stormy_teal" />
+                        </FrameLayout>
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:gravity="center"
+                            android:text="Vaccins"
+                            android:textColor="@color/text_primary"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="@color/outline" />
+
+                <!-- Row 2 -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <!-- Statistiques -->
+                    <LinearLayout
+                        android:id="@+id/menuAdminStats"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:foreground="?attr/selectableItemBackground"
+                        android:gravity="center"
+                        android:orientation="vertical"
+                        android:paddingVertical="18dp"
+                        android:paddingHorizontal="8dp">
+
+                        <FrameLayout
+                            android:layout_width="50dp"
+                            android:layout_height="50dp"
+                            android:background="@drawable/bg_kpi_icon_blue">
+                            <ImageView
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
+                                android:layout_gravity="center"
+                                android:contentDescription="@null"
+                                android:src="@drawable/ic_bar_chart"
+                                app:tint="@color/info" />
+                        </FrameLayout>
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:gravity="center"
+                            android:text="Statistiques"
+                            android:textColor="@color/text_primary"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <View
+                        android:layout_width="1dp"
+                        android:layout_height="match_parent"
+                        android:background="@color/outline" />
+
+                    <!-- Alertes -->
+                    <LinearLayout
+                        android:id="@+id/menuAdminAlertes"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:foreground="?attr/selectableItemBackground"
+                        android:gravity="center"
+                        android:orientation="vertical"
+                        android:paddingVertical="18dp"
+                        android:paddingHorizontal="8dp">
+
+                        <FrameLayout
+                            android:layout_width="50dp"
+                            android:layout_height="50dp"
+                            android:background="@drawable/bg_kpi_icon_red">
+                            <ImageView
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
+                                android:layout_gravity="center"
+                                android:contentDescription="@null"
+                                android:src="@drawable/ic_notifications"
+                                app:tint="@color/error" />
+                        </FrameLayout>
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:gravity="center"
+                            android:text="Alertes"
+                            android:textColor="@color/text_primary"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- ══════════════════════════════════════
+             OUTILS label
+        ═══════════════════════════════════════ -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="22dp"
+            android:layout_marginTop="22dp"
+            android:layout_marginBottom="10dp"
+            android:letterSpacing="0.07"
+            android:text="OUTILS"
+            android:textColor="@color/stormy_teal"
+            android:textSize="11sp"
+            android:textStyle="bold" />
+
+        <!-- ══════════════════════════════════════
+             OUTILS LIST CARD
+        ═══════════════════════════════════════ -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="16dp"
+            app:cardBackgroundColor="@color/white"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="3dp"
+            app:strokeWidth="0dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="6dp">
+
+                <!-- Retards vaccination -->
+                <LinearLayout
+                    android:id="@+id/menuAdminRetards"
+                    android:layout_width="match_parent"
+                    android:layout_height="58dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="12dp"
+                    android:background="?selectableItemBackground">
                     <FrameLayout android:layout_width="38dp" android:layout_height="38dp"
-                        android:background="@drawable/bg_kpi_icon_blue">
+                        android:background="@drawable/bg_kpi_icon_orange">
                         <ImageView android:layout_width="20dp" android:layout_height="20dp"
-                            android:layout_gravity="center" android:src="@drawable/ic_building"
-                            android:contentDescription="@null" app:tint="@color/brand_lavender" />
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_notifications"
+                            android:contentDescription="@null"
+                            app:tint="@color/warning_dark" />
                     </FrameLayout>
-                    <TextView android:layout_width="0dp" android:layout_height="wrap_content"
-                        android:layout_marginStart="14dp" android:layout_weight="1"
-                        android:text="Gestion des centres"
-                        android:textColor="@color/text_primary" android:textSize="15sp" android:textStyle="bold" />
-                    <ImageView android:layout_width="18dp" android:layout_height="18dp"
-                        android:src="@drawable/ic_logout" android:rotation="180"
-                        android:contentDescription="@null" app:tint="@color/text_secondary" />
+                    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_weight="1" android:layout_marginStart="14dp"
+                        android:orientation="vertical">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="Retards de vaccination"
+                            android:textColor="@color/text_primary" android:textSize="14sp" android:textStyle="bold" />
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="Enfants en retard sur le calendrier"
+                            android:textColor="@color/text_secondary" android:textSize="11sp" />
+                    </LinearLayout>
+                    <ImageView android:layout_width="16dp" android:layout_height="16dp"
+                        android:src="@drawable/ic_chevron_right"
+                        android:contentDescription="@null"
+                        app:tint="@color/pearl_aqua" />
                 </LinearLayout>
 
                 <View android:layout_width="match_parent" android:layout_height="1dp"
                     android:background="@color/outline" android:layout_marginHorizontal="8dp" />
 
-                <!-- Vaccins -->
-                <LinearLayout android:id="@+id/menuAdminVaccins"
-                    android:layout_width="match_parent" android:layout_height="60dp"
-                    android:gravity="center_vertical" android:orientation="horizontal"
-                    android:paddingHorizontal="12dp" android:background="?selectableItemBackground">
+                <!-- RDV -->
+                <LinearLayout
+                    android:id="@+id/menuAdminRdv"
+                    android:layout_width="match_parent"
+                    android:layout_height="58dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="12dp"
+                    android:background="?selectableItemBackground">
                     <FrameLayout android:layout_width="38dp" android:layout_height="38dp"
-                        android:background="@drawable/bg_kpi_icon_green">
+                        android:background="@drawable/bg_kpi_icon_pearl">
                         <ImageView android:layout_width="20dp" android:layout_height="20dp"
-                            android:layout_gravity="center" android:src="@drawable/ic_syringe"
-                            android:contentDescription="@null" app:tint="@color/brand_teal" />
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_rdv"
+                            android:contentDescription="@null"
+                            app:tint="@color/stormy_teal" />
                     </FrameLayout>
-                    <TextView android:layout_width="0dp" android:layout_height="wrap_content"
-                        android:layout_marginStart="14dp" android:layout_weight="1"
-                        android:text="Gestion des vaccins"
-                        android:textColor="@color/text_primary" android:textSize="15sp" android:textStyle="bold" />
-                    <ImageView android:layout_width="18dp" android:layout_height="18dp"
-                        android:src="@drawable/ic_logout" android:rotation="180"
-                        android:contentDescription="@null" app:tint="@color/text_secondary" />
-                </LinearLayout>
-
-                <View android:layout_width="match_parent" android:layout_height="1dp"
-                    android:background="@color/outline" android:layout_marginHorizontal="8dp" />
-
-                <!-- Statistiques -->
-                <LinearLayout android:id="@+id/menuAdminStats"
-                    android:layout_width="match_parent" android:layout_height="60dp"
-                    android:gravity="center_vertical" android:orientation="horizontal"
-                    android:paddingHorizontal="12dp" android:background="?selectableItemBackground">
-                    <FrameLayout android:layout_width="38dp" android:layout_height="38dp"
-                        android:background="@drawable/bg_kpi_icon_blue">
-                        <ImageView android:layout_width="20dp" android:layout_height="20dp"
-                            android:layout_gravity="center" android:src="@drawable/ic_bar_chart"
-                            android:contentDescription="@null" app:tint="@color/info" />
-                    </FrameLayout>
-                    <TextView android:layout_width="0dp" android:layout_height="wrap_content"
-                        android:layout_marginStart="14dp" android:layout_weight="1"
-                        android:text="Statistiques globales"
-                        android:textColor="@color/text_primary" android:textSize="15sp" android:textStyle="bold" />
-                    <ImageView android:layout_width="18dp" android:layout_height="18dp"
-                        android:src="@drawable/ic_logout" android:rotation="180"
-                        android:contentDescription="@null" app:tint="@color/text_secondary" />
-                </LinearLayout>
-
-                <View android:layout_width="match_parent" android:layout_height="1dp"
-                    android:background="@color/outline" android:layout_marginHorizontal="8dp" />
-
-                <!-- Alertes -->
-                <LinearLayout android:id="@+id/menuAdminAlertes"
-                    android:layout_width="match_parent" android:layout_height="60dp"
-                    android:gravity="center_vertical" android:orientation="horizontal"
-                    android:paddingHorizontal="12dp" android:background="?selectableItemBackground">
-                    <FrameLayout android:layout_width="38dp" android:layout_height="38dp"
-                        android:background="@drawable/bg_kpi_icon_red">
-                        <ImageView android:layout_width="20dp" android:layout_height="20dp"
-                            android:layout_gravity="center" android:src="@drawable/ic_notifications"
-                            android:contentDescription="@null" app:tint="@color/error" />
-                    </FrameLayout>
-                    <TextView android:layout_width="0dp" android:layout_height="wrap_content"
-                        android:layout_marginStart="14dp" android:layout_weight="1"
-                        android:text="Alertes système"
-                        android:textColor="@color/text_primary" android:textSize="15sp" android:textStyle="bold" />
-                    <ImageView android:layout_width="18dp" android:layout_height="18dp"
-                        android:src="@drawable/ic_logout" android:rotation="180"
-                        android:contentDescription="@null" app:tint="@color/text_secondary" />
-                </LinearLayout>
-
-                <View android:layout_width="match_parent" android:layout_height="1dp"
-                    android:background="@color/outline" android:layout_marginHorizontal="8dp" />
-
-                <View android:layout_width="match_parent" android:layout_height="1dp"
-                    android:background="@color/outline" android:layout_marginHorizontal="8dp" />
-
-                <!-- Journal d'audit -->
-                <LinearLayout android:id="@+id/menuAdminAudit"
-                    android:layout_width="match_parent" android:layout_height="60dp"
-                    android:gravity="center_vertical" android:orientation="horizontal"
-                    android:paddingHorizontal="12dp" android:background="?selectableItemBackground">
-                    <FrameLayout android:layout_width="38dp" android:layout_height="38dp"
-                        android:background="@drawable/bg_badge_info">
-                        <ImageView android:layout_width="20dp" android:layout_height="20dp"
-                            android:layout_gravity="center" android:src="@drawable/ic_bar_chart"
-                            android:contentDescription="@null" app:tint="@color/brand_blue" />
-                    </FrameLayout>
-                    <TextView android:layout_width="0dp" android:layout_height="wrap_content"
-                        android:layout_marginStart="14dp" android:layout_weight="1"
-                        android:text="Journal d'audit"
-                        android:textColor="@color/text_primary" android:textSize="15sp" android:textStyle="bold" />
-                    <ImageView android:layout_width="18dp" android:layout_height="18dp"
-                        android:src="@drawable/ic_logout" android:rotation="180"
-                        android:contentDescription="@null" app:tint="@color/text_secondary" />
+                    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_weight="1" android:layout_marginStart="14dp"
+                        android:orientation="vertical">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="Gestion des RDV"
+                            android:textColor="@color/text_primary" android:textSize="14sp" android:textStyle="bold" />
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="Vue globale des rendez-vous"
+                            android:textColor="@color/text_secondary" android:textSize="11sp" />
+                    </LinearLayout>
+                    <ImageView android:layout_width="16dp" android:layout_height="16dp"
+                        android:src="@drawable/ic_chevron_right"
+                        android:contentDescription="@null"
+                        app:tint="@color/pearl_aqua" />
                 </LinearLayout>
 
                 <View android:layout_width="match_parent" android:layout_height="1dp"
                     android:background="@color/outline" android:layout_marginHorizontal="8dp" />
 
                 <!-- Kiosks -->
-                <LinearLayout android:id="@+id/menuAdminKiosk"
-                    android:layout_width="match_parent" android:layout_height="60dp"
-                    android:gravity="center_vertical" android:orientation="horizontal"
-                    android:paddingHorizontal="12dp" android:background="?selectableItemBackground">
+                <LinearLayout
+                    android:id="@+id/menuAdminKiosk"
+                    android:layout_width="match_parent"
+                    android:layout_height="58dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="12dp"
+                    android:background="?selectableItemBackground">
                     <FrameLayout android:layout_width="38dp" android:layout_height="38dp"
                         android:background="@drawable/bg_kpi_icon_green">
                         <ImageView android:layout_width="20dp" android:layout_height="20dp"
-                            android:layout_gravity="center" android:src="@drawable/ic_building"
-                            android:contentDescription="@null" app:tint="@color/brand_teal" />
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_scan"
+                            android:contentDescription="@null"
+                            app:tint="@color/brand_teal" />
                     </FrameLayout>
-                    <TextView android:layout_width="0dp" android:layout_height="wrap_content"
-                        android:layout_marginStart="14dp" android:layout_weight="1"
-                        android:text="Kiosks salle d'attente"
-                        android:textColor="@color/text_primary" android:textSize="15sp" android:textStyle="bold" />
-                    <ImageView android:layout_width="18dp" android:layout_height="18dp"
-                        android:src="@drawable/ic_logout" android:rotation="180"
-                        android:contentDescription="@null" app:tint="@color/text_secondary" />
+                    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_weight="1" android:layout_marginStart="14dp"
+                        android:orientation="vertical">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="Kiosks salle d'attente"
+                            android:textColor="@color/text_primary" android:textSize="14sp" android:textStyle="bold" />
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="Écrans d'affichage file d'attente"
+                            android:textColor="@color/text_secondary" android:textSize="11sp" />
+                    </LinearLayout>
+                    <ImageView android:layout_width="16dp" android:layout_height="16dp"
+                        android:src="@drawable/ic_chevron_right"
+                        android:contentDescription="@null"
+                        app:tint="@color/pearl_aqua" />
                 </LinearLayout>
 
                 <View android:layout_width="match_parent" android:layout_height="1dp"
                     android:background="@color/outline" android:layout_marginHorizontal="8dp" />
 
-                <!-- Retards de vaccination -->
-                <LinearLayout android:id="@+id/menuAdminRetards"
-                    android:layout_width="match_parent" android:layout_height="60dp"
-                    android:gravity="center_vertical" android:orientation="horizontal"
-                    android:paddingHorizontal="12dp" android:background="?selectableItemBackground">
+                <!-- Audit -->
+                <LinearLayout
+                    android:id="@+id/menuAdminAudit"
+                    android:layout_width="match_parent"
+                    android:layout_height="58dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="12dp"
+                    android:background="?selectableItemBackground">
                     <FrameLayout android:layout_width="38dp" android:layout_height="38dp"
-                        android:background="@drawable/bg_kpi_icon_orange">
+                        android:background="@drawable/bg_kpi_icon_lavender">
                         <ImageView android:layout_width="20dp" android:layout_height="20dp"
-                            android:layout_gravity="center" android:src="@drawable/ic_notifications"
-                            android:contentDescription="@null" app:tint="@color/warning_dark" />
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_bar_chart"
+                            android:contentDescription="@null"
+                            app:tint="@color/brand_lavender" />
                     </FrameLayout>
-                    <TextView android:layout_width="0dp" android:layout_height="wrap_content"
-                        android:layout_marginStart="14dp" android:layout_weight="1"
-                        android:text="Retards de vaccination"
-                        android:textColor="@color/text_primary" android:textSize="15sp" android:textStyle="bold" />
-                    <ImageView android:layout_width="18dp" android:layout_height="18dp"
-                        android:src="@drawable/ic_logout" android:rotation="180"
-                        android:contentDescription="@null" app:tint="@color/text_secondary" />
-                </LinearLayout>
-
-                <View android:layout_width="match_parent" android:layout_height="1dp"
-                    android:background="@color/outline" android:layout_marginHorizontal="8dp" />
-
-                <!-- Rendez-vous -->
-                <LinearLayout android:id="@+id/menuAdminRdv"
-                    android:layout_width="match_parent" android:layout_height="60dp"
-                    android:gravity="center_vertical" android:orientation="horizontal"
-                    android:paddingHorizontal="12dp" android:background="?selectableItemBackground">
-                    <FrameLayout android:layout_width="38dp" android:layout_height="38dp"
-                        android:background="@drawable/bg_badge_info">
-                        <ImageView android:layout_width="20dp" android:layout_height="20dp"
-                            android:layout_gravity="center" android:src="@drawable/ic_rdv"
-                            android:contentDescription="@null" app:tint="@color/brand_blue" />
-                    </FrameLayout>
-                    <TextView android:layout_width="0dp" android:layout_height="wrap_content"
-                        android:layout_marginStart="14dp" android:layout_weight="1"
-                        android:text="Gestion des RDV"
-                        android:textColor="@color/text_primary" android:textSize="15sp" android:textStyle="bold" />
-                    <ImageView android:layout_width="18dp" android:layout_height="18dp"
-                        android:src="@drawable/ic_logout" android:rotation="180"
-                        android:contentDescription="@null" app:tint="@color/text_secondary" />
+                    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_weight="1" android:layout_marginStart="14dp"
+                        android:orientation="vertical">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="Journal d'audit"
+                            android:textColor="@color/text_primary" android:textSize="14sp" android:textStyle="bold" />
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="Historique des actions système"
+                            android:textColor="@color/text_secondary" android:textSize="11sp" />
+                    </LinearLayout>
+                    <ImageView android:layout_width="16dp" android:layout_height="16dp"
+                        android:src="@drawable/ic_chevron_right"
+                        android:contentDescription="@null"
+                        app:tint="@color/pearl_aqua" />
                 </LinearLayout>
 
                 <View android:layout_width="match_parent" android:layout_height="1dp"
                     android:background="@color/outline" android:layout_marginHorizontal="8dp" />
 
                 <!-- Recherche -->
-                <LinearLayout android:id="@+id/menuAdminRecherche"
-                    android:layout_width="match_parent" android:layout_height="60dp"
-                    android:gravity="center_vertical" android:orientation="horizontal"
-                    android:paddingHorizontal="12dp" android:background="?selectableItemBackground">
+                <LinearLayout
+                    android:id="@+id/menuAdminRecherche"
+                    android:layout_width="match_parent"
+                    android:layout_height="58dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="12dp"
+                    android:background="?selectableItemBackground">
                     <FrameLayout android:layout_width="38dp" android:layout_height="38dp"
-                        android:background="@drawable/bg_kpi_icon_blue">
+                        android:background="@drawable/bg_kpi_icon_almond">
                         <ImageView android:layout_width="20dp" android:layout_height="20dp"
-                            android:layout_gravity="center" android:src="@drawable/ic_search"
-                            android:contentDescription="@null" app:tint="@color/info" />
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_search"
+                            android:contentDescription="@null"
+                            app:tint="@color/brand_coral" />
                     </FrameLayout>
-                    <TextView android:layout_width="0dp" android:layout_height="wrap_content"
-                        android:layout_marginStart="14dp" android:layout_weight="1"
-                        android:text="Recherche globale"
-                        android:textColor="@color/text_primary" android:textSize="15sp" android:textStyle="bold" />
-                    <ImageView android:layout_width="18dp" android:layout_height="18dp"
-                        android:src="@drawable/ic_logout" android:rotation="180"
-                        android:contentDescription="@null" app:tint="@color/text_secondary" />
+                    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_weight="1" android:layout_marginStart="14dp"
+                        android:orientation="vertical">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="Recherche globale"
+                            android:textColor="@color/text_primary" android:textSize="14sp" android:textStyle="bold" />
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="Patients, bébés, parents…"
+                            android:textColor="@color/text_secondary" android:textSize="11sp" />
+                    </LinearLayout>
+                    <ImageView android:layout_width="16dp" android:layout_height="16dp"
+                        android:src="@drawable/ic_chevron_right"
+                        android:contentDescription="@null"
+                        app:tint="@color/pearl_aqua" />
                 </LinearLayout>
 
                 <View android:layout_width="match_parent" android:layout_height="1dp"
                     android:background="@color/outline" android:layout_marginHorizontal="8dp" />
 
                 <!-- Exports -->
-                <LinearLayout android:id="@+id/menuAdminExports"
-                    android:layout_width="match_parent" android:layout_height="60dp"
-                    android:gravity="center_vertical" android:orientation="horizontal"
-                    android:paddingHorizontal="12dp" android:background="?selectableItemBackground">
+                <LinearLayout
+                    android:id="@+id/menuAdminExports"
+                    android:layout_width="match_parent"
+                    android:layout_height="58dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="12dp"
+                    android:background="?selectableItemBackground">
                     <FrameLayout android:layout_width="38dp" android:layout_height="38dp"
-                        android:background="@drawable/bg_kpi_icon_orange">
+                        android:background="@drawable/bg_kpi_icon_teal">
                         <ImageView android:layout_width="20dp" android:layout_height="20dp"
-                            android:layout_gravity="center" android:src="@drawable/ic_rdv"
-                            android:contentDescription="@null" app:tint="@color/warning_dark" />
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_package"
+                            android:contentDescription="@null"
+                            app:tint="@color/brand_teal" />
                     </FrameLayout>
-                    <TextView android:layout_width="0dp" android:layout_height="wrap_content"
-                        android:layout_marginStart="14dp" android:layout_weight="1"
-                        android:text="Rapports et exports"
-                        android:textColor="@color/text_primary" android:textSize="15sp" android:textStyle="bold" />
-                    <ImageView android:layout_width="18dp" android:layout_height="18dp"
-                        android:src="@drawable/ic_logout" android:rotation="180"
-                        android:contentDescription="@null" app:tint="@color/text_secondary" />
+                    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_weight="1" android:layout_marginStart="14dp"
+                        android:orientation="vertical">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="Rapports et exports"
+                            android:textColor="@color/text_primary" android:textSize="14sp" android:textStyle="bold" />
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="Données CSV / PDF"
+                            android:textColor="@color/text_secondary" android:textSize="11sp" />
+                    </LinearLayout>
+                    <ImageView android:layout_width="16dp" android:layout_height="16dp"
+                        android:src="@drawable/ic_chevron_right"
+                        android:contentDescription="@null"
+                        app:tint="@color/pearl_aqua" />
                 </LinearLayout>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- Logout button -->
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnAdminMoreLogout"
-            style="@style/Widget.Vaccinkid.Button.Danger"
+        <!-- ══════════════════════════════════════
+             COMPTE label
+        ═══════════════════════════════════════ -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="22dp"
+            android:layout_marginTop="22dp"
+            android:layout_marginBottom="10dp"
+            android:letterSpacing="0.07"
+            android:text="COMPTE"
+            android:textColor="@color/stormy_teal"
+            android:textSize="11sp"
+            android:textStyle="bold" />
+
+        <!-- ══════════════════════════════════════
+             LOGOUT CARD
+        ═══════════════════════════════════════ -->
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
-            android:layout_height="54dp"
-            android:layout_marginHorizontal="22dp"
-            android:layout_marginTop="8dp"
-            android:text="Se déconnecter"
-            app:icon="@drawable/ic_logout"
-            app:iconTint="@color/white" />
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="16dp"
+            app:cardBackgroundColor="@color/white"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="3dp"
+            app:strokeColor="@color/error_light"
+            app:strokeWidth="1.5dp">
+
+            <LinearLayout
+                android:id="@+id/btnAdminMoreLogout"
+                android:layout_width="match_parent"
+                android:layout_height="58dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?selectableItemBackground"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingHorizontal="16dp">
+
+                <FrameLayout
+                    android:layout_width="38dp"
+                    android:layout_height="38dp"
+                    android:background="@drawable/bg_kpi_icon_red">
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_gravity="center"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_logout"
+                        app:tint="@color/error" />
+                </FrameLayout>
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="14dp"
+                    android:text="Se déconnecter"
+                    android:textColor="@color/error"
+                    android:textSize="15sp"
+                    android:textStyle="bold" />
+
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_chevron_right"
+                    app:tint="@color/error" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- ══════════════════════════════════════
+             FOOTER
+        ═══════════════════════════════════════ -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="28dp"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:paddingBottom="16dp">
+
+            <ImageView
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:alpha="0.15"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_medical_staff"
+                app:tint="@color/stormy_teal" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:alpha="0.45"
+                android:text="VaccinKids · Admin"
+                android:textColor="@color/stormy_teal"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:alpha="0.30"
+                android:text="Protéger chaque enfant"
+                android:textColor="@color/text_secondary"
+                android:textSize="10sp" />
+        </LinearLayout>
+
     </LinearLayout>
 </androidx.core.widget.NestedScrollView>

@@ -3,6 +3,7 @@ package com.example.vaccinkid
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
+import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
@@ -15,6 +16,7 @@ import kotlinx.coroutines.launch
 class AdminMoreFragment : Fragment(R.layout.fragment_admin_more) {
 
     private lateinit var authViewModel: InfirmierAuthViewModel
+    private var profileLoaded = false
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -57,7 +59,12 @@ class AdminMoreFragment : Fragment(R.layout.fragment_admin_more) {
             showLogoutDialog()
         }
 
-        loadProfile(view)
+        if (!profileLoaded) loadProfile(view)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (!profileLoaded) view?.let { loadProfile(it) }
     }
 
     private fun loadProfile(view: View) {
@@ -65,15 +72,36 @@ class AdminMoreFragment : Fragment(R.layout.fragment_admin_more) {
             try {
                 val response = ApiClient.apiService.getMe()
                 val user = response.data?.user ?: return@launch
-                val fullName = listOfNotNull(user.prenom, user.nom).joinToString(" ").ifBlank { "Admin #${user.id}" }
-                view.findViewById<TextView>(R.id.tvAdminMoreName).text = fullName
-                view.findViewById<TextView>(R.id.tvAdminMoreRole).text = when (user.role.uppercase()) {
-                    "ADMIN" -> "Administrateur principal"
-                    else -> user.role
-                }
+
+                val fullName = listOfNotNull(user.prenom, user.nom)
+                    .joinToString(" ").ifBlank { "Administrateur" }
                 val initials = listOfNotNull(user.prenom?.firstOrNull(), user.nom?.firstOrNull())
                     .joinToString("").uppercase().ifBlank { "AD" }
+                val roleLabel = when (user.role.uppercase()) {
+                    "ADMIN" -> "Administrateur principal"
+                    else    -> user.role.replaceFirstChar { it.uppercase() }
+                }
+
+                view.findViewById<TextView>(R.id.tvAdminMoreName).text = fullName
                 view.findViewById<TextView>(R.id.tvAdminMoreInitials).text = initials
+                view.findViewById<TextView>(R.id.tvAdminMoreRole).text = roleLabel
+
+                // Centre info
+                val centre = user.centreNom
+                view.findViewById<TextView>(R.id.tvAdminMoreCentre).text =
+                    if (!centre.isNullOrBlank()) centre else "Centre non affecté"
+
+                // Phone (shown only if available)
+                val phone = user.telephone
+                val llPhone = view.findViewById<LinearLayout>(R.id.llAdminMorePhone)
+                if (!phone.isNullOrBlank()) {
+                    view.findViewById<TextView>(R.id.tvAdminMorePhone).text = formatPhone(phone)
+                    llPhone.visibility = View.VISIBLE
+                } else {
+                    llPhone.visibility = View.GONE
+                }
+
+                profileLoaded = true
             } catch (_: Exception) {}
         }
     }
@@ -84,6 +112,7 @@ class AdminMoreFragment : Fragment(R.layout.fragment_admin_more) {
             .setMessage("Vous serez redirigé vers l'écran de connexion.")
             .setNegativeButton("Annuler", null)
             .setPositiveButton("Se déconnecter") { _, _ ->
+                profileLoaded = false
                 authViewModel.logout {
                     startActivity(Intent(requireContext(), AdminLoginActivity::class.java).apply {
                         flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
@@ -91,5 +120,14 @@ class AdminMoreFragment : Fragment(R.layout.fragment_admin_more) {
                 }
             }
             .show()
+    }
+
+    companion object {
+        private fun formatPhone(raw: String): String {
+            val digits = raw.filter { it.isDigit() }
+            return if (digits.length == 10)
+                "${digits.substring(0,2)} ${digits.substring(2,4)} ${digits.substring(4,6)} ${digits.substring(6,8)} ${digits.substring(8,10)}"
+            else raw
+        }
     }
 }
